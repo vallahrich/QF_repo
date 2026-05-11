@@ -1,0 +1,233 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes an arXiv identifier and version line (arXiv:2412.05202v3), has full paper structure (abstract, methods, results, appendices) but no journal or conference venue, and reads like a submitted but not yet journal-published manuscript.",
+  "title": "Entanglement scaling in matrix product state representation of smooth functions and their shallow quantum circuit approximations",
+  "authors": [
+    "Vladyslav Bohun",
+    "Illia Lukin",
+    "Mykola Luhanko",
+    "Georgios Korpas",
+    "Philippe J.S. De Brouwer",
+    "Mykola Maksymenko",
+    "Maciej Koch-Janusz"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (quant-ph), arXiv:2412.05202v3",
+  "doi": "",
+  "abstract_summary": "This preprint derives rigorous asymptotic expansions for the decay of entanglement (purities and entanglement spectra) across bonds in matrix product state (MPS) representations of smooth real and complex functions, showing universal exponential scaling at small spatial scales and non-universal behavior controlled by localization/support at large scales. Leveraging these analytical results, the authors develop an improved MPS-based algorithm to generate shallow O(N)-gate quantum circuits (with additional optimizations and a Tensor Cross Interpolation extension for scalability), and validate the approach on heavy-tailed probability distributions (including L´evy) with simulations and experiments on IBM quantum hardware up to 64 qubits.",
+  "methodology_description": "The paper combines analytic derivations about entanglement scaling in Matrix Product State (MPS) representations of smooth 1D functions with a practical MPS-based algorithm to build shallow quantum circuits that encode discretized functions (in particular probability distributions). Methodologically the authors: (1) derive asymptotic expansions for purities, entanglement spectra and entanglement entropy across MPS bonds using continuum limits, Taylor expansions and Euler–Maclaurin resummation (theoretical analysis); (2) implement an improved iterative MPS-to-circuit procedure that (a) converts the discretized function (tensor of values on a binary grid) into an MPS using SVD or sampling-based Tensor Cross Interpolation (TCI), (b) brings the MPS to a central canonical form, (c) truncates bonds (target χ=2) with a threshold ε_trunc, (d) converts the truncated MPS exactly into a sequence of 2-qubit “V-layer” gates (analytic decomposition) using optimized isometry synthesis (up to 2 CNOTs per 2-qubit isometry), (e) optionally variationally optimizes the central gate (minimize 2nd Renyi entropy), (f) appends the inverse of the truncated-circuit to the original MPS on an MPS-simulator to produce a less-entangled MPS and repeats (greedy iterative disentangling). They exploit analytic entanglement decay results to skip gates on bonds below ε_trunc, and use TCI to avoid storing the full 2^N tensor. Experiments evaluate fidelity (|<ψ|f>|^2), entanglement spectra/purities, KL divergence and Kolmogorov–Smirnov tests, with runs on ideal simulators, noisy simulations (IBM FakeToronto) and real IBM QPUs (ibm_torino, ibm_marrakesh).",
+  "algorithms_used": [
+    "Matrix Product State (MPS) decomposition",
+    "Singular Value Decomposition (SVD) for MPS/TT decomposition",
+    "Tensor Cross Interpolation (TCI) / TT-cross",
+    "Analytic MPS-to-circuit decomposition (χ=2 exact conversion / V-layer construction)",
+    "Bond truncation (χ truncation) with ε_trunc threshold",
+    "Variational optimization of central gate (minimize 2nd Renyi entropy)",
+    "Gram–Schmidt orthonormalization (density matrix diagonalization steps)",
+    "Euler–Maclaurin resummation (analytic derivations)"
+  ],
+  "frameworks": [
+    "torchTT (referenced)",
+    "MPS quantum-circuit simulator (unnamed)",
+    "IBM backend ecosystem (FakeToronto / ibm torino / ibm marrakesh)"
+  ],
+  "experimental_setup": "Distributions (normal, log-normal, Gamma, and heavy-tailed L´evy) were discretized on an N-bit binary grid x = 0.σ1σ2...σN with L2 normalization and optional finite-support truncation [0, L]. MPS representations were constructed either by SVD of the full tensor (when feasible) or by Tensor Cross Interpolation (TCI) sampling when N large. Circuits were produced by truncating bonds to χ=2 (with ε_trunc cutoffs like 1e-3 or 1e-4), converting to V-layer 2-qubit gate circuits (isometry synthesis with up to 2 CNOTs), optionally optimizing the central gate, and iterating the disentangling procedure. Evaluations used ideal MPS simulators (large bond dimension / “exact”), IBM noisy simulator (FakeToronto), and IBM QPUs (ibm_torino, ibm_marrakesh). Sampling used 5000 shots for QPU experiments; KS tests used 200 samples. Reported metrics include fidelity, KL divergence and KS p-values; circuit properties (depth, CNOT count) were recorded.",
+  "dataset_used": "Analytic probability distributions used as inputs: truncated Normal (Gaussian), Log-normal, Gamma, and α-stable (L´evy) heavy-tailed distributions. These are synthetic mathematical distributions (not market time-series or proprietary financial datasets). Parameters (location µ, scale σ or c) and support truncation L are varied in experiments.",
+  "experiment_input": {
+    "source": "Analytic closed-form PDFs (Normal, Log-normal, Gamma, L´evy) defined by the authors",
+    "size": "Discretized onto N qubits (N varied across experiments: examples include N = 6, 10, 15, 18, 20, 25, 27, 40, 50, 64). Effective vector length is 2^N but TCI avoids explicit storage for large N.",
+    "preprocessing": "Truncation of PDF support to finite interval [0, L] where required; L varied. Mapping to binary grid x = sum σ_i 2^{-i}. L2 normalization (f(x)=sqrt(p(x)) for probability encoding). For large-N cases TCI sampled O(N χ^2) PDF evaluations (example: ~8×10^4 PDF calls for a 40-qubit TCI construction)."
+  },
+  "experiment_process": [
+    "1) For a given analytic function/PDF, discretize on N-bit binary grid x = 0.σ1...σN over chosen support [0,L].",
+    "2) Construct an MPS representation: (a) SVD-based MPS when feasible (storing full tensor), or (b) sampling-based Tensor Cross Interpolation (TCI / TT-cross) to build MPS without storing full 2^N vector.",
+    "3) Put MPS into central canonical form (choose a central bond/site).",
+    "4) Truncate all bonds to bond dimension χ=2 (or enforce χ=1 where entanglement below threshold ε_trunc), producing a truncated MPS approximation.",
+    "5) Convert truncated MPS exactly into a quantum circuit using 'V-layer' architecture (double-staircase) composed of local 2-qubit isometries; synthesize 2-qubit isometries into gates using optimized decomposition with up to 2 CNOTs plus 1-qubit rotations (RX/RY/RZ).",
+    "6) Optionally make the central bond gate variational and optimize its 1- and 2-qubit parameters by minimizing the second Renyi entropy on the central bond.",
+    "7) On an MPS circuit simulator, append the inverse of the truncated-circuit to the original (non-truncated) MPS as a disentangler, contract the network to obtain a new MPS with reduced entanglement.",
+    "8) Repeat steps 3–7 iteratively (greedy) for multiple layers until desired fidelity or resource limits (number of layers upto tested 1–5).",
+    "9) Export the final composed circuit to run on ideal or noisy simulators, or on IBM QPUs; sample measurement outcomes (e.g., 5000 shots on QPU).",
+    "10) Evaluate outputs: compute fidelity |<ψ|f>|^2 (where f is exact discretized state), entanglement spectra / purities from MPS, KL divergence, and Kolmogorov–Smirnov test p-values against exact/truncated CDFs."
+  ],
+  "experiment_output": {
+    "formats": [
+      "Prepared quantum circuits (gate sequences, layer counts)",
+      "Sampled bitstrings from circuits (measurement histograms)",
+      "MPS entanglement data (purities pk, entanglement spectra Λk,i, entropies Sk)",
+      "Numerical metrics and plots (fidelity F, KL divergence, KS p-values, depth and CNOT counts, error vs support L)"
+    ],
+    "metrics": [
+      "Fidelity F = |<ψ|f>|^2",
+      "Kullback–Leibler (KL) divergence between encoded and ideal distributions",
+      "Kolmogorov–Smirnov (KS) test p-value (KS performed with 200 samples)",
+      "Entanglement purities pk and entanglement spectra Λk,i",
+      "Circuit depth and 2-qubit (CNOT) gate counts"
+    ],
+    "baselines/comparisons": [
+      "Exact discretized state (full MPS/SVD) as ground truth",
+      "Analytic asymptotic predictions derived in the paper (e.g., Eq.(17) fidelity estimate, asymptotic 1/4^k scalings)",
+      "Noisy vs ideal simulator comparisons; varying number of layers (1..5) to study depth–accuracy trade-off"
+    ]
+  },
+  "experiment_parameters": {
+    "qubits_tested": [
+      6,
+      10,
+      15,
+      18,
+      20,
+      25,
+      27,
+      40,
+      50,
+      64
+    ],
+    "shots": 5000,
+    "layers_tested": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "epsilon_trunc": [
+      0.001,
+      0.0001
+    ],
+    "bond_dimension_truncation": 2,
+    "gate_set": [
+      "RX",
+      "RY",
+      "RZ",
+      "CNOT"
+    ],
+    "isometry_synthesis": "up to 2 CNOTs + 1-qubit rotations (better than generic 3-CNOT 2-qubit unitary)",
+    "fidelity_estimate_formula": "F ≈ 1 - Σ_{k>0,i≥2} Λ_{k,i}^2 (leading-order estimate Eq.(17))",
+    "TCI_sample_count_example": 80000,
+    "support_L_examples": "varied per experiment; examples include small L~1..5 and very large L up to 2^14 (used for L´evy experiments)",
+    "variational_optimization_target": "minimize second Renyi entropy on central bond; small parameter count (1-2 CNOTs)"
+  },
+  "hardware_details": {
+    "simulators": [
+      {
+        "name": "ideal MPS simulator",
+        "description": "MPS-based simulator with very large bond dimension used for near-exact simulation"
+      },
+      {
+        "name": "IBM FakeToronto",
+        "description": "noisy device simulator/back-end"
+      }
+    ],
+    "quantum_processors": [
+      {
+        "name": "ibm_torino",
+        "provider": "IBM Quantum",
+        "notes": "executions up to 25 qubits"
+      },
+      {
+        "name": "ibm_marrakesh",
+        "provider": "IBM Quantum",
+        "notes": "executions up to 64 qubits; used for TCI-generated large circuits"
+      }
+    ],
+    "classical_tools": [
+      "torchTT (package cited and used for TCI)",
+      "MPS circuit simulator (unnamed/internal)"
+    ]
+  },
+  "reproducibility_notes": "The paper references publicly available methods and packages (Tensor Cross Interpolation / TT-cross literature and the torchTT package repository), and states implementation details (ε_trunc, χ=2 truncation, V-layer construction, isometry synthesis with up to 2 CNOTs). However, no explicit public code repository for the authors' full implementation or pipeline is provided in the manuscript. Reproducibility is facilitated by references to standard MPS/TT and TCI algorithms and by listing hardware/backends used (IBM devices and FakeToronto), but exact experiment scripts, parameter files and the MPS simulator implementation are not linked; reproducing experiments will require reimplementing some integration glue (MPS canonical transforms, V-layer synthesis and variational central gate optimization) or contacting the authors.",
+  "key_findings": [
+    "[speculative] The paper derives rigorous asymptotic expansions showing that purities pk of the MPS/tensor representation of a smooth L2-normalized function on [0,1] decay exponentially with bond index k, with leading correction pk = 1 - g1(f)/(6·4^k) + O(1/8^k).",
+    "[speculative] The authors present explicit formulas for the expansion coefficient g1(f) (involving derivatives of f) and show conditions when it vanishes (e.g., exponentials / trivial MPS of bond dimension one).",
+    "[speculative] Corollaries assert that subleading entanglement spectrum components Λ_{k,1} scale as ~ 2^{-k} √(g1(f)/12) and entanglement entropy Sk decays exponentially in k (Sk = O(k/4^k) asymptotically).",
+    "[speculative] A theorem states the reduced density eigenvalues ρ_{k,n} scale as O(1/4^{k n}) to leading order, giving explicit asymptotics for low-lying eigenvalues (e.g., ρ_{k,1} ∼ g1(f)/(12·4^k)).",
+    "[speculative] The analytic asymptotic results are extended to functions with only r absolutely continuous derivatives: the stated scaling holds up to order r+1, while higher orders are non-universal.",
+    "[speculative] For large-scale (small k) bonds the entanglement is non-universal and strongly depends on localization/support of the function; exponentially localized functions show super-exponential decay of entanglement on leading bonds, while heavy-tailed/polynomial localization (e.g., Lévy) delays the onset of the universal small-scale decay.",
+    "[supported] Numerical SVD experiments on discretized normal, log-normal and Lévy distributions match the theoretical asymptotic scalings for Λ_{k,1}, Λ_{k,2} at sufficiently large k, with deviations at small k consistent with the predicted non-universal regime.",
+    "[speculative] The paper presents an improved MPS-to-circuit algorithm: using 'V'-layer (double-staircase) disentangling layers (instead of full staircase) and truncation threshold ε_trunc to skip gates on nearly unentangled bonds, yielding circuits with O(N) gates but lower depth/practical CNOT counts.",
+    "[supported] The algorithm uses a variational optimization for the central bond gate across layers and uses optimal isometry decompositions (≤2 CNOTs for 2-qubit isometries) to reduce 2-qubit gate count.",
+    "[supported] Analytic fidelity estimates for single-layer truncation are given: first-order fidelity loss ≈ sum over truncated bonds and modes of Λ_{k,i}^2, and numerical experiments confirm these estimates where asymptotic regime applies.",
+    "[supported] The authors implement a Tensor Cross Interpolation (TCI) based variant that constructs MPS approximations from black-box PDF evaluations (no full 2^N vector stored); TCI scales as O(N χ^2) function evaluations and was used to build circuits up to 64 qubits.",
+    "[supported] Empirical tests: circuits generated by the method were executed and sampled on IBM superconducting QPUs (ibm torino and ibm marrakesh) and on simulators; up to 25 qubits the generated distributions (1- and 2-layer circuits) passed Kolmogorov–Smirnov (KS) tests at significance level 0.05 (with reported shot counts).",
+    "[supported] For larger circuits (e.g., 50–64 qubits) generated via TCI and executed on real devices the qualitative features of heavy-tailed distributions were reproduced but quantitative statistical tests failed due to device noise.",
+    "[supported] Quantitative numerical metrics reported include single-layer infidelities as low as ~1e-3 for some distributions/supports (example: normal with σ=2, and Lévy examples showed infidelity saturation ~4×10^-3 in reported cases), and MPS-to-circuit construction for 40 qubits with TCI used ~8×10^4 PDF evaluations; TCI-uploaded MPS errors ~6×10^-8 (average).",
+    "[speculative] The authors argue the entanglement structure of smooth functions enables systematically constructing shallow, accurate amplitude-encoding circuits (O(N) gates) and that these encodings are especially favorable when the function is smooth and/or localized."
+  ],
+  "results_summary": "The paper provides an analytical study of entanglement in MPS/tensor representations of smooth (real or complex) functions and derives asymptotic scalings for purities, entanglement spectra and reduced density eigenvalues as functions of bond index. It shows that for smooth functions entanglement decays exponentially with bond index (small scales), while large-scale behaviour depends on localization/support (exponential localization gives super-exponential suppression of large-scale entanglement; heavy tails delay decay). Building on these theoretical findings the authors develop an improved MPS-based algorithm to convert function MPS into shallow O(N)-gate quantum circuits, introducing V-layer disentanglers, truncation heuristics, optimal isometry decompositions and a TCI-based workflow to avoid storing full 2^N tensors. They validate the theory and algorithms with numerical SVD comparisons, simulator fidelity estimates and real-device experiments on IBM QPUs: up to ~25 qubits the encoded distributions passed KS tests (5000 shots reported), whereas larger, TCI-generated circuits (50–64 qubits) reproduced qualitative features but suffered from noise. Reported single-layer circuit infidelities were often ~1e-3, and TCI construction used ~8×10^4 PDF calls for a 40-qubit example.",
+  "performance_claims": [
+    "Executed and sampled encoding circuits on IBM superconducting QPUs (ibm torino) up to 25 qubits; experiments used 5000 shots and passed KS tests at 0.05 significance (with 200 samples).",
+    "Generated large TCI-based circuits up to 64 qubits (executed on ibm marrakesh); for 50–64 qubits qualitative agreement with target distributions observed, but quantitative tests failed due to noise.",
+    "Single-layer shallow circuits achieved infidelity as low as ~1e-3 for certain distributions/supports; example: one-layer infidelity saturated ~4×10^-3 for a Lévy example.",
+    "TCI-based 40-qubit construction required ≈8×10^4 PDF map evaluations and produced MPS-upload average relative error ≈6×10^-8 (max ~4×10^-7).",
+    "Circuit synthesis optimizations reduce 2-qubit gate count by using 2-CNOT decompositions for 2-qubit isometries (instead of 3 CNOTs for a general 2-qubit unitary).",
+    "Reported circuits depths and CNOT counts (representative means from tables): for 6, 10, 15 qubits typical depths ≈16–43 and mean CNOTs ≈9–29 for two-layer encodings with ε_trunc in tested settings."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper does not claim or demonstrate a computational quantum advantage; it focuses on efficient/state-preparation circuits (shallow, O(N) gates) for amplitude encoding of classical functions and distributions, provides analytic/empirical evidence for compact MPS representations and practical circuits, and evaluates performance on noisy hardware, but does not show a task-level advantage over classical methods.",
+  "limitations": [
+    "The theoretical results rely on function smoothness (Theorem 1); for non-smooth functions the universal asymptotic behaviour breaks down and only a limited number (up to r+1) of entanglement-spectrum orders can be guaranteed.",
+    "Finite-support / truncation effects and boundary terms matter: asymptotic expansions require sufficiently large k (e.g. k > log2(L/2σ) for Gaussians) and corrections exist for finite intervals.",
+    "Analytic fidelity/error bounds are given for single-layer (single-bond) truncation only; multilayer decompositions do not admit simple analytic error bounds in this work.",
+    "The MPS-to-circuit algorithm is approximate and greedy (iterative disentangling); it does not provide global optimality guarantees.",
+    "Hardware noise imposes a practical depth–accuracy trade-off: deeper (multilayer) circuits can perform worse on noisy devices; quantitative statistical fidelity was achieved up to ≈25 qubits, while circuits up to 64 qubits reproduced only qualitative features due to noise.",
+    "Tensor Cross Interpolation (TCI) reduces memory needs but still requires a (non-negligible) number of PDF evaluations that scale as O(N χ^2); the paper reports examples requiring ~8×10^4 function calls.",
+    "Proofs and asymptotic expansions use limits (e.g. N → ∞) and assumptions (e.g. existence of smooth extensions beyond [0,1]) that may limit direct applicability to finite-N or pathological inputs.",
+    "[inferred] The computational cost to reach very high accuracy for heavy-tailed or weakly localized distributions may be high because the universal decay regime of entanglement can be pushed to very large scales (large k), implying more qubits / resources are needed.",
+    "[inferred] The greedy iterative procedure can be trapped in suboptimal local solutions; there is no study of alternative global or provably-better optimization strategies.",
+    "[inferred] The method focuses on 1D functions (hierarchical binary grid); performance and complexity for high-dimensional / multivariate PDFs are not analysed in detail and may be substantially different.",
+    "[inferred] Gate compilation and mapping to realistic device topologies (connectivity constraints, routing) are not treated in depth; real-device compilation overheads may further increase depth and noise sensitivity.",
+    "[inferred] The variational step (central gate optimization) may be non-convex and costly; the paper does not quantify its runtime or robustness across different inputs.",
+    "[inferred] The hyperparameter ε_trunc controls an accuracy–depth trade-off but choosing it for a given device/noise model is not automated or theoretically prescribed."
+  ],
+  "open_questions": [
+    "How can the density-matrix-based analysis be extended to multivariate functions and multivariate PDFs?",
+    "What is the optimal tensor-network geometry (and corresponding qubit ordering) for general multivariate functions, and how does it depend on the function's entanglement structure?",
+    "Can one derive analytic results for entanglement spectra and scaling for multivariate functions, analogous to the 1D results in this paper?",
+    "How should encoding circuits and MPS approximations be adapted to be robust against realistic hardware noise (noise-aware design, error mitigation, or noise-adaptive depth selection)?",
+    "What is the detailed quantitative effect of hardware noise on fidelity and sampling accuracy for the proposed circuits as qubit count and depth scale?",
+    "How to fully characterise entanglement properties and approximability for non-smooth functions (beyond the partial statements made here)?",
+    "[inferred] How can the greedy disentangling algorithm be improved (or replaced) to provide provable bounds or better empirical performance across diverse function classes?",
+    "[inferred] What are the precise resource and sampling costs of TCI (function-evaluation counts, runtime, memory) as a function of desired accuracy, qubit number N, and maximum bond dimension χ for different distribution classes?",
+    "[inferred] How to systematically pick / optimize the origin and number of V-layers (and other architecture choices) given a target device noise profile and a target fidelity?",
+    "[inferred] What are the practical scalability limits (qubit counts, depth, and run time) on current and near-term QPUs for loading realistic heavy-tailed distributions with useful fidelity?"
+  ],
+  "future_work": [
+    "Extend the density-matrix-based analysis to multivariate functions.",
+    "Derive the optimal tensor-network representation (geometry) of multivariate functions based on their entanglement structure.",
+    "Obtain analytic results on entanglement of multivariate functions and use them to design improved quantum-circuit encodings.",
+    "Investigate and improve tensor-network algorithms informed by entanglement structure for better classical pre-processing / circuit generation.",
+    "Carry out a more detailed analysis of the influence of hardware noise on function preparation and explore noise-aware circuit design.",
+    "Perform a more detailed study of entanglement and approximability for non-smooth functions (left for future research in the paper)."
+  ],
+  "topic_tags": [
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Analytic derivations show universal exponential entanglement decay at small scales and non-universal behaviour at large scales, enabling systematic bond truncation that yields shallow O(N)-gate circuits for encoding discretized probability distributions.",
+    "#idea:hybrid-approach — Practical pipeline: classical MPS/TT construction (SVD or Tensor Cross Interpolation) + classical truncation heuristics + analytic MPS-to-circuit conversion produces efficient quantum circuits while avoiding full 2^N storage.",
+    "#idea:near-term-feasibility — Demonstrated on IBM noisy simulator and real IBM QPUs up to 64 qubits with prepared circuits having low CNOT counts (up to 2 CNOTs per 2-qubit isometry) and evaluated via fidelity, KL divergence and KS tests.",
+    "#idea:quantum-advantage — Exact conversion of truncated χ=2 MPS to 'V-layer' two-qubit isometry circuits yields linear-in-N gate count (O(N)) which is advantageous compared to naive state-preparation requiring exponentially many gates for arbitrary vectors.",
+    "#idea:hybrid-approach — Iterative greedy disentangling (append inverse truncated circuit, recompute MPS, repeat) and optional variational optimization of central gate reduce entanglement and improve fidelity with few layers.",
+    "#limitation:data-encoding — Building MPS via TCI requires many evaluations of the target PDF for large N (examples: ~8×10^4 PDF calls for 40 qubits), so classical sampling/encoding costs are significant and scale with desired fidelity/N.",
+    "#limitation:noise — Real-device experiments and noisy-simulator runs indicate hardware noise impacts fidelity and necessitate shallow, low-CNOT circuits; observed metrics depend on QPU noise characteristics (experiments reported on ibm_torino and ibm_marrakesh).",
+    "#idea:quantum-advantage — Method is robust across a range of analytic PDFs including heavy-tailed α-stable (L´evy) distributions, suggesting applicability to distributions with challenging support/localization properties (relevant for heavy-tail modelling).",
+    "#idea:near-term-feasibility — Use of χ=2 truncation and optimized isometry synthesis (up to 2 CNOTs) keeps circuits shallow and makes demonstrations on current NISQ hardware feasible for certain classes of smooth/sparse-entanglement functions."
+  ],
+  "contradictions": []
+}

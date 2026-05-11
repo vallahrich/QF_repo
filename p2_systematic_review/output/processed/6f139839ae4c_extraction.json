@@ -1,0 +1,215 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document bears an arXiv identifier (arXiv:2602.15474v1) with a v1 date and the manuscript structure (abstract, methods, results, references, supplementary) typical of a preprint; no journal or conference venue is indicated, so it is not clearly peer-reviewed or published.",
+  "title": "Quantum Reservoir Computing for Statistical Classification in a Superconducting Quantum Circuit",
+  "authors": [
+    "J. J. Prieto-Garcia",
+    "A. G. del Pozo-Martín",
+    "M. Pino"
+  ],
+  "year": "2026",
+  "journal_or_venue": "arXiv preprint arXiv:2602.15474",
+  "doi": "",
+  "abstract_summary": "This preprint numerically studies Quantum Reservoir Computing (QRC) implemented in a superconducting circuit of two capacitively coupled islands with Josephson junctions, mapping its low-energy dynamics to a Bose–Hubbard model. The authors demonstrate that this analog QRC can accurately classify complex and heavy-tailed probability distributions and detect volatility regimes in GARCH(1,1) time series, often outperforming classical methods when data are scarce; they further argue the approach is noise-resilient and feasible on current superconducting hardware, and discuss routes to improved performance using larger Hilbert spaces.",
+  "methodology_description": "The authors implement and numerically evaluate a Quantum Reservoir Computing (QRC) approach using a minimal superconducting circuit reservoir composed of two capacitively coupled superconducting islands with Josephson junctions. They derive a low-energy Bose–Hubbard Hamiltonian for the device in the transmon regime and simulate open-system dynamics with a Lindblad master equation. Input real-valued sequences are encoded into the amplitude of the gate voltage (ε Vg = ε0 xj) and injected sequentially while the reservoir evolves from its ground state. At specified times occupation probabilities of selected Fock basis states (0..m with m=2, producing nine reservoir neurons) are measured; temporal statistics (mean, standard deviation, correlations) of each neuron trajectory are pooled into feature vectors. A linear readout layer is trained by closed-form Moore–Penrose pseudo-inverse (least-squares) to map features to targets. Three supervised tasks are studied (Normal vs Laplace classification, Student-t degrees-of-freedom regression on 1/ν, and three-band GARCH(1,1) volatility-regime classification) and performance is compared to classical baselines (generalized likelihood-ratio test / MLE for distribution tasks and a feature-based supervised classifier on raw time series for GARCH). Simulations are performed with QuTiP solving the master equation with collapse operators Cj = sqrt(κj) aj (κ1 = κ2 = 500 µs^-1), a bosonic occupancy cutoff nc = 5, and reservoir Hamiltonian parameters ω1 = 10 GHz, ω2 = 9 GHz, g12 = 400 MHz, U = 600 MHz (ε0 varied by task). Performance metrics (accuracy for classification, RMSE for regression) are reported versus input sequence length T and scaling laws are fitted (power-law, stretched-exponential, etc.) to characterize data-efficiency.",
+  "algorithms_used": [
+    "Quantum Reservoir Computing (QRC)",
+    "Moore–Penrose pseudo-inverse linear readout (closed-form linear regression)",
+    "Generalized Likelihood Ratio Test (GLRT)",
+    "Maximum Likelihood Estimation (MLE)",
+    "Feature-based supervised classifier (classical baseline)"
+  ],
+  "frameworks": [
+    "QuTiP"
+  ],
+  "experimental_setup": "Numerical simulation of a two-mode superconducting circuit mapped to a Bose–Hubbard Hamiltonian. Open-system dynamics solved via a Lindblad master equation (density matrix formulation) with collapse operators Cj = sqrt(κj) aj. Bosonic occupancy cutoff nc=5; occupations measured for Fock states with i,j in {0,1,2} (9 neurons). Parameter values: ω1=10 GHz, ω2=9 GHz, g12=400 MHz, U=600 MHz, κ1=κ2=500 µs^-1. Input encoding via gate voltage amplitude εVg = ε0 xj with ε0 task-dependent (examples: 3.8 GHz, 1 GHz, 1.9 GHz). Simulations run with QuTiP and numerical resources from Supercomputación Castilla y León (SCAYLE).",
+  "dataset_used": "Synthetic datasets generated in simulation: (1) independent samples drawn from Normal(µ,σ) or Laplace(µ,b) with µ in [1,2], σ or b in [0.1,0.7]; (2) Student-t samples with µ=0, σ=1 and 1/ν ∈ [1/30,1] (uniform in 1/ν); (3) GARCH(1,1) time series with ω=1 and (α,β) sampled so that α+β falls into three persistence bands: low [0.2,0.6], medium [0.6,0.9], high [0.9,0.99]. No real financial market data were used.",
+  "experiment_input": {
+    "source": "synthetic (simulated iid draws or GARCH(1,1) process)",
+    "sequence_length": "variable T (studied as a sweep parameter); multiple T values tested",
+    "parameter_ranges": {
+      "Normal/Laplace": {
+        "mu": "[1,2]",
+        "sigma_or_b": "[0.1,0.7]"
+      },
+      "Student-t": {
+        "mu": "0",
+        "sigma": "1",
+        "1/nu": "[1/30,1]"
+      },
+      "GARCH": {
+        "omega": "1",
+        "alpha+beta_bands": {
+          "low": "[0.2,0.6]",
+          "medium": "[0.6,0.9]",
+          "high": "[0.9,0.99]"
+        }
+      }
+    },
+    "preprocessing_and_encoding": "Each real-valued data point x_j is scaled into a dimensionless amplitude and encoded as the gate-voltage drive ε Vg = ε0 xj; reservoir initialized in ground state before each sequence.",
+    "sample_counts": "not specified in paper"
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Derive low-energy Bose–Hubbard Hamiltonian for two-mode superconducting circuit.",
+      "Set Hamiltonian and dissipation parameters (ω1, ω2, g12, U, κ).",
+      "For each dataset instance: initialize reservoir in ground state.",
+      "For each time step j in sequence length T: encode data point x_j via gate voltage drive ε0 x_j and evolve master equation for chosen interval.",
+      "At designated measurement times collect occupation probabilities of Fock states with i,j in {0,1,2}.",
+      "Compute per-neuron temporal statistics (mean, std, correlations) across the sequence (statistical pooling).",
+      "Concatenate pooled statistics into a feature vector; stack across training instances to form feature matrix F(X).",
+      "Train linear readout via Moore–Penrose pseudo-inverse: W = F^(+) · Y_train.",
+      "Evaluate on test set: Y_test = F(X_test) · W; compute metrics (accuracy or RMSE).",
+      "Compare results with classical baselines: GLRT/MLE for distribution tasks and feature-based supervised classifier on raw x_t for GARCH.",
+      "Fit scaling laws (stretched-exponential, power-law, log-power) to metric vs T data and report fitted parameters and χ^2_red."
+    ],
+    "iterations_and_training": "Closed-form linear readout; no iterative optimizer for readout weights (pseudo-inverse). Classical baselines use MLE or GLRT (closed-form or numerical maximization) and a supervised classifier (not specified if iterative).",
+    "task_specific_parameters": {
+      "Fock_measurement_levels": "m=2 (0..2)",
+      "num_neurons": 9,
+      "boson_cutoff": 5,
+      "decoherence_rates": "κ1=κ2=500 µs^-1",
+      "Hamiltonian": {
+        "ω1": "10 GHz",
+        "ω2": "9 GHz",
+        "g12": "400 MHz",
+        "U": "600 MHz"
+      },
+      "drive_amplitudes_examples": {
+        "Normal_vs_Laplace": "ε0 = 3.8 GHz",
+        "Student-t": "ε0 = 1 GHz",
+        "GARCH": "ε0 = 1.9 GHz"
+      }
+    }
+  },
+  "experiment_output": {
+    "metrics": [
+      "Accuracy (A) for classification tasks (Normal vs Laplace; GARCH-band)",
+      "RMSE for regression task (1/ν estimation)"
+    ],
+    "baselines": [
+      "Generalized Likelihood Ratio Test (GLRT) for Normal vs Laplace",
+      "Maximum Likelihood Estimator for Student-t ν",
+      "Feature-based supervised classifier (trained on raw x_t) for GARCH"
+    ],
+    "output_format": "Metric values (mean ± 1σ) reported as functions of input sequence length T; scaling-law fits (functional form and fitted parameters) with reduced chi-squared reported"
+  },
+  "experiment_parameters": {
+    "modes": 2,
+    "bosonic_cutoff_nc": 5,
+    "measured_fock_levels_m": 2,
+    "num_neurons": 9,
+    "omega_1": "10 GHz",
+    "omega_2": "9 GHz",
+    "g12": "400 MHz",
+    "U": "600 MHz",
+    "drive_amplitudes_epsilon0": {
+      "normal_vs_laplace": "3.8 GHz",
+      "student_t": "1.0 GHz",
+      "garch": "1.9 GHz"
+    },
+    "decay_rates_kappa": "500 µs^-1 (each mode)",
+    "simulator": "QuTiP",
+    "readout_method": "Moore–Penrose pseudo-inverse (linear least squares)"
+  },
+  "hardware_details": "Simulations performed with QuTiP (Quantum Toolbox in Python). Numerical computations run on Supercomputación Castilla y León (SCAYLE) facilities. No QPU / cloud quantum hardware was used.",
+  "reproducibility_notes": "No public code or dataset repository is cited in the paper. Simulation model parameters, Hamiltonian, Lindblad collapse operators, reservoir measurement choices (Fock levels 0..2), bosonic cutoff (nc=5), and main numerical tool (QuTiP) are specified, which allows reproduction in principle, but the authors do not provide implementation scripts, exact training/test sample counts, nor random seeds.",
+  "key_findings": [
+    "[supported] A two-site superconducting circuit (two capacitively coupled islands with Josephson junctions) can be modeled at low energy by a driven Bose–Hubbard Hamiltonian and used as a quantum reservoir for supervised learning.",
+    "[supported] Numerical QRC (quantum reservoir computing) simulations with this circuit successfully classify probability distributions (Normal vs Laplace), estimate Student-t tail parameter (1/ν), and classify GARCH(1,1) volatility regimes.",
+    "[supported] In the small-sample (limited-data) regime, the QRC implementation outperforms the classical benchmarks considered (generalized likelihood ratio test for distribution tasks; a feature-based supervised classifier for GARCH classification) in the authors' numerical experiments.",
+    "[supported] For large sample sizes the classical methods match or marginally outperform the simulated QRC on the tasks tested.",
+    "[supported] QRC performance trends were characterized via empirical scaling fits: accuracy or RMSE as a function of input sequence length T (fits reported and parametrized in the paper).",
+    "[supported] Simulations included realistic decoherence via a Markovian master equation with collapse operators (decay rates κ1 = κ2 = 500 μs^-1) and a modest boson-occupation cutoff (nc = 5).",
+    "[supported] The authors used a small reservoir (m = 2 → nine measured occupation probabilities), followed by temporal-statistics pooling (means, std, correlations) and a linear readout trained with Moore–Penrose pseudo-inverse.",
+    "[supported] Quantitative fit results reported: e.g. for Student-t 1/ν regression both methods follow ~T^{-p} decay with fitted p ≈ 0.45–0.48 and prefactors (classical cc = 0.93±0.02, quantum cq = 0.76±0.03), indicating lower RMSE for QRC across much of T range.",
+    "[supported] Quantitative fit results for Normal vs Laplace discrimination: asymptotic accuracies A∞ fitted as A∞,classical = 1.000±0.005 and A∞,quantum = 0.943±0.007; QRC shows advantage at small T, classical better at largest T in these simulations.",
+    "[supported] Quantitative fit results for GARCH band classification: classical fit parameters A∞,classical = 1.0000±0.0013 (stretched-exponential approach), QRC fit consistent with power-law approach with A∞,quantum = 1.00±0.13 but QRC has higher accuracy in low-T regime in the simulated experiments.",
+    "[supported] The authors report reservoir parameters used in simulations representative of superconducting platforms (typical ω ~ 10 GHz, g12 ≈ 400 MHz, U ≈ 600 MHz, drives ε0 varied by task).",
+    "[speculative] Running the same QRC algorithm on actual superconducting hardware (with larger Hilbert space / higher boson cutoffs) would likely improve performance and allow exploitation of a much larger effective reservoir.",
+    "[speculative] Adding more nonlinearities or more superconducting islands (e.g., all-to-all coupling) and operating beyond the truncated Bose–Hubbard approximation could further enhance QRC performance in experiment.",
+    "[speculative] QRC is positioned as a noise-resilient quantum learning approach potentially capable of tackling real-world problems on currently available superconducting platforms (this is inferred from simulations that include decoherence, but hardware implementation was not performed)."
+  ],
+  "results_summary": "The paper numerically studies quantum reservoir computing implemented with a simple two-site superconducting circuit whose low-energy dynamics map to a driven Bose–Hubbard model. Using a modest simulated reservoir (boson-cutoff nc=5, nine readout ‘neurons’) and including Markovian decay (κ=500 μs^-1), the authors demonstrate that the QRC approach can (in simulation) (i) discriminate Normal vs Laplace distributions, (ii) estimate Student-t tail weight (1/ν) with lower RMSE than a classical maximum-likelihood baseline across much of the tested T range, and (iii) classify GARCH volatility regimes, showing a clear advantage in the small-sample regime. They report empirical scaling fits (accuracy or RMSE vs sample length T), provide quantitative fit parameters, and argue that deploying this QRC on larger, real superconducting hardware (with larger Hilbert space and possibly stronger nonlinearities) could further improve performance.",
+  "performance_claims": [
+    "Student-t 1/ν regression: RMSE(T) ~ c T^{-p} with fitted (classical) cc = 0.93 ± 0.02, pc = 0.483 ± 0.005 and (quantum) cq = 0.76 ± 0.03, pq = 0.451 ± 0.008 (χ^2_red ≈ 1.07 (classical), 0.85 (quantum)).",
+    "Normal vs Laplace discrimination: stretched-exponential fits yield A∞,classical = 1.000 ± 0.005 (cc=0.58±0.02, kc=0.086±0.008, pc=0.72±0.03, χ^2_red=2.85) and A∞,quantum = 0.943 ± 0.007 (cq=0.37±0.02, kq=0.016±0.005, pq=1.14±0.08, χ^2_red=0.17).",
+    "GARCH(1,1) band classification: classical fit A∞,classical = 1.0000 ± 0.0013 (cc=2.47±0.08, kc=0.926±0.014, pc=0.136±0.008, χ^2_red=1.40); QRC fit A∞,quantum = 1.00 ± 0.13 with power-law parameters cq=1.01 ± 0.06, pq=0.21 ± 0.08 (χ^2_red=0.56).",
+    "Reservoir and noise parameters used in simulations: ω1=10 GHz, ω2=9 GHz, g12 ≈ 400 MHz, U ≈ 600 MHz, bosonic occupation cutoff nc=5, decay rates κ1=κ2=500 μs^-1, readout measured occupations for 0≤i,j≤2 (9 neurons)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "Numerical simulations show a task-dependent advantage of QRC over the chosen classical baselines in the limited-data (small-T) regime for distribution discrimination, Student-t tail estimation, and GARCH regime classification. However, the advantages are demonstrated only in simulation (with a small truncated reservoir and specific classical benchmarks), not on hardware nor as a general provable quantum speedup; generalization to physical devices and broader problem classes is presented as a plausible but speculative extension.",
+  "limitations": [
+    "Numerical simulations use a truncated Hilbert space with a bosonic occupancy cutoff nc = 5 (author-stated).",
+    "Reservoir measurements are restricted to a small subset of Fock states with m = 2 (nine reservoir neurons) rather than exploiting a larger observable set (author-stated).",
+    "Low-energy model relies on a quartic expansion of the Josephson cosine potential and the Rotating Wave Approximation, valid only in the regime EJ ≫ EC and for not-too-large excitations (author-stated).",
+    "The analysis avoids the strong-coupling regime (roughly g ≲ 0.1 ω); behaviour outside that regime is not explored (author-stated).",
+    "Decoherence model includes only decay (inelastic processes) via collapse operators Cj = √κj aj and does not include pure dephasing or other noise channels (author-stated).",
+    "Simulations use a small two-site Bose–Hubbard reservoir (two superconducting islands) rather than larger/more complex reservoirs (author-stated).",
+    "Results are numerical/simulated and have not been demonstrated on experimental superconducting hardware (author-stated).",
+    "QRC advantage is primarily observed in the limited-data (short T) regime and classical methods can outperform QRC for large T (author-stated/observed).",
+    "Validity of the Bose–Hubbard truncation may break down if occupancies increase; a full rotor model (and higher-order nonlinearities) may be required for larger Hilbert spaces (author-stated).",
+    "[inferred] Practical measurement issues (measurement fidelity, speed, back-action, shot noise) and overhead for extracting occupation probabilities in real hardware are not addressed in detail.",
+    "[inferred] The comparison set of classical baselines is limited (GLRT and a feature-based classifier); broader benchmarking against state-of-the-art classical ML/forecasting methods is not provided.",
+    "[inferred] Scalability questions (how performance and resource requirements scale with more islands, larger cutoffs, more measured observables) are not quantified.",
+    "[inferred] Sensitivity to more realistic or complex noise models (e.g., 1/f noise, non-Markovian effects) is not explored.",
+    "[inferred] Choice of pooling/statistics for feature construction (means, std, correlations) is heuristic; impact of different readout/feature-engineering choices is not systematically studied.",
+    "[inferred] Training/overfitting and generalization behaviour (especially when increasing reservoir size or using real data) is not thoroughly analyzed.",
+    "[inferred] Applicability and robustness of the method to real-world financial market data (with their nonstationarity and richer structure) remains untested."
+  ],
+  "open_questions": [
+    "How does QRC performance scale when the reservoir Hilbert space is significantly enlarged (higher bosonic cutoffs or more superconducting islands)?",
+    "What are the effects on QRC performance of including more realistic noise channels such as pure dephasing and non-Markovian noise present in superconducting devices?",
+    "Can the algorithmic advantages observed numerically be reproduced (or improved) in a real superconducting implementation?",
+    "How will the reservoir dynamics change (and how will QRC performance be affected) when higher-order nonlinearities are included or when operating beyond the quartic expansion regime (toward a rotor model)?",
+    "What is the role of strong coupling regimes (beyond the g ≲ 0.1 ω approximation) on reservoir richness and learning performance?",
+    "How to optimally design and measure observables (which Fock states, what pooling statistics) to maximize information extraction while keeping experimental overhead feasible?",
+    "What reservoir architectures (e.g., more islands, all-to-all capacitive coupling, other circuit topologies) provide the best trade-off between complexity and learning performance for statistical/financial tasks?",
+    "Can QRC be adapted or combined with classical methods to extend its advantage beyond the limited-data regime?",
+    "How robust is the QRC approach to distributional shifts and nonstationarity typical of real financial time series?",
+    "What are the training, runtime, and data-efficiency scaling laws for larger reservoirs and more complex tasks, and are there regimes where QRC exhibits a provable advantage?"
+  ],
+  "future_work": [
+    "Run the QRC algorithm on real superconducting hardware to access much larger Hilbert spaces and a larger number of reservoir neurons (author-stated).",
+    "Explore operating Josephson junctions in different regimes or add more nonlinear elements to increase reservoir nonlinearity (author-stated).",
+    "Incorporate additional superconducting islands with all-to-all (or more complex) capacitive couplings to increase network complexity and the number of neurons (author-stated).",
+    "Investigate regimes where the Bose–Hubbard truncation fails and study the full rotor model dynamics to capture stronger nonlinear behaviour (author-stated).",
+    "Experiment with larger measurement sets and richer observables in hardware to leverage an expanded Hilbert space for improved learning (author-stated).",
+    "Study how to optimize reservoir design (parameters, coupling, driving amplitudes, decoherence regime) for performance on real-world statistical and financial tasks (author-stated/inferred)."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance",
+    "risk-management"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — A two-mode superconducting quantum reservoir (mapped to a Bose–Hubbard model) can classify heavy-tailed distributions and detect GARCH volatility regimes in simulation, reportedly outperforming classical baselines when training data are scarce.",
+    "#idea:hybrid-approach — The system uses a classical closed-form linear readout (Moore–Penrose pseudo-inverse) on features pooled from measured Fock occupations (occupation probabilities and temporal statistics), i.e., an explicit quantum-reservoir / classical-readout hybrid pipeline.",
+    "#idea:near-term-feasibility — Authors argue the analog QRC is noise-resilient and feasible on current superconducting hardware, based on Lindblad open-system simulations with realistic decoherence rates.",
+    "#limitation:simulation-only — All results are numerical (QuTiP master-equation simulations); no experiments on real quantum hardware are reported.",
+    "#limitation:no-empirical-validation — Claims of noise resilience and hardware feasibility are not validated with device experiments or real financial datasets.",
+    "#limitation:qubit-count — The demonstrated reservoir is minimal (two bosonic modes, 9 effective 'neurons' from Fock states 0..2); scalability to larger Hilbert spaces or real-world problem sizes is not empirically shown.",
+    "#limitation:data-encoding — The encoding is amplitude-to-gate-voltage (ε Vg = ε0 xj) applied sequentially; the work does not quantify overheads or limitations of this encoding for higher-dimensional inputs.",
+    "#idea:quantum-advantage — Authors fit scaling laws (power-law, stretched-exponential, log-power) for performance vs sequence length T, suggesting improved data-efficiency scaling that they attribute to reservoir dynamics.",
+    "#limitation:noise — Although Lindblad decoherence is simulated, practical noise sources, control errors, readout fidelity and experimental overheads on real superconducting devices are not demonstrated or experimentally mitigated."
+  ],
+  "contradictions": [
+    "The paper claims feasibility on current superconducting hardware and noise-resilience, but provides only numerical Lindblad simulations (no real-device experiments); this undermines the empirical basis for the feasibility claim (limitation: no-empirical-validation, simulation-only).",
+    "Authors report outperforming classical baselines when data are scarce, but comparisons are limited to GLRT/MLE and a feature-based classifier on synthetic data; stronger or more diverse classical baselines and real-market data are not used, so the asserted quantum advantage may not generalize."
+  ]
+}

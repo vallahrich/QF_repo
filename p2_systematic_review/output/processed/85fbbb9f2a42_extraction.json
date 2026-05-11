@@ -1,0 +1,236 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2208.13251v2), the typical abstract/methods/results structure and references, and lacks journal or conference publication details—consistent with an arXiv preprint.",
+  "title": "A PREPROCESSING PERSPECTIVE FOR QUANTUM MACHINE LEARNING CLASSIFICATION ADVANTAGE USING NISQ ALGORITHMS",
+  "authors": [
+    "Javier Mancilla",
+    "Christophe Pere"
+  ],
+  "year": "2022",
+  "journal_or_venue": "arXiv preprint (quant-ph)",
+  "doi": "",
+  "abstract_summary": "This preprint investigates how classical preprocessing — in particular Linear Discriminant Analysis (LDA) — impacts quantum machine learning (QML) classification on NISQ-era devices. Through experiments on tabular financial datasets (credit default and fraud detection) with two-qubit encodings, the authors show that LDA-based dimensionality reduction improves quantum classifier performance (VQA and QSVC) compared with PCA and can outperform baseline classical classifiers under the tested conditions.",
+  "methodology_description": "The authors investigate whether classical preprocessing (particularly supervised Linear Discriminant Analysis — LDA) improves the performance of small-scale quantum classifiers on financial tabular data. They compare classical baselines (Logistic Regression, Decision Tree/CART, Naïve Bayes, k-NN, SVM, Random Forest) against two quantum/hybrid approaches — a quantum-kernel SVM (QSVC) using a Qiskit ZZFeatureMap and a variational quantum classifier (VQA/VQC) using angle encoding — after compressing high-dimensional inputs to two dimensions to match two qubits. Two financial datasets (UCI Credit Card default and a Kaggle bank fraud dataset) are subject to EDA and normalization and then dimensionality reduction by SVD, PCA, Supervised Kurtosis Projection Pursuit (SKPP), or LDA (LDA applied by splitting the data and producing one component per half to yield two features). Encoded data are run on simulators (Qiskit Aer and Pennylane default qubit simulator) with noise subtracted. Models are trained with an 800/200 train/test split; classical models are evaluated with 10-fold cross-validation (error bars reported), while VQA is reported without cross-validation error due to implementation differences. Evaluation employs precision, recall, F1, Matthews correlation coefficient and balanced accuracy to compare classical and quantum approaches.",
+  "algorithms_used": [
+    "Logistic Regression",
+    "Decision Tree (CART)",
+    "Naïve Bayes",
+    "k-Nearest Neighbors (k-NN)",
+    "Support Vector Machine (classical SVM)",
+    "Random Forest",
+    "Quantum Support Vector Classifier (QSVC / quantum kernel SVM)",
+    "Variational Quantum Classifier / Variational Quantum Algorithm (VQA / VQC)"
+  ],
+  "frameworks": [
+    "Qiskit (Aer simulator, ZZFeatureMap)",
+    "Pennylane (default qubit simulator)"
+  ],
+  "experimental_setup": "All quantum experiments were executed on simulators only: Qiskit Aer (statevector/noisy model available but simulations run with noise subtracted) and Pennylane default qubit simulator (state-vector). Two qubits were used (two encoded features). Classical and quantum approaches used an 800-sample training set and a 200-sample test set. Most classical models were evaluated with 10-fold cross-validation (error bars reported). QSVC used Qiskit ZZFeatureMap with repetitions=2 and feature dimension=2 (fixed, not tuned). VQA used angle encoding (rotation gates) with a strongly entangling layer; specific ansatz depth and optimizer were not fully specified.",
+  "dataset_used": "Two financial/tabular datasets: (1) UCI Default of Credit Card Clients (sourced from UCI / Kaggle) — 30,000 rows, 25 features, imbalanced (~22% positive default), demographics/payments/billing features; (2) Fraud Detection (Kaggle dataset by Volodymyr Gavrysh) — ~20,468 rows, 114 features, imbalanced (~27% fraud).",
+  "experiment_input": {
+    "sources": {
+      "UCI_credit_card": "UCI Default of Credit Card Clients (also obtained via Kaggle)",
+      "fraud_bank": "Kaggle fraud detection dataset (Volodymyr Gavrysh)"
+    },
+    "sizes": {
+      "UCI_credit_card": {
+        "rows": 30000,
+        "features": 25
+      },
+      "fraud_bank": {
+        "rows": 20468,
+        "features": 114
+      },
+      "used_for_experiments": {
+        "train": 800,
+        "test": 200
+      }
+    },
+    "preprocessing": {
+      "exploratory_data_analysis": true,
+      "normalization": true,
+      "sampling": "no oversampling/undersampling/SMOTE applied prior to the quantum preprocessing",
+      "dimensionality_reduction_methods": [
+        "SVD (2 components)",
+        "PCA (2 components)",
+        "Supervised Kurtosis Projection Pursuit (SKPP, 2 components)",
+        "LDA (special split: dataset halves reduced to 1 component each to create 2 features)"
+      ],
+      "final_feature_count_for_encoding": 2
+    },
+    "notes": "LDA was applied in a supervised manner by splitting the dataset and producing one component per half so that two components (one per split) were available for 2-qubit encoding."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Load dataset (CSV) and perform EDA / cleaning / normalization",
+      "Reduce dimensionality of original features to two components using one of: SVD, PCA, SKPP, or LDA (special split approach for LDA)",
+      "Encode 2-dimensional classical vectors into 2-qubit quantum states: for QSVC use Qiskit ZZFeatureMap; for VQA use angle encoding (rotation gates)",
+      "Train models: classical baselines (LR, CART, NB, k-NN, SVM, Random Forest) and quantum models (QSVC and VQA/VQC)",
+      "Evaluate: classical models via 10-fold cross-validation (report mean ± error bars); QSVC via CV (where applicable); VQA reported without CV error bars due to implementation differences",
+      "Compare metrics across DR methods to assess the effect of preprocessing (especially LDA vs PCA)"
+    ],
+    "key_hyperparameters_and_choices": {
+      "train_test_split": "800 train / 200 test",
+      "cross_validation": "k=10 folds for classical and many quantum evaluations (except VQA error bars not provided)",
+      "QSVC_feature_map": {
+        "type": "ZZFeatureMap",
+        "repetitions": 2,
+        "feature_dimension": 2
+      },
+      "VQA": {
+        "encoding": "angle encoding (rotation gates Rx/Ry/Rz implied)",
+        "ansatz": "strongly entangling layer",
+        "parameter_tuning": "not tuned (defaults)",
+        "error_bars": "not provided"
+      },
+      "classical_models": {
+        "LogisticRegression": {
+          "max_iter": 1000
+        },
+        "k-NN": {
+          "n_neighbors": 7
+        },
+        "other_classical": "default scikit-learn parameters unless noted"
+      }
+    },
+    "notes": "Many model hyperparameters (e.g., optimizer for VQA, number of shots, ansatz depth) were not fully specified or tuned; feature map parameters were fixed and not extensively optimized."
+  },
+  "experiment_output": {
+    "result_format": "Tabular metrics per model and per dimensionality-reduction method, reporting Precision, Recall, F1-score, Matthews correlation coefficient (MCC), Balanced Accuracy, and Accuracy. For CV experiments the paper reports means with error bars (from 10-fold CV). VQA values were reported without CV error bars.",
+    "baselines": "Classical ML baselines trained on raw data and also on reduced 2-component representations; comparisons focused on whether QSVC and VQA with LDA preprocessing outperform classical baselines on balanced accuracy and other metrics.",
+    "high_level_findings": "LDA preprocessing gave better performance for both QSVC and VQA (two-qubit encoding) compared to PCA and other DR techniques; in several cases VQA and QSVC with LDA outperformed classical baselines on balanced accuracy and other metrics."
+  },
+  "experiment_parameters": {
+    "qubits": 2,
+    "train_test_split": "800/200",
+    "cross_validation_folds": 10,
+    "QSVC_feature_map_repetitions": 2,
+    "QSVC_feature_dimension": 2,
+    "kNN_neighbors": 7,
+    "LogisticRegression_max_iter": 1000,
+    "VQA_ansatz": "strongly_entangling_layer",
+    "encoding": "angle encoding for VQA; ZZFeatureMap for QSVC",
+    "shots": null,
+    "optimizer": null,
+    "ansatz_depth": null,
+    "noise_model": "simulations run with noise subtracted (effectively noise-free in reported experiments)"
+  },
+  "hardware_details": {
+    "simulators": [
+      {
+        "name": "Qiskit Aer",
+        "type": "statevector / high-performance simulator (C++)",
+        "notes": "noisy model available but experiments run without noise"
+      },
+      {
+        "name": "Pennylane default qubit",
+        "type": "state-vector simulator (Python)",
+        "notes": "used for VQA optimization; recommended for stochastic expectation values"
+      }
+    ],
+    "quantum_hardware": "no real quantum processing units (QPUs) used",
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "Authors state that the notebooks used in the study can be provided upon contacting them. However, several hyperparameters and implementation details are not fully specified in the text (e.g. VQA optimizer, number of measurement shots, ansatz depth, exact rotation gates used, training epochs/iterations for VQA), which would be required to fully reproduce experiments. Dimensionality-reduction and encoding high-level settings are provided (2-component outputs, QSVC ZZFeatureMap repetitions=2, train/test split 800/200, CV=10), and simulators (Qiskit Aer and Pennylane default qubit) are named.",
+  "key_findings": [
+    "[supported] Using Linear Discriminant Analysis (LDA) as a preprocessing/dimensionality-reduction step improved the performance of the evaluated quantum classifiers (VQA and QSVC) compared to PCA and other DR methods on the two studied datasets.",
+    "[supported] A Variational Quantum Algorithm (VQA) with angle encoding and two qubits achieved substantially higher balanced accuracy on the UCI Credit Card dataset when data were preprocessed with LDA (reported balanced accuracy 92.54%).",
+    "[supported] On the Fraud (bank) detection dataset, both VQA and QSVC paired with LDA achieved competitive performance (VQA balanced accuracy 83.92%, QSVC balanced accuracy 80.67%) that is comparable to or slightly better than some classical baselines under the experimental setup.",
+    "[supported] Some quantum kernel configurations (QSVC with certain DR methods) collapsed to predicting only the majority class in some experiments (e.g., QSVC with SKPP or PCA in some cases), illustrating sensitivity to encoding/DR choices.",
+    "[supported] Classical dimensionality-reduction (PCA, SVD, SKPP, LDA) is a practical approach to compress high-dimensional tabular data to match the small number of qubits available in current NISQ-era devices; the paper demonstrates this pipeline using two qubits.",
+    "[supported] Experiments were executed on noiseless (and configurable) simulators (Qiskit Aer, Pennylane default qubit); results do not reflect real-device noise or latency.",
+    "[speculative] The authors argue that quantum advantage for QML may be better framed as improved information extraction (representation) rather than strictly outperforming classical ML across all metrics and datasets.",
+    "[speculative] The authors suggest LDA will generally be superior to PCA for supervised QML tasks with few qubits (they note more work is needed to validate this generalization).",
+    "[speculative] The paper posits that careful classical preprocessing and encoding strategies could enable useful QML workflows for business contexts even with very few qubits.",
+    "[supported] The authors report that classical ML baselines can perform poorly on imbalanced datasets (e.g., UCI credit default), and that DR+quantum pipelines can mitigate this in their experiments."
+  ],
+  "results_summary": "The preprint reports experiments on two tabular, binary-class finance-related datasets (UCI credit-default, ~25 features; a fraud dataset, ~114 features) using a fixed small-qubit hybrid QML pipeline (two qubits). The authors compare classical baselines (LR, KNN, CART, NB, SVM) and quantum approaches (QSVC quantum kernel and a Variational Quantum Algorithm) across several dimensionality-reduction techniques (SVD, PCA, SKPP, LDA). Empirically, LDA as a supervised DR step produced the best downstream quantum classifier performance in these experiments. Notably, VQA+LDA produced very high balanced accuracy on the UCI dataset (reported 92.54%), and VQA+LDA and QSVC+LDA produced competitive results on the Fraud dataset (balanced accuracies ~83.9% and ~80.7%). The study emphasizes the importance of preprocessing and encoding choices for QML in the NISQ era and notes that experiments were run on simulators without device noise.",
+  "performance_claims": [
+    "[supported] UCI Credit Card dataset — VQA with LDA: Precision 41.30%, Recall 100.00%, F1-score 58.46%, Matthews corr 59.28%, Balanced Accuracy 92.54% (Table 3).",
+    "[supported] UCI Credit Card dataset — QSVC with LDA: Precision 67.02% (±13.31), Recall 33.44% (±10.08), F1-score 43.96% (±10.97), Matthews corr 38.51% (±10.97), Balanced Accuracy 64.6% (±5.08) (Table 3).",
+    "[supported] Fraud (bank) dataset — VQA with LDA: Precision 84.00%, Recall 84.44%, F1-score 75.68%, Matthews corr 55.81%, Balanced Accuracy 83.92% (Table 5).",
+    "[supported] Fraud (bank) dataset — QSVC with LDA: Precision 82.35% (±10.29), Recall 65.92% (±8.79), F1-score 72.93% (±8.14), Matthews corr 66.35% (±9.9), Balanced Accuracy 80.67% (±4.94) (Table 5).",
+    "[supported] Classical baseline on UCI (best classical shown): CART F1-score 39.10% and Balanced Accuracy 60.76% (Table 2), indicating the QML+LDA pipeline improved balanced accuracy substantially on that dataset.",
+    "[supported] Classical baseline on Fraud dataset (best classical shown): CART F1-score 81.17% and Balanced Accuracy 87.28% (Table 4); quantum methods with LDA were competitive but not uniformly better than the best classical in all metrics."
+  ],
+  "quantum_advantage_claim": "demonstrated",
+  "quantum_advantage_detail": "Within the limited experimental scope (two datasets, two-qubit noiseless simulators, specific encodings and DR choices), the authors empirically demonstrate improved classification performance for quantum classifiers when classical supervised DR (LDA) is used — notably a large gain on the UCI credit dataset and competitive gains on the fraud dataset. The claim is demonstrated in these simulation experiments but is limited in scope (simulators, small qubit count, few datasets), so the advantage is empirical for the presented setups rather than a general proof of QML superiority.",
+  "limitations": [
+    "Current study uses only simulators (Qiskit Aer and Pennylane default qubit); no experiments on real noisy quantum hardware were performed (authors subtracted noise from simulations).",
+    "Very small number of qubits used: experiments restricted to two qubits, limiting generalizability to larger quantum devices and real industrial problems.",
+    "Only two datasets (both finance-related) were used; dataset selection is narrow and may not generalize across domains.",
+    "One of the datasets could be synthetic or of uncertain provenance (Fraud Detection dataset from Kaggle), limiting realism of outcomes.",
+    "Classical baseline models were not exhaustively tuned — default hyperparameters used (authors note LR max iterations changed, KNN neighbors fixed), which may bias comparisons.",
+    "Quantum model hyperparameters were not tuned: feature map parameters for QSVC were fixed, VQA embedding and ansatz were not optimized (authors acknowledge these choices).",
+    "Variational Quantum Algorithm (VQA) results were computed differently and reported without cross-validation error bars, limiting comparability and uncertainty quantification.",
+    "Dimensionality reduction choices were limited to SVD, PCA, SKPP and LDA and the paper does not fully analyze why LDA outperforms PCA (authors state this was not explored and will be in future work).",
+    "Small sample size for experiments: training on 800 samples and testing on 200 samples may limit statistical power and robustness of results.",
+    "Imbalanced datasets were left unmodified (no oversampling/SMOTE/etc.), which may have affected classifier performance and comparability.",
+    "[inferred] Use of noise-free or idealized simulations likely overestimates achievable performance on real NISQ devices due to decoherence and gate errors.",
+    "[inferred] Limited hyperparameter search and model selection for both classical and quantum methods mean reported advantages may be sensitive to tuning and not robust.",
+    "[inferred] Lack of statistical significance testing or hypothesis testing reported for comparisons between classical and quantum methods.",
+    "[inferred] Restriction to two-dimensional encodings (to match two qubits) reduces representational capacity and may bias which dimensionality reduction methods appear superior."
+  ],
+  "open_questions": [
+    "Why does LDA (supervised dimensionality reduction) produce better encodings for quantum classification than PCA (unsupervised) under the small-qubit regime?",
+    "How do different quantum encoding strategies (feature maps, angle encodings, parameter choices) affect downstream quantum classifier performance?",
+    "To what extent do results obtained on simulators translate to real, noisy quantum hardware (i.e., how robust are the observed advantages under realistic noise)?",
+    "How does the observed quantum advantage scale with increasing qubit counts and higher-dimensional encodings (beyond the two-qubit case)?",
+    "What is the effect of different VQA ansatz designs and layer/entanglement structures on classification performance and trainability?",
+    "How sensitive are the reported quantum gains to careful tuning of classical baselines and quantum hyperparameters (could optimized classical models close the gap)?",
+    "Can the preprocessing (e.g., LDA) + quantum encoding pipeline generalize across domains beyond the two financial datasets tested?",
+    "What is the role of class imbalance in the reported results, and how do standard imbalance-mitigation techniques (oversampling, SMOTE) interact with quantum encodings?",
+    "How should quantum advantage be defined and measured in the context of QML for supervised classification — purely by end metrics or also by information extraction properties?",
+    "How do different quantum kernel designs and feature map depths/repetitions impact QSVC performance on tabular, high-feature datasets?"
+  ],
+  "future_work": [
+    "Explore why LDA provides a better data representation for qubit encoding and analyze the prevalence of LDA over PCA in supervised QML.",
+    "Study the potential impact of PCA in unsupervised tasks when used as preprocessing for quantum algorithms.",
+    "Investigate the effect of feature map parameter choices on QSVC outputs and optimise feature map hyperparameters.",
+    "Explore and tune different VQA ansatzes (structure optimization) and study their impact on VQA results.",
+    "Extend experiments to more datasets (including other domains) and datasets with higher numbers of features to create a general benchmark.",
+    "Perform experiments on real quantum hardware (noisy devices) to understand practical behavior in the NISQ era.",
+    "Conduct more extensive hyperparameter tuning for both classical baselines and quantum models to ensure fair comparisons.",
+    "Study alternative quantum encoding methods and their interaction with classical preprocessing (e.g., other encodings than angle encoding and ZZFeatureMap).",
+    "Investigate preprocessing strategies and encoding choices to improve information extraction from classical data by quantum algorithms."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance",
+    "fraud-detection",
+    "credit-lending"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Classical supervised preprocessing (LDA) substantially improves performance of small-scale quantum classifiers (QSVC and VQA) on tabular financial datasets compared to PCA and other DR methods.",
+    "#idea:quantum-advantage — In the reported 2-qubit, simulator-based experiments, QSVC and VQA with LDA preprocessing outperform several classical baselines on metrics such as balanced accuracy and F1 for the tested splits.",
+    "#idea:near-term-feasibility — The study frames the approach as NISQ-feasible by using two-qubit encodings and standard feature maps/variational ansatz, suggesting potential applicability in near-term QML pipelines when paired with strong classical preprocessing."
+  ],
+  "contradictions": [
+    "The claimed quantum advantage is based on small-scale, simulator-only experiments with only two encoded features and an 800/200 train/test split; missing cross-validation error bars for VQA and fixed/unoptimized hyperparameters raise doubt that the observed gains reflect inherent quantum superiority rather than experimental choices (e.g., preprocessing and tuning).",
+    "Noise was effectively subtracted via simulator settings rather than demonstrated on real hardware; this contradicts any strong implication that the methods have been validated under realistic device noise or that results will transfer to actual NISQ devices without degradation.",
+    "Dimensionality-reduction choices (special LDA splitting to force two features) and lack of oversampling for imbalanced classes could produce dataset-specific artifacts that account for improved performance, limiting the generality of the quantum advantage claim."
+  ],
+  "limitation_tags": [
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:data-encoding",
+    "limitation:no-empirical-validation",
+    "limitation:simulation-only"
+  ]
+}

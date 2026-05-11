@@ -1,0 +1,190 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "Contains a DOI (10.1007...), published online date, labeled 'RESEARCH ARTICLE', structured sections (abstract, methods, results), experimental evaluation on real quantum hardware, and full references—all indicative of a peer-reviewed empirical journal article.",
+  "title": "The effects of quantum hardware properties on the performances of variational quantum learning algorithms",
+  "authors": [
+    "Giuseppe Buonaiuto",
+    "Francesco Gargiulo",
+    "Giuseppe De Pietro",
+    "Massimo Esposito",
+    "Marco Pota"
+  ],
+  "year": "2024",
+  "journal_or_venue": "Quantum Machine Intelligence",
+  "doi": "10.1007/s42484-024-00144-5",
+  "abstract_summary": "This experimental study analyzes how quantum hardware topology (qubit connectivity and basis gates) and transpilation overhead affect the performance of variational quantum algorithms (VQE and VQC) on real IBM devices. The authors show that highly connected/expressive ansatzes can incur significant SWAP- and gate-overhead after transpilation, increasing noise and impairing training (including inducing barren plateaus), and they propose a heuristic metric combining transpiled circuit depth, quantum volume and qubit usage to guide ansatz selection; results are validated on portfolio optimization and Iris classification tasks.",
+  "methodology_description": "This empirical study experimentally evaluated the effect of quantum hardware topology on the performance of variational quantum algorithms (VQAs). Two representative VQAs were used: the Variational Quantum Eigensolver (VQE) for a Markowitz-style portfolio optimization task and a Variational Quantum Classifier (VQC) for supervised classification on the Iris dataset. The portfolio problem (small-scale examples) was formulated from historical daily closing prices obtained from Yahoo! Finance and converted into a QUBO/Ising Hamiltonian via binary encoding of integer asset quantities, a penalty term for the budget constraint, and mapping to Pauli Z operators. The VQC used a ZZ-feature map to encode classical features into quantum states. Parametrized ansatz types (TwoLocal and RealAmplitude) with four entanglement topologies (full, linear, circular, pairwise) were evaluated. All circuits were implemented in Qiskit, transpiled to IBM superconducting backends with a medium transpiler optimization level (Qiskit’s stochastic mapper), and executed on multiple real IBM quantum processors. A grid-search over optimizers and learning rates was performed; Cobyla with learning rate 0.001 was selected. Key outputs were the convergence behavior of the objective (energy for VQE, cross-entropy loss for VQC), classical-vs-quantum solution quality comparisons (E_classical / E_vqe), classification F1-score, and analyses of transpiled circuit depth and SWAP overhead. Based on the experimental observations a heuristic score (xi_q) combining quantum volume, mean transpiled circuit depth, and qubit usage ratio was proposed to guide ansatz/hardware selection.",
+  "algorithms_used": [
+    "VQE",
+    "VQC"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Real IBM Quantum superconducting backends were used. Circuits (ansatz + feature maps) were transpiled with Qiskit using a medium optimization level; the transpiler's stochastic SWAP-mapper was sampled repeatedly to obtain mean transpiled depths. Experiments were executed on multiple IBM QPUs to compare topology/noise effects.",
+  "dataset_used": "Financial data: historical daily closing prices from Yahoo! Finance (examples used Apple and IBM over 2011-12-23 to 2022-10-21). Classification data: the Iris dataset from scikit-learn.",
+  "experiment_input": {
+    "portfolio_optimization": {
+      "source": "Yahoo! Finance via yfinance Python package",
+      "assets": "Small-scale examples; representative mention of Apple and IBM (N=2) in text, figure examples mention configurations with 3 assets and 2 encoding bits",
+      "time_range": "2011-12-23 to 2022-10-21 (daily closing prices)",
+      "preprocessing": "Compute returns/mean returns and covariance matrix; define budget B (example B=1000); compute maximum integer units per asset mmax_i = floor(B/Pi); determine binary encoding bits ki = floor(log2(mmax_i)); construct conversion matrix C; form QUBO with penalty λ for budget constraint and map to Ising Hamiltonian (Pauli-Z)."
+    },
+    "classification": {
+      "source": "Iris dataset from scikit-learn",
+      "size": "standard Iris dataset (150 instances, 4 features, 3 classes)",
+      "preprocessing": "Feature normalization; encode via ZZ-feature map"
+    }
+  },
+  "experiment_process": {
+    "common_steps": [
+      "Design parametrized ansatz (TwoLocal or RealAmplitude) with one of four entanglement topologies (full, linear, circular, pairwise).",
+      "For VQC apply ZZ-feature map to encode classical input into qubits.",
+      "For PO: convert portfolio integer optimization to binary variables, build QUBO, convert to Ising Hamiltonian for VQE objective.",
+      "Transpile circuits to target IBM backend using Qiskit transpiler with medium optimization level (stochastic SWAP insertion).",
+      "Run variational algorithm on real hardware: iteratively optimize circuit parameters with a classical optimizer (Cobyla selected after grid search) until convergence.",
+      "Collect outputs (expectation values for Hamiltonian or prediction probabilities), compute loss (energy or cross-entropy), and update parameters (gradient-free update via optimizer).",
+      "Repeat transpilation multiple times per ansatz/backend (200 transpilation runs reported) to obtain mean transpiled depth/SWAP statistics and to account for stochasticity.",
+      "Aggregate results per hardware and ansatz: convergence behavior, final energy vs classical optimum, and classification metrics (F1-score)."
+    ],
+    "optimizer_and_hyperparameters": "Grid search over optimizers (Cobyla, Adam, SPSA, NFT) and learning rates; Cobyla chosen with learning rate 0.001. Parameter-shift rules referenced for gradient evaluation but a gradient-free optimizer (Cobyla) was used in experiments."
+  },
+  "experiment_output": {
+    "formats": [
+      "Convergence traces of objective function (energy for VQE, cross-entropy loss for VQC) over optimization epochs",
+      "Aggregated boxplots of final objective values per hardware and ansatz",
+      "Ratio E_classical / E_vqe (classical branch-and-bound baseline vs VQE result)",
+      "Classification F1-score on Iris test set and final loss values",
+      "Mean transpiled circuit depth and SWAP counts (computed across repeated transpiles)",
+      "Heuristic metric xi_q combining quantum volume, transpiled depth, and qubit usage ratio"
+    ],
+    "baselines": [
+      "Classical branch-and-bound solution for portfolio optimization (used to compute E_classical)",
+      "Classical performance metrics (F1-score) used for VQC evaluation"
+    ]
+  },
+  "experiment_parameters": {
+    "optimizer": "Cobyla (selected after grid search)",
+    "learning_rate": 0.001,
+    "ansatz_types": [
+      "TwoLocal",
+      "RealAmplitude"
+    ],
+    "entanglement_topologies": [
+      "full",
+      "linear",
+      "circular",
+      "pairwise"
+    ],
+    "feature_map": "ZZ-Feature Map (for VQC)",
+    "transpiler_optimization_level": "medium",
+    "transpilation_runs": 200,
+    "budget_B_example": 1000,
+    "binary_encoding_bits": "problem-dependent; ki = floor(log2(mmax_i)); example figures use 2 encoding bits in some runs",
+    "penalty_lambda": "user-defined penalty (λ) included in QUBO; numeric value not specified in text",
+    "shots": "not specified in paper",
+    "number_of_epochs": "iterative until convergence (not numerically specified)"
+  },
+  "hardware_details": {
+    "cloud_provider": "IBM Quantum (IBM Q Experience)",
+    "backends_used": [
+      "ibmq_toronto",
+      "ibm_geneva",
+      "ibmq_guadalupe",
+      "ibm_hanoi",
+      "ibm_auckland",
+      "ibm_cairo",
+      "ibmq_montreal",
+      "ibmq_mumbai",
+      "ibmq_kolkata"
+    ],
+    "notes": "Superconducting qubit devices; per-backend quantum volume was used as a comparative metric. Exact device specifications (T1/T2, gate fidelities, shots per circuit) are not enumerated in the text."
+  },
+  "reproducibility_notes": "Data sources are public (Yahoo! Finance via yfinance for portfolio data; Iris dataset from scikit-learn). Implementation used Qiskit and IBM public backends. The authors state code is available upon reasonable request. Because transpilation mapping is stochastic (Qiskit SWAP-mapper) and experiments were performed on live IBM hardware, reproducing identical numeric results requires access to the same backends (which have time-varying noise) and re-running multiple transpilation samples to estimate mean depths; specific numeric seeds, exact penalty λ values, and shots are not provided in the paper.",
+  "key_findings": [
+    "[supported] Quantum hardware topology (physical qubit connectivity and basis gates) significantly affects the performance of variational quantum algorithms (VQE and VQC) in terms of convergence, solution quality and variability.",
+    "[supported] Highly connected (more expressive) ansatzes can incur a substantial transpilation overhead (additional SWAP and basis-gate transformations) on sparse hardware; this increases circuit depth and error rates and can degrade training.",
+    "[supported] There exists a practical trade-off: an ansatz must balance expressiveness against the transpilation/resource cost for a given device; the optimal ansatz structure depends on the target hardware.",
+    "[supported] Measured quantum volume correlates with better convergence and lower variability across ansatz choices: higher quantum volume devices tolerate more expressive ansatzes with less performance degradation.",
+    "[supported] Some smaller or lower-qubit-count devices (example highlighted: ibm guadalupe) can deliver competitive or superior performance for certain ansatzes because of lower transpilation overhead.",
+    "[supported] Noise-induced barren plateaus were observed experimentally (example: ibm cairo); selecting different local qubit subsets / topology-aware qubit assignment can mitigate or avoid these plateaus.",
+    "[supported] The transpilation process is stochastic; the authors used distributions (mean over multiple transpile runs, e.g., 200 runs) of transpiled depths to evaluate mapping costs.",
+    "[supported] The authors propose a heuristic metric ξq = (Nq/NT) * log(QV^2 / Dc + 1) combining used-qubit fraction, quantum volume and mean transpiled depth to rank expected ansatz–hardware suitability; this heuristic matched observed trends in their experiments.",
+    "[speculative] The proposed heuristic is presented as problem-independent and broadly useful for ansatz selection across devices and problems (this generalization was suggested but not extensively validated across problem classes and hardware beyond the studied cases).",
+    "[speculative] The experimental findings can foster topology-aware ansatz design and be incorporated into neural/automated ansatz-search methods (claimed potential; not empirically proven in this work).",
+    "[speculative] More broadly stated background claim: variational quantum algorithms have potential to outperform classical algorithms under favorable conditions (stated as motivation; not demonstrated here)."
+  ],
+  "results_summary": "The paper presents experimental evidence, using IBM superconducting devices, that the physical topology and transpilation characteristics of quantum hardware materially affect the training and outcomes of VQE and VQC. More expressive, highly connected ansatzes often cause larger transpilation overhead (SWAPs and basis-gate expansion) on sparsely connected devices, increasing circuit depth and noise and in many cases degrading convergence or producing noise-induced barren plateaus. Higher device quantum volume correlates with more robust convergence across ansatz choices, while some smaller devices can perform well for low-overhead ansatzes. The authors demonstrate that choosing qubit subsets/topology-aware mappings can mitigate barren plateaus and propose a heuristic metric ξq (combining used-qubit ratio, quantum volume and mean transpiled depth) that aligned with observed device–ansatz performance in their experiments on Markowitz portfolio VQE and Iris VQC tasks.",
+  "performance_claims": [],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper does not claim or demonstrate quantum advantage over classical methods; it empirically studies how hardware topology and transpilation affect VQA training and proposes heuristics for better ansatz-to-hardware matching rather than reporting any superiority over classical algorithms.",
+  "limitations": [
+    "Experiments were performed only on IBM superconducting quantum devices (a limited set of real machines listed), which limits generalization to other hardware technologies and vendors.",
+    "Problem sizes were small-scale (e.g., Iris dataset for classification and a small portfolio optimization instance with few assets and low encoding resolution), limiting conclusions about scalability to larger, practically relevant problems.",
+    "Only a restricted set of ansatz families was studied (TwoLocal and RealAmplitude with a few entanglement patterns), so conclusions may not hold for other ansatz architectures.",
+    "Transpilation was performed at a medium optimization level and the impact of different transpiler settings was not fully explored.",
+    "The heuristic ξq relies on quantities (quantum volume, mean transpiled depth, Nq/NT) estimated from stochastic transpilation runs and was validated only on the studied hardware/ansatz set; its broader validity is unproven.",
+    "Optimization was performed with a single chosen classical optimizer (Cobyla) and a fixed learning-rate setting after grid search; behavior with other optimizers and hyperparameter regimes was not exhaustively investigated.",
+    "The study focuses on the combined effect of hardware noise and topology but does not separate or quantify precisely the individual contributions of different noise sources (e.g., single-qubit vs. two-qubit gate error vs. readout) to training degradation.",
+    "The analysis is largely empirical and specific to the chosen encodings (binary encoding for portfolio, ZZ feature map for Iris); transferability to alternative encoding/feature maps was not validated.",
+    "[inferred] The experiments use small numbers of qubits/subsets of devices; conclusions about sparser connectivity as devices scale up are qualitative and not supported by large-scale experiments.",
+    "[inferred] The heuristic requires repeated transpilation (hundreds of runs in experiments) to estimate mean depths, which may be costly and impractical in some operational settings.",
+    "[inferred] The paper does not provide formal guarantees or theoretical bounds on when the balance between ansatz expressivity and transpilation cost will be favorable — decisions rely on empirically derived heuristics."
+  ],
+  "open_questions": [
+    "How well does the proposed heuristic (ξq) generalize to other hardware platforms (e.g., trapped ions, photonic devices) and to future devices with different basis gates and connectivity?",
+    "What are principled, possibly automated methods to design topology-aware ansatz that optimally trade off expressivity and transpilation-induced error for a given hardware topology?",
+    "Can one quantify threshold conditions (in terms of quantum volume, connectivity, and noise rates) under which more expressive (higher-connectivity) ansatz become detrimental rather than beneficial?",
+    "How does the interplay of noise, qubit connectivity, and ansatz structure scale with larger problem sizes and higher qubit counts (will the observed trends persist or change qualitatively)?",
+    "What are the most effective and general mitigation strategies for noise-induced barren plateaus beyond local qubit-cluster selection (e.g., compiler-level techniques, error mitigation, ansatz design, alternative encodings)?",
+    "How sensitive are the experimental findings to choices of classical optimizer, hyperparameters, and stochasticity in transpilation — can robust automatic selection procedures be developed?",
+    "To what extent can transpiler optimization algorithms be improved or adapted to specifically minimize training degradation of VQAs (rather than only gate count or circuit depth)?",
+    "How do different data encoding/feature maps (beyond the ZZ feature map and the particular binary encoding used for portfolio optimization) interact with hardware topology and transpilation overhead?",
+    "What is the cost-benefit tradeoff (in terms of runtime, queueing, and resource usage) of performing repeated transpilation runs to estimate mean transpiled depth for heuristic computation in production workflows?"
+  ],
+  "future_work": [
+    "Develop topology-aware ansatz design methods and incorporate the hardware-dependent attributes identified here into neural search algorithms for variational circuits.",
+    "Use the proposed heuristic to guide ansatz selection and qubit selection in practice, and validate/extend it across more devices, larger problems, and other quantum hardware technologies.",
+    "Investigate qubit-cluster selection and other practical techniques as mitigation strategies for noise-induced barren plateaus, extending the empirical study to more cluster configurations and devices.",
+    "Integrate the topology-awareness (including transpilation cost and quantum volume considerations) into automated ansatz search and compilation toolchains to improve VQA performance on NISQ devices.",
+    "Empirically study and quantify the separate contributions of different noise sources (single-qubit, two-qubit, readout) and transpilation overhead to training failure, to inform targeted mitigation strategies.",
+    "[inferred] Explore alternative transpiler optimization levels and compiler strategies, and their effect on VQA training outcomes, to identify best practices for running VQAs on real hardware."
+  ],
+  "topic_tags": [
+    "portfolio-optimization",
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical",
+    "quantum-annealing-qubo",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability",
+    "contradiction:classical-vs-quantum"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Empirical evidence on multiple IBM QPUs shows hardware topology (connectivity and basis gates) and transpilation overhead significantly impair VQA training and can induce barren plateaus, limiting NISQ feasibility for finance tasks.",
+    "#idea:hybrid-approach — Uses a hybrid quantum-classical workflow (VQE/VQC with classical optimizers; Cobyla selected after grid search) with classical preprocessing (QUBO mapping for portfolio) and repeated transpilation sampling to manage stochastic mapper effects.",
+    "#idea:near-term-feasibility — Highly connected/expressive ansatzes (full entanglement, expressive TwoLocal/RealAmplitude) often incur substantial SWAP and gate overhead after transpilation, increasing circuit depth/noise and worsening solution quality for both portfolio optimization and Iris classification.",
+    "#idea:near-term-feasibility — Proposes a heuristic metric xi_q combining quantum volume, mean transpiled circuit depth, and qubit-usage ratio to guide ansatz/hardware selection in practice (noise-aware design).",
+    "#idea:near-term-feasibility — Reports quantitative performance metrics (E_classical/E_vqe ratios, classification F1-scores, mean transpiled depth, SWAP counts) from experiments on real hardware, validating the impact of topology and transpilation.",
+    "#idea:hybrid-approach — Demonstrates binary integer-to-QUBO encoding for small Markowitz-style portfolio instances enabling VQE use, but highlights that encoding and penalty constraints increase qubit and depth requirements that hurt real-device performance."
+  ],
+  "contradictions": [
+    "The paper shows that larger/more expressive ansatzes can degrade performance due to transpilation-induced SWAPs and increased noise, contradicting the expectation that more expressivity uniformly improves VQA performance on real hardware.",
+    "Empirical comparisons reveal that VQE on small portfolio instances often fails to outperform classical branch-and-bound baselines (unfavourable E_classical/E_vqe ratios), contradicting claims of near-term quantum superiority for these finance problems."
+  ]
+}

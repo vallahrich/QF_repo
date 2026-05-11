@@ -1,0 +1,91 @@
+## THESIS SCOPE — gate-based quantum computing ONLY
+
+This thesis covers gate-based quantum computing only. Quantum annealing (D-Wave, adiabatic) is out of scope. Only extract results for gate-based experiments identified in Step 2. Ignore any annealer-only experiments.
+
+## Paper Text
+
+{paper_text}
+
+## Instructions
+
+You are a research assistant extracting quantitative results from an academic paper on quantum computing in finance.
+
+## Context
+
+This paper belongs to the **{silo_name}** problem domain (Phase 1 taxonomy code: {silo_code}).
+
+The following experiments were identified in Step 2:
+{step2_experiments}
+
+Phase 2 classification context:
+{p2_context}
+
+## Task
+
+For EACH experiment identified in Step 2, extract all numerical results, classical baselines, speedup claims, and scalability data. Focus especially on the domain-specific metrics for this silo.
+
+## Domain-Specific Metrics for {silo_name}
+
+For this problem domain, look specifically for these metrics:
+**Primary metrics:** {primary_metrics}
+**Scale indicator:** {scale_indicator}
+
+Extract these metrics by name whenever they appear. Also extract ANY other quantitative result reported, even if not in the primary list above.
+
+## Extract Per Experiment
+
+### Results (array)
+For each reported metric:
+- **metric_name**: use standardised lowercase_with_underscores names. Use the primary metric names above when applicable.
+- **value**: the exact number. If a range, use the midpoint and note the range in unit.
+- **uncertainty**: standard deviation, confidence interval, or error bar if reported (e.g., "±0.03", "95% CI [0.78, 0.86]"). Use null if not reported.
+- **num_runs**: number of independent runs/seeds averaged, if reported.
+- **unit**: unit of measurement (%, seconds, ratio, etc.)
+- **higher_is_better**: true/false
+- **data_source**: "table", "figure", "text", or "computed"
+
+### Classical Baselines (array)
+For each classical method compared against:
+- **method_name**: the classical method (e.g., "Gurobi MIP", "Random Forest", "classical Monte Carlo", "CPLEX", "MVO")
+- **metric_name**: same metric as quantum result
+- **value**: classical result value
+- **unit**: unit
+
+### Speedup Claims (array)
+- **type**: asymptotic, empirical, theoretical, projected, none
+- **factor**: speedup magnitude (e.g., "2x", "quadratic", "O(sqrt(N))")
+- **baseline_method**: what classical method is compared
+- **conditions**: under what conditions (e.g., "assuming fault-tolerant hardware", "for N > 1000")
+- **is_demonstrated**: boolean — was this actually shown or just claimed?
+- **caveats**: important caveats or qualifications
+
+### Scalability Data (array)
+If the paper tests multiple problem sizes, extract each data point:
+- **problem_size**: the scale value (e.g., number of assets, dataset size)
+- **num_qubits**: qubits used at this size
+- **metric_name**: which metric
+- **metric_value**: the result at this size
+
+## Output Format
+
+Return a JSON object:
+
+{{
+  "experiment_results": [
+    {{
+      "experiment_id": "exp_1",
+      "results": [ ... ],
+      "classical_baselines": [ ... ],
+      "speedup_claims": [ ... ],
+      "scalability_data": [ ... ]
+    }}
+  ]
+}}
+
+## Rules
+- Extract ALL reported results, not just the primary metrics. If the paper reports execution_time, convergence_rate, or any other metric, include it.
+- If the paper has more than 5 quantum experiments, focus on the 5 most distinct/important ones (different algorithms or most comprehensive results). Mention in the output that additional experiments were omitted.
+- For table data with many rows, extract: the best quantum result, the worst quantum result, and all classical baseline rows. Do NOT extract every row of a 20-row comparison table.
+- If values are only readable from figures (not stated in text/tables), estimate the value and set data_source to "figure".
+- Use null rather than guessing — never fabricate values.
+- Return ONLY the JSON object.

@@ -1,0 +1,276 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier and version (arXiv:2509.17876v1) and a date, and is structured like a research paper (abstract, methods, results, references) but not tied to a journal or conference—indicating an arXiv preprint.",
+  "title": "Quantum Portfolio Optimization: An Extensive Benchmark",
+  "authors": [
+    "Eric Stopfer",
+    "Friedrich Wagner"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (arXiv:2509.17876)",
+  "doi": "",
+  "abstract_summary": "This paper presents a large-scale computational benchmark comparing quantum optimization methods (quantum annealing and QAOA) with state-of-the-art classical approaches (mixed-integer programming, simulated annealing, steepest descent, tabu search, and a problem-specific heuristic) on 250 real-world portfolio instances with up to 1,000 assets. The study finds that modern MIP solvers (notably Gurobi) can solve all instances to proven optimality in seconds and that the problem-tailored classical heuristic consistently outperforms the quantum approaches within a fixed 60-second runtime, suggesting limited scope for practical quantum advantage in portfolio optimization.",
+  "methodology_description": "The authors perform an empirical benchmark comparing quantum optimization approaches (quantum annealing and QAOA) against classical exact solvers (Gurobi, SCIP) and several classical heuristics (simulated annealing, steepest-descent local search, tabu search, and a problem-specific heuristic) on a portfolio-optimization variant (MinVola). They generate realistic instances from daily Nasdaq closing prices (2020–2023) using yfinance, compute annualized returns and covariances, and create instance sets by randomly sampling assets for a range of problem sizes (up to 1,000 assets). They choose the MinVola variant as the focus after showing it is the most challenging classically. Continuous MinVola is solved to optimality by MIP (Gurobi) and used as reference. For quantum experiments they derive a QUBO by binary-discretizing asset weights (binary expansion with precision parameter d) and adding quadratic penalty terms for constraints; penalty factors and discretization precision are chosen heuristically. Quantum annealing experiments run on a D-Wave Advantage 2 with dense-embedding via DWaveCliqueSampler and test multiple annealing times and chain-strength settings (including tuned values). QAOA experiments use three parameter-selection strategies (analytic grid for p=1, LR-QAOA linear-ramp schedule, and classical optimization with COBYLA on a noiseless simulator) and are executed both on an ideal simulator and on IBM hardware (ibm_strasbourg). All solution methods are given equal wall-clock budgets (60 s per run for the main benchmark), and results are evaluated with metrics including approximation ratio (fm/fopt), feasibility percentage, and number of samples. Additional solver configurations (time limits, optimality gaps) are used for the classical MIP comparisons.",
+  "algorithms_used": [
+    "Quantum Annealing",
+    "QAOA",
+    "Mixed-Integer Programming (Gurobi, SCIP)",
+    "Simulated Annealing",
+    "Steepest Descent Local Search",
+    "Tabu Search",
+    "Problem-specific greedy heuristic",
+    "Random sampling (baseline)"
+  ],
+  "frameworks": [
+    "D-Wave (dwave-system, DWaveCliqueSampler)",
+    "IBM Quantum (ibm_strasbourg)",
+    "Qiskit Aer (AerSimulator)",
+    "yfinance",
+    "Gurobi",
+    "SCIP",
+    "SciPy (COBYLA optimizer)",
+    "dwave-greedy",
+    "dwave-tabu"
+  ],
+  "experimental_setup": "Quantum annealing: D-Wave Advantage 2 QPU (up to ~4,600 physical qubits) with DWaveCliqueSampler embedding for fully-connected QUBOs; annealing times tested {1 µs, 5 µs, 20 µs, 50 µs}; chain strength tuned (default and hand-tuned values per problem size). QAOA: simulated on Qiskit Aer (noiseless) and executed on IBM hardware (ibm_strasbourg); parameter-selection strategies: analytic grid (p=1), LR-QAOA linear ramp (∆β=0.3, ∆γ=0.6), and COBYLA optimization on noiseless simulator. Classical: Gurobi and SCIP for exact solutions; open-source implementations for simulated annealing, steepest-descent, tabu search. Unified per-method wall-clock time budget of 60 seconds for the main benchmark; MIP solver comparisons also use 3600 s runs with 0% and 5% optimality gaps.",
+  "dataset_used": "Historical daily closing prices for 1,978 NASDAQ-listed assets from 2020–2023, retrieved via yfinance / Yahoo Finance. Annualized asset returns and annualized covariance matrix computed from daily returns (252 trading days convention). Instances are produced by randomly sampling assets for specified problem sizes (various n up to 1,000).",
+  "experiment_input": {
+    "source": "Yahoo Finance via yfinance (daily NASDAQ closing prices)",
+    "assets_total": 1978,
+    "time_range": "2020-01-01 to 2023-12-31 (daily prices)",
+    "preprocessing": [
+      "Compute daily returns r_{i,t} = p_{i,t}/p_{i,t-1} - 1",
+      "Compute average daily returns and annualize returns via geometric/252 convention",
+      "Compute annualized covariance matrix: σ_{ij} = 252 * sample covariance of daily returns",
+      "Randomly sample asset subsets to create instances of target sizes",
+      "Set per-asset upper bounds u_i = max(1/10, 3/n) for each instance",
+      "Set problem-instance parameters (e.g., ν, ϵ, λ) from 70% quantiles or averages of randomly generated portfolios"
+    ],
+    "instance_generation": "For each chosen problem size n (range includes 3,5,7,10,15,20,25,30,40,50,60,70,80,90,100,150,200,250,300,400,500,600,700,800,900,1000) generate 10 random instances per variant (paper summary focuses on 250 instances)"
+  },
+  "experiment_process": {
+    "overall_pipeline": [
+      "Select MinVola variant after initial hardness comparison across MaxRet, MinVola, MultiObj using SCIP and Gurobi",
+      "Formulate continuous MinVola and solve with MIP (Gurobi) to obtain provable optimal objective fopt (used as reference)",
+      "Transform MinVola to a QUBO for quantum methods: define penalized objective f(ω) = σ^2 + ϕ(µ(ω)-ϵ)^2 + ψ(Σ ω_i - 1)^2",
+      "Discretize continuous weights ω_i using binary expansion ω_i = u_i*(1/(2^{d}) ω_{i,d+1} + Σ_{j=1}^d 1/(2^j) ω_{i,j}) with d=3 (4 binary variables per asset)",
+      "Set penalty factors ϕ = ψ = 1000 (heuristic based on magnitude of objective/constraint terms)",
+      "Produce dense QUBO (100% density) of size 4n variables"
+    ],
+    "quantum_annealing_steps": [
+      "Embed dense QUBO using DWaveCliqueSampler (predefined embeddings for cliques) to map logical variables onto Advantage2 physical qubits",
+      "Test annealing times ∈ {1, 5, 20, 50} µs",
+      "Vary chain-strength; compare default and tuned chain-strength values (e.g., cs=3 for n∈{5,7,10,15}, cs=4 for n=20, cs=5 for n=25)",
+      "Run sampling until the 60 s wall-clock budget is exhausted; record feasible samples and objectives"
+    ],
+    "QAOA_steps": [
+      "Use three parameter-selection strategies: (1) analytic grid search for p=1 using closed-form expectation formula, (2) LR-QAOA linear ramp setting β_i = (1 - i/p) Δβ, γ_i = ((i+1)/p) Δγ with Δβ=0.3, Δγ=0.6, (3) classical optimization with COBYLA on a noiseless simulator (initialized with LR-QAOA)",
+      "Test p ∈ {1,2,4} (reported mainly p=1; additional tests for p=2,4 showed worse empirical performance under noise and time limits)",
+      "Training/sampling time splits: grid search: 30 s training + 30 s sampling; COBYLA: up to 52 s training + remaining sampling time",
+      "Execute sampling on IBM hardware (ibm_strasbourg) and on Qiskit Aer noiseless simulator; collect sampled candidate solutions"
+    ],
+    "classical_heuristics_and_exact": [
+      "Run Gurobi and SCIP on the continuous MinVola (time limit 3600 s for some comparisons; in benchmarking Gurobi used to compute fopt). Gurobi runs significantly faster than SCIP for large n",
+      "Run open-source implementations of simulated annealing, steepest-descent local search, and tabu search with default parameters for 60 s each",
+      "Run the problem-specific greedy heuristic: initialize n candidate greedy portfolios by seeding one asset with δ and iteratively add δ to the asset that most reduces variance while satisfying return constraint (stop when weights sum to 1)",
+      "Include random-sampling baseline: sample binary QUBO configurations and evaluate objective"
+    ],
+    "evaluation": [
+      "For each method and instance collect best feasible objective fm within 60 s",
+      "Compute approximation ratio Θ = fm / fopt (≥1 since minimization)",
+      "Compute feasibility percentage (fraction of the 10 instances per size where at least one feasible solution was returned)",
+      "Report number of samples (shots) produced in 60 s"
+    ]
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Approximation ratio (Θ = fm / fopt)",
+      "Feasibility percentage (fraction of instances with at least one feasible solution)",
+      "Number of samples/shots generated within time budget",
+      "Classical solver runtimes (SCIP, Gurobi) including effects of relative optimality gaps (0% and 5%)",
+      "Empirical distributions of objective values (discussed qualitatively)"
+    ],
+    "baselines": [
+      "Provably optimal solution from Gurobi (fopt)",
+      "Random sampling baseline",
+      "Problem-specific heuristic (best-performing classical heuristic)"
+    ],
+    "result_format": "Per-instance and aggregated statistics (averages over 10 instances per size), with empirical standard deviations; plots of metrics vs. problem size"
+  },
+  "experiment_parameters": {
+    "QUBO_discretization_d": 3,
+    "binary_vars_per_asset": 4,
+    "penalty_factors": {
+      "phi_return": 1000,
+      "psi_normalization": 1000
+    },
+    "annealing_times_us_tested": [
+      1,
+      5,
+      20,
+      50
+    ],
+    "chain_strengths": {
+      "default": "D-Wave default heuristic",
+      "tuned_examples": {
+        "n in {5,7,10,15}": 3,
+        "n = 20": 4,
+        "n = 25": 5
+      }
+    },
+    "QAOA": {
+      "depths_tested_p": [
+        1,
+        2,
+        4
+      ],
+      "LR_QAOA_parameters": {
+        "delta_beta": 0.3,
+        "delta_gamma": 0.6
+      },
+      "parameter_optimizers": [
+        "analytic grid (p=1)",
+        "LR-QAOA initialization",
+        "COBYLA classical optimizer (SciPy)"
+      ]
+    },
+    "time_limits": {
+      "main_benchmark_per_method": "60 seconds",
+      "MIP_solver_comparisons": "3600 seconds"
+    },
+    "MIP_solver_gaps": [
+      0,
+      5
+    ],
+    "classical_heuristics": {
+      "simulated_annealing": "open-source default implementation",
+      "steepest_descent": "open-source implementation (dwave-greedy referenced)",
+      "tabu_search": "open-source implementation (dwave-tabu referenced)",
+      "problem_specific_heuristic_delta": "δ (unspecified constant; used as discrete increment)"
+    },
+    "evaluation_shots": "as many samples as fit inside 60 s (not a fixed shot count)"
+  },
+  "hardware_details": {
+    "quantum_annealer": {
+      "model": "D-Wave Advantage 2",
+      "approx_physical_qubits": 4600,
+      "embedding_method": "DWaveCliqueSampler (predefined clique embeddings)",
+      "provider": "D-Wave"
+    },
+    "gate_based": {
+      "hardware": "ibm_strasbourg (IBM Quantum)",
+      "simulator": "Qiskit Aer AerSimulator (noiseless simulator)",
+      "provider": "IBM"
+    },
+    "classical_solvers_and_packages": {
+      "MIP_solvers": [
+        "Gurobi",
+        "SCIP"
+      ],
+      "other_packages": [
+        "yfinance (data retrieval)",
+        "SciPy (COBYLA)"
+      ]
+    },
+    "classical_compute_environment": "not specified in paper"
+  },
+  "reproducibility_notes": "The authors state that code and data are publicly available at the project GitHub repository https://github.com/stopfereric/portfolio_opt_benchmark. They report specific parameter choices (penalty factors = 1000, discretization d=3, annealing times tested, chain-strength tuning values, LR-QAOA Δβ/Δγ, time budgets). Some choices (e.g., δ in the problem-specific heuristic, exact classical compute hardware, random seeds) are not fully specified in the text; reproducibility on quantum hardware will also be affected by device noise and embedding variability. The repository is indicated as the primary resource to reproduce experiments.",
+  "key_findings": [
+    "[supported] A large-scale empirical benchmark was performed: 250 real-world portfolio instances drawn from NASDAQ data, with up to 1,000 assets each.",
+    "[supported] Mixed-integer programming (continuous formulation solved by Gurobi) solved all tested instances to provable optimality, often in the order of seconds.",
+    "[supported] Among classical solvers, Gurobi outperformed SCIP dramatically (reported speed-up factor > 1000 for large n, e.g., n=1000).",
+    "[supported] Of the three problem variants studied (MaxRet, MinVola, MultiObj), MinVola was the hardest for classical MIP solvers and therefore chosen as the focus for quantum benchmarking.",
+    "[supported] A QUBO encoding for MinVola was used with binary discretization ωi = ui * (1/2^{d}...) with d = 3, yielding 4n binary variables for n assets and penalty factors ϕ = ψ = 1000.",
+    "[supported] Quantum annealing (D‑Wave Advantage 2) and QAOA (IBM device and simulators) were empirically outperformed by a problem-specific classical heuristic in terms of best-found solution quality within a fixed 60 s runtime budget.",
+    "[supported] Quantum annealing and QAOA often performed no better than random sampling on the tested instances under the 60 s budget: they returned fewer feasible solutions and worse approximation ratios.",
+    "[supported] After parameter tuning (notably chain-strength tuning), quantum annealing performed better than its default configuration and slightly outperformed the tested QAOA configurations in these experiments.",
+    "[supported] Embedding/connectivity overhead is a hard practical limitation: with the D‑Wave device used (≈4597 qubits) the largest fully embedded tested instance corresponded to 25 assets (100 QUBO variables).",
+    "[supported] Gate‑based QAOA experiments were limited by device/transpilation overheads: circuit depths blow up (example: 1-layer QAOA depth ~161 → ≈11,000 after transpilation for 20 assets) and classical state-vector simulation was limited to ≈30 variables.",
+    "[supported] Increasing the number of QAOA layers (p) degraded empirical performance in these experiments (fewer shots, more noise/transpilation overhead), despite theoretical monotonicity with p.",
+    "[supported] Classical metaheuristics (simulated annealing, steepest descent, tabu search) produced feasible solutions for nearly all tested sizes and were competitive; a bespoke problem-specific greedy/steepest-descent heuristic gave the best classical heuristic results.",
+    "[speculative] The authors conjecture that the all-to-all (dense) QUBO structure is the main reason for poor quantum performance because it creates long chains for annealers and many swaps/gates for gate-based devices.",
+    "[supported] Specific QA and QAOA runtime/shot/parameter design choices were evaluated (anneal times 1, 5, 20, 50 μs; chain-strength tuning; QAOA parameter strategies: grid search for p=1, LR-QAOA ramp, COBYLA on simulator).",
+    "[supported] Under the 60 s per-instance evaluation protocol, quantum methods generated fewer usable samples (shots) for large instances compared to classical sampling and heuristics, limiting their empirical performance."
+  ],
+  "results_summary": "This preprint reports an extensive empirical benchmark comparing quantum heuristics (quantum annealing on D‑Wave Advantage 2 and QAOA on IBM hardware/simulator) with state-of-the-art classical methods (Gurobi MIP, SCIP, simulated annealing, tabu search, steepest descent, and a problem-specific heuristic) on 250 real-world portfolio optimization instances (up to 1,000 assets). The key empirical findings are: (i) continuous MIP (Gurobi) solved all instances to proven optimality extremely quickly (often seconds), (ii) a problem-specific classical heuristic outperformed the quantum approaches in solution quality within a 60 s runtime budget, and (iii) both quantum annealing and QAOA often performed comparably to random sampling unless carefully tuned, with practical limitations arising from embedding and transpilation overheads for dense all-to-all QUBO encodings.",
+  "performance_claims": [
+    "250 real-world instances benchmarked (10 instances × 3 variants × 26 sizes up to n=1000).",
+    "QUBO discretization chosen with d=3, yielding 4n binary variables for n assets.",
+    "Penalty factors used in QUBO penalty objective: ϕ = ψ = 1000.",
+    "Time budget per method per instance for heuristic comparisons: 60 seconds.",
+    "Gurobi outperforms SCIP with a speed-up factor > 1000 for large instances (n=1000) in these experiments.",
+    "Largest problem embeddable on the D‑Wave Advantage 2 used (≈4597 physical qubits) corresponded to 25 assets (100 QUBO variables).",
+    "Annealing times tested: 1 μs, 5 μs, 20 μs, 50 μs; varying these in the reported range did not materially change results.",
+    "Chain-strength tuning improved QA performance; recommended cs settings in paper: cs=3 for 5–15 assets, cs=4 for 20 assets, cs=5 for 25 assets.",
+    "QAOA classical state-vector simulation feasible up to ≈30 variables; beyond that simulation was infeasible due to memory.",
+    "Empirical observation: QAOA approximation ratio ≥ 2 for problems with 20 or more assets in the tested configurations; heuristic approximation ratios grew to ≥ 10 at ~250 assets for some classical heuristics (as reported)."
+  ],
+  "quantum_advantage_claim": "disputed",
+  "quantum_advantage_detail": "Based on their empirical benchmark, the authors report no observed practical quantum advantage for the tested portfolio optimization variant: classical MIP and a problem-specific heuristic outperformed quantum annealing and QAOA under a realistic 60 s per-instance budget. They thus dispute claims of a near-term quantum advantage for this problem class on current hardware, attributing poor quantum performance primarily to dense all-to-all problem structure and hardware embedding/transpilation overheads.",
+  "limitations": [
+    "QUBO transformation relies on heuristic penalty factors (ϕ = ψ = 1000) and a heuristic discretization (d = 3); selection of optimal penalty factors is NP-hard and the chosen settings may bias results.",
+    "Limited device connectivity and embedding overhead for analog annealers: fully connected (dense) QUBOs require large embeddings, which limited the largest embeddable problem on the D-Wave Advantage 2 to 25 assets (100 QUBO variables).",
+    "QAOA performance degraded strongly with problem size due to transpilation overhead and noise: circuit depth and swap-gate counts balloon when mapping all-to-all connectivity to devices with limited qubit connectivity.",
+    "Classical simulation of QAOA and exact evaluation of large QAOA circuits is memory-limited (authors report classical simulation limited to roughly 30 variables).",
+    "QAOA parameter selection methods used have no optimality guarantee; authors did not optimize parameters on hardware because communication times are prohibitively large.",
+    "Benchmark time limit of 60 seconds imposed uniformly across methods — while intended to ensure fairness, this constrains training/sampling-intensive quantum routines and may affect their observed performance.",
+    "Quantum annealing required hand-tuned chain-strength values to produce usable results; default chain-strength computation performed poorly.",
+    "The study focused on the MinVola (variance-minimizing) variant with fixed-return constraint, i.e., a relatively simple portfolio formulation; conclusions may not generalize to more complex, realistic portfolio variants with additional constraints.",
+    "The comparison of methods emphasized the single best solution rather than statistical properties of the sampled solution distributions; differences in distributions (rather than best samples) were observed but not fully analyzed.",
+    "Authors used default or off-the-shelf implementations for several classical heuristics (simulated annealing, tabu search, steepest descent), which may not represent fully optimized classical baselines.",
+    "[inferred] Use of a single historical dataset (NASDAQ assets, 2020–2023) may limit generalizability of the results to other markets, time periods, or asset classes.",
+    "[inferred] The dense, fully connected QUBO formulation (no sparsification or decomposition applied in this study) likely penalizes current quantum hardware; alternative modeling/decomposition techniques were not implemented here.",
+    "[inferred] The 60s wall-clock limit and practical constraints (communication overhead with cloud hardware, number of shots) may have disproportionately affected gate-based experiments (QAOA) compared to classical heuristics and MIP solvers.",
+    "[inferred] The comparison across solvers included a commercial MIP solver (Gurobi) and an open-source solver (SCIP); licensing, implementation details, and hardware used for these solvers may affect reproducibility and practical applicability."
+  ],
+  "open_questions": [
+    "Do more complex portfolio optimization variants (additional constraints, transaction costs, short-selling, integer constraints, multi-period models, etc.) change the potential for a quantum advantage?",
+    "Can improvements in quantum hardware (better qubit connectivity, more qubits, lower noise) or improved embedding strategies materially change the conclusions for dense portfolio QUBOs, especially for very large instances?",
+    "To what extent can better QAOA parameter selection methods, deeper circuits combined with error mitigation, or hardware-aware circuit compilation improve QAOA performance on dense portfolio problems?",
+    "Can algorithmic advances in QUBO modeling (automated/optimal penalty coefficient selection, finer/coarser discretization strategies, alternative encodings) meaningfully improve quantum solver performance?",
+    "How do full solution distributions from quantum methods (expectation, quantiles, variance of sampled solutions) compare to classical heuristics and random sampling over realistic budgets of shots/time — and would distributional metrics change the interpretation of potential advantage?",
+    "Can problem-tailored quantum-classical hybrid approaches (decomposition, sparsification, circuit cutting, problem partitioning) enable quantum methods to compete with classical heuristics for large, dense portfolio instances?",
+    "What is the precise contribution of classical versus quantum parts in hybrid/closed-source quantum optimization systems that have reported favorable results (i.e., how much classical preprocessing/postprocessing explains reported gains)?",
+    "What are robust, transferable rules/practices for selecting D-Wave chain strengths and embeddings for dense QUBOs, and how sensitive are results to these choices?"
+  ],
+  "future_work": [
+    "Conduct further experiments to study the performance of quantum methods on more complicated portfolio variants with additional constraints and variables.",
+    "Search for and evaluate better QAOA parameter selection and optimization strategies (including optimization on hardware where practical) to determine whether improved parameters yield meaningful gains.",
+    "Investigate alternative QUBO modeling choices (penalty factor selection procedures, different discretization precisions) and their impact on quantum solver performance."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "benchmark-comparison",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Extensive empirical benchmark (250 real-world instances up to 1,000 assets) shows modern MIP solvers (Gurobi) solve instances to proven optimality in seconds; quantum methods (D-Wave QA and QAOA) do not outperform classical methods under a 60 s wall-clock budget.",
+    "#idea:near-term-feasibility — QAOA experiments (p=1 primarily, p=2,4 tested) on noiseless simulator and IBM hardware produced worse empirical performance under noise and time limits; simulator results do not translate into hardware advantage.",
+    "#idea:hybrid-approach — QAOA parameter selection used hybrid classical optimizers (COBYLA) and analytic/LR schedules; classical optimization of parameters was constrained by time budgets and did not yield superior solutions in practice.",
+    "#limitation:data-encoding — Continuous-to-binary discretization (d=3 → 4 binaries per asset) and large penalty factors produce dense QUBOs (4n variables, 100% density), inflating problem size and harming quantum performance.",
+    "#limitation:qubit-count — Dense QUBO and embedding onto D-Wave Advantage2 require substantial logical-to-physical mapping and chain strengths; embedding and chain-breaking limit solution quality as n grows.",
+    "#limitation:noise — QAOA on IBM hardware degraded relative to noiseless simulator; noise and limited circuit depth (small p) constrain attainable performance under realistic conditions.",
+    "#idea:near-term-feasibility — A problem-specific classical heuristic consistently outperformed quantum approaches within the fixed runtime, suggesting limited practical near-term scope for quantum advantage on MinVola portfolio instances."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — The paper demonstrates that state-of-the-art classical solvers (Gurobi) and a problem-specific heuristic outperform quantum annealing and QAOA on 250 real-world portfolio instances, contradicting prior claims of quantum advantage for portfolio optimization.",
+    "contradiction:scalability — By showing that the binary discretization (4n variables) and dense QUBO formulation lead to embedding and chain-strength issues on current hardware, the paper contradicts claims that current quantum methods can scale effectively to large realistic portfolio sizes (hundreds to 1,000 assets)."
+  ]
+}

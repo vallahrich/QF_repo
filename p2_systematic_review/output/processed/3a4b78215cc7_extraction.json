@@ -1,0 +1,203 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document is labelled with an arXiv identifier and version (arXiv:2303.06089v2) and date, which indicates it is an arXiv preprint. It has a standard paper structure (abstract, methods, results, references) but no journal or conference proceedings venue is indicated.",
+  "title": "Real Option Pricing using Quantum Computers",
+  "authors": [
+    "Alberto Manzano",
+    "Gonzalo Ferro Costas",
+    "Álvaro Leitao",
+    "Carlos Vázquez",
+    "Andrés Gómez"
+  ],
+  "year": "2024",
+  "journal_or_venue": "arXiv preprint arXiv:2303.06089",
+  "doi": "",
+  "abstract_summary": "The paper proposes an alternative Quantum Accelerated Monte Carlo (QAMC) pipeline for derivative pricing that combines a new direct encoding (which embeds sign information of the payoff into the quantum state) with a modified Real Quantum Amplitude Estimation (mRQAE) algorithm capable of recovering amplitude sign and magnitude. This approach avoids splitting payoffs into positive and negative parts, retains the theoretical quadratic speedup, and is validated empirically on a quantum emulator against standard QAMC methods.",
+  "methodology_description": "The authors propose and evaluate an alternative Quantum Accelerated Monte Carlo (QAMC) pipeline for derivative pricing that combines a new state-encoding called direct encoding with a modified Real Quantum Amplitude Estimation (mRQAE) routine. They (1) represent the risk-neutral distribution of the terminal asset price ST under a Black–Scholes model in a discretized quantum register (US), (2) encode the payoff either via a square-root amplitude encoding (U√F) or via the direct encoding (UF) that places the (signed) payoff directly in amplitudes, (3) for direct encoding apply U†S to concentrate the expected payoff into the amplitude of the |0⟩ state (UDE = U†S UF US), and (4) estimate that amplitude using mRQAE which iteratively (a) performs a sign-estimating first iteration using shifted oracles, (b) chooses a shift bi+1 = −amin_i, (c) applies Grover-like amplifications k times chosen to keep amplified angles in [0,π/2], (d) measures amplified probabilities with prescribed shot counts Ni determined via Hoeffding-style bounds, and (e) maps back to shrink the amplitude-confidence interval until target precision ϵ is met. Experiments are performed on a quantum emulator (QLM / myQLM) using a simplified one-step exact Black–Scholes simulation (ST analytical formula) and multiple payoffs (vanilla call, put, digital, linear). The method is compared against the iterative modified QAE (mIQAE) baseline (square-root encoding) by plotting absolute estimation error vs number of oracle calls across precisions and reporting medians and IQR.",
+  "algorithms_used": [
+    "modified Real Quantum Amplitude Estimation (mRQAE)",
+    "Real Quantum Amplitude Estimation (RQAE) (referenced)",
+    "modified Iterative Quantum Amplitude Estimation (mIQAE) (baseline)",
+    "Grover amplification (amplitude amplification)",
+    "square-root amplitude encoding",
+    "direct encoding (proposed)"
+  ],
+  "frameworks": [
+    "NEASQC: FinancialApplications (Python) (github)",
+    "QLM (Atos)",
+    "myQLM"
+  ],
+  "experimental_setup": "Experiments run on CESGA Finisterrae III (FT3) supercomputer. Two node configurations reported: (a) 48-core Intel Xeon Platinum 8260L, 1510 GB RAM, RHEL 9.2 (used with QLM-1.9.1, Python 3.9.16) and (b) 2-core Intel Xeon Ice Lake 8352Y, 256 GB RAM, Rocky Linux 8.4 (myQLM-1.9.9, Python 3.9.9). Quantum emulation performed with QLM/myQLM. Simplifications: single-step exact Black–Scholes ST sampling (analytical) used instead of multi-step SDE Euler–Maruyama to keep qubit count low.",
+  "dataset_used": "Synthetic data: discretized Black–Scholes terminal price distribution (risk-neutral) generated synthetically via analytic Black–Scholes lognormal formula. Parameters used in experiments: risk-free rate r=0.01, volatility σ=0.5, T−t = 1 year, S_t = 1.0. Discretization: 32 points in [0.01, 5.0] (J=32). Payoffs tested: vanilla call, vanilla put, digital call/put, linear payoff F(ST)=ST−K (with K examples, e.g. 1.5).",
+  "experiment_input": {
+    "source": "synthetic (Black–Scholes analytic)",
+    "size": "discretization J = 32 points (used in experiments); effective K = J for single-step tests",
+    "qubits_for_distribution": 5,
+    "preprocessing": "discretize continuous lognormal Black–Scholes distribution into J points; encode distribution into quantum state via UBS/UZ (oracles). For direct-encoding, the payoff normalization ∥F∥∞ is used. Simplifications: one-step exact sampling (no Euler–Maruyama multi-step), initial S_t hardcoded."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Construct quantum oracle US that prepares superposition corresponding to discretized ST distribution (single-register simplification or UBS).",
+      "Encode payoff either with square-root amplitude operator U√F (places sqrt(F) into amplitude of an ancilla) or with direct encoding UF (places signed F directly into amplitude).",
+      "For direct encoding apply U†S to map expectation into amplitude of |0⟩ (UDE = U†S UF US).",
+      "Run amplitude estimation: (a) For mRQAE, perform first iteration to estimate sign by measuring two shifted oracles (shifts ±b1, with b1=1/2), computing empirical probabilities psum and pdiff and estimating aˆ1 = (psum−pdiff)/(4 b1). Build initial confidence interval. (b) For each subsequent iteration choose shift bi+1 = −amin_i, choose Grover amplification exponent ki+1 = floor(π/(4 arcsin(2ϵa_i)) − 1/2) (bounded by kmax), amplify (2ki+1+1) times, measure amplified probability with Ni shots chosen from Ni = (1/(2 ϵp(q,ki)^2)) log(2/γi) where ϵp and γi are set per formulas in the paper, map measured probability back to unamplified angle, undo shift, and update amplitude interval; iterate until interval half-width ≤ ϵ.",
+      "Compare mRQAE results (direct encoding) against mIQAE (square-root encoding) and classical MC scaling; record absolute error vs number of oracle calls NQ; report medians and 25/75 percentiles over repeated runs."
+    ],
+    "iteration_and_stop": "Iterations continue until amplitude-interval half-width ϵa ≤ target precision ϵ. Amplification policy parameter q (lower bound on ratio of (2k+1) between iterations) controls growth; kmax and T are computed from q and ϵ."
+  },
+  "experiment_output": {
+    "metrics": [
+      "Absolute error between QAMC estimate and discretized expectation (|estimate − ground_truth|)",
+      "Number of calls to oracle NQ (used as cost metric)",
+      "Medians and interquartile ranges (25th and 75th percentiles) across runs"
+    ],
+    "baselines_compared": [
+      "modified Iterative QAE (mIQAE) with square-root encoding (including splitting payoff into positive/negative parts when needed)",
+      "Classical Monte Carlo scaling (discussed theoretically)"
+    ],
+    "output_format": "Plots of absolute error vs NQ for different target precisions ϵ; tables/figures showing comparative scaling and empirical medians/IQRs"
+  },
+  "experiment_parameters": {
+    "discretization_points_J": 32,
+    "qubits_for_distribution": 5,
+    "payoff_functions": [
+      "vanilla_call",
+      "vanilla_put",
+      "digital_call",
+      "digital_put",
+      "linear (ST-K)"
+    ],
+    "BlackScholes_params": {
+      "r": 0.01,
+      "sigma": 0.5,
+      "T_minus_t": 1.0,
+      "S_t": 1.0
+    },
+    "encoding_options": [
+      "square-root encoding",
+      "direct encoding"
+    ],
+    "mRQAE_params": {
+      "initial_shift_b1": 0.5,
+      "amplification_policy_q": "user-chosen (paper analyzes general q>1); used to compute k and kmax",
+      "precision_range_eps": "varied (examples shown from 1e-7 to 1e-2)",
+      "confidence_gamma": "user-chosen (1 - gamma is confidence); used to compute shot allocation γi",
+      "shot_allocation_formula": "Ni = (1/(2 ϵp(q,ki)^2)) log(2/γi) with ϵp(q,ki) defined in paper"
+    },
+    "oracle_calls_NQ": "varied across experiments up to ~1e7 in plots",
+    "number_of_repetitions": "statistics reported (medians and 25/75 percentiles); exact repetition count per point not explicitly stated"
+  },
+  "hardware_details": {
+    "compute_infrastructure": "CESGA Finisterrae III (FT3) supercomputer",
+    "node_configurations": [
+      {
+        "node_label": "QLM",
+        "cpu": "48-core Intel Xeon Platinum 8260L",
+        "ram": "1510 GB",
+        "os": "Red Hat Enterprise Linux 9.2",
+        "python": "3.9.16",
+        "qlm_version": "QLM-1.9.1"
+      },
+      {
+        "node_label": "QAPTIVA / ILK",
+        "cpu": "2-core Intel Xeon Ice Lake 8352Y",
+        "ram": "256 GB",
+        "os": "Rocky Linux 8.4",
+        "python": "3.9.9",
+        "qlm_version": "myQLM-1.9.9"
+      }
+    ],
+    "quantum_emulator": "QLM / myQLM (Atos)",
+    "cloud_provider": "not applicable (on-prem CESGA HPC)"
+  },
+  "reproducibility_notes": "Authors refer to a public Python repository NEASQC: FinancialApplications (GitHub) for code (reference [FM24]). Experiments used QLM/myQLM emulators (versions reported) and were run on CESGA Finisterrae III; Black–Scholes parameters and discretization (32 points, interval [0.01,5.0]) and the amplitude-estimation parameter formulas are provided in the paper. The paper states 'Availability of data and materials: Not applicable' but the code repository is cited; raw experiment traces are not included in the text. Reproduction requires access to QLM/myQLM or equivalent emulator, the NEASQC code, and the HPC environment or local compute resources.",
+  "key_findings": [
+    "[speculative] The paper introduces a new encoding protocol called \"direct encoding\" that loads payoff (including sign information) directly into amplitudes instead of loading square roots of payoffs.",
+    "[speculative] The paper proposes a modified real quantum amplitude estimation algorithm (mRQAE) that is an asymptotically optimal variant of RQAE and is capable of recovering the sign of the amplitude.",
+    "[supported] Combining the direct encoding with mRQAE yields a QAMC pipeline that avoids splitting payoffs into positive and negative parts and can estimate expectations that may be negative.",
+    "[supported] Experimental emulation (quantum emulator) comparisons show that the proposed pipeline (direct encoding + mRQAE) attains comparable oracle-call scaling to current practical amplitude-estimation methods (e.g., mIQAE) and retains the expected quadratic-in-queries sampling scaling of QAMC versus classical Monte Carlo.",
+    "[supported] In practice (emulator tests) the difference in empirical performance between direct encoding and the square-root encoding is small for the experiments performed.",
+    "[supported] The mRQAE recovers negative expectation values in numerical emulations without requiring separate positive/negative decompositions, whereas naive square-root encoding fails to converge on negative-expectation cases unless the problem is split.",
+    "[supported] The authors provide formulas and parameter choices for configuring mRQAE (shots per iteration, confidence allocation, amplification policy) and prove bounds on iterations, depth and total query complexity for their configuration.",
+    "[supported] The paper reiterates the standard theoretical QAMC advantage: classical MC error scales as O(1/sqrt(N)) while (ideal) amplitude-estimation-based QAMC sampling error scales as O(1/N) in number of oracle calls.",
+    "[supported] The authors acknowledge practical limitations for end-to-end, fault-tolerant QAMC on current hardware: large qubit counts, deep Grover-like circuits, gate fidelity and decoherence constraints make full implementations infeasible today.",
+    "[speculative] The authors suggest that improved state-preparation or other encodings and further parameter tuning of mRQAE could reduce truncation and practical resource costs, but these are posed as future directions rather than demonstrated results."
+  ],
+  "results_summary": "The paper presents an alternative QAMC pipeline that couples a \"direct encoding\" (which stores payoff values, including sign, directly in amplitudes) with a modified real quantum amplitude estimation algorithm (mRQAE) that can read both magnitude and sign. Analytic configuration choices and complexity bounds for mRQAE are given. Numerical experiments on a quantum emulator (under several simplifying assumptions) show the combined method can estimate derivatives prices with negative expected payoff without splitting the payoff and that empirical oracle-call scaling is comparable to state-of-the-art amplitude-estimation variants (e.g. mIQAE). The authors also emphasize remaining practical hardware challenges that prevent full end-to-end deployment on current quantum processors.",
+  "performance_claims": [
+    "CMC sampling/statistical error scales as O(1/sqrt(N_C)).",
+    "QAMC sampling error (using amplitude estimation) scales as O(1/N_Q) in number of oracle calls.",
+    "The mRQAE query complexity (their configuration) is upper-bounded as N_Q < C1(q) * (1/ϵ) * log(C2(q)/γ) for constants C1(q), C2(q) depending on amplification policy q (theorem proven in Appendix B).",
+    "Experimental emulation used a Black–Scholes discretization with 32 points (5 qubits) for probability encoding in the demonstrations.",
+    "Empirical comparisons (emulator) show the mRQAE + direct encoding performs competitively with mIQAE in terms of number of oracle calls to reach target precision in the tested examples (figures in paper).",
+    "Specific chosen configuration parameters in the paper: example shift b1 = 1/2; shot-count per iteration Ni = (1 / (2 * ϵ_p(q,k_i)^2)) * log(2/γ_i) (equation provided).",
+    "Reported mIQAE empirical constants cited: N_mIQAE < 123 * (1/ϵ) * log(6/γ) (table gives this as a published bound/comparison)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper relies on the well-known theoretical quadratic speedup of amplitude-estimation-based QAMC (error O(1/N_Q) vs classical O(1/sqrt(N))). The authors demonstrate similar scaling in emulator experiments and provide asymptotic complexity bounds for mRQAE, but no end-to-end demonstration on real, error-corrected hardware is provided. Practical hardware constraints are acknowledged, so the advantage is established at the theoretical/emulation level rather than as a real-hardware demonstration.",
+  "limitations": [
+    "Author-stated: Current hardware limitations make full-scale QAMC implementations infeasible: need hundreds or thousands of logical qubits for single-precision registers and a few time steps.",
+    "Author-stated: Grover-like amplitude amplification routines require circuit depths that exceed current decoherence times (not feasible on NISQ devices).",
+    "Author-stated: The total number of gates (oracle US combined with Grover-like algorithms) requires gate error rates beyond current technology.",
+    "Author-stated: Experiments and validation were performed under several simplifying assumptions (single-step simulation, use of exact Black–Scholes solution, replacement of UZ by UBS, small discretizations), which limit generality of empirical results.",
+    "Author-stated: The direct encoding and square-root encoding require normalization (knowledge of a bound ∥F∥∞) which induces truncation/discretization errors if the bound or discretization is coarse.",
+    "Author-stated: The mRQAE parameter choices used in the paper are not unique; alternative parameter settings could be more efficient (e.g., reduce shots) and were not explored exhaustively.",
+    "[inferred] The procedures were validated on quantum emulators/simulators rather than noisy quantum hardware, so the practical performance in the presence of realistic noise and error mitigation/error correction overheads is unknown.",
+    "[inferred] State preparation (loading target distributions, UZ) can be expensive in the worst case (up to O(J log J) gates) and is a potential bottleneck for overall algorithmic advantage.",
+    "[inferred] The approach was demonstrated for European payoffs and exact-simulable SDEs (Black–Scholes); extension to path-dependent, multi-step or multi-asset models (which require storing or updating full paths) will significantly increase resource requirements and was not addressed.",
+    "[inferred] Implementing shifted oracles Ab (needed for mRQAE/direct encoding) may be nontrivial for complex payoffs or high-dimensional settings; complexity and cost of constructing these shifts were not detailed.",
+    "[inferred] The normalization/truncation requirement (an upper bound on payoffs) introduces a modeling/design choice whose impact on practical pricing error and resource tradeoffs is not fully quantified.",
+    "[inferred] Statistical shot-counts and confidence bounds rely on Hoeffding (or other) inequalities which can be conservative; potential inefficiencies in shot allocation remain unoptimized.",
+    "[inferred] The scaling of end-to-end resource costs (qubits, gate depth, shots) with increasing dimensionality, finer discretization, or longer maturities was not fully quantified."
+  ],
+  "open_questions": [
+    "How can quantum state preparation be engineered to efficiently (in qubits and gate depth) initialize states that approximately encode the target probability distributions needed for pricing?",
+    "Can new encodings be devised that avoid or reduce the need for global normalization bounds (∥F∥∞) and thereby reduce truncation or discretization error?",
+    "What are the optimal parameter choices (amplification policy q, per-iteration shot counts Ni, confidence allocations γi, shifts b) for mRQAE to minimize total oracle calls and shots in realistic settings?",
+    "How robust is the direct-encoding + mRQAE pipeline to realistic noise models on current or near-term quantum hardware, and what error mitigation or error-correction overheads are required?",
+    "How can the approach be generalized to non-European, path-dependent derivatives or multi-asset models where exact one-step simulation is not available?",
+    "How does end-to-end resource scaling (qubits, gate-depth, total number of oracle calls) behave as the number of time steps, dimensions (underlyings), or discretization resolution increase?",
+    "What are practical methods to implement shifted oracles Ab for complex payoffs, and what is their cost relative to the unshifted oracle?",
+    "Can tighter (but still analytically tractable) statistical bounds than Hoeffding be used in the mRQAE framework to reduce shot counts without sacrificing rigorous confidence guarantees?",
+    "What gate- and hardware-error thresholds are necessary for practical advantage of QAMC (direct encoding + mRQAE) over classical Monte Carlo in realistic financial problems?",
+    "Are there hybrid or variational strategies that could reduce circuit depth or qubit counts while preserving the amplitude-estimation advantage?"
+  ],
+  "future_work": [
+    "Develop efficient methods to initialise quantum states that approximate the target probability distribution with far fewer qubits and gates (state preparation / approximate loading).",
+    "Investigate alternative payoff encodings to reduce truncation/normalization errors (new encodings with different normalizations).",
+    "Explore alternative parameter settings for mRQAE (amplification policy, per-iteration confidence and precision) to improve shot-efficiency and overall performance.",
+    "Pursue end-to-end implementations (beyond the simplifying assumptions used here) and evaluate scalability and performance on realistic, higher-dimensional or path-dependent models."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "grover-search",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Direct encoding combined with modified Real Quantum Amplitude Estimation (mRQAE) preserves the theoretical quadratic speedup for estimating signed-payoff expectations and avoids splitting payoffs into positive/negative parts.",
+    "#idea:quantum-advantage — Emulator experiments report medians and IQRs of absolute estimation error vs number of oracle calls, showing mRQAE (direct encoding) compares favorably to mIQAE (square-root encoding) on several payoff types.",
+    "#idea:hybrid-approach — The pipeline relies on classical pre-/post-processing (distribution discretization, shift selection, interval updates) together with quantum amplitude amplification/estimation, demonstrating a practical quantum-classical workflow.",
+    "#idea:near-term-feasibility — Experiments target very small instances (J=32 discretization, 5 qubits for distribution) and use single-step analytic Black–Scholes sampling to keep qubit counts low, enabling emulator-based prototyping of the method.",
+    "#limitation:qubit-count — To remain tractable the study uses a one-step analytic ST sampling and coarse discretization; realistic multi-step SDE simulations would require substantially more qubits and are not demonstrated.",
+    "#limitation:simulation-only — All empirical validation is on QLM/myQLM emulators (HPC nodes); no experiments on physical QPUs are reported.",
+    "#limitation:no-empirical-validation — The effect of hardware noise, gate errors, and real-device constraints is not evaluated, so claims about practical speedups remain untested on hardware.",
+    "#limitation:data-encoding — The proposed direct encoding depends on payoff normalization (infinity norm) and oracle constructions (US, UF, UᵝS); the cost and circuit complexity of preparing these oracles at higher resolution is not fully quantified."
+  ],
+  "contradictions": []
+}

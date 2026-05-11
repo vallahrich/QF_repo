@@ -1,0 +1,193 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The manuscript includes standard paper structure (abstract, methods, results, citations) and contains an arXiv identifier and explicit note that it has been submitted to IEEE but not yet published—clear indicators of a preprint.",
+  "title": "EAQGA: A Quantum-Enhanced Genetic Algorithm with Novel Entanglement-Aware Crossovers",
+  "authors": [
+    "Mohammad Kashfi Haghighi",
+    "Matthieu Fortin-Deschênes",
+    "Christophe Pere",
+    "Mickaël Camus"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (submitted to IEEE)",
+  "doi": "",
+  "abstract_summary": "The paper proposes EAQGA, a quantum-enhanced genetic algorithm that introduces an entanglement-aware crossover to encode correlated bit pairs from elite solutions into shallow quantum circuits, using a limited number of entanglements to remain NISQ-friendly. The method is applied to portfolio optimization and evaluated on simulators and IBM's 127-qubit ibm_quebec device, reporting substantially improved fitness (≈33–37% better) over classical GA and a quantum-inspired GA under the same iteration and population settings.",
+  "methodology_description": "The authors propose an entanglement-aware quantum-enhanced genetic algorithm (EAQGA) for binary combinatorial optimization (QUBO) problems and evaluate it on portfolio optimization. Solutions are encoded as measured bitstrings of quantum circuits whose qubits correspond to decision variables (one qubit per asset). Each generation: (1) N circuits are prepared from an initial |+> superposition (Hadamards) and measured to obtain an initial population; (2) an elitism pool of the top two solutions is maintained; (3) new circuits for the next generation are produced by a crossover that (a) detects correlated bit-pairs between the two elite parents (positive or negative correlations approximating Bell-state patterns), (b) probabilistically selects pairs for entanglement using a selection probability ps modulated by the normalized covariance entries and a time-dependent decay factor df(t), (c) builds short entanglement chains and encodes selected correlations into circuits using RY rotations on control qubits and CNOTs (or RY+X+CNOT for negative correlations), and (d) biases non-entangled qubits toward elite-bit values by single-qubit RY rotations with probability parameter pa; (4) each generated circuit is measured once in the computational basis, solutions evaluated by the Min-Var (mean-variance) QUBO objective µ^T x - q x^T Σ x (q=0.5), and the elitism pool updated. The algorithm is run for a fixed number of iterations with fixed population sizes. Comparative baselines include a classical GA and an adaptive quantum-inspired GA (AQGA). Experiments use Qiskit tooling, a Matrix Product State (MPS) simulator for circuits with limited entanglement, and experiments on real hardware (IBM ibm_quebec). Performance is reported as average and standard deviation of fitness values over repeated runs and compared to baselines and brute-force optimum (where tractable).",
+  "algorithms_used": [
+    "Entanglement-Aware Quantum-Enhanced Genetic Algorithm (EAQGA)",
+    "Classical Genetic Algorithm (GA)",
+    "Adaptive Quantum-Inspired Genetic Algorithm (AQGA)",
+    "QUBO (mean-variance portfolio formulation)"
+  ],
+  "frameworks": [
+    "Qiskit (Qiskit Sampler, Qiskit Finance DataProvider, Qiskit Aer MPS)"
+  ],
+  "experimental_setup": "Simulations used the Qiskit Matrix Product State (MPS) simulator (Qiskit Aer). Real-device experiments used IBM Quantum’s 127-qubit processor ibm_quebec (access via PINQ2). Problem sizes: subsets of 30 and 40 assets on simulator (10 different subsets each), and a 100-asset subset on the real device. Population sizes: 10 and 20 (simulator), 10 (hardware). Iterations: 20. Each circuit was measured once (shots=1).",
+  "dataset_used": "Historical daily price data for S&P 500 constituent stocks obtained via Qiskit Finance (YahooDataProvider). Time range: 2023-10-01 to 2024-09-30. Returns computed as Pit/Pit-1 - 1; per-asset mean µ and covariance Σ computed from these returns. The portfolio objective used a binary Mean-Variance QUBO with risk-aversion q = 0.5. Random non-overlapping subsets of 30 and 40 assets were used for simulator runs; one random subset of 100 assets used on hardware.",
+  "experiment_input": {
+    "data_source": "Qiskit Finance YahooDataProvider (Yahoo Finance)",
+    "time_range": "2023-10-01 to 2024-09-30 (daily)",
+    "asset_universe": "S&P 500 constituents",
+    "subsets": [
+      {
+        "count": 10,
+        "size": 30,
+        "overlap": "non-overlapping subsets for simulator experiments"
+      },
+      {
+        "count": 10,
+        "size": 40,
+        "overlap": "non-overlapping subsets for simulator experiments"
+      },
+      {
+        "count": 1,
+        "size": 100,
+        "use": "real quantum hardware experiment"
+      }
+    ],
+    "preprocessing": "Compute daily returns Rit = Pit/Pit-1 - 1; µ_i = mean(Rit); Σ_{i,j} = sample covariance using T-1 denominator",
+    "problem_encoding": "Binary QUBO objective: maximize µ^T x - q x^T Σ x with q=0.5; one qubit per asset"
+  },
+  "experiment_process": {
+    "initialization": "Prepare circuits in |0>^n, apply Hadamard to each qubit to create |+>^n; measure to generate initial population (N circuits).",
+    "elitism": "Maintain top two solutions (elitism pool) per iteration to guide crossover.",
+    "crossover_generation": "For each new circuit: detect correlated index pairs between the two elite parents (positive/negative correlations). Compute selection probability p_s = ps * (possibly df(t)) * |Σ_n(i,j)| with decay factor df(t) = 0.5 + t/(2*Tmax). Probabilistically select pairs, form entanglement chains, choose one qubit as control and others targets, encode pairwise/chain correlations using RY rotations on control(s), CNOT(s), and X for negative-type correlations. For non-entangled qubits, apply single-qubit RY to bias measurement toward elite-bit with amplitude pa.",
+    "measurement": "Measure each circuit once in the computational basis (shots=1) to obtain a candidate bitstring.",
+    "evaluation": "Compute fitness using QUBO objective µ^T x - q x^T Σ x; update elitism pool and repeat for Tmax iterations.",
+    "baselines_and_comparisons": "Classical GA (roulette selection, single-point crossover p=0.85, mutation rate=0.03), AQGA (adaptive rotation scheme with θmax=0.25, θmin=0.15, mutation ratio=0.05, disaster operation reinitializing worst 20% after 6 stagnant iterations).",
+    "runs_and_repetition": "Simulator: each algorithm run 100 times per subset to compute mean and std. Hardware: experiments repeated 10 times for the 100-asset subset.",
+    "stopping": "Fixed Tmax = 20 iterations"
+  },
+  "experiment_output": {
+    "metric": "Fitness value defined by the QUBO objective (Mean-Variance: µ^T x - q x^T Σ x). Tables present values multiplied by 100 for readability.",
+    "statistics_reported": "Average and standard deviation of fitness across repeated runs; improvement percentages versus baselines reported (e.g., EAQGA 33.6% better than GA and 37.2% better than AQGA on the 100-asset hardware experiment).",
+    "baselines": [
+      "Classical Genetic Algorithm (GA)",
+      "Adaptive Quantum-Inspired Genetic Algorithm (AQGA)",
+      "Brute-force optimum (reported where tractable for small subsets)"
+    ],
+    "output_format": "Per-iteration average fitness curves and final average/std fitness tables across subsets and population sizes"
+  },
+  "experiment_parameters": {
+    "qubits_per_problem": [
+      30,
+      40,
+      100
+    ],
+    "population_sizes": [
+      10,
+      20
+    ],
+    "iterations": 20,
+    "shots_per_circuit": 1,
+    "EAQGA_hyperparameters": {
+      "pa": 0.95,
+      "ps": 0.6,
+      "decay_factor_df(t)": "0.5 + t/(2*Tmax)",
+      "gates_used": [
+        "H",
+        "RY",
+        "X",
+        "CX (CNOT)"
+      ]
+    },
+    "AQGA_hyperparameters": {
+      "theta_max": 0.25,
+      "theta_min": 0.15,
+      "mutation_ratio": 0.05,
+      "disaster_threshold_iters": 6,
+      "disaster_reinit_fraction": 0.2
+    },
+    "GA_hyperparameters": {
+      "crossover_probability": 0.85,
+      "mutation_rate": 0.03,
+      "selection": "roulette wheel (fitness-proportional)"
+    },
+    "QUBO_parameter": {
+      "risk_aversion_q": 0.5
+    }
+  },
+  "hardware_details": {
+    "simulator": "Qiskit Matrix Product State (MPS) simulator (Qiskit Aer implementation)",
+    "quantum_processor": {
+      "name": "ibm_quebec",
+      "qubits": 127,
+      "provider": "IBM Quantum",
+      "access": "via PINQ2 (acknowledged)"
+    }
+  },
+  "reproducibility_notes": "The paper describes implementation details, hyperparameters, and data sources (Qiskit Finance YahooDataProvider). No public code repository or notebook link is provided in the manuscript. Data are publicly accessible via Yahoo Finance through Qiskit Finance. Reproduction of hardware experiments requires access to IBM Quantum backends (ibm_quebec) and the same Qiskit primitives; exact circuit-generation seeds and implementation code are not provided, which may hinder exact replication.",
+  "key_findings": [
+    "[supported] The proposed Entanglement-Aware Quantum-Enhanced Genetic Algorithm (EAQGA) outperforms a classical Genetic Algorithm (GA) and an Adaptive Quantum-Inspired Genetic Algorithm (AQGA) on the tested portfolio-optimization instances (simulator experiments, sizes 30 and 40, populations 10 and 20).",
+    "[supported] On real quantum hardware (IBM ibm_quebec, using 100 qubits / a 100-asset subset) EAQGA produced average fitness values 33.6% better than GA and 37.2% better than AQGA under the reported experimental conditions (20 iterations, population size 10).",
+    "[supported] EAQGA yielded lower standard deviations (i.e., higher empirical stability) across repeated runs than GA and AQGA in the reported experiments.",
+    "[supported] The new crossover encodes observed bit-pair correlations from elite solutions into shallow quantum circuits via a heuristic that maps positive/negative correlations to small entangled subcircuits (CNOT + RY pattern) and biases single qubits with RY rotations.",
+    "[speculative] Limiting the number of entangled pairs and keeping circuit depth shallow makes the method especially suitable for NISQ devices and reduces noise-related degradation in practice (asserted but not proven as a general rule across hardware/noise models).",
+    "[supported] The authors explicitly state they do not claim a formal quantum advantage; because the algorithm uses limited entanglement, it remains classically simulable in many cases.",
+    "[speculative] Encoding entanglement patterns (|ψp⟩ and |ψn⟩ style correlations) is argued to capture economically meaningful joint behaviors (e.g., mutually exclusive or jointly-selected asset pairs) and thereby aid portfolio optimization; this mapping is plausible but presented as an algorithmic/interpretive claim rather than a proven theorem.",
+    "[supported] EAQGA performs comparatively well even with small population sizes (e.g., population = 10), outperforming GA and AQGA run with the same population and iterations in the experiments.",
+    "[supported] Use of a Matrix Product State (MPS) simulator is appropriate for these experiments because the generated circuits intentionally limit entanglement, enabling efficient classical simulation.",
+    "[speculative] The paper suggests that current quantum devices with ~100 qubits can begin to address utility-scale combinatorial optimization problems; this is an optimistic extrapolation from the reported experiment rather than a conclusive demonstration."
+  ],
+  "results_summary": "The paper introduces EAQGA, a quantum-enhanced genetic algorithm that uses an entanglement-aware crossover to map correlated bit pairs from elite solutions into shallow quantum subcircuits, and biases unpaired qubits with single-qubit rotations. Empirical experiments on S&P 500-derived portfolio subsets (simulator: 30 and 40 assets; hardware: 100 assets on IBM ibm_quebec) show EAQGA achieves higher average fitness and lower variance than a classical GA and an adaptive quantum-inspired GA under the tested hyperparameters (20 iterations, populations 10/20). On the 100-asset hardware experiment EAQGA reported +33.6% vs GA and +37.2% vs AQGA. The authors emphasize practical NISQ suitability (limited entanglement, shallow circuits) and explicitly do not claim a formal quantum advantage.",
+  "performance_claims": [
+    "[supported] On ibm_quebec with a 100-asset subset, EAQGA produced average fitness values 33.6% higher than GA and 37.2% higher than AQGA (20 iterations, population size 10).",
+    "[supported] On the simulator for problem size 40 and population 10, EAQGA outperformed GA and AQGA by approximately 15.4% and 10% on average respectively (over the reported subsets and runs).",
+    "[supported] Simulator aggregate example metrics (size 30, population 10, averaged over 10 subsets and runs): average fitness ×100 — GA: 1.9155, AQGA: 1.9999, EAQGA: 2.0819 (reported in Table I averages).",
+    "[supported] Experimental protocol details: 20 iterations, population sizes evaluated 10 and 20, single-shot measurement per circuit, hyperparameters used for EAQGA included pa = 0.95 and ps = 0.6.",
+    "[supported] The simulator experiments comprised 10 random subsets for each problem size (30 and 40 assets), 100 independent runs per subset to compute averages and standard deviations."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The authors explicitly state they do not claim a formal quantum advantage: EAQGA uses limited entanglement and shallow circuits which make it often classically simulable (and thus no provable asymptotic quantum speedup is claimed). Reported improvements are empirical performance gains under the tested instances and settings rather than proof of quantum computational advantage.",
+  "limitations": [
+    "The authors explicitly do not claim a formal quantum advantage: the algorithm uses a limited number of entanglements and can be simulated efficiently on classical hardware.",
+    "Circuit design intentionally limits entanglement and keeps depth shallow to be NISQ-friendly, which may restrict the algorithm's ability to capture more complex multi-variable correlations.",
+    "[inferred] Experimental evaluation is narrow in scope: simulator tests use subsets of size 30 and 40 and hardware tests use a single 100-qubit subset on one IBM device with only 10 repeats, limiting statistical confidence and generality.",
+    "[inferred] Benchmarking is limited: comparisons are only made to a classical GA and an AQGA; the paper does not compare to other classical heuristics (e.g., simulated annealing, tabu search, sophisticated solvers) or other quantum approaches (e.g., QAOA, VQE).",
+    "[inferred] The algorithm relies on a set of hyperparameters (ps, pa, selection heuristics, decay schedule) tuned via Bayesian optimization on a random subset; robustness and generalization of these choices to other datasets/problems is not shown.",
+    "[inferred] Each quantum circuit is measured only once to produce a sample/solution, which may reduce robustness of estimates and increase sensitivity to device noise/stochasticity.",
+    "[inferred] No formal complexity, convergence proof, or theoretical guarantees are provided (e.g., on convergence speed, approximation quality, or scaling behavior).",
+    "[inferred] Use of the MPS simulator (efficient for low entanglement) both reflects and may bias evaluation toward low-entanglement regimes; behavior when higher entanglement is required is not characterized.",
+    "[inferred] The study focuses on binary (0/1) portfolio selection; handling of additional practical constraints (cardinality limits, budget constraints, or continuous allocations) is not addressed."
+  ],
+  "open_questions": [
+    "How can quantum entanglement be better harnessed to represent various levels of correlation between assets, even in low-depth circuits? (explicitly raised by the authors)",
+    "[inferred] What are the trade-offs between number/structure of entanglements, circuit depth, and performance under realistic device noise? How many entanglements are optimal for a given problem/hardware?",
+    "[inferred] Can the proposed entanglement-aware crossover approach scale reliably to larger problem sizes (>100 qubits) and to other combinatorial optimization problems beyond portfolio optimization?",
+    "[inferred] Is it possible to obtain a formal or empirical quantum advantage for practical financial optimization problems using variants of this approach (e.g., different entanglement schemes, deeper circuits, or hybrid strategies)?",
+    "[inferred] How robust is the algorithm across different market regimes, asset universes, and real-world data noise/estimation error in returns and covariances?",
+    "[inferred] How sensitive is algorithm performance to hyperparameters (ps, pa, decay schedule, elitism pool size), and can these be made adaptive or self-tuning in production settings?",
+    "[inferred] How does EAQGA compare (in solution quality and resource use) against other modern classical metaheuristics and quantum algorithms such as QAOA or quantum-inspired optimization when applied to the same financial instances?",
+    "[inferred] How can the approach be extended to handle additional practical constraints (cardinality, budget, transaction costs) or continuous/weight-based portfolio formulations?"
+  ],
+  "future_work": [
+    "Stimulate further research into how quantum entanglement can be harnessed to represent various levels of correlation between assets, even in low-depth circuits (explicitly mentioned).",
+    "Integration of the proposed method into the Optimization QKit of the PINQ2 innovation platform (stated plan)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — EAQGA reports substantial empirical improvements (≈33–37% better fitness) versus a classical GA and an adaptive quantum-inspired GA under the same population/iteration settings, including a 100-asset run on IBM's 127-qubit device.",
+    "#idea:near-term-feasibility — The method is explicitly NISQ-friendly: uses shallow entanglement-aware circuits, limits chain lengths, uses an MPS simulator for low-entanglement cases, and demonstrates experiments on a real 127-qubit device (ibm_quebec).",
+    "#idea:hybrid-approach — The algorithm is hybrid: quantum circuits generate candidate bitstrings (one qubit per asset) while classical genetic operations (elitism, selection logic, fitness evaluation) and hyperparameter control steer evolution.",
+    "#limitation:noise — Hardware experiments use shots=1 per circuit and only 10 repetitions for the 100-asset hardware runs, making results susceptible to sampling noise and device errors; noise amplification risk not extensively mitigated in reported experiments.",
+    "#limitation:qubit-count — Encoding is one qubit per asset (binary inclusion), so scaling to larger asset universes requires linearly more qubits; experiments use a single 100-asset subset on a 127-qubit device, leaving broader scalability untested."
+  ],
+  "contradictions": []
+}

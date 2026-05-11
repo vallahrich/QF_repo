@@ -1,0 +1,207 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2201.06987v2) and date, lacks a journal or conference venue, and contains an industry disclaimer—consistent with an author-uploaded preprint rather than a peer-reviewed publication.",
+  "title": "Benchmarking Amplitude Estimation on a Superconducting Quantum Computer",
+  "authors": [
+    "Salvatore Certo",
+    "Anh Dung Pham",
+    "Daniel Beaulieu"
+  ],
+  "year": "2022",
+  "journal_or_venue": "arXiv preprint (arXiv:2201.06987)",
+  "doi": "",
+  "abstract_summary": "This preprint benchmarks Maximum Likelihood Amplitude Estimation (MLAE) on a superconducting IBM Nairobi quantum computer using inner-product (unary data loader) circuits and aggressive compilation/optimization with Qiskit and Pytket. The authors find that optimally compiled circuits allow MLAE to outperform naive sampling for up to three Grover iterations (circuit depth ≈131) on 4-qubit experiments (best reported mean error ≈0.0442), and they provide empirical upper bounds on feasible AE circuit depths for current NISQ hardware.",
+  "methodology_description": "The authors benchmark Maximum Likelihood Amplitude Estimation (MLAE) on a superconducting quantum processor by constructing quantum circuits that encode the squared inner product of pairs of unit vectors into the amplitude of a designated qubit. Circuits implement state-preparation operator A (unary data loader style using RBS two-qubit unitaries) and the Grover iterate Q = A S0 A† Sψ. They generated synthetic random unit-vector pairs in 2 and 4 dimensions (inner products approximately uniformly distributed), compiled the high-level circuits to IBM Nairobi basis gates and then applied aggressive optimizations using Qiskit and Pytket. Using a linear sequencing schedule (LIS) they evaluated mk = 0..7 Grover repetitions, executing each compiled subcircuit with 500 shots and repeating the whole experiment 50 times to obtain statistics. Measurement counts hk for the target outcome were fed into the MLAE likelihood function and an MLE over θ (with an initial uniform prior over [0, π/2]) produced amplitude estimates a = sin^2 θ, which were compared against the exact inner products. They also compared MLAE results to a naive sampling baseline (classical averaging) with up to 3000 shots in increments of 500. The study reports mean errors, variance, circuit depths and gate counts across compilation strategies, and identifies empirical depth thresholds (e.g., deterioration of accuracy beyond ~3 Grover iterations for the tested hardware and compilations).",
+  "algorithms_used": [
+    "Maximum Likelihood Amplitude Estimation (MLAE)",
+    "Grover iterate (amplitude amplification)",
+    "Naive sampling (classical baseline)"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "Pytket"
+  ],
+  "experimental_setup": "IBM Nairobi superconducting quantum processor (7 qubits, quantum volume 32). Synthetic experiments used 2-qubit and 4-qubit circuits to encode inner products via unary-style data loaders (RBS gates). Circuits compiled to hardware basis gates then optimized with Qiskit (optimization level 3) and Pytket (level 2). MLAE run with linear sequencing mk = 0..7, 500 shots per subcircuit, 50 independent repetitions; naive-sampling baseline run up to 3000 shots in increments of 500. Initial MLE prior uniform over [0, π/2]. Reported measured metrics include mean relative error, variance, circuit depth and gate counts.",
+  "dataset_used": "",
+  "experiment_input": {
+    "type": "synthetic",
+    "source": "randomly generated unit vectors",
+    "dimensions_tested": [
+      2,
+      4
+    ],
+    "sample_size": 50,
+    "distribution": "unit vectors chosen such that inner products are approximately uniformly distributed",
+    "preprocessing": "vectors normalized to unit length to form quantum state amplitudes"
+  },
+  "experiment_process": {
+    "steps": [
+      "Generate synthetic random unit-vector pairs (2D and 4D) and compute exact inner product for ground truth.",
+      "Construct state-preparation circuit A (unary loader using RBS gates) that encodes the inner product amplitude on the target qubit.",
+      "Construct Grover iterate Q = A S0 A† Sψ (implement Sψ and S0 via single Z/reflection gates where applicable).",
+      "Compile high-level circuits to IBM Nairobi basis gates and apply optimization passes using Qiskit (level 3) and Pytket (level 2).",
+      "For each mk in {0,...,7} (linear schedule), execute the corresponding compiled circuit with 500 shots and record counts hk of the target outcome.",
+      "Feed hk, mk, Nk into the MLAE likelihood (L(h; a) = ∏ P(mk; a)^hk (1−P(mk; a))^(Nk−hk) with P(mk; a)=sin^2((2mk+1)θ)) and perform MLE over θ with initial prior uniform on [0, π/2]; compute a = sin^2 θ.",
+      "Repeat the whole procedure 50 times to obtain averages and variances.",
+      "Run naive-sampling baseline by direct sampling of A (no Grover) with up to 3000 shots (increments of 500) and compare errors.",
+      "Collect metrics (mean error, variance) and circuit diagnostics (depth, gate counts) for different compilation strategies and Grover iteration counts."
+    ],
+    "parameters": {
+      "sequencing_schedule": "Linear (LIS)",
+      "mk_values": "0..7",
+      "shots_per_subcircuit": 500,
+      "naive_sampling_shots": "up to 3000 in increments of 500",
+      "repetitions": 50,
+      "MLE_prior": "uniform over [0, π/2]",
+      "compilers_and_levels": {
+        "Qiskit": "level 3",
+        "Pytket": "level 2"
+      }
+    }
+  },
+  "experiment_output": {
+    "formats": [
+      "mean relative error between estimated amplitude and exact inner product",
+      "variance / error bars across repetitions",
+      "per-Grover-iteration error curves",
+      "circuit diagnostics (total depth, two-qubit gate counts, gate composition)"
+    ],
+    "baselines": [
+      "naive sampling (classical averaging of measurements)"
+    ],
+    "representative_results": [
+      "2-qubit: minimal mean error ~0.0017 after 7 Grover iterations (500 shots per subcircuit)",
+      "4-qubit: best mean error ~0.0442 achieved with Pytket optimized circuits after 3 Grover iterations (circuit depth ~131); errors deteriorated beyond ~3 iterations due to decoherence/noise"
+    ]
+  },
+  "experiment_parameters": {
+    "hardware_qubits": 7,
+    "circuit_qubits_used": [
+      2,
+      4
+    ],
+    "max_grover_iterations_mk": 7,
+    "shots_per_mk": 500,
+    "naive_sampling_shots": [
+      500,
+      1000,
+      1500,
+      2000,
+      2500,
+      3000
+    ],
+    "repetitions": 50,
+    "MLE_prior_theta_range": "[0, π/2]",
+    "compilers": {
+      "Qiskit": "optimization level 3",
+      "Pytket": "optimization level 2",
+      "standard_transpiler": "IBM standard compilation (baseline)"
+    },
+    "observed_depths": {
+      "max_compiled_depth": "~300 (for some compiled circuits)",
+      "best_reported_depth_for_3_Grover": 131
+    }
+  },
+  "hardware_details": {
+    "qpu_model": "IBM Nairobi (superconducting)",
+    "num_qubits": 7,
+    "quantum_volume": 32,
+    "cloud_provider": "IBM Quantum"
+  },
+  "reproducibility_notes": "The paper describes the circuit constructions, compilation frameworks (Qiskit, Pytket) and optimization levels used, and synthetic data generation (random unit vectors). However, no code repository, exact random seeds, nor circuit source files or runtime compilation outputs are provided in the text. Reproducing exact compiled circuits may be hardware- and compiler-version dependent; authors did not provide explicit links to code or data.",
+  "key_findings": [
+    "[supported] Maximum Likelihood Amplitude Estimation (MLAE) with aggressively-compiled circuits outperforms naive sampling on the IBM Nairobi superconducting device for up to 3 Grover iterations (empirical result).",
+    "[supported] For a 4-qubit inner-product AE task, Pytket-optimized circuits achieved a mean relative error of 0.0442 after 3 Grover iterations with a compiled circuit depth of 131 (empirical result).",
+    "[supported] For a 2-qubit AE task, MLAE achieved a lowest recorded mean error of 0.0017 after 7 Grover iterations (empirical result).",
+    "[supported] Aggressive compilation (Qiskit and Pytket) substantially reduced two-qubit gate counts and overall circuit depth compared to standard compilation, improving AE performance (empirical result).",
+    "[supported] In these experiments Pytket produced shallower circuits and lower mean error than Qiskit's most aggressive compilation settings for the tested circuits (empirical, caveated by sample size and hardware noise).",
+    "[supported] The experimental platform used was IBM Nairobi (7 qubits, reported quantum volume 32) and experiments used 500 shots per circuit instance (up to 7 Grover iterations) repeated 50 times (experimental setup).",
+    "[supported] RBS-based data-loader circuits can compile to very large depths on IBM superconducting hardware (unoptimized depths >500 for 7 Grover iterations); even after optimization depths for higher iteration counts reached ~300 and errors degraded beyond ~3 iterations (empirical observation).",
+    "[supported] Errors and performance degrade beyond ~3 Grover iterations on the tested superconducting hardware due to decoherence and accumulated gate errors (empirical observation).",
+    "[supported] Literature-based threshold: prior work estimates that achieving quantum advantage for certain Monte Carlo derivative-pricing tasks requires t-depth on the order of 54 million, implying current hardware is far from that threshold (literature citation).",
+    "[speculative] Canonical QPE-based amplitude estimation (using controlled Q and QFT) is impractical on current NISQ devices because controlled operations and QFT require deep, error-prone circuits (theoretical/engineering argument).",
+    "[speculative] MLE sequencing schedules (e.g., linear, exponential, power-law) and the choice of schedule will affect practical AE performance; this work used a linear incremental sequence (methodological/theoretical).",
+    "[speculative] Circuit compilation strategy and hardware-specific gate errors will materially determine the practical feasibility and required circuit depths for AE as hardware evolves (theoretical/engineering claim).",
+    "[speculative] The circuits presented may be among the deepest reported on superconducting hardware that still exhibit meaningful error reduction for MLAE (asserted comparison to some prior reports, not exhaustively established)."
+  ],
+  "results_summary": "This preprint reports experimental benchmarks of Maximum Likelihood Amplitude Estimation (MLAE) on IBM's Nairobi 7-qubit superconducting device. Using unary-style RBS-based inner-product circuits for 2- and 4-qubit tasks and aggressive compilation (Qiskit and Pytket), the authors show MLAE can outperform naive sampling: for 2 qubits, a minimum mean error of 0.0017 was observed after 7 Grover iterations; for 4 qubits, Pytket-optimized circuits attained mean error 0.0442 after 3 Grover iterations at compiled depth ~131. Aggressive compilation substantially reduced two-qubit gate counts and depths versus standard transpilation. Performance degraded beyond ~3 Grover iterations due to decoherence/accumulated errors. The authors situate these empirical results against literature estimates that large t-depths (O(10^7)) are required for Monte Carlo quantum advantage, concluding current hardware remains far from that threshold.",
+  "performance_claims": [
+    "IBM Nairobi device: 7 qubits, quantum volume 32 (platform spec).",
+    "Experimental schedule: up to 7 Grover iterations, 500 shots per mk, experiments repeated 50 times; naive sampling tested up to 3000 shots (method).",
+    "2-qubit MLAE: lowest mean error = 0.0017 after 7 Grover iterations (empirical).",
+    "4-qubit MLAE (Pytket-optimized): mean error = 0.0442 after 3 Grover iterations, compiled circuit depth = 131 (empirical).",
+    "Unoptimized RBS-based circuits can compile to depths >500 for 7 Grover iterations; optimized circuits still reached depths ~300 for higher iterations, with errors worsening beyond ~3 iterations (empirical observation).",
+    "Trapped-ion comparison (from cited work): prior trapped-ion experiments reported up to 92 two-qubit gates and maximum circuit depth 62 (literature comparison).",
+    "Literature-based threshold for quantum advantage in some Monte Carlo derivative-pricing tasks: t-depth ≈ 54,000,000 (cited prior work)."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper does not demonstrate quantum advantage. It reports improved estimation accuracy using MLAE and aggressive compilation on a 7-qubit superconducting device for small problems, but explicitly notes that literature estimates place the circuit-depth requirements for practical quantum advantage in Monte Carlo far beyond current hardware capabilities (t-depth ≈ 54 million).",
+  "limitations": [
+    "Canonical QPE-based AE is unsuitable for current NISQ devices because controlled gates and QFT are expensive and increase circuit depth (author-stated).",
+    "Compilation to hardware-native gates and qubit topology can dramatically increase circuit depth, gate counts, and alter algorithm performance (author-stated).",
+    "Empirical deterioration of AE results after ~3 Grover iterations due to decoherence and accumulated gate errors; practical upper bound on useful circuit depth observed (author-stated).",
+    "RBS gates compile into large-depth two-qubit interactions on superconducting hardware unless aggressively optimized (author-stated).",
+    "Naive sampling did not improve with larger shot counts (up to 3000) due to hardware noise limiting estimation accuracy (author-stated).",
+    "[inferred] Experiments are limited in scope to unary data-loader inner-product circuits (2- and 4-dimensional vectors), so results may not generalize to other problem types or higher dimensions.",
+    "[inferred] Results are specific to a single superconducting device (IBM Nairobi, 7 qubits, QV=32); generalizability across different superconducting backends or larger devices is unproven.",
+    "No systematic, quantitative head-to-head comparison of compilation toolchains (Qiskit vs Pytket) was performed; the presented results are not direct comparisons (author-stated).",
+    "[inferred] Use of only a linear sequencing schedule (LIS) for MLAE leaves open whether other schedules (EIS, power-law, iterative AE variants) might perform better under noise.",
+    "[inferred] Small sample sizes for random vectors (50 instances per experiment) could affect statistical robustness of the reported means and comparisons.",
+    "[inferred] The study does not test other AE approaches (e.g., iterative AE, variational AE) in this experimental setting, so comparative performance is unknown.",
+    "The measured achievable circuit depths and error rates are many orders of magnitude away from the t-depth (~54 million) estimated as required for quantum advantage in derivative pricing, indicating current hardware is far from practical advantage (author-stated)."
+  ],
+  "open_questions": [
+    "What are the exact circuit requirements (gate counts, depths, connectivity) necessary to achieve quantum advantage for applications that rely on Amplitude Estimation (author-stated)?",
+    "How do different compilation strategies and optimization passes compare quantitatively across multiple metrics, algorithms, and circuit types (author-suggested)?",
+    "Why did Pytket-compiled circuits appear more robust to noise at higher Grover iterations than Qiskit-compiled circuits in these experiments — what causes the discrepancy (author-noted open issue)?",
+    "What is the maximum feasible number of Grover iterations (and corresponding circuit depth) for AE on present and near-term superconducting hardware before noise negates benefits (implicit/author-empirical)?",
+    "How do alternative sequencing schedules for MLAE (e.g., EIS, power-law) or other AE variants perform relative to LIS under realistic noise and compilation overheads ([inferred])?",
+    "How well do these experimental findings generalize across different quantum hardware platforms (e.g., trapped ions vs superconducting qubits) and larger qubit counts ([inferred])?",
+    "What are best practices for compiling specific multi-qubit primitives (such as RBS) to minimize depth and noise on different hardware backends ([inferred])?",
+    "Can MLAE (or other low-depth AE algorithms) scale to problem sizes and depths required by financially-relevant Monte Carlo problems before hardware improves substantially ([inferred])?",
+    "How do qubit topology and gate-specific error rates quantitatively impact achievable AE performance and the practical selection of circuits/schedules ([inferred])?"
+  ],
+  "future_work": [
+    "Perform further experiments to benchmark and compare different ways to optimize quantum circuits (different compilers, optimization levels, and passes) for AE (author-stated).",
+    "Design comprehensive functional benchmark tests that are continually monitored against current quantum hardware to measure progress toward quantum advantage (author-stated).",
+    "Evaluate a variety of metrics, algorithms, and circuit types to quantitatively assess compiler performance and to identify best practices for AE circuit compilation (author-suggested).",
+    "[inferred] Explore other AE sequencing schedules and alternative AE algorithms (iterative, variational) experimentally to determine their relative robustness under real-device noise.",
+    "[inferred] Extend experiments to additional hardware platforms and larger/qubit-count devices to assess generalizability and scalability of AE benchmarks."
+  ],
+  "topic_tags": [
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "grover-search",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Maximum Likelihood Amplitude Estimation (MLAE) implemented on a superconducting QPU can outperform naive sampling for small instances (4-qubit inner-product task) up to ~3 Grover iterations (best mean error ≈ 0.0442).",
+    "#idea:near-term-feasibility — Empirical upper bounds on feasible AE circuit depths are provided: accuracy deteriorates beyond ~3 Grover iterations (circuit depth ≈131) on the tested IBM Nairobi device, showing practical NISQ limits.",
+    "#idea:hybrid-approach — Classical maximum-likelihood post-processing (MLE) combined with quantum subcircuit executions (MLAE) is an effective hybrid workflow for amplitude estimation on current hardware.",
+    "#limitation:noise — Decoherence and gate noise are identified as primary causes of error growth with increased Grover iterations; aggressive compilation delays but does not eliminate noise-limited depth thresholds.",
+    "#limitation:qubit-count — The experiments use unary-style data loading (RBS) and small 2- and 4-qubit circuits; the approach as tested is qubit-inefficient for higher-dimensional problems, limiting direct scalability.",
+    "#limitation:data-encoding — Unary data loader encodings were used to prepare amplitudes; encoding choices impact qubit requirements and compiled depths, affecting practicality for larger financial Monte Carlo problems.",
+    "#idea:quantum-advantage — Aggressive compiler optimizations (Qiskit, Pytket) materially improve empirical performance and extend the iteration budget where MLAE beats naive sampling.",
+    "#limitation:no-empirical-validation — (not applicable) — the paper does provide empirical validation on real hardware with statistical repetition and baselines."
+  ],
+  "contradictions": [
+    "contradiction:scalability — Although amplitude estimation promises asymptotic quadratic speedup versus classical sampling, this study demonstrates that on current NISQ hardware the depth and noise constraints limit practical advantage to very small instances (4 qubits, ≲3 Grover iterations), contradicting optimistic expectations that AE yields practical speedups without addressing hardware depth/noise.",
+    "contradiction:scalability — The paper's empirical upper bounds on AE circuit depth challenge claims that QAE/AE variants are readily applicable to real-world Monte Carlo (e.g., finance) problems on near-term devices without significant algorithmic or hardware advances."
+  ]
+}

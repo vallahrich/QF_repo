@@ -1,0 +1,163 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document is an academic-style draft with abstract, methods, results, references and JEL codes but explicitly labeled 'Draft. Not edited. Please do not circulate.' and lacks any journal or conference venue—consistent with a preprint/working paper rather than a peer-reviewed publication or industry report.",
+  "title": "Quantum-enhanced versus classical Support Vector Machine: An application to stock index forecasting",
+  "authors": [
+    "Mathieu Mercadier"
+  ],
+  "year": "2023",
+  "journal_or_venue": "Preprint (draft)",
+  "doi": "",
+  "abstract_summary": "This preprint surveys quantum machine learning literature with emphasis on quantum Support Vector Machines and reports two empirical experiments comparing a quantum-enhanced SVM (using a quantum kernel estimator) to classical SVMs for forecasting stock index movement directions. Using small-scale cloud-accessible NISQ hardware, the study finds the classical SVM (particularly with an RBF kernel) outperforms the current quantum-enhanced approach in accuracy and runtime, concluding that quantum SVMs are not yet practically advantageous for financial forecasting though they may become so as hardware improves.",
+  "methodology_description": "The study empirically compares a classical Support Vector Machine (SVM) and a quantum-enhanced SVM (QSVM using the quantum kernel estimator) for binary classification of stock-index movement direction. Weekly financial data (Wednesdays) from Bloomberg L.P. spanning 2009-07-08 to 2020-01-22 are preprocessed into weekly returns and binary up/down labels. Two experiments are run: (1) one-week-ahead prediction of the S&P/TSX composite (TSX) using three features (lagged TSX return, lagged S&P500 return, lagged CAD/USD return); (2) contemporaneous (present) prediction of Euro Stoxx 50 (SX5E) direction using contemporaneous DAX and CAC returns. For both experiments a rolling/series of runs is performed using training windows of 80 consecutive weeks and test windows of 20 consecutive weeks, repeated monthly for 113 evaluation points. The classical SVM is implemented with scikit-learn's SVC (linear and RBF kernels; hyperparameters C and γ tuned). The quantum-enhanced SVM uses Qiskit's QSVM / quantum kernel estimator: classical inputs are embedded with a second-order Pauli-Z feature map (full entanglement, specified nonlinear phases), the quantum processor estimates kernel entries (sampling R=1024 shots), the classical SVM dual problem is solved on the resulting kernel matrix, and the quantum device is invoked again to compute kernels between test points and support vectors. Performance is evaluated by balanced accuracy, F1-score, precision, recall, and wall-clock computation time.",
+  "algorithms_used": [
+    "Support Vector Machine (SVM)",
+    "Quantum-enhanced SVM (QSVM with Quantum Kernel Estimator / QKE)"
+  ],
+  "frameworks": [
+    "scikit-learn (SVC)",
+    "Qiskit (QSVM / quantum kernel estimator)",
+    "IBM Quantum Experience (cloud access to QPUs)"
+  ],
+  "experimental_setup": "Two supervised classification experiments with weekly financial data. Sliding/rolling windows: training size = 80 weeks, test size = 20 weeks. Repeated monthly over 113 evaluation dates. Classical SVM run locally (scikit-learn); QSVM run via Qiskit on IBM Quantum Experience real hardware (free 5-qubit access). Quantum feature map: second-order Pauli-Z evolution circuit, full entanglement, 2 repetitions. Kernel estimation via repeated sampling (shots R = 1024). Metrics recorded per run: balanced accuracy, F1-score, precision, recall, and per-observation wall-clock time.",
+  "dataset_used": "Weekly financial time series from Bloomberg L.P., sampled on Wednesdays from 2009-07-08 to 2020-01-22. Two experiment datasets: (1) TSX index returns with features = {lagged TSX return, lagged S&P 500 (SPX) return, lagged CAD/USD return}; (2) SX5E index returns with features = {DAX return, CAC return} for same-week prediction. Labels are binary up/down movement directions derived from returns.",
+  "experiment_input": "Source: Bloomberg L.P. Frequency: weekly (Wednesdays). Time span: 2009-07-08 to 2020-01-22 (figures reference ~551 dates). Experiment 1: features = 3 (Return_TSX_{t}, Return_SPX_{t}, Return_CAD_{t}), target = Direction_TSX_{t+1}. Experiment 2: features = 2 (Return_DAX_{t}, Return_CAC_{t}), target = Direction_SX5E_{t}. Preprocessing: compute weekly returns; assign binary labels (up/down); use Wednesdays to avoid end-of-week volatility; construct rolling datasets with training_size=80 and test_size=20 consecutive weeks; imbalance noted in some splits. No code or dataset files are provided in the paper.",
+  "experiment_process": "1) Preprocess raw price data to weekly returns and binary up/down labels (Wednesdays). 2) For each evaluation date (monthly repeat, total 113 runs): extract the preceding 80-week training window and following 20-week test window. 3) Classical pipeline: train scikit-learn SVC on training data; experiment with linear and RBF kernels; tune C and γ (RBF) hyperparameters; predict test labels; record metrics. 4) Quantum-enhanced pipeline: map classical features into quantum states using a second-order Pauli-Z feature map (ϕ(xi)=xi, ϕ(xi,xj)=(π−xi)(π−xj)), set number of qubits = number of features (nqb=3 for TSX experiment, nqb=2 for SX5E experiment), full entanglement, repetitions=2; for all pairs in training set run the quantum circuit U†Φ(xi) UΦ(xj) on the QPU, sample R=1024 shots to estimate kernel entries K(xi,xj)=|⟨Φ(xi)|Φ(xj)⟩|^2; build kernel matrix; classically solve the SVM dual using that kernel to obtain support vectors and α coefficients; for each test point estimate kernels against support vectors via QPU; compute predictions ˆy = sign(sum α_t y_t K(xt,x') + b); compute metrics. 5) Aggregate metrics across runs and compare classical vs quantum results. Additional measurements: wall-clock execution time per observation (noted very long and variable).",
+  "experiment_output": "Per-run metrics: balanced accuracy, F1-score, precision, recall, and observed wall-clock computation time. Results aggregated (means reported) over 113 runs. Baselines: classical SVM with linear kernel and SVM with RBF kernel (hyperparameter-tuned). Reported findings: classical SVM with RBF attains best balanced accuracy (especially in the easier separability experiment), QSVM yields lower balanced accuracy and much longer execution times (average ~3 h 55 min per observation on IBM cloud in this set-up). Kernel-free advantages (no γ tuning) of QSVM noted but not yielding superior empirical performance here.",
+  "experiment_parameters": {
+    "training_window_weeks": 80,
+    "test_window_weeks": 20,
+    "number_of_runs": 113,
+    "data_frequency": "weekly (Wednesdays)",
+    "time_span": "2009-07-08 to 2020-01-22",
+    "classical_svm_kernels": [
+      "linear",
+      "RBF (radial basis function)"
+    ],
+    "classical_hyperparameters_tuned": [
+      "C (regularization)",
+      "gamma (for RBF)"
+    ],
+    "quantum_feature_map": "second-order Pauli-Z evolution circuit",
+    "feature_map_formulas": {
+      "phi_single": "phi(xi) = xi",
+      "phi_pair": "phi(xi,xj) = (π - xi)(π - xj)"
+    },
+    "qubits_per_experiment": {
+      "TSX_experiment": 3,
+      "SX5E_experiment": 2
+    },
+    "entanglement": "full",
+    "repetitions_of_feature_map": 2,
+    "shots": 1024,
+    "sampling_error_scaling": "O(R^-0.5)",
+    "kernel_estimation_method": "estimate transition amplitude via circuit U†Φ(xi)UΦ(xj) and count |0...0| outcomes",
+    "software_implementations": {
+      "classical": "scikit-learn SVC (local)",
+      "quantum": "Qiskit QSVM / quantum kernel estimator"
+    }
+  },
+  "hardware_details": {
+    "quantum_provider": "IBM Quantum Experience (IBM Q cloud)",
+    "access": "public free tier (limited to 5 qubits)",
+    "used_backend": "actual IBM QPU (unspecified model) via Qiskit",
+    "simulator": "Not reported (actual QPU used)",
+    "notes": "Cloud queuing and device noise reported; execution times highly variable (40 minutes to >8 hours per observation), average ~3 h 55 min per observation."
+  },
+  "reproducibility_notes": "Data source is Bloomberg L.P. (proprietary); the paper does not provide code or a public repository. Reproduction would require Bloomberg access to reconstruct datasets and IBM Quantum Experience account (free tier) for QPU runs. Key Qiskit QSVM settings (feature map order, entanglement, repetitions, shots=1024), training/test window sizes (80/20), and rolling procedure (113 monthly runs) are documented in the paper; exact hyperparameter search grids and random seeds (if any) are not provided. As such, partial reproduction is feasible given access to Bloomberg and IBM Q, but exact numeric replication is impeded by missing code, device/model/version specifics, and nondeterminism/noise inherent to cloud QPU runs.",
+  "key_findings": [
+    "[supported] In the reported experiments the quantum-enhanced SVM (quantum kernel estimator) underperforms the classical SVM in both predictive accuracy and wall-clock computation time on the tested stock-index forecasting tasks.",
+    "[supported] When forecasting one-week-ahead TSX direction (using lagged TSX, SPX, CAD returns) classifiers show poor separability: classical RBF SVM balanced accuracy only slightly above 50%; linear and quantum kernels near 50% (chance).",
+    "[supported] When forecasting current SX5E direction from contemporaneous DAX and CAC returns (an easier/separable task), classical SVM with RBF kernel achieves the highest balanced accuracies (>90% reported); linear and quantum kernels give lower but still high balanced accuracies (>80%).",
+    "[supported] Measured average quantum-enhanced SVM computation time per observation (using the cloud device) was ~3 hours 55 minutes (range ~40 minutes to >8 hours), and empirically ~5.9 × 10^6 times slower than performing the corresponding classical computation locally.",
+    "[supported] The quantum kernel estimator (QKE) used here does not require setting the usual RBF γ hyperparameter (the kernel is K(x,x') = |⟨Φ(x)|Φ(x')⟩|^2), which simplifies tuning compared with typical non-linear classical kernels.",
+    "[supported] The quantum-enhanced SVM results exhibit run-to-run variability (stochasticity) due to sampling/noise on NISQ hardware.",
+    "[supported] Practical experiments were constrained by NISQ/cloud limitations (limited qubits — free IBM access limited to 5 qubits, device noise, limited shots/throughput and long queues), forcing small training/test sets (80/20) and binary classification only.",
+    "[supported] The paper contributes an application of QKE-SVM to noisy, non-stationary financial time series — a data domain where prior QKE-SVM empirical work mostly used well-separated UCI datasets.",
+    "[speculative] Quantum SVM algorithms can provide exponential theoretical speed-ups (time complexity claims O(log N) vs classical O(N)) but only under specific assumptions (e.g., data provided/loaded as coherent quantum superpositions); these speed-ups are theoretical and not realized in the presented experiments.",
+    "[speculative] The statement that the quantum SVM 'eliminates the need' to select a kernel and fine-tune many hyperparameters is optimistic: while QKE avoids some classical hyperparameters (e.g., γ), it still requires choice/design of the quantum feature map/circuit and other experimental settings.",
+    "[supported] The empirical setup: monthly rolling experiments over 113 Wednesdays, training set size 80, test set size 20, shot count reported as R = 210, feature-map circuits used with n_qubits = 3 (first task) and n_qubits = 2 (second task) for the chosen feature maps."
+  ],
+  "results_summary": "The paper reports two pilot empirical comparisons between a quantum-enhanced SVM (using a quantum kernel estimator on IBM cloud NISQ hardware) and classical SVMs for binary stock-index movement prediction. On a harder, less separable task (one-week-ahead TSX) all methods performed near chance, with the quantum-enhanced SVM offering no improvement. On an easier, more separable task (current SX5E from DAX and CAC) the classical SVM with RBF kernel outperformed the quantum-enhanced SVM (balanced accuracy >90% vs >80%). The quantum runs were highly constrained by NISQ limitations and were orders of magnitude slower in wall-clock time. The authors conclude no practical advantage for the quantum-enhanced SVM in these financial forecasting pilots, while noting potential future gains if hardware and data-loading assumptions change.",
+  "performance_claims": [
+    "Average quantum-enhanced SVM computation time per observation (cloud-based): 3 hours 55 minutes (range ~40 minutes to >8 hours).",
+    "Empirical slow-down: quantum-enhanced SVM runs were on average 5.9 × 10^6 times slower than the corresponding classical local computations.",
+    "Future-forecast (TSX) task: classical RBF kernel balanced accuracy reported only slightly above 50%; linear and quantum kernels close to 50% (chance).",
+    "Present-forecast (SX5E) task: classical SVM with RBF kernel achieved balanced accuracies above 90%; linear and quantum kernels achieved balanced accuracies above 80%.",
+    "Experimental setup: monthly rolling experiments over 113 dates (Wednesdays), training size = 80, test size = 20, number of shots reported R = 210, qubit counts used correspond to feature counts (n_qubits=3 and n_qubits=2)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper acknowledges theoretical literature claiming quantum SVM exponential speed-ups under idealized assumptions (e.g., data in coherent superposition and fault-tolerant hardware), but these are not demonstrated experimentally here; with classical data and current NISQ cloud hardware the authors observe no practical advantage and in fact large runtime and noise disadvantages.",
+  "limitations": [
+    "Quantum hardware is in the NISQ era and remains highly sensitive to noise and decoherence; quantum error correction is not yet available at scale (author-stated).",
+    "Freely available cloud-based quantum devices impose strict resource limits (free access limited to 5 qubits) which constrain experiment size and complexity (author-stated).",
+    "Cloud-based quantum access has practical constraints: restricted qubit counts, long waiting queues, and variability in execution time (author-stated).",
+    "The quantum kernel estimator (QKE) incurs sampling error due to a finite number of measurement shots (R=210), with error scaling ~O(R^-0.5) (author-stated).",
+    "The implementation used is 'quantum-enhanced' rather than fully quantum: only kernel estimation is performed on the quantum processor, while the rest (e.g., solving the dual SVM) is classical (author-stated).",
+    "Theoretical exponential speed-ups require data provided in coherent quantum superposition (or QRAM); with classically supplied data this advantage does not materialize (author-stated).",
+    "Experiments were limited to small training/test set sizes (80 training, 20 test) and binary classification due to hardware limits (author-stated).",
+    "The quantum-enhanced SVM exhibits stochastic run-to-run variability (inherent randomness of quantum sampling), so identical inputs may not always yield identical outputs (author-stated).",
+    "Execution time in practice is much higher for the quantum-enhanced approach: reported average of ~3 hours 55 minutes per observation on cloud hardware and ~5.9×10^6 times slower than local classical computation (author-stated).",
+    "In these experiments the quantum-enhanced SVM underperformed classical SVM on accuracy metrics (author-stated).",
+    "Results are confined to weekly stock-index movement-direction forecasting using a small, specific set of features (limiting generalizability to other financial tasks, frequencies, or richer feature sets) (author-stated).",
+    "[inferred] The study's findings may not generalize across different quantum hardware/backends because experiments used a single cloud provider and a free-access configuration.",
+    "[inferred] Mapping features to qubits (nqb = number of features) constrains the number of input features and impedes scaling to higher-dimensional feature spaces.",
+    "[inferred] Cloud platform overheads (network latency, queuing, job scheduling) likely inflate end-to-end runtimes above what pure quantum execution time would be.",
+    "[inferred] The chosen feature map / circuit (second-order Pauli-Z evolution) may not be optimal for financial time series, contributing to suboptimal kernel representations.",
+    "[inferred] Market data non-stationarity and high noise levels in financial time series may particularly limit the effectiveness of current quantum kernel methods.",
+    "[inferred] Absence of QRAM or efficient quantum data-loading mechanisms prevents realization of theoretical quantum speedups for classically sourced datasets."
+  ],
+  "open_questions": [
+    "As quantum hardware (qubit counts, coherence times, error rates) improves, will quantum-enhanced SVMs (or fully quantum SVMs) begin to outperform classical SVMs on real financial data?",
+    "Can larger kernel matrices (enabled by more qubits) reverse the observed underperformance of the quantum-enhanced SVM?",
+    "How much do sampling noise and limited shots contribute to the accuracy gap, and can increasing shots or improved error mitigation change outcomes practically?",
+    "Are there financial prediction tasks, data representations, or feature maps for which quantum kernels provide a clear advantage over classical kernels?",
+    "Can alternative quantum machine learning approaches (e.g., variational quantum classifiers) deliver better performance or runtime trade-offs on financial time series?",
+    "What is the impact of non-stationarity and high noise in market data on the robustness and generalization of quantum kernel methods?",
+    "How can one efficiently load large classical datasets into quantum states (QRAM or other methods) to realize the theoretical quantum speed-ups?",
+    "To what extent do cloud-specific factors (job queue delays, multi-user contention, network overhead) vs. intrinsic quantum computation costs drive the long end-to-end runtimes observed?",
+    "What are the practical requirements (qubit counts, coherence times, gate fidelities) for a quantum SVM to become competitive or superior to classical SVM on typical financial datasets?",
+    "How reproducible and stable are quantum-enhanced SVM results across different hardware providers and different backend configurations?"
+  ],
+  "future_work": [
+    "Evaluate whether financial practitioners can rely on quantum-enhanced SVMs in practice (a forward-looking assessment to prepare for potential transition) (author-stated).",
+    "Replicate and extend experiments on larger matrices and datasets once quantum hardware capacity improves (explicitly suggested by the author: 'these results may be overcome with the possibility of performing the same computations on bigger matrices') (author-stated).",
+    "Conduct more empirical experiments on noisier, non-stationary financial time series to expand experimental knowledge and assess robustness (author-stated/in context).",
+    "Explore improvements in quantum technologies (more qubits, longer coherence times, error correction/mitigation) to test whether outputs improve as hardware matures (author-stated).",
+    "Compare and benchmark quantum-enhanced SVM against classical SVM across more varied financial tasks and datasets to assess generalizability (author-stated as part of a future research agenda)."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Empirical evaluation on IBM public QPUs (5-qubit access) shows the quantum-enhanced SVM (QSVM with quantum kernel estimator) underperforms classical SVM (especially RBF) on stock-index direction forecasting in both accuracy and runtime.",
+    "#idea:hybrid-approach — The implemented pipeline is hybrid: classical preprocessing and SVM dual solving combined with QPU-based quantum kernel estimation (feature map circuits and sampling) for kernel entries and test evaluations.",
+    "#limitation:qubit-count — Experiments were restricted to 2–3 qubits (one qubit per feature) which prevents demonstration on realistically sized financial feature vectors and limits representational capacity.",
+    "#limitation:noise — Real-device noise and finite sampling (shots=1024, sampling error ~O(R^-0.5)) significantly affect kernel estimates and degrade classification performance compared to noiseless/classical baselines.",
+    "#limitation:data-encoding — The chosen Pauli-Z feature map requires explicit embedding of features (and entanglement), tying qubit count to feature dimensionality and adding overheads that hinder scalability.",
+    "#idea:near-term-feasibility — Wall-clock execution times were prohibitively long and variable in this setup (reported average ~3 h 55 min per observation on IBM cloud), indicating practical deployment is infeasible on current cloud-accessible NISQ devices.",
+    "#contradiction:classical-vs-quantum — The paper provides empirical evidence contradicting optimistic claims of immediate quantum advantage for QSVMs in financial forecasting under current hardware constraints."
+  ],
+  "contradictions": [
+    "This study contradicts claims that quantum-enhanced SVMs presently outperform classical SVMs for financial forecasting: across 113 rolling experiments the classical RBF SVM achieved higher balanced accuracy and far lower runtimes than the QSVM on real QPU hardware.",
+    "The paper challenges scalability claims by demonstrating that limited qubit counts (2–3 qubits), device noise, and very long wall-clock runtimes make QSVMs impractical for larger or higher-dimensional financial problems on current NISQ hardware."
+  ]
+}

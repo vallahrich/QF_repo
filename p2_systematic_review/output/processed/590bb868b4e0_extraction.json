@@ -1,0 +1,200 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "The document has a Springer DOI, received/revised/accepted/published dates and publisher copyright (indicative of a peer‑reviewed journal). It contains an abstract, methods, experiments with datasets, metrics and results, and numerous citations—characteristics of an empirical research article.",
+  "title": "Frequency‑domain enhanced bi‑directional recurrent quantum network for stock price trend prediction",
+  "authors": [
+    "Jichu Ou",
+    "Wanyi Li",
+    "Jinbin Huang"
+  ],
+  "year": "2023",
+  "journal_or_venue": "Multimedia Tools and Applications",
+  "doi": "10.1007/s11042-023-17620-y",
+  "abstract_summary": "The paper proposes FDBRQ, a multistep stock price trend prediction model that combines a frequency-domain embedding module (FDEM), an external feature attention enhancement (EFAE) using exogenous factors, and a bi-directional recurrent quantum neural network built from quantum circuit units. Designed to handle non-stationary, long-memory and noisy financial time series, the method outputs multiple future steps and demonstrates improved prediction accuracy over several baselines on four Chinese stock datasets.",
+  "methodology_description": "The authors propose FDBRQ, a multistep stock price trend prediction pipeline that (1) transforms past adjusted closing price time series into frequency-domain embeddings using Variational Mode Decomposition (VMD) followed by layer normalization, batch normalization, a set of full-dimension convolutions (kernel sizes 1..K), channel-average pooling and a fully-connected layer to produce per-time-step embeddings; (2) incorporates exogenous information via an external feature attention enhancement (EFAE) that computes an attention vector from selected external factors (softmax(W_A * F_T)) and applies elementwise weighting and residual addition to each embedding; (3) processes the enhanced embeddings through a bi-directional recurrent quantum network composed of two independent n-qubit chains of T Quantum Circuit Units (QCUs). Each QCU encodes the classical embedding into quantum state (quantum encoder) and evolves it with a parameterized quantum ansatz (trainable rotations and entangling gates) to produce a state phi_t which depends on phi_{t-1}; forward and backward circuit outputs are concatenated and projected by fully connected layers to produce per-step features, which are concatenated over time and mapped to q-step forecasts. Training is performed on classical hardware (quantum circuits are classically simulated as parameterized unitary layers) using the Adam optimizer (lr=0.001), a Huber-like loss (piecewise L2/L1), batch size 32, and 100 epochs. Input preprocessing includes adjusted-close filtering, removal of suspended trading dates, log-differencing (daily log-returns), min-max scaling; external factors are cleaned (forward-fill missing, MAD-based outlier clipping), neutralized for market cap and industry, standardized and selected via information coefficient (IC) and information ratio (IR). Experiments compare against ARIMA variants and several LSTM-based baselines on four CSI-300 constituent stocks over 1-, 5-, and 20-day horizons.",
+  "algorithms_used": [
+    "Variational Mode Decomposition (VMD)",
+    "Layer Normalization",
+    "Batch Normalization",
+    "Convolutional feature extraction (full-dimension convolution)",
+    "External attention (softmax weighting of factors)",
+    "Parameterized quantum circuits (quantum encoder + ansatz)",
+    "Bi-directional recurrent quantum network (sequence of QCUs)",
+    "Adam optimizer",
+    "Huber-like loss (piecewise L2/L1)",
+    "Baselines: ARIMA, WT-ARIMA, VMD-ARIMA, ARIMAX, LSTM, BLSTM, deep LSTM variants"
+  ],
+  "frameworks": [],
+  "experimental_setup": "",
+  "dataset_used": "Adjusted closing prices and factor data from JoinQuant for four CSI 300 constituent stocks (000651.XSHE, 300015.XSHE, 600519.XSHG, 601318.XSHG). Training period: 2018-01-01 to 2022-12-31; test period: 2023-01-01 to 2023-04-30 (78 trading days). External factors drawn from JoinQuant factor library (emotion, momentum, risk, style, technical factors).",
+  "experiment_input": {
+    "source": "JoinQuant platform",
+    "assets": [
+      "000651.XSHE",
+      "300015.XSHE",
+      "600519.XSHG",
+      "601318.XSHG"
+    ],
+    "date_ranges": {
+      "train": "2018-01-01 to 2022-12-31",
+      "test": "2023-01-01 to 2023-04-30"
+    },
+    "sample_counts": {
+      "train_approx": "≈ 2018–2022 trading days (≈ 1200–1300)",
+      "test_exact": 78
+    },
+    "preprocessing": [
+      "Remove suspended trading dates",
+      "Use corporate-action adjusted closing prices",
+      "Compute daily log-returns: x_t* = ln(x_t) - ln(x_{t-1})",
+      "Min–Max scaling of returns (then inverse-transform for outputs)",
+      "External factors: forward-fill missing values, MAD-based outlier clipping, market cap & industry neutralization, min–max standardization",
+      "Factor selection via Spearman IC and IR for 1D/5D/20D horizons; top factors per category chosen"
+    ]
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "For each prediction horizon set time-window length T (T=20 for 1-step, T=48 for 5-step, T=96 for 20-step).",
+      "Apply VMD to the T-length input series with K=7 modes to obtain K IMFs.",
+      "Arrange IMFs as feature map (K x T x 1), apply layer normalization then batch normalization.",
+      "Apply full-dimension convolutions with K kernels of receptive fields 1..K, then channel-average pooling to obtain 1 x K x T map.",
+      "Split along time axis into T feature vectors and map each via fully connected layer to embedding Et (demb=32).",
+      "Compute external attention At = softmax(W_A * F_T) from m external factors observed at last time T; produce enhanced embeddings Et' = At ⊗ Et ⊕ Et.",
+      "Feed enhanced embeddings sequentially into two independent n-qubit quantum circuits (forward and backward). Each circuit contains T Quantum Circuit Units (QCUs).",
+      "Each QCU: apply Quantum Encoder UE(Et') to encode classical features to qubit rotations, then apply parameterized Quantum Ansatz UA(theta_t) (depth dc=3) to evolve the state; initial state |0^n>. Use n=6 qubits.",
+      "At each timestep concatenate forward and backward quantum states and pass through fully connected layer to produce H_t (dh=32).",
+      "Concatenate H_t over time and apply final fully connected layer to output q-step predictions {y_t}_{t=1..q}.",
+      "Use Huber-like loss (piecewise L2 if |error|≥1 else |error|-0.5) and optimize trainable parameters (classical network weights and quantum ansatz parameters) with Adam (lr=0.001), batch size 32, epochs 100.",
+      "For baselines: ARIMA family models selected by AIC; WT-ARIMA and VMD-ARIMA use multiscale decomposition + per-component ARIMA and reconstruction; ARIMAX uses last-period covariates as constants for multistep rolling; LSTM variants configured with additional recurrent unit connected to external factors; deep models run 20 times and averaged."
+    ],
+    "training_notes": [
+      "Model fine-tuned daily during testing by adding previous day to training set to simulate live updating",
+      "Quantum circuits are treated as parameterized unitary layers simulated on classical hardware; no specific quantum simulator or QPU is reported"
+    ]
+  },
+  "experiment_output": {
+    "predicted_outputs": "q-step forecasts of closing price (multiplestep q=1,5,20) returned as time series of predicted prices (inverse-scaled and inverse-log-differenced back to price units).",
+    "evaluation_metrics": [
+      "RMSE",
+      "MAE",
+      "MAPE"
+    ],
+    "baselines_compared": [
+      "ARIMA",
+      "WT-ARIMA",
+      "VMD-ARIMA",
+      "ARIMAX",
+      "LSTM",
+      "BLSTM",
+      "DLSTM (deep LSTM)",
+      "DBLSTM (deep bi-directional LSTM)"
+    ],
+    "result_format": "Tabular metric comparisons per stock and horizon (RMSE, MAE, MAPE). Figures showing prediction traces with uncertainty bands (NNs run 20 times; light red band shows spread)."
+  },
+  "experiment_parameters": {
+    "time_window_T": {
+      "1_step": 20,
+      "5_step": 48,
+      "20_step": 96
+    },
+    "VMD_modes_K": 7,
+    "embedding_dimension_demb": 32,
+    "hidden_dimension_dh": 32,
+    "qubits_n": 6,
+    "ansatz_depth_dc": 3,
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "batch_size": 32,
+    "epochs": 100,
+    "loss": "Huber-like (piecewise L2/L1 with delta=1)",
+    "training_runs_per_nn": 20,
+    "shots": null
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "Data: authors state that data used are available from the authors upon request; source is JoinQuant. Code and exact quantum-classical execution details (quantum simulator or framework, random seeds, initialization of ansatz parameters, measurement/shots if applicable, classical hardware specs) are not provided in the paper. The paper describes circuit structure (encoder + parameterized ansatz) and gate types (Rx/Ry/Rz/H, entangling operations) and hyperparameters (qubits=6, ansatz depth=3) which allow reimplementation, but lacking an accompanying codebase or simulator specification may hinder exact reproduction. Factor selection lists and preprocessing are described in sufficient detail to replicate factor inputs.",
+  "key_findings": [
+    "[supported] The proposed FDBRQ (frequency-domain enhanced bi-directional recurrent quantum network) outperforms the compared baselines (ARIMA, WT-ARIMA, VMD-ARIMA, ARIMAX, LSTM, BLSTM, DLSTM, DBLSTM) on four Chinese-stock datasets for 1-, 5- and 20-step prediction tasks (tables 5–7).",
+    "[supported] The frequency-domain embedding module (FDEM) that uses VMD + normalization + convolution to produce time-step embeddings is causal (designed to avoid using future information) and was used in the experiments.",
+    "[supported] Incorporating external factors via the external feature attention enhancement (EFAE), where factors were selected by IC/IR analysis, improves predictive performance when included in the model.",
+    "[supported] Multistep prediction with neural-network-based models (including the proposed FDBRQ) reduces the error-accumulation problem seen in rolling-prediction ARIMA variants, yielding more stable multistep forecasts.",
+    "[supported] Practical constraints motivated using a small quantum system (6 qubits) in the implementation; the authors note that larger quantum neural networks are slow to train on classical hardware.",
+    "[speculative] The paper claims quantum neural networks have exponential memory capacity and eliminate catastrophic amnesia compared to classical networks.",
+    "[speculative] The authors claim that introducing quantum circuits into the neural network \"improves the model’s understanding of the stock market\" and that quantum parallelism enhances computational/adaptive capabilities.",
+    "[speculative] The assertion that information processing in the human brain is similar to quantum phenomena (citing quantum consciousness/quantum mind literature) is presented to motivate QNN use.",
+    "[speculative] The claim that the QCU-based bi-directional quantum network structure is the primary cause of the observed performance gains (i.e., that gains stem from quantum-specific properties rather than architecture/hyperparameter choices) is implied but not isolated experimentally."
+  ],
+  "results_summary": "The authors introduce FDBRQ, combining a frequency-domain embedding (via VMD), an external-factor attention module (factors selected by IC/IR), and a bi-directional recurrent quantum neural network constructed from quantum circuit units (QCUs). On four CSI-300 constituent stocks and for 1-, 5-, and 20-step prediction horizons, FDBRQ attained the lowest reported RMSE/MAE/MAPE among the compared methods in the paper’s experiments. The paper highlights that multistep prediction with neural-network outputs avoids the cumulative error of rolling ARIMA-style forecasts, and attributes improved performance to the combined frequency-domain embedding, external-factor attention, and the quantum-circuit–based recurrent architecture. The authors also note practical limitations in scaling quantum-network size on classical hardware.",
+  "performance_claims": [
+    "1-step prediction (Table 5): FDBRQ RMSE/MAE/MAPE = 0.2174 / 0.1448 / 0.3941 for 000651.XSHE.",
+    "1-step prediction (Table 5): FDBRQ RMSE/MAE/MAPE = 0.2065 / 0.1615 / 0.5153 for 300015.XSHE.",
+    "1-step prediction (Table 5): FDBRQ RMSE/MAE/MAPE = 8.0272 / 6.3208 / 0.3510 for 600519.XSHG.",
+    "1-step prediction (Table 5): FDBRQ RMSE/MAE/MAPE = 0.3971 / 0.2295 / 0.4749 for 601318.XSHG.",
+    "5-step prediction (Table 6): FDBRQ RMSE/MAE/MAPE = 0.5039 / 0.3874 / 1.0522 for 000651.XSHE.",
+    "5-step prediction (Table 6): FDBRQ RMSE/MAE/MAPE = 0.4270 / 0.3384 / 1.0715 for 300015.XSHE.",
+    "5-step prediction (Table 6): FDBRQ RMSE/MAE/MAPE = 20.3476 / 15.1537 / 0.8404 for 600519.XSHG.",
+    "5-step prediction (Table 6): FDBRQ RMSE/MAE/MAPE = 0.7021 / 0.5272 / 1.0837 for 601318.XSHG.",
+    "20-step prediction (Table 7): FDBRQ RMSE/MAE/MAPE = 1.0281 / 0.8790 / 2.2215 for 000651.XSHE.",
+    "20-step prediction (Table 7): FDBRQ RMSE/MAE/MAPE = 1.3329 / 0.9570 / 3.1959 for 300015.XSHE.",
+    "20-step prediction (Table 7): FDBRQ RMSE/MAE/MAPE = 32.8685 / 25.2901 / 1.4421 for 600519.XSHG.",
+    "20-step prediction (Table 7): FDBRQ RMSE/MAE/MAPE = 1.6517 / 1.1823 / 2.4782 for 601318.XSHG."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper attributes improved predictive performance to the inclusion of quantum circuit units and discusses theoretical quantum benefits (superposition, entanglement, quantum parallelism). However, experiments are run as model comparisons without demonstrating execution on quantum hardware, without isolating the quantum component's contribution (e.g., ablation vs. an equivalent classical architecture), and without provable/empirical quantum speedup or complexity advantage. Therefore any claimed 'quantum advantage' remains speculative.",
+  "limitations": [
+    "When attempting to construct quantum neural networks with more qubits, training speed on classical computers becomes relatively slow (author-stated).",
+    "Building and operating large-scale quantum systems currently faces practical limitations in resources and cost, making large-qubit implementations challenging (author-stated).",
+    "The study evaluates the model on only four stocks from the Chinese market (CSI 300 constituents), which limits demonstrated generalizability to other assets, markets and market regimes [inferred].",
+    "The quantum circuits were evaluated in a classical computing environment (simulation) rather than on physical quantum hardware; therefore real-hardware noise, connectivity and runtime constraints are not assessed [inferred].",
+    "The model uses external factor values observed at the last period only; it does not model or require future exogenous covariates, which may limit scenarios where covariate evolution matters or where covariates can be forecasted explicitly [inferred].",
+    "Daily fine-tuning (adding the prior day to the training set) is used during testing, implying continual retraining and higher operational/computational cost in real-time deployment [inferred].",
+    "Selection of external factors was performed by IC/IR screening (top factors per category); this choice may miss other informative features and may be dataset-specific, impacting robustness [inferred].",
+    "Hyperparameter choices (e.g., T, K, n, dc, demb, dh) were fixed in experiments; sensitivity to these choices and hyperparameter optimization effects are not fully explored, limiting understanding of stability and reproducibility [inferred].",
+    "The contribution of the quantum components versus classical components (i.e., how much performance gain is attributable specifically to the quantum circuit design) is not isolated via detailed ablation on real quantum hardware, limiting causal attribution of improvements [inferred].",
+    "Interpretability of the learned quantum representations and decision rationale is not deeply examined; practical explainability for financial practitioners remains unclear [inferred]."
+  ],
+  "open_questions": [
+    "How will the proposed quantum neural network architecture perform when executed on real quantum hardware (including noise, limited connectivity, and gate errors)?",
+    "How many qubits and what quantum circuit depths are required in practice to obtain further performance gains over classical models in financial time-series tasks?",
+    "How robust is the FDBRQ model across broader asset classes, different markets (e.g., non-Chinese markets), different time periods, and during market stress or regime changes?",
+    "What is the relative contribution of each module (FDEM frequency embedding, EFAE external attention, forward/backward quantum circuits) to overall performance? (i.e., need for systematic ablation studies)",
+    "Can training time and computational cost be reduced to make daily fine-tuning and real-time deployment practical, and what methods (classical/quantum) best enable that?",
+    "How sensitive are results to choices in external factor selection method (IC/IR), the number of factors, and preprocessing (neutralization, outlier handling)?",
+    "How interpretable are the quantum-derived features for risk managers and portfolio decision makers, and can the model provide actionable, explainable signals for trading?",
+    "How does the model perform in a live trading or backtesting environment when transaction costs, slippage, and realistic execution constraints are included?",
+    "Are there principled approaches to integrate forecasts of external covariates (instead of using last-period values) within the multistep prediction framework?",
+    "What are the failure modes of the model (e.g., overfitting, adversarial market patterns), and how can robustness be improved?"
+  ],
+  "future_work": [
+    "Design quantum neural networks to better handle the time–frequency domain features of financial time series and improve the robustness and running speed of the models (author-stated).",
+    "Address the training-speed and scalability issues when increasing qubit counts, and explore implementations that overcome current classical-simulation bottlenecks (author-stated/implied)."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — The FDBRQ model (frequency-domain embedding + external feature attention + bi-directional recurrent quantum network) reports improved RMSE/MAE/MAPE versus ARIMA-family and multiple LSTM baselines on four CSI-300 constituent stocks across 1-, 5-, and 20-day horizons.",
+    "#idea:hybrid-approach — A classical preprocessing pipeline (VMD, normalization, convolutional feature extraction, attention-based factor integration) produces 32-d embeddings that are fed into parameterized quantum circuit units; training is performed classically with the quantum circuits simulated as parameterized unitary layers and optimized with Adam.",
+    "#idea:quantum-advantage — The temporal model uses two independent n-qubit chains (forward and backward) of T Quantum Circuit Units (QCUs); each QCU encodes the per-step embedding via a rotation-based quantum encoder and evolves it with a depth-3 parameterized ansatz, concatenating forward/backward states to produce timestep features.",
+    "#idea:hybrid-approach — External Feature Attention Enhancement (EFAE) integrates selected exogenous factors (selected by IC/IR) via a softmax weighting and residual addition to boost per-step embeddings prior to quantum processing.",
+    "#limitation:simulation-only — All quantum circuits were classically simulated as parameterized unitary layers; no experiments on physical QPUs or noisy-device simulators are reported.",
+    "#limitation:qubit-count — The implemented quantum recurrent network uses only n=6 qubits, indicating limited scale and potential difficulty extending to higher-dimensional inputs or production problems.",
+    "#limitation:data-encoding — Classical-to-quantum encoding is performed via qubit rotation encoders for 32-d embeddings, but the paper does not discuss state-preparation costs, circuit compilation overhead, or fidelity implications on real hardware."
+  ],
+  "contradictions": []
+}

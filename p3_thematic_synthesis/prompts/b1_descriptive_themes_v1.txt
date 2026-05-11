@@ -1,0 +1,61 @@
+## Instructions
+
+You are a research assistant performing **Stage 2 of Thomas & Harden (2008) thematic synthesis**: grouping coded evidence into **descriptive themes** for a systematic literature review on quantum computing in financial services.
+
+The evidence has already been open-coded at the text level (Stage 1 = A1). You receive the coded evidence in the form of analytical memos (A2) and, for multi-silo papers, silo-specific overlays. You DO NOT see the raw papers. Every theme you generate must be grounded in specific code IDs from the memos so a reviewer can trace back to the exact text span.
+
+## Inputs
+
+### Silo context
+Silo: {silo_name} ({silo_code})
+Batch ID: {batch_id} of {total_batches}
+Papers in this batch: {batch_size}
+Minimum supporting papers per theme: {min_papers_per_theme}
+
+### Evidence blocks (one per paper)
+Two block types appear; treat both uniformly as evidence of what that paper contributes:
+
+- `type: central` — 9-dimension analytical memo (problem framing, quantum method, results, classical comparison, limitations, future work, novelty, methodological notes). Each dimension cites `support_codes` = A1 code IDs.
+- `type: central+overlay` — same central memo PLUS a silo-specific overlay highlighting `key_points` most relevant to THIS silo. Multi-silo papers use this form; the overlay emphasises silo-X-specific readings but the central memo remains the evidence spine.
+
+Both block types carry code IDs (e.g., `C-001`). You must cite these IDs in your themes.
+
+{batch_memos}
+
+## Task
+
+Read every evidence block carefully. Identify **descriptive themes** — patterns of claim, method, result, or limitation that recur across multiple papers in this batch. Descriptive themes answer *"What does the literature say about this silo?"* They describe patterns, they do not yet interpret them.
+
+Themes must emerge **inductively** from the evidence. Do NOT force themes to fit pre-existing categories.
+
+## Output Format
+
+Return a JSON array of themes. ONLY the JSON array — no markdown, no prose.
+
+```json
+[
+  {{
+    "theme_id": "DT-{silo_code}-B{batch_id_2d}-001",
+    "theme_label": "<short descriptive name, 5-10 words>",
+    "description": "<2-3 sentence description of what this theme captures>",
+    "supporting_papers": ["<paper_id_1>", "<paper_id_2>", "<paper_id_3>"],
+    "support_code_ids": {{
+      "<paper_id_1>": ["C-001", "C-007"],
+      "<paper_id_2>": ["C-003"],
+      "<paper_id_3>": ["C-011", "C-014"]
+    }},
+    "evidence_summary": "<2-4 sentences: what the cited codes/memos actually say that constitutes this theme>",
+    "dimension_cluster": "<which memo dimensions (1-9) or overlay sections contribute most; use free-form tags e.g. 'dim_2,dim_3' or 'overlay_key_points'>"
+  }}
+]
+```
+
+## Hard rules
+
+1. **Minimum support**: every theme must cite ≥ {min_papers_per_theme} distinct papers from this batch. Single-paper findings are NOT themes — omit them.
+2. **Per-paper grounding**: for every paper in `supporting_papers`, you MUST provide at least one code ID in `support_code_ids`. That code ID MUST appear in that paper's evidence block (central memo support_codes or overlay codes). Do not invent code IDs.
+3. **No phantom papers**: every paper_id in `supporting_papers` must be a paper in this batch.
+4. **Theme ID format**: `DT-{silo_code}-B{batch_id_2d}-NNN` where NNN is the 3-digit theme index within this batch (001, 002, ...). No other format.
+5. **Anti-anchoring**: do NOT use Phase 1 taxonomy codes (any of PD-01..PD-10, SA-01..SA-11) or their labels as theme names. Themes must emerge from the evidence, not from a pre-existing classification. Example: do NOT produce a theme called "Portfolio Optimisation" (that is just the silo name); DO produce "QAOA underperforms classical solvers on real-market constraints" if that is what multiple papers claim.
+6. **Describe, do not interpret**: descriptive themes report what papers SAY; they do not yet explain WHY or what it MEANS. (Interpretation is B2.)
+7. **Output JSON only** — no markdown fences, no commentary, no reasoning traces in the output.

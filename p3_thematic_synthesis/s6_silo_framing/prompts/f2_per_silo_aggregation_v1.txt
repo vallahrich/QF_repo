@@ -1,0 +1,118 @@
+# F2 — per-silo finance-framing aggregation
+
+You are aggregating per-paper financial-framing extractions (the F1
+output of the s6_silo_framing pipeline) into a per-silo synthesis.
+The synthesis will be used as input to a researcher-authored finance
+preface for the silo chapter (Chapter 6 of the thesis).
+
+## Source
+
+You will be given:
+- `silo` — the silo name (one of: portfolio_optimization,
+  derivative_pricing, risk_management, quantum_ml_finance,
+  fraud_detection, trading_execution, credit_lending,
+  simulation_monte_carlo)
+- `silo_paper_set` — the canonical list of paper_ids belonging to this
+  silo (used to validate your `*_supporting_paper_ids` outputs)
+- `coverage_stats` — pre-computed counts of how many papers in the silo
+  have each F1 field populated (you do NOT need to recount; trust these
+  numbers)
+- `f1_records` — a JSON array of F1 extractions, one per paper. Each
+  record contains:
+    paper_id, silos, problem_statement (or null),
+    classical_baseline (or null), classical_difficulty (or null),
+    business_stakes (or null), extraction_confidence, extraction_notes
+
+Verbatim quote evidence supporting each F1 statement was verified
+upstream against the original PDF text and is persisted alongside the
+records in `extractions/papers/{paper_id}.json`. You do not need to
+re-verify the prose — synthesise across what the F1 records say.
+
+## Task
+
+Produce ONE per-silo aggregation that synthesises across the F1 records
+and answers four questions for the silo as a whole:
+
+1. **What is the financial problem this silo addresses?** (Q1)
+2. **What classical baseline / state-of-the-art does the corpus treat
+   as the comparator?** (derived Q3)
+3. **Why is the problem hard classically?** (Q2)
+4. **What business stakes does the corpus mention?** (derived Q4 — may
+   be sparse; silence is a finding)
+
+For each question, write 2–4 sentences in your own words that summarise
+the dominant patterns and tensions across the silo. Then list the
+`paper_ids` that support each synthesised claim. Finally, produce a
+single `draft_finance_brief` of 200–400 words that the researcher can
+use as a starting point for §(0) of the silo chapter.
+
+## Output schema
+
+Return ONE JSON object with exactly these fields:
+
+```json
+{
+  "silo": "<silo name>",
+  "synthesised_problem_statement": "<2-4 sentences>",
+  "problem_statement_supporting_paper_ids": ["<paper_id>", "..."],
+  "synthesised_classical_baseline": "<2-4 sentences>",
+  "classical_baseline_supporting_paper_ids": ["<paper_id>", "..."],
+  "synthesised_classical_difficulty": "<2-4 sentences>",
+  "classical_difficulty_supporting_paper_ids": ["<paper_id>", "..."],
+  "synthesised_business_stakes": null | "<2-4 sentences>",
+  "business_stakes_supporting_paper_ids": ["<paper_id>", "..."],
+  "silo_silence_flags": ["<short string>", "..."],
+  "draft_finance_brief": "<200-400 word paragraph>"
+}
+```
+
+## Rules
+
+1. **Every supporting_paper_id must exist in `silo_paper_set`.** Any
+   paper_id you cite must be a paper_id that appears in the F1 records
+   you were given for this silo. The downstream sanitiser will drop
+   hallucinated IDs.
+
+2. **Cite only papers that actually support the claim you make.** Do
+   not pad supporting lists. 5–15 paper_ids per field is typical. If
+   only 3 papers support a specific claim, cite only those 3.
+
+3. **Synthesise dominant patterns; do not list every paper.** The
+   reader can see the F1 records; your job is to find the throughline.
+   Quote-level detail belongs in F1, not F2.
+
+4. **Acknowledge tensions when they exist.** If half the silo frames
+   the problem one way and half another, say so explicitly. Do not
+   force a single thesis where the corpus is divided.
+
+5. **Silence is a finding.** If `coverage_stats.n_papers_with_business_stakes`
+   is low (e.g. < 30%), that is itself a finding — record it in
+   `silo_silence_flags` and consider returning `null` for
+   `synthesised_business_stakes` if the populated records do not
+   converge on a coherent stake.
+
+6. **Do not import outside knowledge.** Synthesise only what the F1
+   records say. Do not import textbook context, do not introduce claims
+   that are not present in any F1 record.
+
+7. **`draft_finance_brief` must be self-contained prose.** It is not a
+   paraphrase of the four synthesised paragraphs. It is a researcher-
+   ready paragraph that names the financial problem, sketches the
+   classical baseline and difficulty, mentions stakes if substantively
+   present, and signals the tensions or silences. 200–400 words.
+   Academic register, no bullet points, no citation marks.
+
+8. **Output ONLY the JSON object.** No markdown wrapping, no prefatory
+   text, no commentary.
+
+## What to avoid
+
+- Generic summaries that could apply to any silo ("quantum methods are
+  promising but face challenges")
+- Listing every method tried by the silo (that is s4 thematic
+  synthesis territory, not s6 framing)
+- Inflating supporting_paper_id lists with weakly-related papers
+- Writing the draft_finance_brief as a thesis abstract — it should be
+  a finance preface, leading with the financial problem
+- Returning a single-sentence synthesis when the corpus contains 100+
+  papers worth of nuance

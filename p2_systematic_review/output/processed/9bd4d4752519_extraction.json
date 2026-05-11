@@ -1,0 +1,217 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an ACM citation and DOI indicating presentation at MICRO '25 (IEEE/ACM International Symposium on Microarchitecture), has structured sections (abstract, methods, experiments, references), and describes empirical evaluations—consistent with a peer-reviewed conference paper.",
+  "title": "Rasengan: A Transition Hamiltonian-based Approximation Algorithm for Solving Constrained Binary Optimization Problems",
+  "authors": [
+    "Qifan Jiang",
+    "Liqiang Lu",
+    "Debin Xiang",
+    "Tianyao Chu",
+    "Tianze Zhu",
+    "Jingwen Leng",
+    "Yun Liang",
+    "Xiaoming Sun",
+    "Jianwei Yin"
+  ],
+  "year": "2025",
+  "journal_or_venue": "IEEE/ACM International Symposium on Microarchitecture (MICRO '25)",
+  "doi": "10.1145/3725843.3756107",
+  "abstract_summary": "The paper introduces Rasengan, a variational quantum algorithm that uses a novel transition Hamiltonian to expand the search from a single feasible solution and exactly span the feasible solution space for constrained binary optimization. It also presents three algorithm–hardware co-design optimizations—Hamiltonian simplification and pruning, segmented execution, and solution purification—to dramatically reduce circuit depth and improve robustness; experiments report substantial accuracy and latency gains over state-of-the-art QAOA methods and deployability on current quantum devices.",
+  "methodology_description": "The paper introduces Rasengan, a variational quantum algorithm designed for constrained binary optimization. Methodologically, it departs from traditional VQAs that start from global superpositions and instead expands the feasible-solution subspace from a single feasible basis state by deriving and applying a set of transition Hamiltonians based on the homogeneous solution space of the linear constraints. The homogeneous basis (solutions of C u = 0) is computed classically from the constraint matrix; each basis vector defines a transition Hamiltonian which, when simulated, coherently mixes pairs of feasible basis states. The work proposes three algorithm-hardware co-design optimizations to enable NISQ deployment: (1) Hamiltonian simplification by finding linear combinations of homogeneous basis vectors to reduce the number of nonzero entries (reduces multi-controlled gate complexity); (2) pruning of transition Hamiltonians that do not expand the feasible space (early-stop detection); and (3) segmented execution of the sequence of transition Hamiltonians with probability-preserving allocation of shots to measured basis states and inter-segment purification (constraint checking and removal of infeasible noisy states). Experiments compare Rasengan to HEA, penalty-term QAOA (P-QAOA with FrozenQubits/Red-QAOA optimizations) and commute-Hamiltonian QAOA (Choco-Q) over multiple benchmark application domains, using both noise-free and noisy simulators and IBM quantum hardware. Metrics reported include approximation ratio gap (ARG), in-constraints rate, circuit depth, parameter count and end-to-end latency.",
+  "algorithms_used": [
+    "Rasengan (transition Hamiltonian-based VQA)",
+    "QAOA",
+    "Penalty-term QAOA (P-QAOA)",
+    "Commute-Hamiltonian QAOA (Choco-Q)",
+    "Hardware-Efficient Ansatz (HEA)",
+    "FrozenQubits (optimization)",
+    "Red-QAOA (initialization optimization)",
+    "Grover adaptive search (mentioned in related work)"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "qiskit-aer-gpu (optional)",
+    "DDSim (decision-diagram simulator)",
+    "CUDA Quantum (CUDA-based quantum-accelerated simulation / CUDA-quantum)"
+  ],
+  "experimental_setup": "Benchmarks spanned five application domains (facility location, k-partition, job scheduling, set cover, graph coloring). For each domain the authors compiled 400 problem instances from prior literature. Table-based benchmarks ranged from ~8 to ~28 qubits (per Table 2) for the principal experiments; additional scalability tests extended to larger instances (tens of qubits up to ~78+). Noise-free and noisy simulator experiments were run on an AMD EPYC 9554 server (64-core, 1 TB RAM) with optional NVIDIA A100 GPU acceleration. Real-device experiments used IBM cloud QPUs (Kyiv and Brisbane, Eagle-family ~127-qubit devices). Default shot allocation per segment was 1024 in many experiments; classical optimizer iterations were up to 300 for simulator experiments and 100 for real-device runs.",
+  "dataset_used": "",
+  "experiment_input": {
+    "description": "Problem-instance benchmarks for constrained binary optimization from five domains",
+    "sources": [
+      "Facility location, KPP, JSP, SCP, GCP instances compiled from literature references cited in the paper ([6,8,14,23,42])"
+    ],
+    "number_of_instances": "400 per benchmark/domain as stated in the paper (per-domain collections of 400 instances); experiments reported across 20 benchmark scales (see Table 2) and reduced-case sets used for artifact runs",
+    "instance_sizes": "Representative sizes in Table 2: qubit counts per instance in experiments ranged from 8 to 28 in the main evaluation; larger scalability tests included up to ~78 qubits",
+    "preprocessing": "Classical computation of one feasible solution per instance (greedy/simple constructive initialization per problem type), computation of homogeneous basis vectors (solutions of C u = 0), elimination of non-binary combinations during basis span enumeration"
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "For each problem instance, compute constraints matrix C and find one feasible solution x_p by simple greedy or problem-specific initialization.",
+      "Solve the homogeneous system C u = 0 to obtain a set of homogeneous basis vectors {u}.",
+      "Construct transition Hamiltonians H_T(u) from each homogeneous basis vector so that H_T(u) maps between pairs of feasible basis states (x_p <-> x_g where x_g = x_p +/- u).",
+      "Apply Hamiltonian-simulation unitary e^{-i H_T(u) t} for each transition Hamiltonian. Decompose each simulation into implementable gates (multi-controlled phase gates and CXs).",
+      "Apply Hamiltonian-simplification: greedily replace basis vectors by linear combinations that reduce the number of nonzero elements to lower multi-controlled gate complexity (Algorithm 1).",
+      "Detect and prune redundant transition Hamiltonians that do not expand the feasible space (early-stop when m consecutive transitions produce no new basis states).",
+      "Use segmented execution: partition sequence of transition Hamiltonians into segments (each segment shallow), execute each segment separately; allocate more execution shots to basis states with higher measured probability as input to next segment.",
+      "Between segments, perform purification by checking constraints C x = b on measured basis states and discard infeasible noisy states (reweight probabilities and reallocate shots accordingly).",
+      "Optimize evolution times t (parameters) and/or segment-level parameters via a classical optimizer (constrained optimization by linear approximation used across all methods) iteratively (up to 300 iterations in simulator experiments; 100 on hardware).",
+      "Collect final measurement outcomes and compute metrics (ARG, in-constraints rate, circuit depth, parameter count, latency)."
+    ],
+    "parameters_tuned": [
+      "evolution times t for each H_T(u) (these are Rasengan parameters)",
+      "segmentation choice (how many transition Hamiltonians per segment)",
+      "number of shots per segment and per basis state (dynamic allocation)",
+      "classical optimizer iterations and stopping criteria",
+      "Hamiltonian simplification choices (greedy replacements)"
+    ],
+    "optimization_details": "Classical optimizer: constrained optimization by linear approximation. For baselines, HEA/P-QAOA/Choco-Q used 5-layer HEA or multiple QAOA layers in comparisons; P-QAOA also used FrozenQubits and Red-QAOA optimizations where indicated."
+  },
+  "experiment_output": {
+    "result_format": "Per-instance numeric metrics and distributions, stored and plotted across instances and benchmarks",
+    "metrics_reported": [
+      "Approximation Ratio Gap (ARG): (E_opt - E_real) / E_opt",
+      "In-constraints rate: fraction/probability of outputs satisfying constraints",
+      "Circuit metrics: two-qubit gate depth, total circuit depth",
+      "Number of variational parameters",
+      "Latency: compilation + quantum execution + classical optimization time",
+      "Scalability measures: number of segments, depth per segment",
+      "Noise sensitivity: ARG under Pauli/depolarizing and amplitude/phase damping noise"
+    ],
+    "baselines": [
+      "Hardware-Efficient Ansatz (HEA)",
+      "Penalty-term QAOA (P-QAOA) with FrozenQubits and Red-QAOA",
+      "Commute-Hamiltonian QAOA (Choco-Q)"
+    ],
+    "output_examples": "Tables and plots reporting ARG, depth, parameter counts for each benchmark and algorithm; hardware run summaries (ARG and in-constraints rates on IBM devices)"
+  },
+  "experiment_parameters": {
+    "qubits_range": "Representative experiments: 8 - 28 qubits in Table 2; scalability tests up to ~78+ qubits",
+    "circuit_depth_Rasengan": "Typical compiled segment depth per transition Hamiltonian on tested instances: 31-227 two-qubit depth per segment; whole multi-segment depths reported ~34-102 in many cases (after simplification/pruning/segmentation). Example values in Table 2 show Rasengan depths: 31, 49, 58, 58, 85, 87, ...",
+    "circuit_depth_baselines": "HEA: tens to hundreds; P-QAOA: tens to hundreds; Choco-Q: up to thousands (e.g., 3848 in an example).",
+    "shots_per_segment": 1024,
+    "optimizer": "Constrained optimization by linear approximation (classical)",
+    "max_iterations_simulator": 300,
+    "max_iterations_hardware": 100,
+    "parameter_counts": "Rasengan parameter counts vary per instance (examples: 3 to 226 in Table 2), P-QAOA/Choco-Q typically used 10 parameters in many experiments, HEA used many more parameters (e.g., orders of magnitude larger)",
+    "noise_model_parameters": {
+      "two_qubit_error_rate_examples": "0.875% (used in amplitude damping combined noise experiment), real-device typical values ~0.82%-1.2%",
+      "single_qubit_error_rate_examples": "0.035% (example in paper)",
+      "amplitude_damping_prob_range": "tested up to ~2%"
+    }
+  },
+  "hardware_details": {
+    "simulators": [
+      "DDSim (decision-diagram-based simulator) used for Rasengan circuits",
+      "Qiskit Aer (including optional qiskit-aer-gpu) used for HEA/QAOA simulations",
+      "CUDA Quantum (CUDA-based accelerator) used to accelerate HEA/QAOA)"
+    ],
+    "classical_server": "AMD EPYC 9554 64-core server with 1 TB RAM; optional NVIDIA A100 GPU for acceleration",
+    "real_qpus": [
+      {
+        "name": "IBM-Kyiv",
+        "family": "Eagle r3",
+        "qubits": "127 (device family referenced)",
+        "provider": "IBM Quantum Cloud"
+      },
+      {
+        "name": "IBM-Brisbane",
+        "family": "Eagle r3",
+        "qubits": "127 (device family referenced)",
+        "provider": "IBM Quantum Cloud"
+      }
+    ]
+  },
+  "reproducibility_notes": {
+    "code_availability": "The authors released code on GitHub (https://github.com/JanusQ/rasengan) and archived a DOI on Zenodo (10.5281/zenodo.16730424).",
+    "artifact_contents": "Conda environment YAMLs, implementation of Rasengan, reproduction scripts and Jupyter notebooks for key figures and tables, run scripts (run_backend.py), and plotting notebooks.",
+    "environment": "Instructions provided to create conda environment; optional GPU acceleration via qiskit-aer-gpu; automatic GPU detection included.",
+    "limitations": "Full original evaluation (20 benchmarks x 100+ cases) is computationally heavy; artifact defaults to reduced case counts (~10 per benchmark) to permit practical reproduction. Real-device runs depend on IBM cloud access and current device calibrations which may affect numeric reproducibility.",
+    "recommended_commands": "Provided in README; primary workflows include python reproduce/run_all_experiments.py or running per-figure notebooks/scripts."
+  },
+  "key_findings": [
+    "[speculative] The paper introduces a transition-Hamiltonian-based VQA ('Rasengan') that expands the feasible-solution subspace from a single feasible basis state using homogeneous basis vectors, rather than shrinking a global superposition as in prior VQAs.",
+    "[speculative] Theoretical claim (Theorem 1) that repeated simulations of a finite set of transition Hamiltonians can cover the entire feasible solution space (with stated upper bounds: m^2 for totally unimodular matrices and m^3 for more complex cases).",
+    "[supported] Rasengan experimentally attains substantially lower approximation-ratio-gap (ARG) than prior VQA baselines (HEA, penalty-term QAOA, and commute-Hamiltonian QAOA) on simulated benchmarks (20 benchmark variants across five application domains).",
+    "[supported] In algorithmic experiments across ~2000 cases, Rasengan achieves on average a 4.12x improvement in solution quality (ARG) and a 1.96x reduction in circuit depth compared to the best prior quantum baseline reported.",
+    "[supported] On real IBM quantum hardware experiments (Kyiv and Brisbane), Rasengan outperformed prior quantum methods and was reported to beat the mean quality of a feasible-solution baseline in their tests, with a reported 379x improvement in their metric on hardware.",
+    "[supported] The practical circuit depth of Rasengan is much smaller than comparable commute-based QAOA methods in the paper's evaluations (typical Rasengan per-segment depths reported <100, while some competing methods required depths in the thousands), enabling deployment on current NISQ devices.",
+    "[supported] Algorithm–hardware codesign optimizations (basis reconstruction / Hamiltonian simplification, pruning of redundant transition Hamiltonians, segmented execution, and constraint-based purification after segments) materially reduced circuit depth and improved noisy-hardware accuracy in the authors' experiments.",
+    "[supported] The authors report that purification-based error mitigation (validation and rejection of infeasible intermediate measurement outcomes) substantially improves the in-constraints rate and overall performance on noisy hardware (claims of large X-fold improvements reported in their experiments).",
+    "[supported] Rasengan maintains high in-constraints rates (algorithmically 100%) and, with purification, reported 100% in-constraints rate in their noisy-device experiments.",
+    "[speculative] The paper claims that encoding objectives as transition Hamiltonians avoids costly encodings of higher-order objective Hamiltonians (claimed to offer greater generality vs QAOA penalty encodings).",
+    "[supported] Noise-sensitivity experiments in the paper (Pauli/depolarizing and amplitude-damping simulations) indicate Rasengan remains effective for realistic device-level error rates (ARG remaining low for error rates on the order of 10^-3 in their tests).",
+    "[supported] Ablation studies in the paper show individual contributions of the three optimization techniques: simplification, pruning, and segmented execution plus purification, with each technique improving depth or ARG in their experimental suite.",
+    "[speculative] The authors claim exponential space expansion (in effect, producing superpositions of the feasible set) via a linear number of Hamiltonian simulations relative to the number of homogeneous basis vectors, enabling more focused search of feasible solutions."
+  ],
+  "results_summary": "This paper proposes Rasengan, a variational quantum algorithm that explores constrained binary optimization spaces by expanding from a single feasible basis state using transition Hamiltonians derived from homogeneous basis vectors. Theoretically, the approach is argued to be expressive enough to reach the entire feasible set (formalized in Theorem 1). Practically, across extensive simulator experiments and limited IBM hardware tests, Rasengan produced substantially better solution quality (lower ARG) and vastly reduced circuit depth compared to several prior VQA baselines (HEA, penalty-term QAOA, and commute-Hamiltonian QAOA). Key system-level optimizations—basis reconstruction/simplification, pruning of redundant transitions, segmented execution, and constraint-based purification—were instrumental in making circuits shallow and robust on NISQ devices. The authors report multi-fold improvements in ARG (avg. ~4.12x), circuit depth reductions (often tens to dozens of times), and very large reported improvements on real hardware metrics in their experimental setup.",
+  "performance_claims": [
+    "Across 2000 cases from five domains, Rasengan increases accuracy by 4.12X compared to the state-of-the-art prior works (reported ARG improvement). [supported]",
+    "Rasengan reduces circuit depth by 1.96X on average versus prior methods in their algorithmic experiments. [supported]",
+    "Circuit depth claimed reduced from ~7000 to ~50 via the proposed optimizations (making Rasengan deployable on modern quantum platforms). [supported]",
+    "On real-world quantum hardware, Rasengan is reported as the first quantum algorithm in their tests to beat the mean quality of a feasible-solution baseline, achieving a 379X improvement (in their reported metric). [supported]",
+    "Hamiltonian simplification, pruning, and probability-preserving segmented execution techniques reduce circuit depth by over 94.67% (as reported). [supported]",
+    "The purification error-mitigation technique 'improves the accuracy by more than 303X' on hardware in their experiments. [supported]",
+    "Typical per-segment circuit depths reported for Rasengan were <100 (e.g., depths of 31–87 in benchmark table), whereas commute-Hamiltonian QAOA (Choco-Q) depths ranged into the thousands for some instances (e.g., 3848 etc.). [supported]",
+    "In noise simulations with Pauli error rates on the order of 10^-3, Rasengan maintained low ARG (e.g., ARG < 0.15 at that error rate in their tests). [supported]",
+    "Algorithmic in-constraints rate is 100% (by construction); in noisy-device experiments, purification produced reported 100% in-constraints rate. [supported]"
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper reports improved performance of a novel quantum variational algorithm relative to other quantum VQA baselines on simulators and small-scale real devices, and demonstrates shallower circuits and higher in-constraints rates in those contexts. It does not claim or demonstrate provable or empirical quantum advantage over classical algorithms for the same optimization tasks.",
+  "limitations": [
+    "Rasengan requires one feasible solution (xp) to be computed in advance and builds the search space by expanding from that solution.",
+    "For general (non-totally-unimodular) constraint matrices the theoretical upper bound on the number of transition simulations is high (m^3), which can be computationally expensive.",
+    "When segment circuit depth or device noise is too large (e.g., amplitude damping probability ≈2% in experiments), intermediate segments may fail to produce feasible states and the optimization can terminate early (no valid solution).",
+    "Effectiveness of Hamiltonian pruning and simplification depends on constraint topology; strong inter-layer dependencies can reduce pruning effectiveness.",
+    "Practical evaluation on real quantum devices was limited to small-scale problems due to current hardware decoherence/error rates and circuit-depth constraints.",
+    "Although segmented execution reduces quantum depth, it introduces additional classical computation and shot-management overhead.",
+    "[inferred] The method assumes linear equality constraints (inequalities are handled via auxiliary binary variables), which can increase problem size and complicate preprocessing.",
+    "[inferred] Computing the homogeneous basis and performing basis regeneration/pruning incur classical preprocessing costs (O(m^2 n) for simplification and O(m^2) to detect redundant Hamiltonians) that may be significant for large instances.",
+    "[inferred] Purification (constraint checking) requires measuring and validating intermediate states; for problems with very large numbers of feasible states this could become burdensome in practice.",
+    "[inferred] The algorithm’s robustness to more complex, realistic noise (correlated noise, time-varying calibration errors, non-Pauli noise) beyond the studied models is uncertain.",
+    "[inferred] Dependence on the choice of initial feasible solution xp and the ordering/segmentation of transition Hamiltonians may affect convergence and solution quality in ways that are not yet fully characterized.",
+    "[inferred] The assumption that homogeneous basis vectors have entries in {-1,0,1} is convenient for implementation; general constraint systems that produce larger integer homogeneous vectors may require adaptations not fully explored here."
+  ],
+  "open_questions": [
+    "How does Rasengan scale and perform on real quantum hardware for much larger problem sizes (tens to hundreds of qubits) under realistic device noise and connectivity?",
+    "What are optimal strategies for segmentation (how many transition Hamiltonians per segment) and dynamic shot allocation to balance solution quality, classical overhead, and quantum noise?",
+    "How sensitive is Rasengan to the choice of initial feasible solution xp and to different permutations/orderings of the homogeneous basis (transition Hamiltonian sequence)?",
+    "Can stronger theoretical guarantees be provided about convergence to the true optimal feasible basis state (and required evolution times) in bounded-depth/segmented regimes?",
+    "How effective is Rasengan under more realistic, correlated, or non-Pauli noise models observed on current devices?",
+    "How does the preprocessing cost (computing homogeneous basis, simplification, redundancy detection) scale on very large, dense constraint matrices, and can these costs be reduced or parallelized effectively?",
+    "How well does Rasengan handle problems whose constraints are not naturally linear equalities (e.g., non-linear constraints or inequalities that lead to large numbers of auxiliary variables)?",
+    "What is the empirical performance comparison between Rasengan and advanced classical approximate or heuristic solvers for the same constrained binary problems at practical instance sizes?",
+    "To what extent can the pruning heuristics miss necessary transition Hamiltonians in certain topologies, and can pruning be made certifiably safe / lossless?",
+    "Can the transition-Hamiltonian approach be generalized to other classes of combinatorial constraints (e.g., global constraints, cardinality constraints with non-binary coefficients) without prohibitive overhead?"
+  ],
+  "future_work": [],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Rasengan (transition-Hamiltonian VQA) reports substantial accuracy (approximation ratio gap) and latency improvements over HEA, P-QAOA and commute-Hamiltonian QAOA on constrained binary-optimization benchmarks (8–28 qubits main, scalability tests to ~78 qubits).",
+    "#idea:near-term-feasibility — Algorithm-hardware co-design (Hamiltonian simplification/pruning, segmented execution, inter-segment purification) reduces circuit depth and improves robustness, enabling deployability and experiments on current IBM Eagle-family QPUs.",
+    "#idea:hybrid-approach — Classical preprocessing (compute one feasible solution and homogeneous basis C u = 0) plus classical optimizers (constrained linear-approximation) are integral; the approach expands feasible-space from a single basis state rather than global superposition.",
+    "#limitation:noise — The method depends on segmentation and purification to mitigate noisy-state contamination; noisy-simulator and real-device results indicate hardware noise remains a limiting factor.",
+    "#limitation:qubit-count — Main empirical comparisons focus on small-to-moderate instances (8–28 qubits); scalability tests extend to ~78 qubits but practical large-instance performance remains unproven.",
+    "#idea:quantum-advantage — Comparisons are empirical across simulators and hardware with metrics (ARG, in-constraint rate, depth, latency), supporting claimed advantages at the evaluated scales."
+  ],
+  "contradictions": []
+}

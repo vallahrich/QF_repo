@@ -1,0 +1,176 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document header shows an arXiv identifier (arXiv:1905.02666v5) and date; structure includes abstract, methods, experiments and references but no journal/ conference proceedings name—clear indicators of an arXiv preprint.",
+  "title": "Option Pricing using Quantum Computers",
+  "authors": [
+    "Nikitas Stamatopoulos",
+    "Daniel J. Egger",
+    "Yue Sun",
+    "Christa Zoufal",
+    "Raban Iten",
+    "Ning Shen",
+    "Stefan Woerner"
+  ],
+  "year": "2020",
+  "journal_or_venue": "arXiv:1905.02666 (preprint)",
+  "doi": "",
+  "abstract_summary": "The paper presents a methodology to price vanilla, multi-asset and path-dependent options on gate-based quantum computers using Amplitude Estimation, which offers a theoretical quadratic speedup over classical Monte Carlo. It emphasizes concrete quantum-circuit constructions to load probability distributions, compute payoffs, and perform amplitude estimation, provides simulation results, and demonstrates small-scale experiments on IBM Q Tokyo using an error-mitigation scheme and amplitude estimation without phase estimation.",
+  "methodology_description": "The authors propose and implement a gate-based quantum approach to option pricing that leverages Amplitude Estimation (AE) to compute expected payoffs (undiscounted) with a theoretical quadratic speedup versus classical Monte Carlo. Their pipeline: (1) represent the future distribution of underlying asset prices on quantum registers (truncation + discretization of log-normal BSM distributions; for general/market-implied distributions they discuss using qGANs to load learned distributions), (2) implement payoff circuits using controlled Y-rotations and comparator circuits to realize piecewise-linear payoffs (vanilla calls/puts, multi-strike portfolios, basket options, Asian and barrier options), (3) construct operator A that prepares the amplitude-encoded probability & payoff ancilla, (4) apply amplitude-estimation techniques to estimate the ancilla |1> amplitude which equals the expectation value of the payoff. They evaluate both the standard AE that includes phase estimation (in simulation) and a reduced-qubit AE variant without phase estimation (per Suzuki et al.) that uses repeated applications of Q^k and a maximum-likelihood estimator to recover the amplitude (used on real hardware). Implementation details include adder/weighted-sum circuits for multi-asset and path-dependent payoffs, comparator circuits implemented with CNOT/Toffoli gates, scaling/angle transforms to map payoffs into rotation angles for the ancilla, and practical error mitigation: readout calibration matrices and a CNOT-amplification + Richardson-extrapolation style mitigation (by replacing each CNOT with 1/3/5 CNOTs to amplify noise, then quadratic extrapolation to zero-noise). Experiments were run in simulation (Qiskit) and on IBM Quantum hardware (IBM Q Tokyo). Results compare AE convergence to classical Monte Carlo baselines and demonstrate hardware feasibility of small instances using AE without QPE combined with mitigation and maximum-likelihood estimation.",
+  "algorithms_used": [
+    "Quantum Amplitude Estimation (AE)",
+    "AE without phase estimation (Suzuki et al. maximum-likelihood approach)",
+    "Quantum Phase Estimation (discussed / used in full AE simulation)",
+    "quantum Generative Adversarial Network (qGAN) for distribution loading (discussed)",
+    "Quantum arithmetic adders / weighted-sum quantum circuits",
+    "Comparator circuits (CNOT / Toffoli based)",
+    "Maximum Likelihood Estimation (for AE without QPE)",
+    "Richardson extrapolation-style error mitigation (CNOT amplification)",
+    "Readout-error calibration (inversion of readout matrix)"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Simulations: Qiskit-based simulations of amplitude estimation including standard AE (with sampling qubits m = 3,5,7,9 corresponding to M = 8,32,128,512). Classical Monte Carlo baselines (up to 100,000 paths for some cases) used for comparison. Hardware experiments: IBM Q Tokyo (20-qubit device). Hardware experiments used a 3-qubit implementation (2 qubits for discretized uncertainty, 1 ancilla payoff qubit). For AE-without-QPE they implemented QA^k for k=0,1 (i.e. m=1), measured repeated shots and applied maximum-likelihood estimation. Error mitigation: readout calibration (8x8 matrix for 3 qubits) and CNOT-amplification (replace each CNOT by 1, 3, and 5 CNOTs) followed by second-order Richardson extrapolation. Hardware measurement protocol: 8192 shots per run, each experiment repeated 20 times and averaged. Qubit choices on device: qubits 6, 10 and 11 (fully connected subset).",
+  "dataset_used": "No external market dataset. All experiments used simulated asset-price distributions derived from the Black-Scholes-Merton model (log-normal distributions). Distributions were truncated to a finite interval and discretized into 2^n bins (e.g., 2 qubits → 4 bins). For multi-step/path-dependent options the multivariate log-normal distribution (diagonal Σ for independent timesteps or full Σ for correlated assets) was used. qGANs are discussed as a method to load empirical/market-implied distributions but hardware experiments used simulated BSM distributions.",
+  "experiment_input": "Source: simulated Black-Scholes-Merton (BSM) log-normal asset-price distributions (single-asset and multivariate for multi-asset/path-dependent cases). Typical parameters given in examples: S0 (spot) varied (hardware experiments used S0 in [1.8,2.5] stepping by 0.1), volatility σ (example: 40% in hardware tests), risk-free rate r (example: 5%), time to maturity T (example: 40/365). Discretization: truncation to ±~3 standard deviations, mapping continuous price interval to integer indices i ∈ {0,..,2^n −1} via affine mapping. For hardware experiments n=2 uncertainty qubits (4 discrete price bins). Payoff scaling: linear mapping and angle scaling parameter c (example c=0.25) used to map payoffs into rotation angles for ancilla. No external real-world dataset used.",
+  "experiment_process": "1) Distribution preparation: compute discretized/truncated log-normal probabilities for the chosen BSM parameters and map to amplitudes; for general distributions qGAN is proposed to learn and output a parametrized generator circuit. 2) State loading: implement PX to load √p_i amplitudes into the n-qubit register (hardware: 2-qubit approximation of log-normal using single-qubit rotations + CNOTs). 3) Payoff encoding: construct comparator circuits (CNOT/Toffoli) to identify regions (i ≥ K), and implement controlled Y-rotations (uniformly-controlled rotations for small instances) to map payoff f(i) into ancilla amplitude (angles computed via scaling c and linear mapping). 4) AE operator construction: build A such that measuring ancilla |1> yields E[f(S)]; build Q = A S0 A† Sψ0. For full AE (simulation) apply Q controlled by m sampling qubits and inverse QFT to estimate phase (m varied). For AE without phase estimation (hardware) perform measurement of Q^k A |0> for k = 0..(2^m −1) as per Suzuki et al. with m=1 in hardware experiments (k=0,1). 5) Measurement & estimation: measure circuits (8192 shots per run), collect probabilities for ancilla |1>, combine outcomes across k in a likelihood function and apply maximum-likelihood estimation to extract θ_a and amplitude a = sin^2(θ_a). 6) Error mitigation: apply readout-error mitigation by constructing and inverting an 8×8 readout matrix; amplify CNOT error by replacing each CNOT with 1, 3, and 5 CNOT sequences (no recalibration) and perform second-order Richardson extrapolation (quadratic fit) to estimate zero-noise value. 7) Postprocessing: map measured amplitude back to expected payoff using known scaling parameters (fmin/fmax/c) and compare to analytical Black-Scholes or classical Monte Carlo baselines. Repeats: each hardware experiment repeated 20 times and averaged. Simulation variants: full AE with m ∈ {3,5,7,9} to evaluate convergence.",
+  "experiment_output": {
+    "primary_outputs": [
+      "Estimated ancilla |1> probabilities (P1) and corresponding estimated expectation E[f(S)] (option price, undiscounted)",
+      "Maximum-likelihood estimates for AE-without-QPE amplitudes",
+      "Convergence behaviour of AE (error vs M) in simulation"
+    ],
+    "metrics_reported": [
+      "Absolute estimation error compared to analytic Black-Scholes or classical Monte Carlo baseline",
+      "Convergence scaling (observed O(1/M) for AE vs O(1/√M) for Monte Carlo)",
+      "Effectiveness of error mitigation (hardware average error reduced from ~62% to ~21% in reported experiment)"
+    ],
+    "baselines": [
+      "Analytical Black-Scholes-Merton price (where applicable)",
+      "Classical Monte Carlo estimates (e.g., 100,000 or 10,000 paths depending on experiment)"
+    ],
+    "format": "Estimated prices and probabilities with confidence intervals / measurement variances; gate counts and circuit depths for resource estimation"
+  },
+  "experiment_parameters": {
+    "qubits_total": 3,
+    "uncertainty_qubits": 2,
+    "payoff_ancilla_qubits": 1,
+    "sampling_qubits_for_full_AE": [
+      3,
+      5,
+      7,
+      9
+    ],
+    "M_values_full_AE": [
+      8,
+      32,
+      128,
+      512
+    ],
+    "AE_without_QPE_m": 1,
+    "shots_per_run": 8192,
+    "repeats_per_experiment": 20,
+    "CNOT_count_QA": 18,
+    "single_qubit_gates_QA": 33,
+    "scaling_parameter_c": 0.25,
+    "discretization_bins_examples": 4,
+    "payoff_scaling": "f mapped with ˜f(i) = 2 f(i) - fmin /(fmax - fmin) - 1 and angles g0, g(i) as described",
+    "error_mitigation": "readout-calibration (8x8), CNOT-amplification with 1/3/5 copies and second-order Richardson extrapolation"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit simulator (Qiskit Aer / Qiskit simulation stack used for AE experiments)",
+    "qpu_model": "IBM Q Tokyo (20 qubits)",
+    "qubits_used_on_qpu": [
+      6,
+      10,
+      11
+    ],
+    "cloud_provider": "IBM Quantum / IBM Research - Zurich"
+  },
+  "reproducibility_notes": "Authors state results and circuits are available in the finance module of Qiskit. The paper provides explicit circuit constructions, gate counts and parameter choices (e.g., c, discretization, example BSM parameters). Simulations were performed in Qiskit and hardware runs on IBM Q Tokyo; readout calibration matrices and gate-replacement error-amplification strategy details are described. Reproducibility should be achievable if the Qiskit finance module examples and circuit parameters (given in the paper and Qiskit) are used; users will need access to IBM Quantum back-end or equivalent simulated-noise models to reproduce hardware results.",
+  "key_findings": [
+    "[speculative] Amplitude Estimation (AE) offers a quadratic sample-complexity speed-up (O(M^-1)) over classical Monte Carlo (O(M^-1/2)).",
+    "[speculative] AE can be implemented without Quantum Phase Estimation (QPE) while still retaining the quadratic speed-up (reference to Suzuki et al. / maximum-likelihood AE).",
+    "[supported] Simulations of the proposed circuits show AE-style estimation converging and exhibiting the expected improved scaling compared to classical Monte Carlo in sample complexity for toy basket-option examples.",
+    "[supported] The paper provides explicit gate-level circuit constructions for core building blocks needed for option pricing on gate-based quantum hardware: distribution loading (2-qubit log-normal example), comparator circuits, piecewise-linear payoff encoding via controlled Y-rotations, weighted-sum adders, and multivariate-register encodings (Asian, barrier, basket examples).",
+    "[supported] Resource estimates (gate counts and depths) for the full AE circuits are large: e.g., Table 2 reports single-qubit, CX (CNOT), CCX (Toffoli) counts and depths for M=2^m samples; circuits quickly become very deep as m increases.",
+    "[supported] Small-scale hardware experiments on IBM Q Tokyo (3 qubits: 2 for uncertainty, 1 payoff) were performed (8192 shots, repeated 20 times) and produced measurable outputs consistent with expectations after error mitigation.",
+    "[supported] A pragmatic error mitigation scheme (inserting extra CNOTs to amplify two-qubit error rates and applying Richardson extrapolation / ML estimation) substantially reduced hardware estimation error in these small experiments: the average option-price error decreased from ~62% (no mitigation) to ~21% (with mitigation) across tested spot prices.",
+    "[supported] Readout-error calibration reduced observed readout error on the measured ancilla probability P1 for A|0>3 from ~6% to ~4%.",
+    "[supported] An optimized QA|0>3 circuit suitable for the three-qubit experiment was produced with 18 CNOT gates and 33 single-qubit gates (after circuit-level optimizations described in the paper).",
+    "[speculative] Quantum Generative Adversarial Networks (qGANs) are proposed as a practical approach to learn and load nontrivial (e.g. market-implied) probability distributions into quantum states with (claimed) polynomial gate costs—presented as an approach but not demonstrated in this work.",
+    "[speculative] Path-dependent options (e.g., Asian, barrier) are identified as the class of derivative pricing problems where the potential impact of quantum AE methods could be largest (argument based on expensive payoff computations per path).",
+    "[speculative] Full practical advantage of AE for realistic option-portfolio sizes will likely require larger, lower-noise, and/or fault-tolerant quantum hardware; near-term devices are insufficient for full-scale AE with QPE."
+  ],
+  "results_summary": "The paper presents a detailed methodology and gate-level circuits to price a variety of option types (vanilla European, multi-asset basket, path-dependent Asian and barrier options) on gate-based quantum computers using Amplitude Estimation (AE). It describes how to load distributions (including a discussion of qGAN-based loading), construct payoff encodings (comparators, piecewise-linear rotations), and compute multivariate sums (adder/weighted-sum circuits). Simulations validate AE's improved sample-complexity scaling versus classical Monte Carlo for toy examples. The authors also run small-scale experiments on IBM Q Tokyo (3 qubits) using an AE variant without phase estimation, and demonstrate that readout calibration plus an error-amplification + Richardson-extrapolation mitigation reduces hardware estimation error substantially (reported average error drop from ~62% to ~21%). The work provides concrete resource estimates showing that full AE circuits become deep and gate-intensive quickly, indicating that practical, large-scale quantum advantage will require more advanced hardware.",
+  "performance_claims": [
+    "AE theoretical convergence: O(M^-1) vs classical Monte Carlo O(M^-1/2) [theoretical claim].",
+    "Simulation evidence of AE sample-complexity advantage for a 3-asset basket option (Figure 11): estimation error scales as expected for AE and shows better scaling than Monte Carlo over the tested M range.",
+    "Table 2 resource counts for full AE circuits (examples): for m=3 (M=8): Single-qubit gates=2,091; CX=2,056; CCX=90; circuit depth=3,927. For m=5 (M=32): Single-qubit=12,768; CX=9,078; CCX=378; depth=17,332. For m=7 (M=128): Single-qubit=52,275; CX=37,132; CCX=1,530; depth=70,916. For m=9 (M=512): Single-qubit=210,144; CX=149,290; CCX=6,138; depth=285,204.",
+    "Optimized QA|0>3 (three-qubit) circuit used on hardware: 18 CNOT gates and 33 single-qubit gates (empirical optimized circuit, Fig. 19).",
+    "Hardware experimental setup: 8192 shots per circuit, each experiment repeated 20 times to average results; qubits chosen to avoid SWAPs on IBM Q Tokyo.",
+    "Readout error mitigation reduced measured P1 error for A|0>3 from approx. 6% to approx. 4% (empirical).",
+    "Error-mitigation (extra-CNOT insertion + Richardson extrapolation) reduced average option-price estimation error from ~62% (no mitigation) to ~21% (with mitigation) across tested spot prices (empirical)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper argues (and cites proofs) that Amplitude Estimation provides a quadratic sample-complexity speed-up over classical Monte Carlo (O(M^-1) vs O(M^-1/2)), and simulation results on toy examples support improved scaling. However, no empirical demonstration of a practical advantage on real quantum hardware is presented — hardware experiments are limited to very small (3-qubit) circuits and show substantial noise that required mitigation. The authors therefore frame the advantage as theoretically established and observed in simulation, but contingent on future larger, lower-noise or fault-tolerant devices for practical realization.",
+  "limitations": [
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:data-encoding"
+  ],
+  "open_questions": [
+    "How to load complex, market-implied, or empirically learned multivariate distributions into quantum registers efficiently and accurately at scale (beyond low-dimensional cases)?",
+    "What are the most resource-efficient implementations (gate counts, qubits) of the higher-order mappings needed to recover the full O(M^{-1}) AE convergence for realistic payoffs?",
+    "How to choose and tune mapping/scaling parameters (e.g. c, discretization ranges, number of qubits per register) in high-dimensional and path-dependent problems to balance accuracy vs circuit complexity?",
+    "Can qGANs (or other generative models) be trained and updated efficiently in production workflows, and how robust are they to concept drift in market data? (how to amortize training cost in production?)",
+    "What are scalable, device-agnostic error-mitigation strategies that extend to deeper AE-style circuits and to circuits required for realistic multi-asset/path-dependent pricing?",
+    "How to optimally discretize the time dimension for path-dependent options (e.g. barrier or Asian options) to trade off computational cost and pricing accuracy on a quantum device?",
+    "What is the minimal hardware requirement (number of logical qubits, gate fidelities, connectivity) for AE-based option pricing to outperform classical Monte Carlo in practical, industry-relevant instances?",
+    "How to implement Greeks (sensitivities / price derivatives) efficiently on a quantum computer, including integration with AE or other estimation primitives? (mentioned as an area to explore)",
+    "How to perform in-place computations (to reduce the number of registers) reliably and with lower gate overhead, and what are the algorithmic implications for circuit design?",
+    "How to handle correlations in multi-asset models in terms of state preparation and circuit resource scaling, especially when correlations vary across assets and over time?",
+    "How generalizable are the low-qubit AE-without-QPE implementations and error mitigation techniques to a broader set of derivative contracts and larger problem sizes?"
+  ],
+  "future_work": [
+    "Calculate price derivatives (Greeks) with a quantum computer (explicitly mentioned by the authors).",
+    "Reduce the number of quantum registers by performing some of the computation in-place (explicitly mentioned).",
+    "Develop improved algorithms that retain AE's speed-up while reducing qubit and gate requirements (authors note ongoing research and reference newer approaches).",
+    "Design and test more advanced error-mitigation strategies applicable to deeper circuits and larger devices (authors indicated simple mitigation was used and larger hardware is needed).",
+    "Investigate circuit- and resource-optimizations for state preparation, comparators, adders and weighted-sum operators to lower gate counts and ancilla usage (implied and discussed).",
+    "Study the integration and operationalization of qGAN-based loading in realistic production workflows, including amortization of training cost and incremental retraining strategies."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo",
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "qft-phase-estimation",
+    "quantum-ml",
+    "error-mitigation",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Use of Quantum Amplitude Estimation to obtain a theoretical quadratic speedup over classical Monte Carlo for expected-payoff option pricing.",
+    "#idea:quantum-advantage — Detailed quantum-circuit constructions for loading truncated/discretized log-normal distributions, comparator circuits and controlled rotations to encode vanilla, multi-asset and path-dependent payoffs into an ancilla amplitude.",
+    "#idea:hybrid-approach — Practical NISQ approach via AE without phase estimation (Suzuki et al.) using repeated Q^k applications and maximum-likelihood estimation, enabling experiments on current devices.",
+    "#idea:hybrid-approach — Proposal to use qGANs (quantum generative models) to learn and load market-implied distributions as a hybrid quantum-classical subroutine, while current experiments use analytic BSM distributions.",
+    "#idea:near-term-feasibility — Implementation of error-mitigation strategies (readout calibration, CNOT-amplification + Richardson extrapolation) and demonstration on IBM Q Tokyo (3-qubit experiments) showing small-scale hardware feasibility.",
+    "#idea:near-term-feasibility — Simulation studies (AE with m up to 9 sampling qubits) benchmarked against classical Monte Carlo to characterise convergence and to illustrate the gap between theoretical scaling and practical limitations."
+  ],
+  "contradictions": []
+}

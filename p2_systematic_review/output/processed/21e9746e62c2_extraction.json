@@ -1,0 +1,206 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document carries an arXiv identifier (arXiv:2011.08057v3) and has the typical structure of a research manuscript (abstract, methods, results, references) but no journal or conference venue is listed, indicating an author preprint.",
+  "title": "Quantum walk-based portfolio optimisation",
+  "authors": [
+    "N. Slate",
+    "E. Matwiejew",
+    "S. Marsh",
+    "J. B. Wang"
+  ],
+  "year": "2021",
+  "journal_or_venue": "arXiv preprint (arXiv:2011.08057)",
+  "doi": "",
+  "abstract_summary": "This preprint introduces the Quantum Walk Optimisation Algorithm (QWOA), a hybrid quantum-classical approach for discrete Markowitz portfolio optimisation aimed at NISQ devices. By indexing the feasible, non-degenerate solution subspace and implementing a continuous-time quantum walk mixer (chosen as a complete graph), the authors show QWOA substantially reduces the search space and outperforms QAOA and QAOAz in numerical simulations, achieving faster convergence to high-quality portfolios with lower parameter-optimisation variance.",
+  "methodology_description": "The authors formulate discrete mean-variance (Markowitz) portfolio optimisation with ternary asset positions (long=+1, short=-1, no position=0) and encode each asset using two qubits. They compare three hybrid quantum-classical approximate optimisation approaches: (1) QAOA with a soft-penalty term added to the objective to enforce the total-position constraint, (2) QAOAz using a dual-parity-ring mixer that preserves Hamming weights (parity bands) and an initial superposition over degenerate valid states, and (3) QWOA which (a) computes an efficient bijective classical indexing id_{n,A} between canonical non-degenerate valid portfolios and indices 0..M-1, (b) prepares an equal superposition over only the M valid, non-degenerate solutions, and (c) implements a continuous-time quantum walk mixer on a chosen circulant graph (here the complete graph K_M) via U_QWOA(t)=U_# e^{-i t K_M} U_#^†, where U_# is the indexing unitary. They derive counting formulas for valid state cardinalities, describe recursive ranking/unranking algorithms for indexing/unindexing, and characterise circuit complexities (indexing O(n^2), walk simulation O(n) up to polylog factors). Numerical experiments (statevector-style quantum simulations) are run to optimise the variational parameters (γ, t) using classical optimisers (BFGS as primary, other methods tested) and evaluate expectation ⟨ψ_f|C|ψ_f⟩, state probabilities and derived financial metrics (expected annual return and risk). Comparisons are performed across p (number of alternating layers) to assess convergence, variability, and quality of solutions.",
+  "algorithms_used": [
+    "QAOA",
+    "QAOAz",
+    "QWOA"
+  ],
+  "frameworks": [
+    "QuOP MPI (quantum optimisation simulator)",
+    "Yahoo Finance Python API (data retrieval)",
+    "BFGS classical optimiser (used for variational parameter optimisation)"
+  ],
+  "experimental_setup": "Numerical simulation experiments using the QuOP MPI simulator (parallel distributed-memory simulation) run on HPC resources (Pawsey Supercomputing Centre). Classical optimisation of variational parameters used BFGS (other classical optimisers were tested for comparison). Repeated simulation trials with random initial variational parameters were performed.",
+  "dataset_used": "Two empirical datasets of daily adjusted close prices for n = 8 ASX-listed stocks obtained via Yahoo Finance. Data Set A: 2017-01-01 to 2018-12-31 (tickers: AMP, ANZ, AMC, BHP, BXB, CBA, CSL, IAG). Data Set B: 2020-03-24 to 2020-09-06 (tickers: FLT, QAN, WEB, REX, AIZ, SYD, SCG, CTD).",
+  "experiment_input": {
+    "source": "Yahoo Finance via Python API",
+    "datasets": [
+      {
+        "name": "Data Set A",
+        "tickers": [
+          "AMP",
+          "ANZ",
+          "AMC",
+          "BHP",
+          "BXB",
+          "CBA",
+          "CSL",
+          "IAG"
+        ],
+        "date_range": "2017-01-01 to 2018-12-31",
+        "n_assets": 8
+      },
+      {
+        "name": "Data Set B",
+        "tickers": [
+          "FLT",
+          "QAN",
+          "WEB",
+          "REX",
+          "AIZ",
+          "SYD",
+          "SCG",
+          "CTD"
+        ],
+        "date_range": "2020-03-24 to 2020-09-06",
+        "n_assets": 8
+      }
+    ],
+    "preprocessing": "Adjusted close prices used. Historical returns and covariance matrix computed from daily adjusted close series to produce expected returns r_i and covariances σ_ij for the Markowitz objective. Encoding uses two qubits per asset with canonical removal of degenerate |11> ≡ |00> representations for QWOA indexing.",
+    "constraint_parameters": {
+      "A": 4,
+      "lambda": 0.5
+    }
+  },
+  "experiment_process": {
+    "overview_steps": [
+      "Compute expected returns r_i and covariance matrix σ_ij from historical adjusted-close series.",
+      "Encode portfolios with two qubits per asset (n assets → 2n qubits).",
+      "For QAOA: add quadratic penalty ζ(z)=ϵ(A - Σ_i z_i)^2 to objective and use standard transverse-field mixer; initial state = uniform over all 2^{2n} states.",
+      "For QAOAz: use dual-parity-ring mixer approximated by product of exponentials (decomposition into U_odd, U_even, U_last) and initialise with equal superposition over degenerate valid states given in Eq. (14).",
+      "For QWOA: compute M(n,A) valid non-degenerate portfolios via recursive counting; implement classical bijective indexing id_{n,A} and its inverse using recursive rank/unrank algorithms; build quantum indexing/unindexing unitary U_# with ancilla register(s); implement continuous-time quantum walk on complete graph K_M via QFT-based simulation sandwiched by indexing unitaries; initial state = equal superposition over M valid canonical states.",
+      "For each method and each p in a set (p = 1..19), prepare circuit |ψ_f〉 = Π_{i=1}^p U_mix(t_i) U_C(γ_i) |ψ0〉 and optimise classical parameters (t_i, γ_i) to minimise expectation value ⟨ψ_f| C |ψ_f⟩ using BFGS. Other classical optimisers (Newton-CG, Nelder-Mead, Powell) were also tested.",
+      "Repeat each optimisation 15 times with random initial (γ, t) drawn uniformly from [0, 2π], record mean and standard deviation of outputs.",
+      "Evaluate and compare metrics: expectation ⟨ψ_f|C|ψ_f⟩, output-state probabilities (esp. probability of optimal portfolio), expected annual return and expected annual risk."
+    ],
+    "variational_optimisation_details": "Primary optimiser BFGS; initial parameter vectors sampled uniformly in [0,2π]; number of optimisation repeats per configuration = 15; evaluated p from 1 up to 19."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Optimised expectation value ⟨ψ_f| C |ψ_f⟩ (objective value)",
+      "Probability of measuring the optimal portfolio (state probabilities)",
+      "Expected annual return",
+      "Expected annual risk (volatility)",
+      "Mean and standard deviation across 15 repeats"
+    ],
+    "baselines": [
+      "Classical brute-force global optimum (computed exhaustively for comparison)",
+      "Comparative baselines: QAOA and QAOAz (same objective and datasets)"
+    ],
+    "output_format": "Numerical tables and plots of objective expectation vs p, expected return/risk vs p, state probability histograms; statistics are mean ± SD across repeats."
+  },
+  "experiment_parameters": {
+    "n_assets": 8,
+    "qubits_per_asset": 2,
+    "total_qubits": 16,
+    "investment_constraint_A": 4,
+    "risk_aversion_lambda": 0.5,
+    "p_values_tested": "1 to 19",
+    "num_repeats": 15,
+    "initial_param_distribution": "uniform(0, 2π) for each γ_i and t_i",
+    "classical_optimiser": "BFGS (primary); also tried Newton-CG, Nelder-Mead, Powell",
+    "search_space_sizes": {
+      "QAOA": 65536,
+      "QAOAz": 1820,
+      "QWOA": 266
+    }
+  },
+  "hardware_details": {
+    "simulator": "QuOP MPI (parallel distributed-memory simulator)",
+    "compute_resources": "Pawsey Supercomputing Centre (HPC resources), Australia",
+    "quantum_hardware": "No physical QPU used (numerical simulation only)",
+    "data_acquisition": "Yahoo Finance via Python API"
+  },
+  "reproducibility_notes": {
+    "data_availability": "Datasets are public (Yahoo Finance tickers and date ranges provided), so financial inputs are reproducible.",
+    "code_availability": "Authors cite use of QuOP MPI (reference given) but do not provide a public repository or explicit implementation code/parameters for the indexing circuits or experiment scripts in the preprint. Re-implementation requires reproducing the described indexing/unindexing algorithms and QWOA circuit constructions.",
+    "notes": "Classical optimisation hyperparameters (BFGS default settings) and the random seeds for initial parameter draws are not explicitly provided in the text. Reproducibility is feasible from the methodological descriptions but would be facilitated by publication of the experiment code and exact scripts."
+  },
+  "key_findings": [
+    "[supported] The Quantum Walk Optimisation Algorithm (QWOA) outperforms QAOA and QAOAz on the tested portfolio optimisation instances (n=8, A=4) in numerical simulations: faster convergence to high-quality solutions and lower run-to-run variance.",
+    "[supported] QWOA restricts the search to canonical valid (non-degenerate) portfolios of size M(n,A), substantially reducing the effective search space compared with QAOA and QAOAz (numerical example: for n=8, A=4 the reported search-space sizes are QAOA=2^16, QAOAz=1820, QWOA=266).",
+    "[supported] The authors present an explicit classical indexing/un-indexing procedure to bijectively map valid portfolio encodings to indices; the paper provides an analytic gate-complexity argument that the indexing circuit dominates mixing depth and leads to an overall mixing complexity O(n^2) (polylog factors omitted).",
+    "[supported] In simulations QWOA amplifies the optimal portfolio probability substantially (reported >40% for Data Set A at p=19, ~20% for Data Set B at p=19), whereas QAOAz sometimes fails to amplify optimal (degenerate) solutions in its parity bands.",
+    "[supported] QAOA with a soft penalty over the full 2^{2n} Hilbert space shows poorer average performance and higher variance in the experiments, attributed to the inclusion of invalid states and degeneracy.",
+    "[supported] QAOAz (dual-parity ring mixer) creates disconnected parity-band components and a biased amplitude distribution over parity bands; this can prevent amplitude flow to some optimal solutions depending on which parity-band they lie in.",
+    "[speculative] Using a complete-graph circulant mixer (as in QWOA) is likely an (near-)optimal mixing choice for combinatorial optimisation due to maximal symmetry and minimal diameter — argued by analogy to proven optimality in some quantum spatial search settings.",
+    "[speculative] The polynomial (quadratic) increase in mixing circuit complexity for QWOA is worth the reduction in search space for NISQ-targeted use, because QWOA converges much more rapidly at low p (the paper asserts this as a practical advantage for near-term devices).",
+    "[speculative] The QWOA approach and indexing idea generalise to other combinatorial optimisation problems with non-power-of-two feasible sets (e.g., the Travelling Salesman Problem), and similar advantages over QAOA-family methods are expected.",
+    "[supported] The hybrid classical optimiser (BFGS used) suffers from the curse of dimensionality as p increases; therefore algorithms that reach good solutions at low p (QWOA in these simulations) are practically advantageous."
+  ],
+  "results_summary": "The paper introduces and evaluates QWOA for discrete mean-variance (Markowitz) portfolio optimisation. Analytic counting shows QWOA restricts the search to M(n,A) canonical valid portfolios, reducing the search space compared to both QAOA (full 2^{2n} space) and QAOAz (includes degenerate encodings). A classical indexing/un-indexing circuit enables a continuous-time quantum-walk mixer (implemented over a circulant/complete graph), with overall mixing complexity argued to be O(n^2). Numerical simulations on two 8-asset datasets (A=4, λ=0.5) show QWOA converges to higher-quality portfolios at lower p, amplifies optimal solutions (reported >40% and ~20% probabilities for the two datasets at p=19), and exhibits smaller variance than QAOA and QAOAz. The authors argue these benefits make QWOA promising for NISQ-era combinatorial optimisation and that the approach generalises to other non-power-of-two feasible-solution problems.",
+  "performance_claims": [
+    "Search-space sizes reported for n=8, A=4: QAOA = 2^16 (reported as '216' in text), QAOAz = 1820, QWOA = 266.",
+    "For n=8,A=4 QWOA reduces the search space to approximately 0.406% of QAOA and about 14.61% of QAOAz (paper's reported percentages).",
+    "QWOA amplifies the optimal portfolio probability to >40% on Data Set A at p=19 (reported).",
+    "QWOA amplifies the optimal portfolio probability to ~20% on Data Set B at p=19 (reported).",
+    "Observed standard deviation of optimized objective ⟨ψf|C|ψf⟩ (Data Set A): QAOA up to 12.96, QAOAz ≈ 0.038, QWOA ≈ 0.011 (reported).",
+    "Observed standard deviation (Data Set B): QAOA up to 12.75, QAOAz ≈ 0.61, QWOA ≈ 0.115 (reported).",
+    "Reported optimal (classical brute-force) objective values used for comparison: Data Set A minimum c(z) = −0.318; Data Set B minimum c(z) = −1.25 (stated in paper).",
+    "Circuit complexity claims: indexing/un-indexing subcircuits O(n) each, overall indexing unitary gate complexity O(n^2) (polylog factors omitted); QWOA mixing/mixer implementation dominated by O(n^2) depth."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper demonstrates improved performance of a quantum-heuristic (QWOA) over other quantum heuristics (QAOA, QAOAz) in classical numerical simulations for small problem instances, but does not demonstrate a provable or empirical advantage over classical algorithms nor demonstrate performance on actual quantum hardware. Claims of practical NISQ-era advantage and general optimality of the complete-graph mixer are presented as arguments or conjectures rather than proven or experimentally validated across broader problem instances.",
+  "limitations": [
+    "Classical parameter optimisation suffers from the curse of dimensionality as p increases; the classical optimiser deteriorates with growing number of variational parameters (author-stated).",
+    "QAOA with soft penalty includes invalid states in the search space, leading to poorer average performance and large variance (author-stated).",
+    "QAOAz mixing operator produces disconnected parity bands, asymmetric connectivity and degeneracy which can prevent amplitude transfer between bands and bias results (author-stated).",
+    "QWOA mixing unitary (indexing + walk) has higher circuit complexity (reported as O(n^2) gate complexity for the indexing component) compared with O(n) for the other mixers — a polynomial (quadratic) increase in circuit depth per iteration (author-stated).",
+    "[inferred] All results are from classical numerical simulation only (QuOP MPI); no experiments on real quantum hardware or noise models are presented.",
+    "[inferred] No analysis of noise, decoherence or other NISQ hardware errors is included; robustness of QWOA under realistic NISQ noise is not evaluated.",
+    "[inferred] Scalability beyond the tested problem size (n = 8) is not demonstrated; practical performance for larger portfolios is unclear.",
+    "[inferred] The indexing/un-indexing unitary requires classical precomputation and ancilla registers and may have significant resource overheads in practice.",
+    "[inferred] The claimed advantage relies on the ability to construct an efficient bijection id_{n,A}(x); constructing such an efficient indexing may be nontrivial for other constraint types or problem encodings.",
+    "[inferred] The trade-off between reducing the search space and increasing circuit depth may be adverse in noisy devices — the benefit of search-space reduction might be offset by deeper circuits under noise.",
+    "[inferred] Dependence on classical optimisation routines (BFGS was used here) introduces vulnerability to local minima and may not generalise; the classical optimiser choice and scaling behaviour are not fully explored.",
+    "[inferred] The optimality of the complete-graph mixer for general combinatorial optimisation is asserted as likely but not proven; there may be problem instances where other mixers are better."
+  ],
+  "open_questions": [
+    "How will QWOA perform on real quantum hardware (NISQ devices) subject to noise and gate errors?",
+    "How does QWOA scale with increasing number of assets n and different constraint values A in practice (resource usage, convergence, and solution quality)?",
+    "Can the indexing/un-indexing circuits be further optimised (gate count, ancilla usage, depth) to reduce the O(n^2) overhead and make QWOA more practical?",
+    "Is the complete graph mixer always the best mixer choice for arbitrary combinatorial optimisation instances, or are there cases where other circulant or problem-specific mixers outperform it?",
+    "How sensitive is QWOA’s advantage to the structure of degeneracy and parity-band distributions in other domains and encodings?",
+    "Can classical parameter optimisation be improved (better optimisers, parameter initialisation strategies, warm-starts, parameter transfer between instances) to mitigate the curse of dimensionality for higher p?",
+    "What are the concrete resource estimates (number of qubits, circuit depth, number of shots) and error thresholds necessary for QWOA to outperform classical or other quantum heuristics on practical portfolio sizes?",
+    "Does QWOA maintain its advantage across a wider variety of financial datasets, risk-return parameters (λ), and different objective/constraint formulations?",
+    "How do sampling noise and finite-shot estimation of expectation values affect the practical optimisation loop and convergence for all compared algorithms?",
+    "How generalisable are the reported advantages of QWOA to other combinatorial optimisation problems (e.g., Traveling Salesman Problem) beyond the examples given?"
+  ],
+  "future_work": [],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-walks",
+    "hybrid-quantum-classical",
+    "qft-phase-estimation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — QWOA (quantum-walk-based variational algorithm) substantially reduces the feasible search space by indexing only valid non-degenerate portfolios and, in statevector simulations, outperforms QAOA and QAOAz in convergence speed and parameter-optimisation variance for 8-asset instances.",
+    "#idea:hybrid-approach — Uses a hybrid quantum-classical design: classical counting and recursive rank/unrank algorithms produce a bijective indexing so the quantum circuit prepares an equal superposition over only M valid portfolios via an indexing unitary U_#, reducing effective search space and circuit depth for the mixer.",
+    "#idea:near-term-feasibility — Algorithm is positioned as NISQ-friendly (variational layers p tested up to 19, continuous-time quantum-walk mixer implemented via QFT-based simulation) and characterised with circuit-complexity bounds (indexing O(n^2), walk simulation O(n) up to polylog factors).",
+    "#limitation:simulation-only — All experiments are statevector-style simulations on HPC (QuOP MPI); no experiments on physical QPUs were reported.",
+    "#limitation:no-empirical-validation — Claims about NISQ applicability and scaling are not validated on noisy hardware; results reflect ideal, noise-free simulations.",
+    "#limitation:qubit-count — Demonstrated only on n=8 assets (16 qubits); practical portfolios with many assets would require much larger quantum resources.",
+    "#limitation:noise — Noise and error effects are not modelled in the reported simulations; robustness to realistic device noise is unknown.",
+    "#limitation:data-encoding — Encoding uses two qubits per asset and requires nontrivial indexing/unindexing unitaries (indexing complexity O(n^2) and ancilla), introducing overheads that may limit scalability in practice."
+  ],
+  "contradictions": []
+}

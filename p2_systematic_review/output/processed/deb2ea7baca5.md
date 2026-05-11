@@ -1,0 +1,190 @@
+---
+aliases:
+- Mixed-Signal Quantum Circuit Design for Option Pricing Using Design Compiler
+- Mixed Signal Quantum Circuit
+authors:
+- Yu-Ting Kao
+- Yeong-Jar Chang
+- Ying-Wei Tseng
+auto_detected: true
+classification: ''
+contradiction_flags: []
+doi: ''
+evaluation_type: simulator
+evidence_type: ''
+has_quantitative_results: true
+idea_tags:
+- idea:quantum-advantage
+- idea:near-term-feasibility
+- idea:hybrid-approach
+- limitation:simulation-only
+- limitation:no-empirical-validation
+- limitation:data-encoding
+- limitation:noise
+journal_or_venue: preprint
+methodology_tags:
+- amplitude-estimation
+- hybrid-quantum-classical
+- error-mitigation
+paper_type: ''
+quantum_advantage_claim: theoretical
+related_papers:
+- 2020_Stamatopoulos_OptionPricing
+relevance_phase1: high
+relevance_phase3: high
+source_type: preprint
+source_type_confidence: medium
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/derivative-pricing
+- topic/simulation-monte-carlo
+- method/amplitude-estimation
+- method/hybrid-quantum-classical
+- method/error-mitigation
+- idea/quantum-advantage
+- idea/near-term-feasibility
+- idea/hybrid-approach
+- limitation/simulation-only
+- limitation/no-empirical-validation
+- limitation/data-encoding
+- limitation/noise
+title: Mixed-Signal Quantum Circuit Design for Option Pricing Using Design Compiler
+topic_tags:
+- derivative-pricing
+- simulation-monte-carlo
+year: ''
+zotero_key: ''
+---
+
+## Abstract summary
+This preprint proposes a mixed-signal quantum circuit framework for option pricing that combines three techniques—exponential data pre-processing, digital calibration, and Monte Carlo price simulation—to reduce circuit complexity and improve noise tolerance. In a 12-qubit case study the authors report reducing gate count from 4095 to 392, depth from 2048 to 6, and maximum error from 25.86% to 1.64%, while noting nonlinear components (exponential and payoff functions) remain to be implemented.
+## Methodology
+The authors propose a mixed-signal quantum circuit framework for Monte Carlo option pricing combining three main techniques: (1) Exponential Data Pre-processing — they classically pre-process a discretized lognormal distribution and synthesize an RTL representation with Synopsys Design Compiler (DC) to restructure rotation/data-encoding operations and reduce gate complexity from exponential to polynomial (they target O(n^2) gates and O(n) depth). (2) Digital Calibration — they use lookup-table based digital calibration (Arcsin/LUT) to convert desired sqrt(x) outputs into rotation angles r = arcsin(sqrt(x)) so that sin(r)=sqrt(x), expanding usable rotation-angle ranges and improving noise tolerance. (3) Monte Carlo Price Simulation — they implement mixed-signal Monte Carlo by generating randomness via Hadamard+measurement (quantum RNG), accumulating daily price fluctuations with a single-qubit rotation-based accumulator (deferring exponentiation to the final stage using exp(a+b+...)=exp(a)*exp(b)*...), and offering two measurement modes: direct classical-like Monte Carlo (via sampling) or deterministic QAE evaluation. The workflow includes RTL synthesis with DC to produce a massively-parallel thread-mapped design (inputs 0..4095 for a 12-qubit space, distribution discretized to 32 levels), simulation-based validation using Qiskit Statevector to compare distributions vs classical Monte Carlo, and benchmarking against the JP Morgan baseline circuit for gate count, circuit depth, and error rate.
+
+**Algorithms used:** Quantum Amplitude Estimation (QAE), Quantum Monte Carlo (quantum-enhanced Monte Carlo), Quantum random number generation via Hadamard measurements, State preparation via rotation gates, Lookup-table based digital calibration (Arcsin LUT)
+**Frameworks:** Synopsys Design Compiler, Qiskit (Statevector simulator)
+
+**Experimental setup:** Simulation-based validation using Qiskit Statevector (statevector access, not shot-based sampling). A 12-qubit case study is used (4096 basis states / thread IDs), with a discretized lognormal PDF into 32 output levels mapped from inputs 0..4095. Histograms and state amplitudes were inspected from the Statevector rather than measurement shots. No physical QPU or cloud provider is reported.
+
+**Dataset:** Synthetic / simulated financial data: a discretized lognormal probability distribution representing asset-price change probabilities. Distribution discretized into 32 output levels (0..31) mapped across a 12-qubit (0..4095) input space. Piecewise-linear payoff segments are pre-processed classically; no external market dataset is reported.
+## Experiment details
+### Input
+{'source': 'Classical pre-processing within the study (synthetic lognormal distribution)', 'size': 'Inputs mapped across 4096 thread IDs (12 qubits); distribution discretized to 32 output levels', 'preprocessing': 'Piecewise-linear (PWL) region isolation for payoff, discretization of lognormal PDF to 32 levels, RTL encoding of distribution values, LUT generation for arcsin(sqrt(x)) calibration angles; mapping to thread IDs for DC synthesis'}
+
+### Process
+{'steps': ['Classical pre-processing: isolate relevant PWL payoff region and discretize lognormal PDF into 32 levels mapped over 0..4095 (12 qubits).', 'RTL encoding: produce RTL that encodes the discretized distribution and input-to-thread mapping; synthesize the design using Synopsys Design Compiler to restructure rotation gates and reduce gate count/depth.', 'Digital calibration: compute calibration LUT values r = arcsin(sqrt(x)) for each required amplitude to correct rotation outputs (so sin(r)=sqrt(x)).', 'Circuit construction: instantiate rotation-based state-preparation, single-qubit accumulator for price fluctuations (series of rotations), quantum RNG via Hadamard gates + measurement (or QAE for deterministic evaluation), and optional QAE module for amplitude estimation.', 'Simulation/validation: run circuits on Qiskit Statevector simulator; extract state amplitudes (histograms from Statevector) to compare quantum Monte Carlo distributions against classical Monte Carlo distributions; measure gate count, depth, and maximum calculation error.'], 'parameters_and_choices': {'qubits': 12, 'discretization_levels': 32, 'input_states': 4096, 'calibration_function': 'r = arcsin(sqrt(x))', 'scaling_factor_m': 1.57, 'measurement_mode': 'Statevector inspection for distributions (shot-less); QAE optional for reduced measurement counts', 'randomness_generation': 'Hadamard gates followed by measurements (m independent samples via m Hadamards/measurements)'}, 'iterations': 'Monte Carlo style repeated simulations (m samples) are referenced; exact m for reported experiments not specified beyond illustrative examples (e.g., discussion of 20 major qubits and 2^20 runs as conceptual)'}
+
+### Output
+{'format': 'Simulation metrics and statevector-derived histograms', 'metrics_reported': ['Gate count (original JP Morgan: 4095 vs proposed: 392)', 'Circuit depth (original: 2048 vs proposed: 6)', 'Maximum calculation error (original: 25.86% vs proposed: 1.64%)', 'Visual / distributional consistency between quantum Monte Carlo and classical Monte Carlo histograms'], 'baselines': 'JP Morgan option-pricing quantum circuit (Stamatopoulos et al. 2020) used as baseline for gate count, depth, and error comparisons', 'outputs': 'Average option price approximations (linear part validated), histograms of price distributions from Statevector, and quantitative reductions in complexity and error'}
+
+### Parameters
+- qubits: 12
+- input_states: 4096
+- discretization_levels: 32
+- original_gate_count: 4095
+- proposed_gate_count: 392
+- original_depth: 2048
+- proposed_depth: 6
+- max_error_before_calibration_percent: 25.86
+- max_error_after_calibration_percent: 1.64
+- calibration_function: r = arcsin(sqrt(x))
+- scaling_factor_m: 1.57
+- simulator: Qiskit Statevector (statevector access)
+- shots: not applicable (Statevector used; histograms from amplitudes)
+
+### Hardware
+{'simulator': 'Qiskit Statevector simulator (statevector access; no shot sampling)', 'QPU_model': None, 'cloud_provider': None}
+
+### Reproducibility
+The paper describes RTL encoding, the LUT-based calibration method, and circuit topologies, and states that Qiskit Statevector was used for simulation. However, no code repository, automated scripts, or raw input files (RTL sources, LUT tables, synthesized netlists) are provided or linked in the text, and nonlinear components (exponential and payoff) are not implemented in the current work. Reproducibility would require reimplementation from the described methods and parameters; no direct artifacts were published with the preprint.
+## Findings
+- [supported] In a 12-qubit case study versus the JP Morgan baseline, Exponential Data Pre-processing reduced quantum gate count from 4095 to 392 and circuit depth from 2048 to 6 (reported simulation/synthesis result).
+- [supported] Digital Calibration using a LUT-based arcsin correction reduced the reported maximum calculation error from 25.86% to 1.64% in the authors' experiments/simulations.
+- [supported] The digital calibration approach expanded the practical rotation-angle range (reported 0 to π/2) and the authors report tolerance to angle deviations of roughly 0.05 radians without substantial degradation.
+- [supported] Mixed-signal Monte Carlo price simulation using a single-qubit price accumulator produced linear-validation results consistent with classical Monte Carlo in the authors' statevector simulations.
+- [supported] The prototype implementation currently omits nonlinear components (exponential and payoff functions); the authors state ~90% of the circuit is implemented and validated on linear parts.
+- [speculative] The authors propose that restructuring rotation-gate encoding can in general reduce data-preprocessing complexity from exponential (up to 2^n−1 rotations) to polynomial O(n^2) and reduce depth from exponential to O(n).
+- [speculative] The paper claims Synopsys Design Compiler (classical DC) and classical VLSI techniques can be effectively applied to synthesize and optimize quantum/mixed-signal circuit components to improve scalability beyond the demonstrated case.
+- [speculative] The authors argue the single-qubit accumulator architecture combined with QAE can enable massive parallelism and reduce measurement overhead, potentially delivering quantum advantages (claimed conceptually rather than fully demonstrated).
+- [speculative] The digital calibration methodology (LUT-based arcsin correction) is presented as a generally-applicable approach to mitigate analog nonlinearities in mixed-signal quantum circuits.
+- [speculative] The mixed-signal design (combining analog rotation-based accumulators with digital preprocessing/calibration) is claimed to be readily extensible to include nonlinear elements later with only minor modifications.
+
+**Results summary:** The preprint presents a mixed-signal quantum-circuit framework for Monte Carlo option pricing that combines classical RTL-based preprocessing (synthesized with a classical Design Compiler), LUT-based digital calibration, and a single-qubit analog accumulator. In simulation/implementation for a 12-qubit test case the authors report a dramatic reduction in gate count (4095→392) and depth (2048→6) compared with a JP Morgan baseline and a reduction in maximum calculation error from 25.86% to 1.64% after calibration. Linear validation via statevector simulation shows output distributions consistent with classical Monte Carlo; nonlinear components (exponential and payoff) were not yet implemented and are left for future work. Several broader claims about asymptotic complexity improvements and general applicability of classical EDA tools to quantum circuit design are proposed but are not proven at scale within this work.
+
+**Performance claims:**
+- Gate count reduced from 4095 to 392 (12-qubit case study, compared to JP Morgan circuit).
+- Circuit depth reduced from 2048 to 6 (12-qubit case study).
+- Maximum calculation error reduced from 25.86% to 1.64% after digital calibration (reported).
+- Rotation-angle usable range expanded to 0 to π/2 radians via calibration (reported).
+- Reported tolerance to rotation-angle deviations approximately 0.05 radians without significant degradation.
+- Distribution discretization example: 32 output levels (0..31) with inputs 0..4095 representing 12 qubits/states in RTL preprocessing.
+- Authors identify an optimal heuristic scaling m ≈ π/2 ≈ 1.57 for a linear transformation minimizing approximation error in their analog calibration argument.
+- Authors state ~90% of the circuit implemented; nonlinear components pending.
+## Quantum advantage claim
+**Classification:** theoretical
+
+The paper argues that Quantum Amplitude Estimation (QAE) can provide quantum advantages (e.g., eliminating the need for randomness and reducing measurement cost) and that the mixed-signal design can exploit parallelism, but these advantages are asserted conceptually and are not empirically demonstrated for the full nonlinear option-pricing pipeline in this work. The experiments focus on linear validation and simulation comparisons rather than a demonstrated end-to-end quantum speedup or provable complexity advantage.
+## Limitations
+- Nonlinear components (exponential and payoff functions) are not implemented or described; only about 90% of the circuit has been implemented and validated (author-stated).
+- Monte Carlo simulations in this work validate only the linear portions of the design; averaging is used for validation and the final nonlinear pricing computation is not yet performed (author-stated).
+- Figures and histogram comparisons were generated from statevector simulations rather than shot-based measurements or hardware runs, so results do not capture realistic sampling noise or device noise (author-stated).
+- [inferred] Scalability beyond the presented 12-qubit case study is not demonstrated; it is unclear how gate count, depth, and calibration scale for larger, production-sized problems.
+- [inferred] No experimental validation on physical quantum hardware or under realistic noise models is reported, leaving open the practical robustness of the approach on NISQ devices.
+- [inferred] The approach depends on classical pre-processing (RTL + Design Compiler) and LUT-based digital calibration; the classical resource/time overhead and memory requirements (LUT size) for large state spaces are not quantified.
+- [inferred] The single-qubit price accumulator replaces a multi-bit accumulator to simplify the circuit, but may limit numerical precision, dynamic range, or ability to represent complex/nonlinear accumulations.
+- [inferred] Generation of Monte Carlo randomness via repeatedly measuring Hadamard-prepared qubits implies many circuit runs for statistically independent samples; resource and time costs for large sample counts are not analyzed.
+- [inferred] Compatibility and mapping of the synthesized mixed-signal circuit to realistic device gate sets, qubit connectivity, and two-qubit gate errors are not addressed.
+- [inferred] Digital calibration depends on LUTs and an arcsin-based correction; how calibration robustness degrades under device drift, calibration errors, or correlated noise is not evaluated.
+## Open questions
+- How can the missing nonlinear components (exponential and payoff functions) be implemented within this mixed-signal quantum circuit framework (analog quantum components, digital emulation, or hybrid approaches)?
+- When the nonlinear elements are implemented, what will be the true end-to-end resource requirements (qubits, gates, depth) and how will they affect the reported complexity gains?
+- How does the mixed-signal design compare to fully digital quantum designs in practice when accounting for full system costs, including classical preprocessing, LUT storage, and calibration overhead?
+- How robust is the digital calibration approach under realistic device noise, temporal drift, cross-talk, and non-idealities encountered on current quantum hardware?
+- How well does the design perform when implemented on actual quantum hardware (shot-based execution), and how do sampling noise and finite-shot effects impact estimation accuracy and required repetitions?
+- How does the proposed design scale to larger problem sizes (more qubits, larger discretizations, more time steps in Monte Carlo) and to real-world financial datasets?
+- What are the trade-offs between using repeated measured randomness (Hadamard + measure) versus deterministic QAE-based evaluation in terms of runtime, circuit depth, and measurement overhead?
+- What is the impact of limited native gate sets and qubit connectivity on the synthesized circuits produced by Design Compiler, and what additional compilation/scheduling overhead will be incurred?
+- How large must LUTs be for accurate digital calibration across realistic input ranges, and is that LUT memory practical for larger state spaces?
+- How sensitive are the claimed error reductions (from 25.86% to 1.64%) to different noise models, parameter choices, and broader classes of payoff/distribution functions?
+
+**Future work:**
+- Implement the missing nonlinear components (exponential and payoff functions) and integrate them into the mixed-signal quantum circuit.
+- Extend the architecture to support full nonlinear computations so that the circuit can perform end-to-end option pricing rather than only linear validation.
+- If nonlinear functions must remain digital, replace the single-qubit accumulator with a multi-bit digital accumulator; otherwise explore analog implementations to preserve the current design.
+- Further optimize and synthesize circuit components using Synopsys Design Compiler (DC) or similar EDA tools to improve scalability and hardware efficiency (author-suggested).
+- Evaluate and validate the complete design (including nonlinear parts) under realistic, shot-based simulations and on physical quantum hardware to measure practical performance and noise resilience.
+## Key ideas
+- #idea:quantum-advantage — Mixed-signal circuit reports large reductions in gate count (4095 -> 392), circuit depth (2048 -> 6), and maximum error (25.86% -> 1.64%) for a 12-qubit option-pricing case study versus the JP Morgan baseline.
+- #idea:hybrid-approach — Heavy classical preprocessing (exponential data pre-processing, piecewise-linear payoff isolation), RTL synthesis via Synopsys Design Compiler, and a lookup-table arcsin(sqrt(x)) digital calibration are used to restructure state-preparation and reduce quantum resource requirements.
+- #idea:near-term-feasibility — The dramatic depth reductions and calibration to expand usable rotation angles are presented as enabling NISQ-era applicability, with optional use of QAE for deterministic evaluation.
+- #limitation:simulation-only — All experiments use Qiskit Statevector access (state amplitudes inspected, no shot-based sampling) and no physical QPU experiments are reported.
+- #limitation:no-empirical-validation — No public code/RTL/LUT artifacts or reproducible experiment scripts are provided; validations are limited to simulator-derived histograms and comparisons.
+- #limitation:data-encoding — The method relies on discretizing the lognormal PDF to 32 levels mapped across 4096 thread IDs and deferring nonlinear components; the overhead and fidelity of encoding nonlinear payoffs at scale remain unresolved.
+- #limitation:noise — Although digital calibration is claimed to improve noise tolerance, hardware noise behavior is untested and nonlinear components that may be noise-sensitive are not yet implemented.
+## Contradictions
+- The paper claims general scalability of exponential preprocessing and large gate/depth reductions beyond the 12-qubit example (polynomial O(n^2) gates, O(n) depth), but provides only a 12-qubit case study and no empirical scaling analysis — the generalization is therefore unsubstantiated.
+- The manuscript states "quantum circuits are inherently deterministic and do not produce randomness by default" yet uses measurement to obtain randomness; this phrasing contradicts standard quantum mechanics (unitary evolutions are deterministic but measurements are probabilistic).
+- Claims of increased noise tolerance and practical NISQ applicability are based on statevector simulations (noise-free) and LUT calibrations; without noisy-hardware experiments the noise-tolerance claims are not validated and may contradict realistic device behaviour.
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

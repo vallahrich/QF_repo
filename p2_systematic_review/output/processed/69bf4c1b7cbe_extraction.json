@@ -1,0 +1,244 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2301.01836v1) and date, with no journal venue or conference proceeding indicated. The structure (abstract, methods, results, references) and industry affiliation suggest an authored preprint rather than a peer-reviewed publication.",
+  "title": "A Quantum-Inspired Binary Optimization Algorithm for Representative Selection",
+  "authors": [
+    "Anna G. Hughes",
+    "Jack S. Baker",
+    "Santosh Kumar Radha"
+  ],
+  "year": "2023",
+  "journal_or_venue": "arXiv preprint (arXiv:2301.01836)",
+  "doi": "",
+  "abstract_summary": "The paper introduces the selector algorithm, an unsupervised method that formulates representative subset selection as a Quadratic Unconstrained Binary Optimization (QUBO) problem to pick data points that are both representative of local clusters and maximally distinct from one another. The authors demonstrate the approach on synthetic data and finance use cases — approximating the NASDAQ 100 with a small stock subset and diversifying a cryptocurrency portfolio — and benchmark performance on D-Wave quantum annealers.",
+  "methodology_description": "The authors formulate representative selection as a Quadratic Unconstrained Binary Optimization (QUBO) problem. Each data point i is represented by a vector y_i; pairwise distances (a kernel) d_{ij} are computed (Euclidean by default, correlation distance used for financial returns). The QUBO objective (Equation 3) contains: (1) a term promoting that selected points are close to neighboring (similarly clustered) data, (2) a term promoting that selected points are far from distant data, and (3) a quadratic penalty enforcing an equality constraint sum_i x_i = k (scaled by A). For the binary selection case x_i ∈ {0,1} the QUBO is solved approximately using metaheuristic QUBO solvers. Classical experiments use the D-Wave decomposing solver qbsolv (tabu-based) to minimize the objective on synthetic datasets and to reconstruct a proxy NASDAQ-100 by selecting k stocks. Quantum experiments map the QUBO to D-Wave quantum annealers (D-Wave 2000Q and D-Wave Advantage) to select diversified cryptocurrency subsets. Device-level experiments explored default and tuned annealing parameters (anneal time sweep 20–990 μs), penalty scaling A (0–10), number of reads/shots (1000), and measured constraint satisfaction rates, cost-function values, and downstream metrics (e.g., MSE to proxy index, correlation distance, selection accuracy on synthetic clusters). The authors also describe an extension to weighted selection (discretized weights) and note using PyQUBO to compile higher-order penalties to QUBO form.",
+  "algorithms_used": [
+    "QUBO (Quadratic Unconstrained Binary Optimization)",
+    "Quantum annealing",
+    "Tabu-based classical decomposition solver (qbsolv)",
+    "Simulated annealing (discussed conceptually)",
+    "PyQUBO (for QUBO compilation of higher-order terms)"
+  ],
+  "frameworks": [
+    "qbsolv",
+    "PyQUBO",
+    "D-Wave systems (quantum annealer APIs implicitly used)"
+  ],
+  "experimental_setup": "Classical optimization: D-Wave decomposing solver qbsolv (tabu-based). Quantum optimization: D-Wave 2000Q QPU (Chimera topology, ~2048 qubits, 6016 couplers) and D-Wave Advantage QPU (~5000+ qubits, ~35,000 couplers). Annealing experiments used default anneal time 20 μs and sweeps up to 990 μs; penalty scaling factor A defaulted to 2 (explored range 0–10); number of reads/shots per run fixed at 1000. Runs/trials: 300 trials per device for the k=3 crypto selection comparison; anneal-time sweep experiments had 19 anneal times with 50 repeats each; penalty-sweep experiments used 11 A values with 50 repeats each. Classical experiments on synthetic datasets and NASDAQ-100 reconstruction used qbsolv.",
+  "dataset_used": "Multiple datasets were used: synthetic clustered 2D points (two Gaussian blobs, 90 points each); synthetic time series (50 sine and 50 cosine series with added Gaussian noise, t in [0,2π], noise sigma varied 0.1–5.5); synthetic two-dimensional stochastic differential equation (SDE) time series (random drift and volatility in [-1,1]); NASDAQ-100 stock daily returns for 102 stocks over 253 trading days (2021-02-01 to 2022-02-01); Crescent Crypto Market Index (CCMIX) daily returns for 18 cryptocurrencies over seven months (2021-04-01 to 2021-11-11).",
+  "experiment_input": {
+    "synthetic_clustered_points": {
+      "description": "Two Gaussian blobs in 2D; 90 points per blob; sd=2.",
+      "used_for": "visual representative selection; k=2"
+    },
+    "synthetic_trigonometric_series": {
+      "description": "50 sine + 50 cosine curves, t ranging from 0 to 2π, additive Gaussian noise n_i ~ N(0,σ); σ varied between 0.1 and 5.5 (10 σ values).",
+      "used_for": "assess selector accuracy selecting one sine and one cosine; 200 trials per σ"
+    },
+    "synthetic_SDE_series": {
+      "description": "Multiple 2D time series from SDE dx_i = μ_i x_i dt + Σ σ_ij x_i dW_j, with μ_i, σ_ij sampled uniformly from [-1,1].",
+      "used_for": "assess selector on simulated financial time series; k=2"
+    },
+    "nasdaq100": {
+      "description": "Daily returns for 102 NASDAQ-100 component stocks, 253 trading days from 2021-02-01 to 2022-02-01. Equally weighted proxy NASDAQ-100 constructed by averaging all stocks' returns.",
+      "used_for": "approximate reconstruction of index with Sk for various k (k up to 102)."
+    },
+    "ccmix_crypto": {
+      "description": "Daily returns for 18 CCMIX cryptocurrencies from 2021-04-01 to 2021-11-11 (seven months).",
+      "used_for": "quantum annealer experiments selecting k (typically k=3) diversified portfolios."
+    },
+    "preprocessing": "For financial datasets, per-asset daily returns vectors were computed and used directly as input vectors y_i. Correlation distance (1 - Pearson correlation) was used as the distance kernel for finance tasks; Euclidean distance used elsewhere. No further preprocessing (normalization beyond mean subtraction in correlation) is described."
+  },
+  "experiment_process": {
+    "step_1": "Form dataset matrix Y with rows y_i (each data point/time series/asset return vector).",
+    "step_2": "Compute pairwise distance/kernel matrix d; default Euclidean for synthetic tasks, correlation distance for financial returns.",
+    "step_3": "Formulate QUBO objective: C(x) = (1/(2k)) x d x^T - (1/n) x d 1^T + A (sum_i x_i - k)^2 (Equation 3), where A is penalty scale enforcing sum x_i = k.",
+    "step_4": "For weighted-selection extension, discretize weights with n_D binary variables per item and compile higher-order terms to QUBO using PyQUBO.",
+    "step_5_classical": "Solve QUBO with qbsolv (decomposing, tabu-based) for synthetic and NASDAQ-100 reconstruction tasks; record selected indices and compute evaluation metrics (cost, correlation distance, MSE to proxy index).",
+    "step_5_quantum": "Embed/submit QUBO to D-Wave QPUs (2000Q and Advantage); run multiple trials/runs. Default anneal time 20 μs; also perform anneal-time sweeps 20–990 μs and penalty A sweeps 0–10. Each run uses 1000 reads/shots; collect solutions across repeats to compute constraint satisfaction rate (percent of runs with exactly k selected), average cost function value, and other statistics.",
+    "step_6_evaluation": "Compare QPU-selected solutions against distribution of cost values over all possible combinations (enumeration where feasible), compute percentiles, and compute downstream metrics: selection accuracy on labeled synthetic clusters (percentage trials selecting one of each cluster), MSE vs proxy NASDAQ-100 as function of k, histograms/density of costs and distances."
+  },
+  "experiment_output": {
+    "formats": [
+      "Selected subsets (indices of chosen data points / assets)",
+      "Numerical objective values (QUBO cost) per solution",
+      "Constraint satisfaction statistics (percentage of runs with sum_i x_i = k)",
+      "Downstream metrics: correlation distance to proxy index, mean squared error (MSE) to proxy NASDAQ-100, selection accuracy (%) on synthetic clusters"
+    ],
+    "baselines": [
+      "Distribution of cost values over all possible combinations (enumeration) used as baseline to rank QPU/classical solutions",
+      "Random/average cost across all combinations (mean cost) used for comparison"
+    ],
+    "reported_metrics": [
+      "Cost function value and percentile among all combinations",
+      "Constraint satisfaction rate (e.g., D-Wave 2000Q: 16% for k=3; Advantage: >85% for k=3)",
+      "Mean cost per device (e.g., 2000Q avg cost 4.02, Advantage avg cost 0.32 in one experiment)",
+      "MSE between reconstructed index Sk and proxy NASDAQ-100 as function of k",
+      "Selection accuracy on synthetic sine/cosine series as function of noise σ"
+    ]
+  },
+  "experiment_parameters": {
+    "k_values": [
+      2,
+      3,
+      20,
+      "up to 102 (full NASDAQ-100)"
+    ],
+    "penalty_scaling_A": {
+      "default": 2,
+      "explored_range": [
+        0,
+        10
+      ],
+      "observation": "little effect observed on solution quality in experiments"
+    },
+    "annealing_time_us": {
+      "default": 20,
+      "explored_range": [
+        20,
+        990
+      ],
+      "noted_optimal_examples": {
+        "2000Q": 550,
+        "Advantage": 900
+      }
+    },
+    "shots_per_run": 1000,
+    "trials": {
+      "qpu_comparison": 300,
+      "anneal_time_sweeps": "19 anneal times × 50 repeats each",
+      "penalty_sweeps": "11 A values × 50 repeats each"
+    },
+    "qbsolv": "used for classical decomposing optimization (tabu-based); default parameters unless otherwise noted",
+    "distance_metrics": [
+      "Euclidean (default)",
+      "Correlation distance (for financial returns)"
+    ],
+    "qpu_specs": {
+      "D-Wave_2000Q_qubits": 2048,
+      "D-Wave_2000Q_couplers": 6016,
+      "D-Wave_2000Q_topology": "Chimera",
+      "D-Wave_Advantage_qubits": "5000+",
+      "D-Wave_Advantage_couplers": "35,000+",
+      "D-Wave_Advantage_connectivity_per_qubit": "up to 15"
+    }
+  },
+  "hardware_details": {
+    "classical_solver": "qbsolv (D-Wave decomposing solver, tabu-based)",
+    "qubo_compiler": "PyQUBO (referenced for higher-order to QUBO compilation)",
+    "quantum_hardware": [
+      {
+        "model": "D-Wave 2000Q",
+        "vendor": "D-Wave Systems",
+        "qubits": 2048,
+        "topology": "Chimera",
+        "couplers": 6016
+      },
+      {
+        "model": "D-Wave Advantage",
+        "vendor": "D-Wave Systems",
+        "qubits": "5000+",
+        "topology": "Pegasus-like (higher connectivity)",
+        "couplers": "35,000+"
+      }
+    ],
+    "access": "Experiments performed on D-Wave QPUs (cloud access implied via D-Wave Systems)."
+  },
+  "reproducibility_notes": "The paper specifies dataset date ranges, per-asset daily returns as input vectors, explicit QUBO objective (Equation 3), solver names (qbsolv, PyQUBO), and QPU models with devices' experimental parameters (shots=1000, anneal times, penalty A). However, no public code repository or data download links are provided in the text. Exact embedding/minor-embedding details, qbsolv parameter settings, random seeds, and precise time-series sampling resolution for synthetic experiments are not given; these would be needed to fully reproduce experiments.",
+  "key_findings": [
+    "[supported] The paper formulates representative selection as a Quadratic Unconstrained Binary Optimization (QUBO) problem (the 'selector' algorithm) and implements it.",
+    "[supported] The selector algorithm works on simple synthetic clustered data (2D Gaussian blobs), picking representative points (one per cluster) as expected.",
+    "[supported] The selector algorithm can select representative high-dimensional time series (sine/cosine with noise, and simulated SDE financial series); accuracy degrades as cluster separability/noise increases.",
+    "[supported] Using a classical decomposing QUBO solver (qbsolv), the selector can approximately reconstruct an equally-weighted proxy NASDAQ-100 index from a subset of stocks; reconstruction error (MSE) decreases with number of selected stocks.",
+    "[supported] For the NASDAQ use case: a selector-chosen k=2 portfolio (FOX, SNPS) had a cost lower than 74% of all possible 2-stock combinations and a correlation distance lower than 89% of combinations.",
+    "[supported] In cryptocurrency diversification experiments using D-Wave quantum annealers, the newer D-Wave Advantage device substantially outperformed the older D-Wave 2000Q on (a) constraint satisfaction (choosing exactly k items) and (b) achieved cost values.",
+    "[supported] Quantitative device comparison results reported: D-Wave 2000Q satisfied the k=3 constraint in 16% of trials (49/300) while D-Wave Advantage satisfied it in >85% of trials (256/300); average cost values reported were 4.02 (2000Q) vs 0.32 (Advantage).",
+    "[speculative] The authors argue that quantum (annealing) hardware is particularly suitable for this class of large-variable QUBO problems because current annealers provide many qubits/couplers.",
+    "[speculative] The selector algorithm is claimed to be broadly applicable across disciplines and distance/kernel choices (including using learned/quantum-evaluated kernels), but such generalizations are not empirically validated in this paper."
+  ],
+  "results_summary": "The authors introduce the 'selector' algorithm that encodes representative subset selection as a QUBO. They demonstrate the approach on synthetic clustered and time-series data where the algorithm reliably picks representatives, with performance degrading as noise/cluster overlap increases. On real financial data, using qbsolv they approximate a proxy NASDAQ-100 with an increasing number of selected stocks (MSE falls as k increases, with roughly ~40 stocks sufficient to closely reproduce the index). In a second use case they map the problem to physical quantum annealers and compare D-Wave devices on a cryptocurrency diversification task: the Advantage QPU substantially outperforms the older 2000Q in constraint satisfaction (>85% vs 16%) and in achieved QUBO cost (average cost 0.32 vs 4.02), with Advantage solutions lying in a far smaller tail of the all-combinations cost distribution.",
+  "performance_claims": [
+    "[supported] D-Wave 2000Q satisfied the k=3 selection constraint in 49 out of 300 trials (16%).",
+    "[supported] D-Wave Advantage satisfied the k=3 selection constraint in 256 out of 300 trials (>85%).",
+    "[supported] Average QUBO cost for 2000Q solutions (at reported annealing settings) was 4.02.",
+    "[supported] Average QUBO cost for Advantage solutions (at reported annealing settings) was 0.32.",
+    "[supported] The average cost of 2000Q solutions lies in the lowest 4% of all possible combinations' cost values; the Advantage average lies in the lowest 0.03%.",
+    "[supported] For the NASDAQ case, the selector-chosen 2-stock portfolio had a cost lower than 74% of all 2-stock combinations and a correlation distance lower than 89% of combinations.",
+    "[supported] NASDAQ proxy reconstruction: mean-squared error between the full-index proxy and selector-generated index declines with k and approaches zero as k approaches 102; authors state roughly 40 stocks reproduce the index effectively."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper demonstrates that a newer quantum annealer (D-Wave Advantage) yielded better constraint satisfaction and lower QUBO costs than an older annealer (D-Wave 2000Q) on the presented task. However, it does not demonstrate an advantage over classical solvers (no controlled classical baseline comparison for the same crypto experiments) nor a provable speedup; claims about suitability of quantum annealers for large QUBOs remain qualitative/speculative.",
+  "limitations": [
+    "The selector optimization maps to a QUBO that is, in general, NP-hard.",
+    "Practical application of the algorithm to large variable counts requires many qubits; gate-model quantum computers currently do not provide this scale, so the work is 'quantum-inspired' and relies on non-universal quantum annealers.",
+    "Quantum annealers are non-universal hardware and have limitations (e.g., connectivity/embedding) that affect problem mapping and solution quality.",
+    "Penalty-based enforcement of equality constraints can be problematic for quantum annealers; the paper observes that one device (D-Wave 2000Q) often fails to satisfy the k constraint when encoded as a penalty.",
+    "The study used mostly default device parameters (e.g., default annealing time) for some experiments and reports only limited parameter tuning; penalty scaling A exhibited little impact in their limited exploration.",
+    "[inferred] Experiments were performed on relatively small problem instances (102 stocks for NASDAQ reconstruction and 18 cryptocurrencies for CCMIX), so scalability to much larger real-world universes is not demonstrated.",
+    "[inferred] The NASDAQ reconstruction used an equally-weighted proxy index rather than the market-cap-weighted official index — a simplification that may limit applicability to real index replication tasks.",
+    "[inferred] The cryptocurrency experiments compare two quantum annealers but do not compare solution quality, runtime, or robustness against classical QUBO solvers or other classical diversification/optimization methods.",
+    "[inferred] The paper focuses on binary selection (selected / not selected); although a weighted generalization is given in the appendix, it is not explored in experiments.",
+    "[inferred] Portfolio evaluation focuses on reconstruction MSE and cost-function values; there is no assessment of economic/financial performance measures such as risk-adjusted returns, transaction costs, turnover, or liquidity constraints.",
+    "[inferred] Only a single type of distance metric (correlation distance / Euclidean by default) is used in experiments; sensitivity to different similarity/distance measures or learned kernels is not evaluated.",
+    "[inferred] No out-of-sample or temporal-robustness testing is reported (e.g., different time windows, walk-forward tests, or stress periods).",
+    "[inferred] Embedding overhead, qubit yield, and connectivity constraints that affect mapping large or dense QUBOs to annealers are not quantified.",
+    "[inferred] The potential effects of problem preprocessing, feature scaling, and hyperparameter selection (A, B, annealing schedule) on practical performance are not comprehensively explored."
+  ],
+  "open_questions": [
+    "How does the selector algorithm compare (in solution quality, runtime, and robustness) to classical diversification and representative-selection methods (e.g., clustering, mean-variance, 1/N) on equivalent tasks?",
+    "How should a practitioner choose the number of representatives k in practice? Are data-driven or model-selection approaches feasible?",
+    "To what extent does the choice of distance / kernel function (Euclidean, correlation distance, cosine, learned kernels, etc.) change the selected subset and downstream portfolio performance?",
+    "Can the weighted-selection generalization (non-binary weights for chosen items) materially improve financial outcomes, and what is the practically feasible resolution (nD) given current hardware?",
+    "Is there a demonstrable advantage (solution quality or runtime) to using quantum annealers for this selector QUBO versus state-of-the-art classical QUBO/metaheuristic solvers for realistic problem sizes?",
+    "How to encode constraints more effectively on annealers so that equality or budget constraints are reliably satisfied without excessive penalty tuning?",
+    "How sensitive are the annealer results to device parameters (annealing time, schedule, penalty scaling) across broader ranges and across different devices or firmware?",
+    "How do solutions produced by the selector algorithm perform out-of-sample, across different market regimes, and when accounting for transaction costs, liquidity, and other trading frictions?",
+    "What are the embedding and connectivity limits for mapping larger, denser QUBOs from real financial universes to current and near-term annealers?",
+    "Can a hybrid approach—learning or computing a kernel on a gate-model quantum device and solving the QUBO on an annealer—yield practical benefits, and how would such a cross-paradigm pipeline be implemented?",
+    "How generalizable are the results across other asset classes or non-financial representative-selection tasks?",
+    "What is the impact of different penalty formulations (soft vs hard constraints, alternative penalty functions) on solution feasibility and performance on quantum devices?"
+  ],
+  "future_work": [
+    "Explore a cross-paradigm hybrid where the distance/kernel function d is evaluated or learned on a gate-model quantum device (or quantum/classical neural network) and the resulting QUBO is solved approximately using a quantum annealer (explicitly noted as beyond the scope of this work).",
+    "Implement and experimentally evaluate the weighted-selection extension (non-binary weights wi) described in Appendix C, including practical encoding (nD), compilation to QUBO, and empirical comparison to the binary selection case.",
+    "Further benchmarking across quantum annealing devices and more extensive parameter sweeps (penalty scaling, annealing time, schedules) to better characterize device-dependent behavior and constraint satisfaction.",
+    "Investigate alternative distance/kernel choices and possibly learnable kernels (including quantum neural-network-based kernels) to assess sensitivity of representative selection to similarity definitions."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability",
+    "contradiction:classical-vs-quantum"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Formulate representative subset selection as a QUBO and solve with a mix of classical decomposition solver (qbsolv) and D-Wave quantum annealers; classical preprocessing (distance/kernel computation) and postprocessing are essential.",
+    "#idea:near-term-feasibility — Demonstrated end-to-end experiments on real annealers (D-Wave 2000Q and Advantage) for small finance problems (e.g., k=3 crypto portfolios), showing the approach is testable on current hardware.",
+    "#idea:hybrid-approach — Penalty-term (A) scaling and anneal-time are important tunable hyperparameters; authors perform anneal-time and penalty sweeps and report constraint-satisfaction rates and cost statistics.",
+    "#idea:near-term-feasibility — The algorithm is applied to finance use cases: approximating a NASDAQ-100 proxy (classically via qbsolv) and selecting diversified cryptocurrency subsets on QPUs, plus multiple synthetic benchmarks.",
+    "#idea:hybrid-approach — Extension to weighted selection via discretized binary weights compiled to QUBO (using PyQUBO) enables richer portfolio formulations at the cost of more binary variables.",
+    "#idea:near-term-feasibility — Evaluation uses downstream financial metrics (MSE to proxy index, correlation distance) rather than only QUBO objective value, making the results relevant to financial practitioners."
+  ],
+  "contradictions": [
+    "The study shows practical limitations on problem size: larger index-reconstruction tasks were handled with a classical decomposing solver (qbsolv) rather than directly on QPUs, contradicting claims that current quantum annealers are ready to scale to large real-world portfolio selection problems.",
+    "Quantum hardware runs exhibited non-negligible constraint-violation rates and required extensive tuning (anneal time, penalty scale) to obtain feasible selections; this undermines any straightforward claim that quantum annealers already outperform classical heuristics for representative-selection tasks."
+  ],
+  "limitation_tags": [
+    "limitation:qubit-count",
+    "limitation:noise"
+  ]
+}

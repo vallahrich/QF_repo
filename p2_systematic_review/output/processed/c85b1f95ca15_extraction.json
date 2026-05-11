@@ -1,0 +1,261 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "medium",
+  "reasoning": "The document has academic structure (abstract, methods, experiments, references, acknowledgments) but no clear journal or conference venue is given; many cited works are arXiv preprints and the paper reads like an author report/working paper labelled 'TECHNICAL PAPER', so it likely is an unrefereed preprint/working paper rather than a clearly peer‑reviewed publication.",
+  "title": "Non-Differentiable Learning of Quantum Circuit Born Machine with Genetic Algorithm",
+  "authors": [
+    "Alexei Kondratyev"
+  ],
+  "year": "2020",
+  "journal_or_venue": "preprint",
+  "doi": "",
+  "abstract_summary": "The paper proposes a non-differentiable training method for the Quantum Circuit Born Machine (QCBM) using a genetic algorithm (GA). It evaluates the GA-trained QCBM on a heavy-tailed FX log-returns dataset and a spiky mixture-of-normals dataset, compares performance to an equivalent restricted Boltzmann machine (RBM), and analyzes GA convergence with respect to circuit architecture and hyperparameters, finding competitive results and practical recommendations (e.g., CX gates, decaying mutation, coarse angle discretization).",
+  "methodology_description": "The study implements and evaluates a Quantum Circuit Born Machine (QCBM) trained with a non-differentiable Genetic Algorithm (GA) and compares it to an equivalent classical Restricted Boltzmann Machine (RBM). The QCBM architecture used is a 12-qubit parameterized quantum circuit with seven adjustable 1-qubit rotation gates per qubit (84 adjustable parameters total) and two layers of fixed 2-qubit controlled-rotation gates (CX primarily, with CZ and CRz variants tested). Rotation gates are discretized on [−π, π] into 2^m values (m ∈ {3,5,7} tested). The GA represents a candidate solution as a 12×7 matrix of rotation angles, uses selection of top-M solutions and mutation-only recombination (no crossover), and optimizes an objective function defined as the sum of squared differences between sorted generated samples and sorted training samples. The equivalent RBM has 12 visible and 7 hidden binary units and is trained using k-step contrastive divergence (implemented via scikit-learn BernoulliRBM). Continuous datasets are quantized to 12-bit binary representations (real→integer→12-bit binary) for model training and reconverted to real values for evaluation. Models are evaluated by generating sample sets (5,000 samples for dataset 1, 4,382 for dataset 2), comparing empirical PDFs and QQ-plots, and by computing the distribution of the objective function over repeated runs (reporting mean and standard deviation). Simulations of the QCBM circuits were performed using the Qiskit simulator.",
+  "algorithms_used": [
+    "Quantum Circuit Born Machine (QCBM)",
+    "Genetic Algorithm (mutation-only variant)",
+    "Restricted Boltzmann Machine (RBM)",
+    "Contrastive Divergence (k-step)"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "scikit-learn (BernoulliRBM)"
+  ],
+  "experimental_setup": "QCBM circuits were simulated with Qiskit. The QCBM architecture: 12 qubits, 3 layers of 1-qubit rotations (Rx, Rz) giving 7 adjustable rotation gates per qubit, and 2 layers of fixed controlled-rotation 2-qubit gates (CX primarily). RBM implemented with scikit-learn BernoulliRBM. No physical QPU runs reported; all quantum experiments run on simulator.",
+  "dataset_used": "Two datasets: (1) synthetic dataset of 5,000 samples drawn from a mixture of four Normal distributions (means: -3, -1, 1, 3; std devs all 0.3; weights 0.1, 0.2, 0.3, 0.4). (2) Financial dataset: USD–JPY spot FX daily log-returns from 2001–2017 comprising 4,382 samples.",
+  "experiment_input": {
+    "dataset_1": {
+      "type": "synthetic mixture",
+      "distribution": "mixture of four normals",
+      "parameters": [
+        {
+          "mean": -3,
+          "std": 0.3,
+          "weight": 0.1
+        },
+        {
+          "mean": -1,
+          "std": 0.3,
+          "weight": 0.2
+        },
+        {
+          "mean": 1,
+          "std": 0.3,
+          "weight": 0.3
+        },
+        {
+          "mean": 3,
+          "std": 0.3,
+          "weight": 0.4
+        }
+      ],
+      "size": 5000,
+      "preprocessing": "Scaled and quantized to 12-bit integer representation via linear mapping between observed min/max (with small eps margins). Converted to 12 binary features per variable."
+    },
+    "dataset_2": {
+      "type": "financial time series",
+      "source": "USD–JPY daily exchange rates (2001–2017)",
+      "derived_value": "daily log-returns ln(S_k / S_{k-1})",
+      "size": 4382,
+      "preprocessing": "Same 12-bit quantization (real→integer→12-bit binary) as dataset 1."
+    }
+  },
+  "experiment_process": {
+    "QCBM_training_pipeline": [
+      "Define QCBM architecture (12 qubits, 7 adjustable rotations per qubit, fixed 2-qubit gates).",
+      "Discretize rotation angle domain to 2^m values (tested m=3,5,7).",
+      "Initialize a population of N candidate angle-matrices (12×7) by sampling discretized angles uniformly.",
+      "For each candidate, run the QCBM circuit K times to generate K samples and convert binary outputs back to real values.",
+      "Compute objective F(theta) = sum_k (u_k - v_k(theta))^2 on sorted vectors (training vs generated).",
+      "Select top-M solutions; produce N new solutions by mutating the M parents (mutation-only GA). Mutation dynamics: per-column mutation probability alpha (with possible second mutation per column with probability alpha/2); alpha may decay exponentially by factor beta each generation.",
+      "Iterate for L generations, updating alpha ← alpha * exp(-beta) each generation; keep best-so-far solution."
+    ],
+    "GA_hyperparameters_used_primary": {
+      "N": 1000,
+      "M": 25,
+      "m": 7,
+      "alpha_initial": 1.0,
+      "beta": 0.013863,
+      "L": 200,
+      "K": "number of generated samples per candidate equal to training set size (e.g., 5000 for dataset1)"
+    },
+    "RBM_training_pipeline": [
+      "Transform training data to binary 12-bit representation.",
+      "Train RBM(12 visible, 7 hidden) using Contrastive Divergence (via scikit-learn BernoulliRBM) with specified learning rate, batch size and iterations.",
+      "Sample from trained RBM by initializing and running alternating Gibbs sampling until thermalization parameter T (not explicitly specified), then convert binary outputs back to real values."
+    ],
+    "RBM_hyperparameters_used": {
+      "n_components": 7,
+      "learning_rate": 0.0005,
+      "batch_size": 10,
+      "n_iter": 40000
+    }
+  },
+  "experiment_output": {
+    "formats": [
+      "Empirical probability density estimates (PDF plots)",
+      "Quantile-Quantile (QQ) plots",
+      "Objective function values per run (F(theta)) and distributions over repeated runs",
+      "Table comparing mean and standard deviation of objective F over 100 runs for QCBM and RBM"
+    ],
+    "baselines": "Equivalent RBM(12,7) trained with contrastive divergence",
+    "metrics": [
+      "Objective function F (sum squared error between sorted training and generated samples)",
+      "Visual fit via PDF and QQ plots",
+      "Summary statistics of F (mean, standard deviation over repeated runs)"
+    ],
+    "key_results": "QCBM(12,7) achieved lower mean and std of objective F than RBM(12,7) for dataset1 in the reported (weakly-optimized) hyperparameter regime (mean F: 30.5 vs 39.6; std: 23.6 vs 30.8)."
+  },
+  "experiment_parameters": {
+    "qcbm": {
+      "n_qubits": 12,
+      "adjustable_gates_per_qubit": 7,
+      "total_parameters": 84,
+      "fixed_2q_gate_types_tested": [
+        "CX",
+        "CZ",
+        "CRz(pi/4)"
+      ],
+      "1q_gate_types": [
+        "Rx(theta)",
+        "Rz(theta)"
+      ],
+      "rotation_discretization_m_values_tested": [
+        3,
+        5,
+        7
+      ],
+      "rotation_steps": {
+        "m=3": "pi/4",
+        "m=5": "pi/16",
+        "m=7": "pi/64"
+      }
+    },
+    "genetic_algorithm": {
+      "population_size_N": 1000,
+      "elite_count_M": 25,
+      "generations_L": 200,
+      "mutation_alpha_initial": 1.0,
+      "mutation_alpha_decay_beta": 0.013863,
+      "mutation_scheme": "per-column single-angle mutation with independent chance, possible second mutation with probability alpha/2; uniform replacement from discretized angle set",
+      "crossover": "not used (mutation-only)"
+    },
+    "rbm": {
+      "visible_units": 12,
+      "hidden_units": 7,
+      "learning_rate": 0.0005,
+      "batch_size": 10,
+      "n_iter": 40000
+    },
+    "sampling": {
+      "generated_sample_counts": {
+        "dataset1": 5000,
+        "dataset2": 4382
+      },
+      "evaluation_runs_for_stats": 100
+    }
+  },
+  "hardware_details": {
+    "simulator": "Qiskit simulator (statevector / circuit simulator implied)",
+    "physical_qpu": "None used for reported experiments (IBM Melbourne and Rochester architectures discussed as compatible)",
+    "cloud_provider": "Not applicable (Qiskit open-source simulator used)"
+  },
+  "reproducibility_notes": "The paper specifies algorithms, architectures, hyperparameters, and preprocessing steps and uses open-source frameworks (Qiskit, scikit-learn). However, no public code or dataset repository link is provided in the manuscript. The datasets are described sufficiently to recreate (synthetic mixture) or to obtain (USD–JPY historical rates), and discretization/encoding algorithms are provided, so reproduction is feasible but would require reimplementation of the GA training loop and QCBM circuits as described.",
+  "key_findings": [
+    "[speculative] The Quantum Circuit Born Machine (QCBM) has strictly greater expressive power than comparable classical Restricted Boltzmann Machines (RBMs) when only a polynomial number of parameters is allowed (citation to theoretical result).",
+    "[supported] A GA-based (genetic algorithm) non-differentiable training procedure can successfully train a QCBM (12 qubits, 7 adjustable rotations per qubit) in simulation to approximate target empirical distributions.",
+    "[supported] In the authors' simulations on two datasets (a 4-component spiky mixture of Gaussians and USD–JPY daily log-returns), both QCBM(12,7) and RBM(12,7) were able to learn and generate samples matching the empirical distributions (visualized via PDF and QQ plots).",
+    "[supported] For dataset 1 (mixture of normals), QCBM(12,7) trained with the GA achieved a lower mean objective-function value (mean = 30.5, sd = 23.6 over 100 runs) than RBM(12,7) trained with contrastive divergence (mean = 39.6, sd = 30.8 over 100 runs) under the reported (weakly optimized) hyperparameters.",
+    "[supported] GA convergence was empirically better for CX (controlled-X) fixed two-qubit gates than for CZ or small controlled-Rz gates, given the chosen 1-qubit gate configuration.",
+    "[supported] An exponentially decreasing mutation rate (starting large and decaying) performed better empirically than constant mutation rates for GA in these experiments.",
+    "[supported] In discretizing rotation angles, increasing discretization granularity beyond m = 5 (Δθ = π/16) gave only marginal improvements in GA performance in these experiments; m = 5 sufficed for the tested QCBM architecture.",
+    "[speculative] The single-run sampling property of QCBMs (one circuit execution yields a sample) points to potential quantum speed-up for sample generation compared to classical RBMs, but this was not demonstrated experimentally in the paper.",
+    "[speculative] Non-differentiable global optimization methods (e.g., GA) may be preferable to differentiable gradient-based training for PQCs in cases where the loss is highly non-smooth; the paper demonstrates one successful GA instance but does not establish general superiority."
+  ],
+  "results_summary": "The paper proposes and tests a genetic-algorithm-based, non-differentiable training method for a 12-qubit QCBM architecture (7 adjustable rotations per qubit) using classical simulation (Qiskit). Empirically, the GA-trained QCBM successfully learned two target distributions (a spiky mixture of Gaussians and heavy-tailed FX log-returns) and, in the reported experiments, produced better objective-function statistics than an RBM with an equal number of adjustable parameters. The authors also report that CX fixed gates and an exponentially decaying mutation rate yielded better GA convergence, and that rotation-angle discretization beyond a step of π/16 gave marginal gains. While the paper highlights potential for quantum advantage and sample-generation speed-up, these remain speculative and were not demonstrated on hardware.",
+  "performance_claims": [
+    "Table 1 (dataset 1, 100 runs): QCBM(12,7) objective-function mean = 30.5, sd = 23.6; RBM(12,7) objective-function mean = 39.6, sd = 30.8.",
+    "GA hyperparameters used (best reported): N = 1000 solutions per generation, M = 25 top solutions selected, m = 7 (128 discrete rotation values), initial mutation rate α = 1.0, exponential decay β = 0.013863 (mutation rate halves every κ = 50 generations), L = 200 generations.",
+    "RBM training hyperparameters used (Contrastive Divergence via Scikit-learn BernoulliRBM): n_components = 7 hidden units, learning_rate = 0.0005, batch_size = 10, n_iter = 40,000.",
+    "Datasets and sample sizes: Dataset 1 (mixture of 4 Gaussians) training samples = 5,000; Dataset 2 (USD–JPY daily log-returns 2001–2017) training samples = 4,382. Sampling after training: 5,000 (dataset 1) and 4,382 (dataset 2) generated samples.",
+    "Rotation discretization tested: m = 3 (Δθ = π/4), m = 5 (Δθ = π/16), m = 7 (Δθ = π/64); marginal improvement observed beyond m = 5."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors argue QCBMs have theoretical expressive advantages and single-run sampling could yield speed or quality advantages, but provide only classical-simulator experiments (no hardware demonstrations) and modest empirical comparisons to an RBM under weakly-tuned hyperparameters. Therefore quantum advantage is suggested as potential/theoretical rather than demonstrated.",
+  "limitations": [
+    "Efficient training of QCBMs remains challenging; traditional gradient-based (differentiable) methods may fail when the loss is highly non-smooth (author-stated).",
+    "The GA searches only a tiny fraction of the exponentially large discrete parameter space (author-stated).",
+    "Experiments were performed on a simulator (Qiskit) rather than on real NISQ devices, so hardware noise, decoherence and gate errors are not assessed (author-stated).",
+    "Results cannot be interpreted as evidence of quantum advantage — QCBM performed at least as well as an equivalently weakly-tuned RBM but no definitive quantum advantage was demonstrated (author-stated).",
+    "Relatively small-scale experiments: 12 qubits and 84 adjustable parameters; scalability to larger systems is not demonstrated (author-stated/inferred).",
+    "Only two datasets were used (one synthetic mixture of Gaussians and one FX log-returns series); breadth of empirical validation is limited (author-stated).",
+    "Comparison baseline is a single classical model (RBM with weak hyperparameter tuning); no comparison with other strong classical generative models (e.g., well-tuned GANs, deep autoregressive models) (inferred).",
+    "Rotation-angle discretization introduces a tradeoff between expressivity and implementability; selection of discretization granularity may limit performance (author-stated).",
+    "Circuit depth is constrained by gate fidelity and decoherence on NISQ hardware, potentially limiting the learnable distributions in practice (author-stated).",
+    "[inferred] The GA configuration used (no crossover, only mutation; specific population / selection choices) may limit exploration/exploitation balance and could be suboptimal for other problems.",
+    "[inferred] The computational cost of the GA (e.g., N=1000 solutions × L=200 generations with circuit runs per solution) can be very large, which may be impractical on real quantum hardware with limited access or on slower simulators.",
+    "[inferred] The paper's performance metrics are primarily the squared-sorted-sample objective and visual PDF/QQ checks; more comprehensive quantitative evaluation metrics (e.g., likelihood approximations, IPMs, sample diversity measures) are not explored.",
+    "[inferred] Effects of finite sampling noise (from limited circuit shots) on GA fitness evaluation and on convergence are not analyzed.",
+    "[inferred] The impact of realistic connectivity constraints beyond nearest-neighbour/sequential connectivity assumptions is not fully explored."
+  ],
+  "open_questions": [
+    "Can the QCBM trained with GA demonstrate a clear quantum advantage (in sample quality or speed to independent samples) over classical generative models in realistic settings?",
+    "How will the proposed GA-trained QCBM perform on real NISQ hardware under noise, gate infidelity and limited coherence times?",
+    "What are the optimal GA design choices (population size, selection M, mutation schedule, crossover inclusion) for training PQCs of different sizes and depths?",
+    "How sensitive is GA convergence to the rotation-angle discretization parameter m and what is the minimum discretization needed in practice on hardware with finite gate precision?",
+    "How does the choice of fixed 2-qubit gates (e.g., CX vs CZ vs controlled small-angle rotations) interact with the 1-qubit gate configuration to affect expressivity and learnability?",
+    "How does increasing circuit depth versus width affect representational capacity and trainability for financial distributions (depth/width trade-offs)?",
+    "How do results scale when moving beyond 12 qubits / 84 parameters — both in terms of optimization difficulty and sampling efficiency?",
+    "How robust is GA training to measurement shot noise and limited sample budgets per fitness evaluation?",
+    "How does the QCBM+GA approach compare to more strongly tuned classical baselines (GANs, normalizing flows, autoregressive models) on the same tasks?",
+    "What evaluation metrics beyond the sorted-sample squared error are most appropriate for assessing generative model quality in financial applications?",
+    "Can hybrid training strategies (combining differentiable methods and non-differentiable heuristics) improve convergence and final performance?",
+    "How to best encode continuous financial variables (precision, binning, binary representation) to balance accuracy and resource requirements?",
+    "What is the impact of limited connectivity topologies on achievable entanglement patterns and model performance in practical devices?"
+  ],
+  "future_work": [
+    "Test the proposed GA-trained QCBM approach on actual quantum processors to assess noise, gate fidelity and decoherence effects (author-stated).",
+    "Explore GA behaviour for various model configurations: different types of fixed 2-qubit gates, different mutation schedules and other GA hyperparameters (author-stated).",
+    "Investigate discretization schemes for rotation angles and determine practical granularity (e.g., Δθ = π/16 was suggested as sufficient for the studied architecture) (author-stated).",
+    "Study scalability and whether a tangible quantum advantage can be demonstrated either in sample quality or in speed (time to generate independent samples) (author-stated).",
+    "Benchmark QCBM+GA against stronger or alternative classical generative models and refine evaluation metrics beyond visual/one-objective checks (inferred/author-stated).",
+    "Examine hybrid training methods and other global optimization algorithms (SA, BO, PSO) for PQC training to compare effectiveness vs GA (author-stated/inferred).",
+    "Analyze the impact of hardware-efficient circuit design choices (connectivity, gate sets) and finite-precision gate implementations on performance (author-stated/inferred).",
+    "Extend experiments to a broader set of real-world financial datasets and stress scenarios to validate robustness and generalization (inferred)."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical",
+    "quantum-ml"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Proposes a non-differentiable genetic-algorithm (classical) to train a parameterised Quantum Circuit Born Machine (QCBM), representing a hybrid quantum-classical training loop.",
+    "#idea:quantum-advantage — In simulator experiments on a synthetic mixture-of-normals dataset the GA-trained QCBM(12,7) achieved lower mean and std of the objective (mean F 30.5 vs 39.6; std 23.6 vs 30.8) compared to an equivalent RBM(12,7).",
+    "#idea:near-term-feasibility — Experiments use a 12-qubit QCBM (84 parameters) with discretized rotation angles and recommend practical settings (CX gates, decaying mutation rate, coarse angle discretization) suggesting NISQ-era implementability in principle.",
+    "#idea:hybrid-approach — Continuous financial data (USD–JPY log-returns) were quantized to 12-bit binary encodings to fit the QCBM/RBM binary architectures, showing an end-to-end pipeline for applying quantum generative models to finance data.",
+    "#idea:quantum-advantage — QCBM can model heavy-tailed and multimodal/spiky distributions used in finance (FX returns) and produce samples with better fitted empirical PDFs/QQ-plots in the reported regime.",
+    "#idea:near-term-feasibility — Analysis of GA convergence w.r.t. circuit architecture and hyperparameters (gate types, discretization levels, mutation decay) provides actionable guidance for small-scale experiments on simulators or early QPUs."
+  ],
+  "contradictions": [],
+  "synthesis_limitations": [
+    "limitation:simulation-only",
+    "limitation:no-empirical-validation",
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:data-encoding"
+  ]
+}

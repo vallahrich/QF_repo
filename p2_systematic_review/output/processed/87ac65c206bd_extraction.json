@@ -1,0 +1,232 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2507.06758v1) and typical preprint structure (title, abstract, methods, results, references) without explicit journal or conference publication metadata, indicating an arXiv preprint.",
+  "title": "Predict and Conquer: Navigating Algorithm Trade-offs with Quantum Design Automation",
+  "authors": [
+    "Simon Thelen",
+    "Wolfgang Mauerer"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint arXiv:2507.06758",
+  "doi": "",
+  "abstract_summary": "Presents a methodology and reproducible reference implementation for automatic selection and parametrisation of hybrid quantum-classical algorithms based on user-specified non-functional requirements via source-code annotations. The authors develop statistical models to predict runtime and solution quality from simulated noisy and ideal data, validate the approach on combinatorial optimisation (various QAOA variants) and provide a Python framework to automate algorithm choice and parameter tuning.",
+  "methodology_description": "The authors develop and evaluate a design-automation framework that predicts non-functional behaviour (solution quality and runtime) of hybrid quantum-classical algorithms to automate algorithm selection and parametrisation. They focus on combinatorial optimisation, encoding five NP-complete problems (Max-Cut, Minimum Vertex Cover, Maximum Independent Set, Partition, Max-3SAT) as QUBOs. Four hybrid algorithms are studied: QAOA, two warm-start QAOA variants (WS-Init-QAOA and WSQAOA) and Recursive QAOA (RQAOA). Experiments are performed via numerical simulation (density-matrix noisy simulator) on the Eviden Qaptiva 800 platform using the QLM library. Random problem instances are generated for qubit counts 5–19 (100 instances per size); noisy simulations are limited to ≤10 qubits and fewer layers. Circuit parameters are optimised with SciPy COBYLA (tolerance 1%, max 150 iterations); 10,000 measurement shots are used per optimiser iteration. A Qiskit-inspired noise model (depolarising channels and thermal relaxation) is implemented with a tunable noise level l (l=0 ideal, l=1 baseline realistic). They build statistical predictors for solution quality (Beta regression and a Power-Law decay model) and a Quality Degradation Model that predicts noisy performance from ideal performance; runtime is modelled as a simple polynomial in C–X depth (T ≈ α * d_CX^β). Models are trained on smaller-instance pools and tested on larger unseen instances (extrapolation). Model fitting uses (non-)linear least squares and beta regression; evaluation metrics include RMSE of normalized solution quality and runtime prediction, convergence behaviour with varying training set sizes, and comparisons across noise levels. The framework integrates models to select algorithms under user-specified non-functional constraints and exposes a Python API for specifying objectives/constraints.",
+  "algorithms_used": [
+    "QAOA",
+    "WS-Init-QAOA",
+    "WSQAOA",
+    "RQAOA",
+    "Goemans-Williamson (classical warm-start for Max-Cut)",
+    "Greedy list scheduling (classical warm-start for Partition)",
+    "Derandomised coin-flip algorithm (classical warm-start for Max-3SAT)",
+    "Greedy maximal matching (2-approximation, MVC warm-start)"
+  ],
+  "frameworks": [
+    "Eviden Qaptiva 800 (simulation platform)",
+    "QLM (density-matrix noisy circuit simulator)",
+    "SciPy (COBYLA optimizer)",
+    "Qiskit noise model (implemented on top of QLM)"
+  ],
+  "experimental_setup": "Density-matrix noisy circuit simulation on Eviden Qaptiva 800 using QLM. Random instance generation: for Max-Cut/MVC/MIS Erdös–Rényi graphs with p=0.5; Partition numbers uniform in [0,1]; Max-3SAT variable counts uniform between 1 and n/3 and clauses sampled uniformly including negations. Qubit counts 5–19 (100 instances per size); noisy simulations limited to ≤10 qubits and QAOA layers ≤4. Circuits transpiled to native gate set {RZ, sqrt(X), C–X}. Gate durations and error rates follow baseline transmon-like parameters; measurement time 4 μs. 10,000 shots per optimiser step; COBYLA optimizer (tolerance 1%, max 150 iterations).",
+  "dataset_used": "",
+  "experiment_input": {
+    "problems": [
+      "Max-Cut (one qubit per vertex)",
+      "Minimum Vertex Cover (MVC)",
+      "Maximum Independent Set (MIS)",
+      "Partition",
+      "Max-3SAT (one qubit per variable and one per clause)"
+    ],
+    "instance_generation": {
+      "qubit_counts": "5 to 19 qubits (100 random instances per size)",
+      "Max-Cut/MVC/MIS": "Erdös–Rényi random graphs with edge probability p = 0.5",
+      "Partition": "Each instance is a set of numbers drawn uniformly from [0,1]",
+      "Max-3SAT": "Number of variables chosen uniformly between 1 and floor(n/3); each clause chosen uniformly among all possible 3-literal clauses with and without negation"
+    },
+    "training_test_split": "For model training, smaller-half sizes (in qubit count) used as baseline pool; from each size 20 of 100 instances chosen for baseline test set and the rest for training. Larger-half sizes reserved for extrapolation testing.",
+    "preprocessing": "QUBO encodings used per problem (standard formulations). For warm-starts, classical approximate solutions computed (Goemans-Williamson, greedy heuristics, derandomised coin-flip, etc.)."
+  },
+  "experiment_process": {
+    "encoding": "Each optimisation problem encoded as a QUBO (one qubit per vertex/variable as appropriate).",
+    "transpilation": "Logical gates transpiled to native gate set {RZ, sqrt(X), C–X}.",
+    "noise_model": "Qiskit-inspired model including depolarising gate errors and thermal relaxation (T1/T2) channels; noise level l scales error probabilities and gate durations (l=0 ideal, l=1 baseline conservative parameters).",
+    "circuit_execution": "Density-matrix simulation executed on QLM; measurement shots per optimisation iteration fixed at 10,000.",
+    "parameter_optimization": "COBYLA optimizer (SciPy) with tolerance 1% and maximum 150 iterations used to optimise QAOA parameters (β, γ) for each run.",
+    "warm_starting": "Warm-start variants obtain initial classical solutions via specified classical heuristics and incorporate them either into initial state or mixer.",
+    "RQAOA": "Recursive procedure: use QAOA subroutine repeatedly to identify and fix variables, performing multiple QAOA runs.",
+    "model_building": "Collect runtime and solution-quality data per (instance, algorithm, depth, noise level). Fit Beta regression models and Power-Law decay models per algorithm-problem combination; fit Quality Degradation Model to predict noisy from ideal performance using non-linear least squares. Runtime model fit as log-linear polynomial in C–X depth.",
+    "evaluation": "Compute normalized solution quality (mapped to [0,1] using problem-specific lower/upper bounds), measure RMSE on baseline and extrapolation test sets, study effect of noise levels l ∈ {0.25,0.5,1,2,4}, and study training set size vs. error convergence."
+  },
+  "experiment_output": {
+    "primary_metrics": [
+      "Normalized solution quality (achieved value scaled between problem-specific lower and upper bounds)",
+      "Approximation ratio (solution / optimal or upper bound)",
+      "Runtime (seconds, includes circuit execution, classical optimisation, transpilation, warm-start search time)",
+      "Prediction errors (RMSE of solution-quality predictions, residuals, average residual sign)"
+    ],
+    "baselines": [
+      "Ideal (noiseless) simulation",
+      "Noisy simulations at baseline noise level l=1 and other scaled noise levels",
+      "Classical warm-start solution values (used as initial guesses)"
+    ],
+    "model_outputs": [
+      "Beta regression and Power-Law model predictions of normalized solution quality",
+      "Quality Degradation Model predicting noisy performance from ideal",
+      "Runtime model predictions T ≈ α * d_CX^β"
+    ],
+    "summaries_reported": "RMSE values (often <0.09 on baseline, <0.07 on extrapolation), residual plots, runtime vs quality trade-off plots, training data size vs error convergence charts"
+  },
+  "experiment_parameters": {
+    "qubits_range": "5-19 (ideal); noisy experiments limited to <=10 qubits",
+    "QAOA_layers": {
+      "ideal": "1 to 7",
+      "noisy": "1 to 4 (limited due to simulator cost)"
+    },
+    "shots_per_iteration": 10000,
+    "optimizer": "COBYLA (SciPy)",
+    "optimizer_tolerance": "1% (0.01)",
+    "optimizer_max_iterations": 150,
+    "measurement_time": "4 microseconds",
+    "gate_set": [
+      "RZ",
+      "sqrt(X)",
+      "C-X"
+    ],
+    "baseline_noise_parameters": {
+      "1-qubit_gate_error": "0.03%",
+      "2-qubit_gate_error": "1%",
+      "1-qubit_gate_time": "35 ns",
+      "2-qubit_gate_time": "400 ns",
+      "T1": "100 microseconds",
+      "T2": "85 microseconds"
+    },
+    "noise_levels_considered": [
+      0,
+      0.25,
+      0.5,
+      1,
+      2,
+      4
+    ],
+    "measurement_shots": 10000,
+    "data_points_full_dataset": {
+      "ideal": 14000,
+      "noisy": 30000
+    },
+    "instances_per_size": 100
+  },
+  "hardware_details": {
+    "simulation_platform": "Eviden Qaptiva 800",
+    "simulator": "QLM density-matrix-based noisy circuit simulator (proprietary)",
+    "noise_model_basis": "Qiskit noisy simulator model (implemented on top of QLM)",
+    "native_gate_set": [
+      "RZ",
+      "sqrt(X)",
+      "C–X"
+    ],
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "Authors provide a reproducible code repository and a reproduction package with models and evaluation results; links are referenced in the paper PDF (citation [12]). The experiments use QLM (proprietary), Eviden Qaptiva 800 simulation platform and implementations of the Qiskit noise model on QLM; baseline noise parameters and full experiment details (instance generation, seeds, model fitting procedures) are documented in the reproduction package.",
+  "key_findings": [
+    "[supported] A statistical framework can predict solution quality and runtime of hybrid quantum-classical optimisation algorithms (QAOA, WSQAOA, WS-Init-QAOA, RQAOA) from small baseline instance sets.",
+    "[supported] Two simple predictive models (Beta regression and a Power-Law decay model) achieve good extrapolation accuracy for solution quality: reported RMSE < 0.09 on baseline test sets and < 0.07 on extrapolation sets for the studied problems and algorithms.",
+    "[supported] A noise-aware 'Quality Degradation Model' can predict noisy-device solution quality from ideal-device performance with error comparable to directly trained noisy models.",
+    "[supported] RQAOA yields the best average solution quality among the tested algorithms but requires substantially more runtime than other variants.",
+    "[supported] Under ideal (noiseless) simulations, increasing the number of QAOA layers generally improves solution quality at the expense of runtime; under noisy conditions there is a turning point beyond which additional layers reduce solution quality.",
+    "[supported] A compact runtime model based on C–X (CNOT) gate depth (polynomial fit after log transform) reasonably predicts algorithm runtime in the authors' simulations.",
+    "[supported] Models trained on modest datasets generalise: ≲100 instances (≈3000 data points) per problem were sufficient to reach within ~10% of the optimal prediction error in the authors' setup.",
+    "[supported] Practical implementation: the authors present a prototype Python framework that (i) stores measured instance-algorithm results, (ii) maintains runtime/quality models, and (iii) selects algorithms/parameters according to user-specified non-functional constraints expressed as code annotations.",
+    "[speculative] The methodology can generalize beyond combinatorial optimisation (they argue it applies to Hamiltonian simulation and analogue/digital-analog approaches) though this was not empirically validated in the paper.",
+    "[speculative] The unified modelling of hardware noise via a single degradation model will remain effective across heterogeneous QPU types and gate-sets when suitably parameterised.",
+    "[supported] In the authors' noisy simulations they model a continuum of noise levels (l ∈ {0.25,0.5,1,2,4}) and show that prediction approaches remain accurate across those regimes.",
+    "[speculative] Design automation (compiler/runtime) could use these predictive models to automate quantum-algorithm selection in HPC stacks, reducing required user expertise (proposed as a likely path, not experimentally demonstrated end-to-end on live hardware)."
+  ],
+  "results_summary": "The paper presents a reproducible methodology and prototype framework for automatic selection of hybrid quantum-classical algorithms based on user-specified non-functional requirements (runtime, solution quality, or combined metrics). Through density-matrix numerical simulations across five NP-complete problems and four QAOA-style algorithm variants, the authors demonstrate that relatively simple statistical models (Beta regression and a Power-Law decay model), augmented by a noise degradation model, can predict solution quality and runtime with low RMSE (reported <0.09 baseline, <0.07 extrapolation). They show that RQAOA typically gives the best solutions at higher computational cost, that noise imposes a layer-depth turning point, and that modest training sets (on the order of 100 instances per problem) suffice to produce useful predictors. A Python-based framework is proposed to integrate these models into algorithm selection workflows; extensions to Hamiltonian simulation are discussed but not empirically evaluated.",
+  "performance_claims": [
+    "RMSE < 0.09 on baseline test sets and < 0.07 on extrapolation sets for Beta Regression and Power-Law models predicting normalized solution quality (empirical, across tested problems/algorithms).",
+    "≈3000 data points (≲100 instances per problem) are sufficient to be within 10% of optimal model error in the authors' setup.",
+    "Simulations used problem sizes up to 19 qubits (ideal) and up to 10 qubits (noisy); QAOA layers tested: 1–7 (ideal) and 1–4 (noisy).",
+    "Noise continuum: l ∈ {0.25, 0.5, 1, 2, 4} where l=1 approximates baseline current superconducting-device parameters.",
+    "Baseline gate/relaxation parameters (used for timing/noise modelling): 1-qubit gate time 35 ns, 2-qubit (C–X) gate time 400 ns, T1 = 100 μs, T2 = 85 μs; gate error baseline: 0.03% (single-qubit), 1% (two-qubit).",
+    "Classical optimiser configuration: COBYLA with tolerance 1% and 150 maximum iterations; measurement shots fixed at 10,000 per optimiser iteration.",
+    "Training datasets: total data points cited were 14,000 (ideal) and 30,000 (noisy) for the full baseline sets used in evaluations."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper focuses on predicting and automating algorithm selection and modelling runtime/quality trade-offs for hybrid quantum-classical algorithms; it does not claim or demonstrate a provable or empirical quantum computational advantage over classical methods. References to potential advantages of quantum computing in certain domains are discussed at a high level and treated as speculative background rather than demonstrated results.",
+  "limitations": [
+    "Experiments restricted to small instance sizes: noiseless simulations up to 19 qubits and noisy simulations limited to 10 qubits and up to 4 QAOA layers.",
+    "Noise model simplifications: implemented Qiskit-inspired model with a single noise-level scalar l, identical imperfection characteristics for all qubits, and focus on depolarising channels and thermal relaxation only.",
+    "Assumption of all-to-all two-qubit connectivity (no qubit routing/limited-connectivity effects accounted for in main experiments).",
+    "Problem-instance selection limited to randomly generated instances (Erd˝os–Rényi graphs, uniform numbers for Partition, random Max-3SAT), no structured or real-world instances evaluated.",
+    "Model variables limited: main predictors were algorithm variant, circuit depth, gate count and qubit count; other factors (e.g., optimiser choice, number of optimiser iterations, shot count, transpilation specifics) mostly held fixed.",
+    "Runtime model is relatively simple (polynomial/log-linear in C–X depth) and does not capture all runtime contributors or complex interactions.",
+    "No complete statistical a-priori analysis to identify or quantify confounders and interaction effects between input variables.",
+    "[inferred] Uncertainty whether models trained on simulated data transfer accurately to real quantum hardware with device-specific imperfections and operational overheads.",
+    "[inferred] Possible limitations when generalising from random benchmark instances to structured, application-specific, or adversarially hard instance distributions.",
+    "[inferred] The single-parameter noise scaling (l) and proportionality assumption between l and physical error probability may not hold uniformly across hardware types or noise regimes.",
+    "[inferred] The framework's reliance on a predefined pool of algorithm variants and pre-trained models may limit adaptability when novel algorithms or ansätze are introduced.",
+    "[inferred] Use of fixed optimisation settings (COBYLA, 10k shots, 150 max iterations, 1% tolerance) may bias results and model predictions for alternative optimiser/shot configurations.",
+    "[inferred] Simulated runtime estimates may not include realistic HPC/quantum cloud overheads such as queuing, communication latency, or variable classical post-processing costs."
+  ],
+  "open_questions": [
+    "How well do the proposed solution-quality and runtime models generalise to real quantum hardware, especially across different qubit technologies and device-specific noise characteristics?",
+    "Can models trained on small and random problem instances reliably predict behaviour for larger, structured, or real-world financial problem instances?",
+    "How should the framework be extended to incorporate limited qubit connectivity, swap routing overheads, and the resulting additional noise/runtime costs?",
+    "What are the effects of other algorithm and implementation choices (optimiser type, shot count, parameter initialisation, transpilation heuristics) on model accuracy and algorithm selection?",
+    "How many and which types of baseline instances are required in practice to reach reliable model accuracy for different problem classes and hardware regimes?",
+    "How robust is the Quality Degradation Model across more complex noise channels, non-Markovian noise, crosstalk, and calibration drift?",
+    "How to handle heterogeneous HPC environments where multiple QPUs with different noise and gate sets are available — can models be transferred or aggregated across devices?",
+    "What is the impact of non-simulated operational factors (job scheduling, classical-quantum latency, measurement bandwidth) on the framework’s selections in deployed systems?",
+    "How to detect and mitigate dataset shift or out-of-distribution instances that would invalidate model predictions at runtime?",
+    "How effective is the framework when the set of candidate algorithms grows significantly (many QAOA variants, hybrid/analogue approaches) — what are the scaling and maintenance costs of the model database?"
+  ],
+  "future_work": [
+    "Extend models to account for additional relevant influence factors (e.g., optimiser type and behaviour, shot counts, transpilation choices, classical optimiser iterations) and interaction effects.",
+    "Incorporate qubit connectivity and routing into modelling (account for swap gates and their predictable trends with connectivity) and evaluate framework performance under limited-connectivity constraints.",
+    "Validate and calibrate models on real quantum hardware across multiple device types and noise regimes to confirm applicability beyond simulations.",
+    "Evaluate generalisability to structured and application-specific instance distributions (beyond random instances) and identify instance features predictive of quantum algorithm behaviour.",
+    "Perform a more complete statistical a-priori analysis to systematically identify confounders and interaction effects and to strengthen causal understanding of the predictors.",
+    "Refine runtime models by adding more variables and tailoring them to specific algorithm scaling behaviours to improve prediction accuracy.",
+    "Extend and demonstrate the framework for other problem domains (explicitly discussed: Hamiltonian simulation, analogue/digital-analog workflows) and hybrid algorithm mixtures.",
+    "Develop mechanisms for continual model updating, transfer learning between QPUs, and handling of heterogenous hardware in the selection database.",
+    "Assess the framework’s integration into real HPC toolchains, multiple programming language environments (C++ pragmas, Python), and practical deployment scenarios including orchestration and scheduling overheads.",
+    "Investigate robustness of the Quality Degradation Model under richer noise descriptions (non-Markovian effects, correlated errors, device drift) and refine degradation parametrisation accordingly."
+  ],
+  "topic_tags": [],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "medium",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Proposes a design-automation framework that predicts runtime and solution quality for hybrid quantum-classical algorithms (QAOA variants) and uses these predictions to automatically select and parameterise algorithms under user-specified non-functional constraints.",
+    "#idea:near-term-feasibility — Focuses on NISQ-era applicability by modelling noisy behaviour via density-matrix simulations with a tunable noise-level parameter and limiting noisy experiments to small qubit counts and shallow depths.",
+    "#idea:hybrid-approach — Incorporates classical warm-start heuristics (Goemans–Williamson, greedy heuristics, derandomised coin-flip, etc.) into warm-start QAOA variants and uses them as baselines and inputs to the automation pipeline.",
+    "#idea:hybrid-approach — Uses classical optimisers (COBYLA) and extensive classical pre/post-processing (warm-start calculation, parameter fitting) in a hybrid workflow exposed through a Python API.",
+    "#idea:near-term-feasibility — Builds statistical predictors (Beta regression, power-law decay models, Quality Degradation Model) to predict noisy performance from ideal simulation and to extrapolate performance to larger unseen instances.",
+    "#idea:hybrid-approach — Models runtime as a polynomial function of C–X depth and predicts both runtime and solution quality to support trade-off-driven algorithm selection.",
+    "#idea:near-term-feasibility — Evaluates sensitivity to noise levels and training set size, showing how prediction errors evolve and quantifying limitations of extrapolation from small instances."
+  ],
+  "contradictions": [
+    "contradiction:scalability — The paper trains and validates performance-prediction models on small instances (5–19 qubits) and noisy simulations are limited to ≤10 qubits, yet it extrapolates predictions to larger instance sizes; this raises a contradiction between claims of extrapolative scalability and the limited noisy-qubit experimental regime (no real-hardware validation)."
+  ],
+  "limitation_tags": [
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:simulation-only",
+    "limitation:no-empirical-validation"
+  ]
+}

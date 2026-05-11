@@ -1,0 +1,202 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document bears an arXiv identifier (arXiv:2112.08347v1) and date, typical preprint formatting. It includes full author affiliations and standard sections but no journal or conference venue, indicating an arXiv preprint rather than a peer-reviewed publication.",
+  "title": "Portfolio Optimization with Digitized-Counterdiabatic Quantum Algorithms",
+  "authors": [
+    "N. N. Hegade",
+    "P. Chandarana",
+    "K. Paul",
+    "X. Chen",
+    "F. Albarrán-Arriagada",
+    "E. Solano"
+  ],
+  "year": "2021",
+  "journal_or_venue": "arXiv preprint arXiv:2112.08347",
+  "doi": "",
+  "abstract_summary": "This preprint applies digitized-counterdiabatic quantum computing (DCQC) and a counterdiabatic-enhanced QAOA (DC-QAOA) to the discrete mean-variance (Markowitz) portfolio optimization problem by mapping it to an Ising Hamiltonian. Using variationally computed local approximate counterdiabatic terms and digitized adiabatic evolutions, the authors report substantial improvements in ground-state success probabilities across many random problem instances (up to 14 qubits) and show enhanced performance over standard QAOA, highlighting potential benefits for NISQ-era financial applications.",
+  "methodology_description": "The authors study discrete mean-variance (Markowitz) portfolio optimization by mapping the integer portfolio allocation problem into a QUBO and then into an Ising Hamiltonian Hp (explicit J_ij and h_i formulas given). They evaluate digitized-counterdiabatic quantum computing (DCQC) and a CD-assisted QAOA (DC-QAOA) using classical numerical simulations. For the adiabatic approach they choose Hi = -Σ_i h_x σx_i, a time-dependent schedule λ(t) (a smooth sin^2-based schedule that vanishes at t=0,T), and add approximate counterdiabatic (CD) terms: a local CD (LCD) ansatz Ã_λ = Σ_i α_i(t) σy_i where α_i(t) is obtained by minimizing the action S = Tr[G_λ^2], and an approximate CD (ACD) term derived from the first-order nested commutator (NC) ansatz. Time evolution is digitized using first-order Trotterization: the total time T is discretized into M steps (Δt = T/M) and the evolution operator approximated as a product of local 1- and 2-body exponentials. Performance is assessed by simulating many random problem instances (mi and ρij randomly generated to mimic market trends), measuring ground-state success probability (overlap with the true ground state) and defined enhancement metrics (Renh and Penh) comparing evolutions with and without CD terms. For DC-QAOA they insert a CD-unitary UD(α)=exp(-i α Σ_i h_i σy_i) from an operator pool (operators produced by NC ansatz) into the QAOA layer sequence Up(γ) and Um(β); parameters (γ, β, α) are optimized with a classical stochastic gradient optimizer (Adagrad). They report results over many instances, sweep problem sizes (number of qubits up to 14), varying granularity g (number of binary slices per asset), Trotter-step choices and circuit depths (QAOA layer p).",
+  "algorithms_used": [
+    "Digitized Adiabatic Quantum Computing (DAdQC)",
+    "Counterdiabatic driving (variational approximate CD)",
+    "Nested commutator (NC) ansatz for approximate gauge potential",
+    "First-order Trotter-Suzuki digitization",
+    "QAOA",
+    "Digitized-Counterdiabatic QAOA (DC-QAOA)",
+    "Adagrad optimizer (classical)"
+  ],
+  "frameworks": [],
+  "experimental_setup": "Classical numerical simulations of digitized quantum evolutions (first-order Trotterized unitary evolution) and variational QAOA circuit simulations. No specific quantum SDK, simulator name, or hardware backend is reported.",
+  "dataset_used": "Synthetic financial data: expected returns mi and covariance matrices ρij randomly generated to mimic real-world market trends. No external/real market dataset or public data source is specified.",
+  "experiment_input": {
+    "source": "Randomly generated synthetic financial returns and covariance matrices (mi, ρij) designed to mimic market behaviour",
+    "size": "Up to 1000 distinct problem instances. Quantum-system sizes studied up to N=14 qubits (examples: N=12 shown in figures). Portfolio parameters varied: number of assets n and binary slice granularity g (g from 1 up to 4 in reported experiments). Example: for n=6, g=2 → N=12 qubits. For DC-QAOA examples N=6 (n=3, g=2).",
+    "preprocessing": "Mapping integer asset allocations xi to binary variables via xi = Σ_{k=1}^g 2^{k-1} z_{u(i,k)}; conversion to QUBO and then Ising Hamiltonian Hp with explicit J_ij and h_i. Penalty/budget constraint encoded with Lagrange multipliers θ1=0.3, θ2=0.5, θ3=0.2 and granularity function G_f = 1/2(g-1). No other data cleaning or external preprocessing reported."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Define discrete mean-variance portfolio objective and encode integer allocations into g-bit binary variables per asset.",
+      "Transform cost into QUBO and map to Ising Hamiltonian Hp (formulas for J_ij and h_i provided).",
+      "Select initial Hamiltonian Hi = -Σ_i h_x σx_i and prepare initial state |+>^⊗N.",
+      "Choose scheduling function λ(t) (sin^2-based) that ensures λ̇ and λ̈ vanish at t=0 and t=T.",
+      "Compute approximate local CD coefficients α_i(t) by minimizing S = Tr[G_λ^2] for the local ansatz Ã_λ = Σ_i α_i(t)σy_i; alternatively construct first-order NC ACD term (nested commutator l=1) with explicit two-body contributions.",
+      "Construct time-dependent Hamiltonian H(t)=Had(λ)+λ̇ Ã_λ (or with ACD) and decompose into 1- and 2-local terms.",
+      "Digitize evolution using first-order Trotter-Suzuki: split total time T into M steps, Δt=T/M; approximate evolution as product of exp(-i Δt c_j H_j) terms and simulate.",
+      "Measure ground-state success probability (overlap with true ground state) for each instance; compute enhancement metrics Renh (fraction of instances improved) and Penh (ratio of success probabilities).",
+      "For DC-QAOA: build variational ansatz U(γ,β,α) with layers Up(γ) = exp(-i γ Hp), Um(β)=exp(-i β Σ σx_i), and UD(α)=exp(-i α Σ h_i σy_i) (CD operator chosen from NC operator pool).",
+      "Optimize parameters (γ,β,α) using Adagrad (step size 0.1), run multiple random initializations (20 runs), select best runs (top 10) for averaging; evaluate success probability Ps as metric and compare to plain QAOA."
+    ],
+    "key_variations": [
+      "Compare no-CD, LCD (local CD), and ACD (first-order nested commutator) in digitized adiabatic evolutions.",
+      "Vary total evolution time T, Trotter step Δt, number of Trotter steps M, system size N, granularity g, and number of QAOA layers p (p = 1, 3, 5 reported)."
+    ]
+  },
+  "experiment_output": {
+    "result_format": "Ground-state success probability (overlap) per instance; histograms and averaged success probabilities across instances; enhancement ratio Renh and average enhancement Penh summaries; plots of success probability versus total evolution time T and versus number of QAOA layers p.",
+    "metrics": [
+      "Ground-state success probability Ps",
+      "Enhancement ratio Renh = (number of instances with improved success probability) / (total instances)",
+      "Success probability enhancement Penh = P_with_CD / P_without_CD",
+      "Averages and standard deviations across instances or runs"
+    ],
+    "baselines": [
+      "Naive digitized adiabatic evolution without CD terms",
+      "QAOA without CD (standard QAOA)"
+    ],
+    "outputs_reported": "Histograms of per-instance success probabilities (with/without CD), curves of Ps vs T, average Ps vs QAOA layers p for QAOA and DC-QAOA, and summary statistics (means, standard deviations) for enhancement metrics."
+  },
+  "experiment_parameters": {
+    "system_sizes_qubits": "Up to N=14 qubits (examples N=12 used for many plots; specific DC-QAOA example N=6)",
+    "number_of_instances": 1000,
+    "portfolio_encoding": "g binary slices per asset; xi = Σ_{k=1}^g 2^{k-1} z_{u(i,k)}",
+    "Lagrange_multipliers": {
+      "theta1": 0.3,
+      "theta2": 0.5,
+      "theta3": 0.2
+    },
+    "granularity_values_g": "reported experiments used g in {1,2,3,4}",
+    "initial_hamiltonian_Hi": "Hi = -Σ_i h_x σx_i (h_x chosen, not explicitly varied in shown results)",
+    "scheduling_function": "λ(t) = sin^2((π/2) sin^2(π t / (2 T))) (a sin^2-based schedule that vanishes at endpoints)",
+    "CD_ansatz": "Local CD Ã_λ = Σ_i α_i(t) σy_i; ACD: first-order nested commutator (l=1) producing two-body σyσz terms",
+    "T_and_trotter": {
+      "examples": [
+        {
+          "T": 1,
+          "Δt": 0.05,
+          "M": 20
+        },
+        {
+          "Δt": 0.1
+        }
+      ]
+    },
+    "QAOA_parameters": {
+      "layers_tested_p": [
+        1,
+        3,
+        5
+      ],
+      "initial_state": "|+>^⊗N",
+      "CD_operator_pool": [
+        "σy",
+        "σzσy",
+        "σyσz",
+        "σxσy",
+        "σyσx"
+      ],
+      "optimizer": "Adagrad",
+      "optimizer_step_size": 0.1,
+      "random_initializations": 20,
+      "averaging": "average of top 10 runs out of 20"
+    }
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "The paper describes the encoding, Hamiltonian coefficients (J_ij, h_i), CD ansatz forms and formulas for α_i(t), Trotterization approach, and key numerical parameters (θ values, T, Δt, M, system sizes, number of instances, optimizer and step size). However, no code repository, specific simulator name, seeds for random data generation, or raw generated datasets are provided in the manuscript. Reproducing results would require reimplementation of the random data generation procedure (mi, ρij) and the numerical simulation of Trotterized quantum evolution and the variational CD coefficient minimization as described.",
+  "key_findings": [
+    "[supported] Digitized-counterdiabatic quantum computing (DCQC) can be applied to discrete mean-variance (Markowitz) portfolio optimization by mapping the problem to an Ising Hamiltonian and performing digitized adiabatic evolution.",
+    "[supported] Introducing approximate counterdiabatic (CD) driving terms (local CD and first-order nested-commutator ACD) in digitized adiabatic evolutions substantially increases the ground-state success probability in numerical simulations across many problem instances.",
+    "[supported] The first-order nested-commutator approximate CD (ACD) term gave robust improvements across all tested instances (reported enhancement ratio = 1 for tested setups), i.e., it was always advantageous in the authors' simulations.",
+    "[supported] Local CD (LCD) terms produce the largest improvements when the budget granularity (number of partitions g) is small; as g increases the LCD benefit diminishes.",
+    "[supported] For larger granularity g (more binary variables per asset), the ACD (first-order nested-commutator) approach shows greater improvement than LCD.",
+    "[supported] The success-probability enhancement from including CD terms tends to increase with system size in the presented simulations (tested up to N = 14 qubits).",
+    "[supported] DC-QAOA (QAOA augmented with a CD unitary) outperforms standard QAOA in the authors' simulations on small portfolio instances (they report higher average success probabilities for DC-QAOA across layers p = 1, 3, 5).",
+    "[supported] Practical implementation details used in the study: first-order Trotterization (error O(Δt^2)), all-to-all Pauli-Z couplings in the problem Hamiltonian, simulations with up to 20 Trotter steps for some parameter sets.",
+    "[supported] Variational/minimization methods were used to obtain the approximate local CD coefficients without requiring instantaneous eigenstates.",
+    "[supported] The authors observed strong run-to-run variability for hybrid variational algorithms (QAOA/DC-QAOA) due to nonconvex optimization landscapes and sensitivity to initialization (manifested as large standard deviations in Ps across random starts).",
+    "[speculative] Extending beyond 2-local approximate CD terms (higher-order terms) is expected to yield further performance improvements.",
+    "[speculative] Combining digitized-counterdiabatic algorithms with digital-analog quantum computing encodings could, in principle, help approach quantum advantage for industrial financial use cases in the NISQ era."
+  ],
+  "results_summary": "The authors adapted digitized-counterdiabatic quantum methods to a discrete mean-variance portfolio optimization task by encoding it as an Ising Hamiltonian and performing digitized adiabatic evolution. Using numerical simulations across many random instances (up to 1000 instances, system sizes up to 14 qubits), they show that including approximate counterdiabatic driving—either local CD (LCD) or a first-order nested-commutator approximate CD (ACD)—markedly improves the probability of finding the ground state within short finite-time, Trotterized evolutions. ACD showed robust universal benefit in their tests, while LCD was most effective for lower granularity (smaller g). They also evaluated DC-QAOA (QAOA augmented with CD unitaries) and found it consistently outperformed naive QAOA on small instances, though both variational approaches suffer from optimization variability and initialization sensitivity. The study is simulation-based and emphasizes potential NISQ-era applicability while noting that further extensions (higher-order CD terms, digital-analog encodings) are possible avenues to explore.",
+  "performance_claims": [
+    "[supported] Simulated experiments ran up to N = 14 qubits and across 1000 random instances for some parameter settings.",
+    "[supported] Typical success probabilities (Ps) for QAOA/DC-QAOA examples were around Ps ~ 0.10 for many instances in their small-size tests, with some instances achieving Ps up to ~0.60 after optimization (reported for one instance).",
+    "[supported] Example digitized-adiabatic simulation parameters used: total evolution time T = 1, Trotter step Δt = 0.05 (20 steps) in some tests; alternate tests used Δt = 0.1.",
+    "[supported] The first-order nested-commutator ACD term produced an 'enhancement ratio' of 1 in the authors' reported simulations (i.e., ACD improved success probability for all tested instances under the considered settings).",
+    "[supported] DC-QAOA (adding a CD unitary chosen from a small operator pool) yielded higher average success probabilities than QAOA across layers p = 1, 3, 5 in the reported small-instance experiments."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper suggests that digitized-counterdiabatic methods and digital-analog encodings may help approach quantum advantage for industrial financial use cases in the NISQ era, but provides only simulation evidence on small instances and does not claim or demonstrate a provable or empirical quantum advantage over classical methods on real-world problem sizes; thus the claim remains speculative.",
+  "limitations": [
+    "Digitization requires a large number of gates which reduces circuit fidelity and makes the algorithms impractical on NISQ devices without error correction.",
+    "Adiabatic evolution requires long runtimes; limited coherence times and device noise prevent relying on truly adiabatic evolution in practice.",
+    "Obtaining the exact adiabatic gauge potential (exact CD term) for many-body systems is difficult; exact CD terms are generally non-local N-body operators and experimentally challenging to implement.",
+    "This study considered only approximate, local (2-local) CD terms; higher-order/non-local CD terms were not implemented.",
+    "The simulation used first-order Trotterization, which introduces an O(Δt^2) trotterization error.",
+    "All-to-all Hamiltonian connectivity requires additional SWAP gates on hardware with only nearest-neighbor interactions, increasing circuit depth and overhead.",
+    "Hybrid QAOA/DC-QAOA approaches face classical optimization challenges: non-convex cost landscapes, local minima, barren plateaus, and sensitivity to parameter initialization leading to large run-to-run variance.",
+    "Local CD (LCD) effectiveness decreases as the granularity (g) increases because the density of states near the ground state grows, increasing transition probabilities.",
+    "[inferred] The experiments and simulations were limited to relatively small system sizes (up to N = 14 qubits); scalability to larger, industrial-scale portfolio instances is not demonstrated.",
+    "[inferred] Market data used in experiments were randomly generated to mimic real-world trends; applicability and performance on real historical market datasets were not fully validated.",
+    "[inferred] The impact of realistic device noise and hardware errors on the claimed enhancements from CD-driving (both in DCQC and DC-QAOA) was not fully characterized.",
+    "[inferred] Resource requirements (gate counts, circuit depth, required connectivity) and precise thresholds for achieving quantum advantage were not quantified."
+  ],
+  "open_questions": [
+    "How can one obtain and implement exact gauge potentials for many-body problem Hamiltonians, and what are practical ways to realize the resulting non-local CD terms experimentally?",
+    "How much additional performance improvement is achievable by including higher-order (beyond 2-local) CD terms or higher orders in the nested-commutator ansatz?",
+    "Can a digital-analog quantum computing encoding layered on top of digitized-counterdiabatic quantum algorithms enable practical quantum advantage for industrial financial use cases on NISQ devices?",
+    "How do DCQC and DC-QAOA perform on real historical market data and on substantially larger portfolio instances relevant to industry?",
+    "How robust are CD-assisted protocols (both DCQC and DC-QAOA) to realistic noise sources, gate errors, and limited qubit connectivity in current hardware?",
+    "What classical optimization strategies or initialization heuristics can mitigate parameter-sensitivity, local minima, and barren-plateau issues in DC-QAOA for finance problems?",
+    "What are the precise resource trade-offs (total evolution time T, Trotter step count M, circuit depth) required to reach practical success probabilities for portfolio optimization?",
+    "How should CD strategies be adapted as portfolio granularity g increases and the density of low-lying excited states grows?"
+  ],
+  "future_work": [
+    "Extend the approach to include higher-order CD terms (beyond 2-local) to seek further enhancement in success probabilities.",
+    "Develop a digital-analog quantum computing encoding on top of the digitized-counterdiabatic quantum algorithm as a route toward quantum advantage for industrial use cases in the NISQ era.",
+    "Investigate and benchmark DCQC/DC-QAOA on larger system sizes and realistic market data to evaluate practical applicability."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Digitized-counterdiabatic approaches (DCQC) and CD-enhanced QAOA (DC-QAOA) yield substantial improvements in ground-state success probability over standard digitized adiabatic evolution and plain QAOA on many random portfolio instances (reported up to 14 qubits).",
+    "#idea:near-term-feasibility — The authors argue these counterdiabatic techniques can be beneficial in the NISQ era by reducing diabatic transitions and improving performance at short evolution times or low circuit depth.",
+    "#idea:hybrid-approach — DC-QAOA is implemented as a variational, hybrid quantum-classical algorithm where a classical optimizer (Adagrad) tunes QAOA and CD parameters; multiple random initializations and classical post-selection are used.",
+    "#idea:quantum-advantage — Two CD constructions are compared: a local CD (LCD) variational ansatz and a first-order nested-commutator (ACD) ansatz, both improving success probabilities with differing trade-offs.",
+    "#idea:near-term-feasibility — Performance sensitivity to Trotter step size, total evolution time T, and QAOA layer count p is reported, illustrating practical parameter regimes for improved performance.",
+    "#idea:hybrid-approach — The problem is encoded as a QUBO/Ising Hamiltonian using binary slicing (granularity g), showing the classical preprocessing and encoding overheads required."
+  ],
+  "contradictions": [],
+  "limitation_tags": [
+    "limitation:qubit-count",
+    "limitation:simulation-only",
+    "limitation:no-empirical-validation",
+    "limitation:data-encoding"
+  ]
+}

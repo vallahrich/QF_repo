@@ -1,0 +1,225 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document carries an arXiv identifier (arXiv:2303.02797v2) and displays the typical structure of a submitted manuscript (abstract, methods, results, references) without naming a peer-reviewed journal or conference proceedings; these cues indicate an arXiv preprint.",
+  "title": "Variational Quantum Eigensolver for Classification in Credit Sales Risk",
+  "authors": [
+    "Joanna Wiśniewska",
+    "Marek Sawerwain"
+  ],
+  "year": "2024",
+  "journal_or_venue": "arXiv preprint (arXiv:2303.02797v2)",
+  "doi": "",
+  "abstract_summary": "The authors propose a hybrid quantum-classical classification method for credit sales risk that combines a Variational Quantum Eigensolver (VQE) ansatz with the SWAP-Test to compare quantum-encoded customer records. Classical features are normalized and encoded as multi-qubit states; VQE is trained to produce class pattern states and the SWAP-Test evaluates similarity for classification. The approach is designed to be compact (logarithmic qubit scaling), suitable for NISQ devices, and achieves high accuracy in experiments compared to classical baselines.",
+  "methodology_description": "The authors propose a hybrid quantum-classical classification pipeline for credit-sales risk based on the Variational Quantum Eigensolver (VQE) to generate class-representative quantum pattern states and the SWAP-Test to compare/score individual normalized sample states against those pattern states. Classical preprocessing first applies min-max normalization to continuous features and then converts each observation into an n-qubit pure state by padding to 2^n amplitudes (adding a zero feature when required) and renormalizing amplitudes (square-root normalization across amplitudes). Entanglement in the prepared sample states is analyzed (using EntDetector) to inform ansatz design. Two ansatz architectures were tested: a standard multi-layer rotation + entangling layer (variant A) and a more compact tailored ansatz (variant B) using fewer Ry rotations and CNOT/CZ entanglers. For each class (and sub-group within a class) the ansatz parameters θ are trained by minimizing a cost derived from measured probability distributions (sum of absolute differences of probabilities) or equivalently minimizing the VQE expectation EVQE = min_θ Σ_j ω_j ⟨0|U†(θ) P_j U(θ)|0⟩. Optimization was performed with classical optimizers (SPSA for the 3-qubit experiments and COBYLA for larger-register experiments). After training, classification of a probe is done by preparing the probe state and performing a SWAP-Test with the class pattern-state; the SWAP-Test first-qubit measurement probability P0 (P0 = 1/2 + 1/2 |⟨ψ|ϕ⟩|^2) is compared to tuned acceptance thresholds (Λ, Ω) to decide membership. The pipeline was evaluated on a small proprietary dataset from a Polish pharmaceutical wholesaler (seven input features representing arrears, dues, delay days, declared payment, and three booleans), using 3 qubits to encode eight amplitudes (padded), and experiments report training accuracies, optimizer runtimes, and comparison with classical classifiers (SVMs, RandomForest, etc.).",
+  "algorithms_used": [
+    "Variational Quantum Eigensolver (VQE)",
+    "SWAP-Test",
+    "PCA (exploratory)",
+    "Entanglement detection (partial-trace based EntDetector)",
+    "SPSA optimizer",
+    "COBYLA optimizer",
+    "Classical classifiers for comparison: SVM, k-NN, Random Forest, Decision Tree, MLP, AdaBoost, GaussianNB, Gaussian Process, QDA"
+  ],
+  "frameworks": [
+    "Python (general)",
+    "Scikit-Learn (classical ML)",
+    "SciPy (optimizers)",
+    "Seaborn (visualization)",
+    "EntDetector (entanglement detection)"
+  ],
+  "experimental_setup": "Experiments were implemented and executed in Python. Training-time measurements were run on a local workstation (Intel Xeon W-2245 3.9 GHz, Windows 11, Python 3.10.7). The authors also mention availability of a 'GPU µ-Lab' at their institute and reference IBM Q Experience as a realistic target for SWAP-Test executions, but the reported runs/timings appear to be local simulations rather than runs on a named QPU.",
+  "dataset_used": "Proprietary credit-sales dataset from a Polish pharmaceutical wholesaler (period: 2003). Each observation contains seven decision variables: (x1) customer arrears amount (real), (x2) total current dues (real), (x3) days of delay of the oldest invoice (integer), (x4) declared but not posted payment amount (real), (x5) past cooperation reliability (boolean), (x6) evaluation of customer's cooperating entities (boolean), (x7) promissory note presence (boolean). An auxiliary x8=0 feature was added to reach 8 amplitudes for 3-qubit encoding.",
+  "experiment_input": {
+    "source": "Proprietary dataset provided by a Polish pharmaceutical wholesaler (2003); referenced in paper but not a public URL in text",
+    "size": "Small; training examples referenced as '40 probes' in PCA figure (i.e., N ≈ 40 for shown experiments)",
+    "features": 8,
+    "feature_types": {
+      "x1": "real (arrears amount)",
+      "x2": "real (total dues)",
+      "x3": "integer (delay days)",
+      "x4": "real (declared payment)",
+      "x5": "boolean (past reliability)",
+      "x6": "boolean (recipient evaluation)",
+      "x7": "boolean (promissory note)",
+      "x8": "auxiliary zero (padded)"
+    },
+    "preprocessing": "1) Classical min-max normalization (per feature: scaled to [0,1]). 2) Padding to 2^n amplitudes (added x8=0). 3) Quantum normalization: convert normalized features into amplitude values via ˆx_i = sqrt(˜x_i / Σ ˜x_i) so the amplitudes satisfy Σ|α_i|^2 = 1. 4) Entanglement analysis using EntDetector to guide ansatz choice.",
+    "notes": "Data split details (train/test) not clearly enumerated; reported accuracy values are on the training set."
+  },
+  "experiment_process": {
+    "steps": [
+      "Classical min-max normalization of numeric features.",
+      "Pad feature vector to length 2^n (add zero-valued features so features_count ≤ 2^n).",
+      "Quantum normalization to form state amplitudes (sqrt-normalization across amplitudes).",
+      "Entanglement analysis with EntDetector to check degree of entanglement in encoded sample states.",
+      "Design ansatz circuits (two variants): standard multi-layer Ry + entangling gates and a compact tailored ansatz with fewer rotations and CNOT/CZs.",
+      "Train the ansatz per class/group using VQE: execute circuit to obtain probability distribution, compute cost f = sum_i |p_a(i) − p_t(i)| (absolute difference of probabilities) or equivalently minimize EVQE expectation, and update θ using a classical optimizer (SPSA or COBYLA).",
+      "Parameters/thresholds: each class/group uses acceptance interval (Λ_g^c, Ω_g^c) for SWAP-Test output; Ω initialized at 0.5 and tuned down as part of parameter selection.",
+      "After training, classify each probe by performing SWAP-Test between the probe state and the trained class pattern-state and comparing measured P0 to the (Λ, Ω) acceptance window."
+    ],
+    "parameters_and_variants": [
+      "Qubit encodings: experiments with q=3 (3 qubits for 8 amplitudes) and q=8 (8 qubits variant discussed for comparison).",
+      "Ansatz layers (al): tested al = 1, 2, 3 (increasing layers raises depth and classification accuracy).",
+      "Ansatz variants: (A) standard multi-layer circuit with Ry rotations and controlled-Z entanglers; (B) compact/tailored ansatz with fewer Ry rotations and CNOT entanglers.",
+      "Optimizers: SPSA (used for 3-qubit cases), COBYLA (used for 8-qubit cases).",
+      "Optimization iterations: SPSA runs reported with 500 iterations; COBYLA iterations not explicitly enumerated.",
+      "Cost function: f(pa, pt) = Σ_i |pa_αi − pt_αi| where pa_αi and pt_αi are measured probabilities for basis state |i⟩.",
+      "SWAP-Test: 3-qubit SWAP-Test circuit; classification uses P0 = 1/2 + 1/2 |⟨ψ|ϕ⟩|^2 and accepts probe into class if Λ < P0 < Ω."
+    ],
+    "iteration_counts": "SPSA: 500 iterations (explicit). COBYLA: not specified. Repeated training / manual tuning of thresholds reported for best performance."
+  },
+  "experiment_output": {
+    "format": "Classification labels (binary: 0 = allow sale, 1 = block sale) per probe; training cost values and measured probabilities from SWAP-Test; runtime measurements.",
+    "metrics_reported": [
+      "Accuracy on training set (percentage).",
+      "False-classification counts/percentages (reported in parentheses in results table).",
+      "Cost function values (reported as typically <~0.25; often 0.05–0.1).",
+      "Optimizer runtimes (e.g., ~30–35 s for SPSA 500 iterations on Intel Xeon W-2245; 600–700 s for COBYLA 8-qubit experiments)."
+    ],
+    "baselines": "Classical classifiers (SVM with various kernels, k-NN, Gaussian Process, Decision Tree, Random Forest, MLP, AdaBoost, GaussianNB, QDA) trained with scikit-learn for comparison. Some classical models achieved up to 100% training accuracy (typically more complex models like SVM with polynomial kernel or ensemble methods).",
+    "key_results": "Best quantum approach (3-qubit tailored ansatz with tuned thresholds and 2 layers) achieved 100% training accuracy after tuning. Other VQE configurations achieved 85–97.5% depending on ansatz and number of layers. Learning-time advantage observed for the compact 3-qubit ansatz using SPSA (~30 s) compared to 8-qubit COBYLA runs (~600 s)."
+  },
+  "experiment_parameters": {
+    "qubits_used": [
+      {
+        "variant": "compact",
+        "q": 3,
+        "notes": "Encodes 8 amplitudes for 7 input features + 1 padding"
+      },
+      {
+        "variant": "larger",
+        "q": 8,
+        "notes": "Explored eight-qubit variant (higher complexity)"
+      }
+    ],
+    "ansatz_layers": [
+      1,
+      2,
+      3
+    ],
+    "ansatz_variants": [
+      "standard (Ry + controlled-Z)",
+      "tailored compact (fewer Ry + CNOT)"
+    ],
+    "optimizers": [
+      "SPSA",
+      "COBYLA"
+    ],
+    "optimizer_iterations": {
+      "SPSA": 500,
+      "COBYLA": "not specified"
+    },
+    "cost_function": "f(pa,pt) = sum over basis states of absolute differences of measured probabilities",
+    "swap_test_depth": 3,
+    "acceptance_thresholds": {
+      "initial_Omega": 0.5,
+      "initial_Lambda": 0.0,
+      "tuning": "thresholds manually tuned per-class/group to reduce overlaps and improve classification"
+    },
+    "shots": null,
+    "measurement_model": "projective measurements to obtain basis-state probability distributions (used to compute cost and SWAP-Test P0)"
+  },
+  "hardware_details": {
+    "cpu": "Intel Xeon W-2245 3.9 GHz (local workstation)",
+    "os": "Windows 11",
+    "python_version": "Python 3.10.7",
+    "other_compute": "'GPU µ-Lab' cluster at University of Zielona GorzÃ³a is mentioned as available hardware",
+    "qpu/simulator": "Not explicitly named; experiments appear to be local simulation/execution in Python (no specific quantum computing framework such as Qiskit/Forest/pyQuil explicitly stated as used for VQE runs). IBM Q Experience mentioned as realistic target but not documented as used for reported runs."
+  },
+  "reproducibility_notes": "The authors state that all scripts, source codes for numerical experiments, and plot-generation scripts are available in a source code repository referenced as [25] in the paper. The repository URL is not included in the provided text excerpt. Exact dataset is proprietary (Polish pharmaceutical wholesaler) and not provided publicly in the paper; replication would require access to that data or a synthetic equivalent and the repository code. Key parameters (qubit counts, ansatz choices, optimizers, iterations) are reported so reimplementation is feasible given the code and data.",
+  "key_findings": [
+    "[supported] The paper implements a hybrid VQE + SWAP-Test quantum-classical method for binary classification of credit sales risk and provides Python simulation code.",
+    "[supported] The authors preprocessed data by classical normalization followed by amplitude encoding (padding 7 features to 8 amplitudes) to produce 3-qubit input states.",
+    "[supported] Entanglement was detected in the normalized sample states (most samples showed all three qubits entangled).",
+    "[supported] Using the simulated VQE + SWAP-Test pipeline, a 3-qubit ansatz achieved up to 100.0% accuracy on the training data after tuning ansatz and acceptance thresholds (Table 4).",
+    "[supported] Other VQE configurations gave high training accuracies (examples: 3-qubit std-ansatz al=2 → 95.00%; 8-qubit variants up to 91.25%).",
+    "[supported] Classical machine-learning baselines (e.g., SVM with polynomial kernel, Random Forest, Decision Tree, Gaussian Process, AdaBoost) also achieved up to 100% accuracy on the same training data (Table 3).",
+    "[supported] Measured/reported training times in simulations: SPSA optimizer (500 iterations) on 3-qubit ansatz ≈ 30–35s; 8-qubit COBYLA runs >600s on the specified CPU.",
+    "[supported] The cost function used in optimization was the sum of absolute differences of measured outcome probabilities; reported cost function values after training were usually < 0.25 (often 0.05–0.1).",
+    "[supported] The SWAP-Test was used to compare pattern states and test samples; the overlap result maps to the probability formula P0 = 1/2 + 1/2 |⟨ψ|ϕ⟩|^2.",
+    "[speculative] The authors assert the approach is compact and requires only a logarithmic number of qubits (amplitude encoding) and thus is suitable for NISQ devices.",
+    "[speculative] The paper claims that NISQ devices, despite noise, are capable of solving the analyzed task in practice (suggested feasibility rather than demonstrated on hardware).",
+    "[speculative] The authors suggest the VQE+SWAP-Test solution is simpler / less complex than some classical models achieving similar training performance.",
+    "[speculative] Statements on asymptotic circuit-depth scaling for the VQE component (poly-logarithmic in 1/ε) and related complexity comments are presented as theoretical context rather than empirically validated for large problems.",
+    "[supported] The authors report not observing barren-plateau issues in their optimization runs for this dataset."
+  ],
+  "results_summary": "The paper presents a targeted simulation study applying a VQE ansatz plus SWAP-Test comparator to a credit-sales risk (binary) classification task. Data were classical-normalized and amplitude-encoded into 3-qubit states (7 features padded to 8 amplitudes). Entanglement was present in the encoded samples. In simulations, tuned 3-qubit ansatz circuits achieved up to 100% accuracy on the training set; other VQE configurations yielded high but lower training accuracies. Several classical ML baselines also achieved 100% on the same training data. Reported training times on a CPU were modest for 3-qubit runs (~30–35s with SPSA) but substantially larger for 8-qubit runs (>600s). The authors argue (theoretically/speculatively) that the method is compact (logarithmic qubit scaling) and suitable for NISQ devices, but no empirical demonstration on quantum hardware nor out-of-sample/generalization benchmarks are provided.",
+  "performance_claims": [
+    "VQE 3-qubit (std-tuned-ansatz-tuned-epsilon, al=2) achieved 100.0% accuracy on the training set (Table 4, No. 11).",
+    "VQE 3-qubit (std-ansatz, al=2) achieved 95.00% accuracy on the training set (Table 4, No. 6).",
+    "VQE 8-qubit configuration (q=8, f=2, al=2) achieved 91.25% accuracy (Table 4, No. 4).",
+    "Classical SVM with polynomial kernel, RandomForest (max_depth=5, n_estimators=10), DecisionTree (max_depth=5), GaussianProcessClassifier, and AdaBoost achieved 100.0% training accuracy on this dataset (Table 3).",
+    "Reported optimization runtimes: SPSA with 500 iterations for 3-qubit ansatz ≈ 30–35 seconds on an Intel Xeon W-2245 CPU; 8-qubit COBYLA runs >600 seconds on same hardware.",
+    "Reported cost-function (sum absolute probability errors) values after training were generally <0.25 and often in the range 0.05–0.1.",
+    "Input encoding: seven original features were padded to an 8-component amplitude vector and encoded into a 3-qubit register (qn = log2 d = 3).",
+    "SWAP-Test overlap probability formula used: P0 = 1/2 + 1/2 |⟨ψ|ϕ⟩|^2."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors claim a potential advantage based on amplitude encoding (logarithmic qubit count) and compact VQE circuits amenable to NISQ devices. However, this is not empirically demonstrated: experiments are simulator-based, classical baselines reached equal training accuracy (including 100%), no out-of-sample/generalization or hardware-noise benchmarks are shown, and no clear runtime or accuracy advantage over classical methods is proven.",
+  "limitations": [
+    "VQE methods suffer from the Barren plateaus problem in general (authors note the problem is known even if not observed in their experiments).",
+    "Manual tuning of acceptance thresholds (Ωg_c) was required to reach best accuracy (authors report tuned-epsilon variants).",
+    "Ansatz must be designed to reproduce entanglement present in the data (authors detect entanglement and emphasize ansatz form matters).",
+    "Learning/optimization time grows substantially with the number of qubits / ansatz complexity (authors report ~30s for 3 qubits vs ~600s for 8 qubits in their setup).",
+    "[inferred] Very small dataset and limited experimental sample size (paper references a small training set — e.g. PCA figure notes 40 probes), raising concerns about statistical validity and overfitting.",
+    "[inferred] Evaluation appears focused on (or reported mainly as) training-set fit; limited evidence of held-out test set / cross-validation and therefore uncertain generalization performance.",
+    "[inferred] No clear demonstration on physical NISQ hardware in the paper (authors state it is possible to run on NISQ devices but report timings from classical hardware/simulations), so real-device noise/latency effects are untested.",
+    "[inferred] Amplitude/state preparation overhead is not accounted for: converting classical vectors to normalized quantum states (amplitude encoding) can itself be costly and may dominate runtime on real devices.",
+    "[inferred] SWAP-Test and related comparisons require repeated measurements (shots) to estimate probabilities — sampling noise and required number of shots are not fully characterized.",
+    "[inferred] Controlled-swap (Fredkin) or multi-qubit controlled operations used by SWAP-Test may be expensive to implement on hardware with limited connectivity/gate sets; hardware-mapping overhead is not addressed."
+  ],
+  "open_questions": [
+    "How well does the VQE+SWAP-Test approach generalize to new, unseen data (robustness / test-set performance vs. reported training accuracy)?",
+    "How does the method scale (accuracy, optimization time, qubit count, and required circuit depth) for larger datasets, more features, and more classes/groups?",
+    "What is the impact of realistic NISQ noise on classification accuracy, and which error mitigation strategies are effective here?",
+    "How to systematically choose or automate acceptance thresholds (Λg_c, Ωg_c) instead of manual tuning to avoid ad-hoc selection?",
+    "What ansatz architectures are optimal for entangled, real-world financial data? How to balance expressibility, trainability, and circuit depth for NISQ constraints?",
+    "Under what conditions will barren plateaus emerge for this classification setup, and what mitigation strategies (ansatz design, initialization, problem encoding) are effective?",
+    "What is the cost (time and gate count) of state/preparation (amplitude encoding) in practical hardware, and can alternative encodings yield better end-to-end performance?",
+    "How many measurement shots are required in practice for reliable SWAP-Test-based similarity estimates, and how does shot noise affect classification boundaries?",
+    "How does VQE+SWAP-Test classification compare to classical baselines in terms of generalization, resource cost, and robustness on realistic datasets and metrics beyond training accuracy?",
+    "How to efficiently map the required circuits (including controlled-swap operations) to hardware with limited connectivity and native gate sets?"
+  ],
+  "future_work": [
+    "Perform experiments on real NISQ hardware (the authors state their low-complexity circuits could be executed on current devices).",
+    "Design and use shallower / data-aware ansatz circuits that preserve required entanglement while minimizing depth for NISQ execution (authors emphasize importance of proper ansatz form and limited depth)."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance",
+    "credit-lending",
+    "risk-management"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Combines a VQE-trained ansatz to produce class-representative quantum pattern states with the SWAP-Test for similarity-based classification, forming a hybrid quantum-classical pipeline.",
+    "#idea:quantum-advantage — Reports higher accuracy versus several classical classifiers on the authors' small proprietary dataset (training accuracies reported), and claims compact quantum representations yield classification benefits.",
+    "#idea:near-term-feasibility — Proposes logarithmic qubit scaling via amplitude encoding (3 qubits for 8 amplitudes) and designs low-depth tailored ansatz variants intended for NISQ devices.",
+    "#limitation:data-encoding — Uses amplitude encoding with padding to 2^n amplitudes and sqrt-normalization; this incurs classical preprocessing and implicit scaling costs that are not fully addressed.",
+    "#limitation:qubit-count — Experimental validation is limited to 3-qubit experiments (discussion of an 8-qubit variant only); claims about scaling to realistic feature sizes are unsubstantiated.",
+    "#limitation:simulation-only — Reported runs and timing measurements are from local classical simulation; no QPU experiments or noise modelling were presented.",
+    "#limitation:no-empirical-validation — Accuracy figures appear to be reported on (or dominated by) the training set for a very small proprietary dataset (N≈40 in shown figures); train/test splits and generalisation performance are unclear."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — The paper asserts superiority over classical classifiers but provides only training-set results on a small proprietary dataset and simulator-based experiments; this limited validation undermines the claim of practical quantum advantage.",
+    "contradiction:scalability — The authors claim logarithmic qubit scaling and NISQ suitability, yet rely on amplitude encoding with padding to 2^n amplitudes and demonstrate only 3-qubit experiments; there is no evidence that the approach scales to realistic, higher-dimensional financial feature sets or to noisy QPUs."
+  ]
+}

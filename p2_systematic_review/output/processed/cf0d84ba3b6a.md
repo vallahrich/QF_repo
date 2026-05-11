@@ -1,0 +1,174 @@
+---
+aliases:
+- Experiments on Fraud Detection use case with QML and TDA
+- Experiments Fraud Detection use
+authors:
+- Satanik Mitra
+- Kameshwar Rao JV
+auto_detected: true
+classification: ''
+contradiction_flags:
+- contradiction:classical-vs-quantum
+doi: 0.HOO/QCES2317.2021.00083
+evaluation_type: simulator
+evidence_type: ''
+has_quantitative_results: true
+idea_tags:
+- idea:hybrid-approach
+- idea:near-term-feasibility
+journal_or_venue: 2021 IEEE International Conference on Quantum Computing and Engineering
+  (QCE)
+methodology_tags:
+- quantum-ml
+- hybrid-quantum-classical
+- variational-nisq
+paper_type: ''
+quantum_advantage_claim: not-applicable
+related_papers: []
+relevance_phase1: high
+relevance_phase3: high
+source_type: conference-paper
+source_type_confidence: high
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/fraud-detection
+- method/quantum-ml
+- method/hybrid-quantum-classical
+- method/variational-nisq
+- idea/hybrid-approach
+- idea/near-term-feasibility
+- contradiction/classical-vs-quantum
+title: Experiments on Fraud Detection use case with QML and TDA
+topic_tags:
+- fraud-detection
+year: '2021'
+zotero_key: ''
+---
+
+## Abstract summary
+This paper evaluates two approaches for credit card fraud detection: a hybrid quantum-classical neural network (QNN) implemented with Xanadu's Strawberry Fields, and a Topological Data Analysis (TDA) mapper-based method using a novel probabilistic labeling approach. Using a balanced subset of the public Kaggle credit card dataset (982 samples), the authors report 89.5% accuracy for the hybrid QNN and 94% accuracy for the TDA mapper method.
+## Methodology
+The study implemented and compared two approaches for credit-card fraud detection on a publicly available Kaggle dataset. First, a hybrid quantum-classical approach: input transaction features were passed through a classical neural network which transformed the inputs (reported mapping to 14 outputs) to produce parameters for a continuous-variable (CV) quantum neural network (QNN). The QNN implementation follows the reference Killoran et al. CV-QNN style and was implemented using Xanadu's Strawberry Fields; the paper states the QNN comprises four standard quantum neural network layers. Second, a Topological Data Analysis (TDA) approach using the Mapper algorithm: the authors applied Mapper with 20 hypercubes, 30% overlap and selected two clusters, and used a novel probabilistic labeling/classification procedure to assign labels to unknown points based on the Mapper clusters. The same balanced subset of the credit-card dataset was used for both methods. Performance was evaluated using accuracy, precision, recall and ROC AUC on a 3:1 train/test split.
+
+**Algorithms used:** Hybrid continuous-variable quantum neural network (CV-QNN), Topological Data Analysis (TDA) - Mapper, Probabilistic cluster-based labeling (novel, used with Mapper)
+**Frameworks:** Strawberry Fields (Xanadu), giotto-tda (referenced for TDA toolkit)
+
+**Experimental setup:** Implementation reported via Xanadu's Strawberry Fields for the CV-QNN; TDA implemented with Mapper (giotto-tda referenced). No quantum hardware / QPU model or backend details (e.g., Fock/Gaussian backend) are specified in the text.
+
+**Dataset:** Kaggle 'Credit Card Fraud Detection' dataset (European cardholders, September 2013). Original dataset: 284,807 transactions with 492 frauds (highly imbalanced). The authors created a balanced subset of 982 samples (492 fraud, 492 genuine) for experiments. Features are the dataset's 28 PCA-derived features.
+## Experiment details
+### Input
+{'source': 'Kaggle: mlg-ulb/creditcardfraud', 'original_size': 284807, 'original_positive_count': 492, 'used_size': 982, 'used_positive_count': 492, 'used_negative_count': 492, 'preprocessing': "Used the dataset's PCA-transformed features (28 features). Authors report a classical neural network mapping inputs to 14 outputs used as QNN gate parameters. Balanced sampling was performed to equalize classes. Same input used for both QNN and TDA pipelines.", 'train_test_split': '3:1 (785 known / training, 197 unknown / test)'}
+
+### Process
+{'QNN_pipeline': ['Input feature vectors (from balanced subset) fed to a classical neural network encoder', 'Classical NN transforms inputs (reported mapping to 14 output values) which serve as gate parameters for the first layer of a continuous-variable QNN', "CV-QNN composed of four quantum neural network layers (as reported) implemented using Xanadu's Strawberry Fields", 'Predictions obtained from hybrid model; evaluated on test set'], 'TDA_pipeline': ['Apply Mapper-based TDA on the same input data (giotto-tda referenced)', 'Mapper parameters: 20 hypercubes, 30% overlap', 'Select two clusters for binary classification', 'Use a novel probabilistic cluster-based labeling method to assign labels to unknown/test points', 'Evaluate assigned labels on test set'], 'iterations_and_training': 'Not specified (no details provided on number of epochs, training iterations, optimizer, loss function, batch size, or convergence criteria).'}
+
+### Output
+{'metrics_reported': ['Accuracy', 'Precision', 'Recall', 'ROC AUC'], 'results': {'Hybrid QNN': {'accuracy': 0.895, 'precision': 0.9, 'recall': 0.89, 'roc_auc': 0.87}, 'TDA (Mapper + probabilistic labeling)': {'accuracy': 0.94, 'precision': 0.99, 'recall': 0.98, 'roc_auc': 0.935}}, 'baselines': 'No classical baselines (e.g., logistic regression, random forest) are reported in the text for direct comparison; both methods are compared only against each other on the balanced subset.'}
+
+### Parameters
+- qubits: None
+- cv_qnn_layers: 4
+- classical_nn_output_size: 14
+- tda_hypercubes: 20
+- tda_overlap_fraction: 0.3
+- tda_clusters: 2
+- train_test_split_ratio: 3:1
+- dataset_balanced: True
+- dataset_size_used: 982
+- shots: None
+- optimizer: None
+- depth: None
+- batch_size: None
+- epochs: None
+
+### Hardware
+{'simulator': 'Strawberry Fields (Xanadu) mentioned as implementation framework', 'qpu_model': None, 'cloud_provider': None}
+
+### Reproducibility
+Dataset is public (Kaggle credit card fraud dataset) and therefore available. The paper does not provide code, detailed training hyperparameters (optimizer, epochs, batch size), QNN backend details (Strawberry Fields backend selection, Fock/Gaussian settings), or exact architecture details of the classical neural network (layer sizes beyond the reported 14-output mapping). These omissions limit reproducibility; authors did not provide a repository or scripts in the text.
+## Findings
+- [supported] On a balanced subset of 982 data points (492 fraud, 492 genuine) the hybrid quantum neural network (QNN) tested by the authors achieved 89.5% accuracy (precision 0.90, recall 0.89, ROC 0.87).
+- [supported] On the same balanced dataset, the Topological Data Analysis (TDA) mapper-based probabilistic classifier tested by the authors achieved 94% accuracy (precision 0.99, recall 0.98, ROC 0.935).
+- [supported] The authors implemented a hybrid QNN using Xanadu's Strawberry Fields (continuous-variable QNN) with four quantum neural network layers; a classical neural network reduced inputs to 14 parameters used as gate parameters for the QNN.
+- [supported] The experimental dataset is the Kaggle Credit Card Fraud Detection dataset (Sept 2013); experiments used a balanced subset of 982 samples and a 3:1 train:test split (197 test points).
+- [supported] The TDA mapper was configured with 20 hypercubes, 30% overlap, and two clusters for the mapper construction in these experiments.
+- [speculative] The paper claims TDA's ability to reveal topological structure can assist in noise reduction and visualization-aided classification (asserted benefit, not systematically validated beyond reported experiments).
+- [speculative] The authors assert that using a classical NN layer to produce parameters for the QNN 'handles' the input encoding hurdle (method described and used, but broader efficacy not rigorously compared).
+- [speculative] The authors suggest combining hybrid QNN and TDA approaches on larger and more complex datasets could yield improved results (forward-looking suggestion, not experimentally demonstrated).
+- [speculative] General statement that quantum computers are making footprints into AI/ML is made without empirical support in this paper (contextual/motivational).
+- [speculative] Claim that the TDA probabilistic classification approach is novel is asserted but not formally validated against prior literature in the paper.
+
+**Results summary:** The authors compared a hybrid quantum-classical neural network (implemented with Xanadu's Strawberry Fields continuous-variable QNN) and a Topological Data Analysis (TDA) mapper-based probabilistic classifier on a balanced subset (982 samples) of the Kaggle credit card fraud dataset. In their experiments the hybrid QNN achieved 89.5% accuracy (precision 0.90, recall 0.89, ROC 0.87) while the TDA mapper classifier achieved 94% accuracy (precision 0.99, recall 0.98, ROC 0.935). The paper reports implementation details (classical NN to 14 parameters into four QNN layers; mapper with 20 hypercubes and 30% overlap) and frames the work as initial experimentation, noting potential for combining methods on larger datasets.
+
+**Performance claims:**
+- Hybrid QNN: accuracy 0.895, precision 0.90, recall 0.89, ROC 0.87 (on balanced subset of 982 samples, 3:1 train:test split).
+- TDA mapper classifier: accuracy 0.94, precision 0.99, recall 0.98, ROC 0.935 (same dataset and split).
+- TDA mapper configuration: 20 hypercubes, 30% overlap, 2 clusters (used in experiments).
+- Dataset sampling: balanced subset of 982 points drawn from original 284,807-sample Kaggle dataset (492 fraud, 492 genuine); test set of 197 points.
+## Quantum advantage claim
+**Classification:** not-applicable
+
+The paper does not claim or demonstrate a quantum computational advantage. The hybrid QNN was implemented and evaluated, but it produced lower reported accuracy (89.5%) than the classical TDA mapper approach (94%) on the authors' balanced subset; the work is presented as initial experimentation rather than evidence of quantum advantage.
+## Limitations
+- Results derive from initial experimentation and are preliminary (author-stated).
+- [inferred] The experiments used a balanced subset of 982 points (492 fraud + 492 genuine) rather than the full original imbalanced dataset, which may not reflect real-world class imbalance.
+- [inferred] Small effective sample size and single train/test split (3:1) raise risk of overfitting and limit statistical confidence.
+- [inferred] Likely executed in a simulated environment (Strawberry Fields reference implementation) with no evaluation on real quantum hardware, so hardware-level noise and feasibility are untested.
+- [inferred] No direct comparison reported to classical baseline algorithms (e.g., logistic regression, random forest, classical neural networks) to contextualize claimed performance gains.
+- [inferred] Limited hyperparameter exploration and justification for TDA mapper choices (20 hypercubes, 30% overlap, two clusters) — sensitivity to these settings is not analysed.
+- [inferred] Novel probabilistic TDA labeling approach is not fully validated or benchmarked; robustness and failure modes are not explored.
+- [inferred] Computational cost, runtime, and resource requirements (for both hybrid QNN and TDA) are not reported, leaving scalability unclear.
+- [inferred] The hybrid QNN relies on a classical preprocessing/encoding step (classical NN mapping inputs to gate parameters); potential information loss or scalability limits of this encoding are not discussed.
+- [inferred] No cross-validation, statistical testing, or uncertainty estimates reported for performance metrics.
+## Open questions
+- How do the hybrid QNN and TDA mapper approaches perform on the full, highly imbalanced original dataset rather than on a balanced subset?
+- How well do the methods scale to larger and more complex real-world financial datasets?
+- Would combining the hybrid QNN and TDA approaches produce consistent improvements, and if so, how should they be integrated?
+- Can the hybrid QNN implementation be run on real quantum hardware, and is there any practical quantum advantage over classical methods?
+- How sensitive are the TDA mapper results to hyperparameter choices (number of hypercubes, overlap fraction, assumed number of clusters)?
+- How robust is the novel probabilistic TDA labeling method in edge cases, noisy data, or varying fraud patterns?
+- How do these approaches compare quantitatively to established classical baselines across multiple metrics and cross-validation folds?
+- What are the computational time and resource costs (classical preprocessing + quantum simulation/hardware) for training and inference, and are they practical for production use?
+- Is the chosen classical-to-quantum encoding (classical NN output used as gate parameters) optimal, or would alternative encoding/feature preparation improve QNN performance?
+- Are the reported results reproducible given the level of methodological detail provided?
+
+**Future work:**
+- Evaluate approaches on larger and more complex datasets (author-suggested).
+- Explore combination/integration of the hybrid QNN and TDA methods to improve performance (author-suggested).
+- Develop improvements over other existing models by extending experimentation and optimization (author-suggested).
+## Key ideas
+- #idea:hybrid-approach — A classical neural network encodes 28 PCA-derived features into 14 parameters which are used as gate parameters for a 4-layer continuous-variable QNN implemented in Xanadu's Strawberry Fields.
+- #idea:hybrid-approach — The paper compares a hybrid CV-QNN pipeline against a classical Topological Data Analysis (Mapper) pipeline with a novel probabilistic cluster-based labeling method on a balanced subset of the Kaggle credit-card fraud dataset.
+- #idea:near-term-feasibility — Experiments were executed in simulation on a small, balanced dataset (982 samples, 3:1 train:test), positioning the work as a near-term prototype/feasibility study rather than a production-scale demonstration.
+- #contradiction:classical-vs-quantum — The classical TDA Mapper classifier outperformed the hybrid QNN on the same dataset (94% vs 89.5% accuracy), which undermines any implicit expectation of superior performance from the quantum model in this use case.
+- #limitation:simulation-only — All quantum experiments were run via Strawberry Fields (no QPU/hardware reported), and no measurement-shot, backend (Fock/Gaussian) or noise model details are provided.
+- #limitation:data-encoding — The authors claim that using a classical NN to produce QNN parameters 'handles' input encoding, but provide no quantitative analysis of encoding cost or alternatives.
+- #limitation:qubit-count — The paper does not report qubit/mode counts or detailed CV-QNN architecture and training hyperparameters, limiting reproducibility and assessment of scalability.
+## Contradictions
+- The hybrid CV-QNN did not outperform the classical TDA Mapper (94% vs 89.5% accuracy) on the same balanced dataset, contradicting expectations that quantum-enhanced models necessarily yield better fraud-detection performance.
+- No classical baseline methods (e.g., logistic regression, random forest) were reported; this omission makes claims about the QNN's usefulness difficult to interpret and contradicts standard practice of benchmarking quantum models against classical baselines.
+- The authors assert that a classical NN layer 'handles' the input encoding hurdle for the QNN, but provide no evidence or analysis; this claim is unvalidated and contradicts broader literature that highlights data-encoding as a nontrivial cost.
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

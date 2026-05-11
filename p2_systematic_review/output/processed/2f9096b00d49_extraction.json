@@ -1,0 +1,183 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2106.13308v2) and follows a preprint-style structure (abstract, methods, experiments, citations) without clear indication of a peer-reviewed venue or conference proceedings.",
+  "title": "Overcoming barriers to scalability in variational quantum Monte Carlo",
+  "authors": [
+    "Tianchen Zhao",
+    "Saibal De",
+    "Brian Chen",
+    "James Stokes",
+    "Shravan Veerapaneni"
+  ],
+  "year": "2021",
+  "journal_or_venue": "arXiv preprint arXiv:2106.13308",
+  "doi": "",
+  "abstract_summary": "The paper studies scalability bottlenecks of variational quantum Monte Carlo (VQMC) arising from Markov Chain Monte Carlo (MCMC) sampling and proposes replacing MCMC with autoregressive neural quantum states that permit exact, GPU-friendly sampling. This modification enables straightforward parallelization across GPUs and nodes, improving runtime and convergence on high-dimensional problems, and the authors demonstrate solving combinatorial optimization and quantum Hamiltonian instances up to ten-thousand dimensions with near-optimal weak scaling.",
+  "methodology_description": "The authors study scalability of variational quantum Monte Carlo (VQMC) by replacing Markov Chain Monte Carlo (MCMC) sampling with exact autoregressive sampling. They represent normalized trial wavefunctions via autoregressive neural networks (MADE) so that psi_theta(x)^2 is an explicit normalized probability; sampling is performed exactly via sequential autoregressive sampling (Algorithm 1). They compare this approach (MADE + AUTO) to the standard neural-network VQMC setup using Restricted Boltzmann Machines (RBM) with random-walk Metropolis–Hastings MCMC. Target problems are non-locally coupled Hamiltonians: (i) Max-Cut instances encoded as quadratic binary Hamiltonians, and (ii) disordered transverse field Ising model (TIM). For optimization they employ gradient-based methods (ADAM default, SGD also tested) and optionally stochastic reconfiguration (SR, a natural-gradient style preconditioner). Experiments include single-GPU and multi-GPU (replicated model) training, scalability up to 10k-dimensional problems, ablation studies on hidden/latent sizes, and MCMC scheme variations. Metrics reported include converged ground-state energy, training loss, standard deviation of local energy, and wall-clock runtime. The sampling-parallelization strategy replicates the model across GPUs, each GPU generates local mini-batches (mbs), computes local gradients, and gradients are averaged via parallel reduction; only sampling is parallelized (not model-parallel).",
+  "algorithms_used": [
+    "Variational Quantum Monte Carlo (VQMC)",
+    "Autoregressive Neural Quantum States (MADE)",
+    "Autoregressive Sampling",
+    "Restricted Boltzmann Machine (RBM)",
+    "Markov Chain Monte Carlo (Random-walk Metropolis–Hastings)",
+    "Stochastic Reconfiguration (SR, natural gradient)",
+    "ADAM optimizer",
+    "SGD optimizer",
+    "Goemans–Williamson SDP relaxation (baseline)",
+    "Burer–Monteiro SDP reformulation (baseline)",
+    "Random Cut (baseline)"
+  ],
+  "frameworks": [],
+  "experimental_setup": "Experiments run on NVIDIA Tesla V100 GPUs (32 GB). Single-GPU and multi-GPU configurations were used (examples: 1×1, 1×2, 1×4, 2×2, 2×4, 4×2, 4×4, 6×4, 8×2 nodes×GPUs). Default training: 300 iterations; evaluation batches of 1024 samples for single-GPU experiments. For large-scale runs, per-GPU mini-batch sizes (mbs) were chosen to saturate GPU memory (examples: mbs = 512, 128, 16, 4 for 1k, 2k, 5k, 10k dimensions respectively).",
+  "dataset_used": "",
+  "experiment_input": "Synthetic problem instances: (1) Max-Cut: random undirected graphs with adjacency matrix constructed by sampling B_ij ~ Bernoulli(0.5), symmetrizing (B + B^T)/2, rounding and zeroing diagonal; graph sizes n ∈ {20,50,100,200,500} (and larger up to 10k for scalability). (2) Transverse Field Ising Model (TIM): Hamiltonian parameters sampled once and fixed with beta_i, beta_ij ~ Uniform(-1,1) and alpha_i ~ Uniform(0,1). No external financial datasets used.",
+  "experiment_process": "Per iteration: (1) Sample a mini-batch of bitstrings. For AUTO: generate exact i.i.d. samples by sequential autoregressive sampling from MADE (n forward passes per sample). For MCMC baseline: run random-walk Metropolis–Hastings with two chains and a burn-in k (heuristic k = 3n + 100), optionally thinning; (2) For each sample compute local energy l_theta(x) using sparse matrix-vector evaluations of H*psi (sparsity s = O(n)); (3) Estimate gradients: standard gradient or SR natural-gradient (Fisher matrix estimated from samples); (4) Aggregate gradients across GPUs by averaging (parallel reduction) and update parameters locally (ADAM default lr=0.01; SGD lr=0.1 tested; SR used with regularization lambda=0.001 and lr=0.1); (5) Repeat for 300 iterations. For multi-GPU runs, the model is replicated; each GPU computes mbs samples and local gradients; effective batch size = L * mbs. Ablations: vary hidden size h (e.g., h = 5*(log n)^2 default for MADE, h = n for RBM), vary MCMC schemes (different burn-in and thinning lengths).",
+  "experiment_output": "Outputs reported: converged mean energy (estimated variational energy ⟨psi|H|psi⟩/⟨psi|psi⟩) averaged over evaluation batches and random seeds; training loss curves; standard deviation of local energy (variance, approaches zero near eigenstate); wall-clock runtimes for fixed iteration counts and time-to-target (hitting time) to reach specified cut/energy thresholds; scalability (weak-scaling) plots across GPU counts. Baselines: RBM+MCMC VQMC, Goemans–Williamson SDP, Burer–Monteiro SDP, random cut.",
+  "experiment_parameters": {
+    "problem_sizes_n": [
+      20,
+      50,
+      100,
+      200,
+      500,
+      1000,
+      2000,
+      5000,
+      10000
+    ],
+    "training_iterations": 300,
+    "evaluation_batch_size_singleGPU": 1024,
+    "per_gpu_mini_batch_sizes_examples": {
+      "1k": 512,
+      "2k": 128,
+      "5k": 16,
+      "10k": 4
+    },
+    "MADE_hidden_size_default": "h = 5 * (log n)^2",
+    "RBM_hidden_units_default": "h = n",
+    "optimizers": {
+      "ADAM": {
+        "lr": 0.01
+      },
+      "SGD": {
+        "lr": 0.1
+      }
+    },
+    "stochastic_reconfiguration": {
+      "lambda": 0.001,
+      "lr": 0.1
+    },
+    "MCMC": {
+      "algorithm": "random-walk Metropolis–Hastings",
+      "chains": 2,
+      "burn_in_k_default": "3*n + 100"
+    },
+    "model_param_count_example_limit": "GPU memory ~10M parameters practical limit (not fixed)",
+    "GPU_model": "NVIDIA Tesla V100",
+    "GPU_memory": "32 GB"
+  },
+  "hardware_details": {
+    "gpu_model": "NVIDIA Tesla V100",
+    "gpu_memory_gb": 32,
+    "multi_gpu_configurations_used": [
+      "1x1",
+      "1x2",
+      "1x4",
+      "2x2",
+      "2x4",
+      "4x2",
+      "4x4",
+      "6x4",
+      "8x2"
+    ],
+    "notes": "No quantum hardware or quantum simulator used; experiments run on classical GPUs for training neural-network quantum states."
+  },
+  "reproducibility_notes": "The paper details architectures (MADE masking, two-layer structure), training hyperparameters (iterations, batch sizes, optimizers and learning rates, SR regularization), sampling schemes, problem instance generation procedures, and GPU configurations. However, no public code repository or explicit implementation link is provided in the text; random seeds are mentioned for averaging but not enumerated. Reproducibility is feasible given the provided hyperparameters and synthetic data recipes, but would be aided by release of source code and exact random seeds.",
+  "key_findings": [
+    "[supported] Replacing MCMC sampling with autoregressive (MADE) models that permit exact sampling (AUTO) removes the undetermined burn-in/thinning bottleneck and enables efficient GPU-parallel sampling for variational quantum Monte Carlo (VQMC).",
+    "[supported] MADE+A UTO achieves substantially faster wall-clock training times than RBM+MCMC in the experiments (e.g., for 300 training iterations on TIM: MADE&AUTO 49.62s vs RBM&MCMC 456.68s at 500 dimensions).",
+    "[supported] MADE+A UTO produces more stable and faster convergence than RBM+MCMC as problem dimension increases (training curves and reduced stochastic-objective variance shown).",
+    "[supported] The autoregressive approach attains solution quality competitive with state-of-the-art classical solvers on Max-Cut for the tested sizes (MADE+A UTO cut values comparable to Goemans–Williamson and Burer–Monteiro on the reported instances).",
+    "[supported] Sampling parallelization (replicating the autoregressive model across GPUs and averaging gradients) attains near-optimal weak scaling on multi-GPU setups up to problems with 10,000 dimensions (normalized runtimes remain approximately constant as GPUs increase).",
+    "[supported] Increasing the effective batch size (more GPUs / more samples) improves convergence and final energy for larger problems; convergence gains saturate earlier for smaller problems.",
+    "[supported] Empirical experiments solved and reported results up to 10,000-dimensional combinatorial optimization / Hamiltonian instances using MADE+A UTO on multi-GPU hardware.",
+    "[speculative] Autoregressive VQMC (AUTO) more generally overcomes scalability barriers of VQMC in high-dimensional many-body and combinatorial problems beyond the specific instances tested.",
+    "[speculative] Memory (model size) is the primary bottleneck as dimensions grow and can be addressed via model-parallel designs; the paper focuses on sampling-parallel scaling rather than model-parallel implementations.",
+    "[supported] Stochastic reconfiguration (natural-gradient) improves convergence for both RBM+MCMC and MADE+A UTO in the experiments."
+  ],
+  "results_summary": "The paper empirically demonstrates that using autoregressive neural quantum states (MADE) with exact autoregressive sampling (AUTO) in VQMC removes MCMC burn-in/thinning bottlenecks, yielding large practical speedups, more stable convergence, and good solution quality. MADE+A UTO is shown to be significantly faster than RBM+MCMC in wall-clock time for fixed training iterations, scales efficiently across GPUs with near-optimal weak scaling up to 10k dimensions, and attains Max-Cut energies comparable to SDP-based classical methods on the tested instances. The authors also show that larger effective batch sizes (more GPUs/samples) improve convergence for large problems and that stochastic reconfiguration further improves optimization.",
+  "performance_claims": [
+    "[supported] Runtime (TIM, 300 iterations, single GPU): RBM+MCMC = 456.68s vs MADE+AUTO = 49.62s at 500 dimensions (Table 1).",
+    "[supported] Runtime (TIM, 300 iterations, single GPU): RBM+MCMC = 189.91s vs MADE+AUTO = 10.63s at 100 dimensions (Table 1).",
+    "[supported] MADE+AUTO achieved Max-Cut objective values comparable to classical SDP solvers: e.g., for n=500 MADE+AUTO (ADAM) = 17006.6 vs Burer–Monteiro = 17416.0 (Table 2).",
+    "[supported] MADE+AUTO achieved TIM ground-state energies reported e.g., for n=100 MADE+AUTO (ADAM) = -771.11 (Table 2).",
+    "[supported] Multi-GPU weak scaling: normalized execution times remain approximately constant across GPU counts for problems of 1k, 2k, 5k, and 10k dimensions when per-GPU minibatch is fixed (Figure 3 and Tables 6–7).",
+    "[supported] Hitting time to reach target Max-Cut performance: MADE+AUTO much faster than RBM+MCMC (e.g., for n=500 target cut 16800 — MADE+AUTO 6.27s vs RBM+MCMC 1096.08s, Table 5).",
+    "[supported] Converged-energy improves with total number of GPUs/effective batch size for TIM; example converged energies reported up to ~-261517.21 at 10000 dimensions for the largest GPU configuration (Table 6)."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The work concerns classical implementations of variational quantum Monte Carlo using neural-network trial states and classical GPUs; it does not demonstrate a quantum-computational advantage on quantum hardware. Claims are about algorithmic scalability and classical GPU parallelism for VQMC rather than quantum speedup.",
+  "limitations": [
+    "MCMC sampling is inherently sequential and difficult to parallelize (author-stated).",
+    "Autoregressive sampling (AUTO) still has a sequential component: sampling each sample requires n forward passes and thus sampling time scales linearly with problem dimension (author-stated).",
+    "The work only parallelizes the sampling step and does not implement model-parallel training; model parameters are replicated on each worker (author-stated).",
+    "Memory usage of fully-connected autoregressive models is a practical bottleneck on GPUs and limits hidden-layer size and overall model capacity (author-stated).",
+    "Experiments are limited to particular non-geometrically-local Hamiltonians (Max-Cut and transverse-field Ising) and to ground states that can be chosen non-negative by design (alpha_i >= 0) — i.e., the approach was evaluated on a restricted class of problems (author-stated / implied).",
+    "Optimality and convergence in large problems are limited by available computational resources (author-stated).",
+    "[inferred] Communication of gradient averages (O(h n) floats) will become a scalability bottleneck for very large n or very large model sizes if model-parallelism / communication compression are not used.",
+    "[inferred] The autoregressive model architecture used (MADE with fully connected layers) may not be the most parameter- or compute-efficient choice for all problem classes; alternative architectures (e.g., convolutional, recurrent, transformer, normalizing flows) were not explored.",
+    "[inferred] The normalization/positivity assumption (psi_theta(x)=sqrt(pi_theta(x))) excludes sign-structured or complex-valued wavefunctions, hence the current AUTO formulation cannot directly represent ground states with sign structure or complex amplitudes.",
+    "[inferred] Comparison against more advanced MCMC variants (e.g., HMC, tempering, optimized proposals) was not performed; thus the advantage over an optimized MCMC pipeline remains to be fully quantified.",
+    "[inferred] Experiments were run on V100 GPUs with specific batch/minibatch choices that saturate memory; portability and performance on other hardware (TPUs, different GPUs) was not evaluated."
+  ],
+  "open_questions": [
+    "How to implement efficient model-parallel training for large autoregressive neural quantum states so that model capacity can scale beyond single-GPU memory limits?",
+    "Can autoregressive approaches be extended to represent wavefunctions with sign structure or complex amplitudes (i.e., beyond non-negative ground states)?",
+    "What is the tradeoff between increased effective batch size (via more GPUs) and convergence quality for different problem classes and sizes — what are optimal scaling rules for batch size vs. dimension?",
+    "How do communication costs and latency affect scalability when gradient/parameter sizes (O(h n)) grow very large? What compression or reduction strategies are effective?",
+    "Can alternative autoregressive or generative architectures (normalizing flows, RNNs, transformers, convolutional MADE variants) improve expressivity or sampling efficiency for quantum many-body problems?",
+    "How well do AUTO-based VQMC methods perform on other, more physically realistic or signful Hamiltonians (e.g., fermionic systems, frustrated magnets) where the Perron–Frobenius non-negativity assumption fails?",
+    "Is there a systematic way to choose latent size h as a function of problem dimension n and problem structure to balance expressivity and computational/memory cost?",
+    "How would AUTO compare to more sophisticated or problem-specific MCMC schemes (e.g., Hamiltonian Monte Carlo, tempering, problem-tailored proposals) when those are carefully tuned and parallelized?",
+    "What is the impact of model architecture and optimization choices (ADAM vs. SR/natural gradient) on convergence in very large-scale regimes?",
+    "How far can practical scaling go on realistic cluster/cloud hardware before communication, memory, or synchronization overheads negate the sampling-parallelism gains?"
+  ],
+  "future_work": [
+    "Model parallelization: distribute model parameters across computing units so each unit stores and updates only a part of the model (author-stated as a complementary avenue).",
+    "Further exploration of sampling parallelization combined with model-parallel training to enable much larger models beyond single-GPU memory limits (implied by authors' discussion).",
+    "Scaling experiments pushing to larger models and more GPUs to reduce the computational-resource-limited optimality gap (author-stated / implied).",
+    "Investigate the communication patterns required for model-parallel autoregressive networks, since they depend on the specific autoregressive architecture (author-stated).",
+    "Study and tune effective batch size scaling (number of GPUs × per-GPU minibatch) to improve convergence for larger problems (author-stated / supported by experiments showing improved convergence with effective batch size).",
+    "[inferred] Extend the autoregressive VQMC framework to handle signful or complex-valued wavefunctions (removing the positivity / sqrt(pi) modeling assumption).",
+    "[inferred] Evaluate alternative autoregressive / generative architectures and normalizing-flow variants to improve expressivity and efficiency.",
+    "[inferred] Benchmark AUTO-based VQMC against more advanced MCMC variants and other classical/quantum heuristics across a broader set of Hamiltonians and combinatorial optimization instances."
+  ],
+  "topic_tags": [
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "quantum-ml"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "benchmark-comparison",
+  "related_papers": [],
+  "relevance_phase1": "medium",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Replace MCMC sampling in variational quantum Monte Carlo with autoregressive neural quantum states (MADE) to permit exact i.i.d. sampling and GPU-friendly parallelization.",
+    "#idea:near-term-feasibility — The AUTO (MADE + autoregressive sampling) approach achieves strong weak-scaling on multi-GPU setups and solves combinatorial/quantum Hamiltonian instances up to 10k dimensions on classical hardware.",
+    "#idea:hybrid-approach — Combining neural-network wavefunction representations with gradient-based optimization (ADAM/SGD) and optional stochastic reconfiguration yields improved runtime and convergence vs RBM+MCMC baselines.",
+    "#limitation:simulation-only — All experiments are classical (neural quantum states on GPUs); no quantum hardware or quantum-circuit simulators were used."
+  ],
+  "contradictions": [
+    "This paper contradicts prior assumptions that MCMC sampling (burn-in/thinning) is an unavoidable bottleneck for scalable VQMC: replacing MCMC with exact autoregressive sampling removes burn-in costs and enables near-optimal weak scaling to 10k dimensions, outperforming RBM+MCMC baselines in runtime and convergence."
+  ]
+}

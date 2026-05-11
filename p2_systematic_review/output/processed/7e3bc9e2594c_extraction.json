@@ -1,0 +1,244 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes an arXiv identifier (arXiv:2405.20328v1), typical preprint structure (abstract, methods, results, citations) and appears to be an author-uploaded manuscript rather than a published peer-reviewed version.",
+  "title": "mRNA secondary structure prediction using utility-scale quantum computers",
+  "authors": [
+    "Dimitris Alevras",
+    "Mihir Metkar",
+    "Takahiro Yamamoto",
+    "Vaibhaw Kumar",
+    "Triet Friedhoff",
+    "Jae-Eun Park",
+    "Mitsuharu Takeori",
+    "Mariana LaDue",
+    "Wade Davis",
+    "Alexey Galda"
+  ],
+  "year": "2024",
+  "journal_or_venue": "arXiv preprint arXiv:2405.20328 (quant-ph)",
+  "doi": "",
+  "abstract_summary": "The authors formulate mRNA secondary structure prediction as a quadratic binary optimization problem and solve it with a CVaR-based VQE on utility-scale gate-based quantum processors (IBM Eagle and Heron). They demonstrate runs for sequences up to 60 nucleotides (10–80 qubits) using a two-local ansatz and NFT classical optimizer, reporting that, with minimal error mitigation and fixed-depth circuits, hardware results match classical CPLEX solutions for minimum free energy structures.",
+  "methodology_description": "The authors formulate RNA secondary-structure prediction with pseudoknots as a quadratic binary optimization over ‘‘quartet’’ variables (two consecutive base pairs). They convert the constrained quadratic program into a QUBO (adding penalty terms for crossing quartets) and use CPLEX as a classical baseline solver. For quantum experiments they map the QUBO to a problem Hamiltonian and solve it with a CVaR-modified Variational Quantum Eigensolver (CVaR-VQE). The variational ansatz is a hardware-efficient two-local circuit composed of single-qubit Y-rotations and native two-qubit entangling gates (ECR or CZ depending on device). The classical parameter optimizer is the NFT sequential minimal (three-evaluation) optimizer; CVaR (lower-α tail average) is used as the objective (α tuned between 0.1 and 0.25). They run noise-free MPS simulations (Qiskit MPS) for many random instances and then execute experiments on IBM utility-scale processors (ibm_brisbane, ibm_osaka, ibm_torino / Heron). Minimal error suppression/mitigation is applied (dynamical decoupling during idles, matrix-free measurement mitigation (M3) for readout), and circuits are transpiled with aggressive optimization. Performance is evaluated versus the CPLEX baseline using metrics including success probability (fraction of runs that sample the global optimum) and optimality gap (relative difference of best sampled energy vs CPLEX optimum). Multiple independent trials with random initial parameters are used to mitigate optimizer local minima.",
+  "algorithms_used": [
+    "CVaR-VQE",
+    "Variational Quantum Eigensolver (VQE)",
+    "NFT (Nakanishi-Fujii-Todo) optimizer",
+    "QUBO formulation / Ising Hamiltonian",
+    "CPLEX (classical integer/quadratic programming solver)",
+    "Dynamical Decoupling (DD) for error suppression",
+    "Matrix-free Measurement Mitigation (M3)"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Simulations: Qiskit MPS simulator using a two-local ansatz (single-qubit Y-rotations + pairwise CZ/ECR layers), two ansatz layers for many sims, CVaR(α=0.1) objective in MPS runs. Hardware: IBM utility-scale processors (ibm_brisbane, ibm_osaka—ECR native two-qubit gate; ibm_torino Heron—CZ native gate). Qubit mappings chosen by per-layer coupling fidelity characterization; circuits transpiled at optimization level 3; dynamical decoupling applied during idles; M3 readout mitigation used. Problem sizes: simulations 10–40 logical qubits; hardware runs at 26, 40, 50 qubits and an 80-qubit run (parameter training done offline in simulator, executed on ibm_torino).",
+  "dataset_used": "",
+  "experiment_input": {
+    "source": "Randomly generated RNA sequences (and selected sequences for hardware runs); nearest-neighbor thermodynamic parameters (NNDB) used to compute quartet energies per Turner/Mathews rules",
+    "size": "Classical baseline: 10,000 random sequences length 15–60 (resulting QUBOs up to 327 variables and ~38,946 constraints). Quantum experiments: simulation instances across qubit counts 10–40 with 10 different sequences per qubit size; hardware experiments used specific sequences of lengths 25, 30, 30 and 42 nucleotides mapped to 26, 40, 50 and 80 qubits respectively.",
+    "preprocessing": "Sequence preprocessing enumerates allowed base pairs (AU, UA, CG, GC, GU, UG), constructs stacked-pair quartets x(i,j,i+1,j-1), builds sets Q (quartets), QC (crossing quartets), QS(q) (stackable quartets), QUA (quartets ending in UA), computes quartet MFE energies from nearest-neighbor parameters, and converts constraints into quadratic penalties to produce the QUBO."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "1) Preprocess RNA sequences to enumerate valid quartets and constraint sets (Q, QC, QS, QUA) and compute quartet energies using thermodynamic parameters.",
+      "2) Formulate quadratic binary optimization and transform constrained problem to a QUBO by adding penalty terms for crossing quartets and other penalties/rewards.",
+      "3) Use CPLEX to solve QUBO as classical baseline and store optimal energies/bitstrings.",
+      "4) Map QUBO to a problem Hamiltonian Hp for quantum optimization.",
+      "5) Select a hardware qubit subgraph via per-layer coupling fidelity tests and map logical qubits to physical qubits.",
+      "6) Build two-local variational ansatz (single-qubit Y rotations and native two-qubit gates) with p layers (p=1 for most hardware runs, p=2 in many simulations).",
+      "7) Use CVaR(α) as objective (α tuned; α=0.1 in many simulations, α=0.25 for hardware runs except offline training for 80-qubit used α=0.1) and NFT optimizer to update parameters sequentially (NFT evaluates 3 parameter settings per parameter update).",
+      "8) For each trial: run Niter optimization iterations (typical Niter ~100–200 in sim; hardware varied up to reported maxima), measure the state with Nshots (varied per experiment), compute CVaR from sampled energies, and feed back to optimizer. Repeat Ntrial independent restarts (Ntrial=10 in sims) to avoid local minima.",
+      "9) Apply minimal error mitigation on hardware: dynamical decoupling during idle times and M3 readout mitigation; transpile circuits at optimization level=3.",
+      "10) Evaluate final sampled bitstrings vs CPLEX baseline to compute success probability and optimality gap."
+    ],
+    "parameters_controlled": [
+      "Ansatz depth (p), CVaR α, number of shots, number of optimization iterations, number of independent trials, NFT evaluation per parameter (neval=3), qubit mapping selected via fidelity threshold"
+    ]
+  },
+  "experiment_output": {
+    "result_format": "Per-instance distributions of sampled bitstrings with associated energies and measurement probabilities",
+    "metrics_reported": [
+      "Success probability (psucc): fraction of independent trials that sampled the global-optimum bitstring found by CPLEX",
+      "Optimality gap (χ): relative percent difference between lowest sampled objective and CPLEX optimum (χ = |F_low − F_CPLEX|/|F_CPLEX| × 100%)",
+      "Distribution plots of measurement probabilities vs energy, counts of lowest-energy bitstring, and runtime/iteration counts",
+      "Comparison of CVaR-VQE results to CPLEX baseline energies/solutions"
+    ],
+    "baselines": "CPLEX classical solver optimal solutions and runtimes"
+  },
+  "experiment_parameters": {
+    "qubit_counts": [
+      10,
+      15,
+      20,
+      25,
+      30,
+      33,
+      36,
+      40,
+      42,
+      50,
+      80
+    ],
+    "ansatz": "two-local (single-qubit Y rotations + native 2-qubit gates)",
+    "layers_p": {
+      "simulations": 2,
+      "hardware": 1,
+      "offline_training_80_qubit": 2
+    },
+    "CVaR_alpha": {
+      "simulations": 0.1,
+      "hardware": 0.25,
+      "offline_80_qubit": 0.1
+    },
+    "optimizer": "NFT (Nakanishi-Fujii-Todo, sequential minimal optimizer)",
+    "NFT_neval": 3,
+    "Ntrial": {
+      "simulations": 10,
+      "hardware": "varied per instance (e.g., 8,8,5)"
+    },
+    "Niter": {
+      "simulations": "typically 100–200",
+      "hardware": "reported maxima per device (see Table I): e.g., up to 600 iterations for some runs"
+    },
+    "shots": {
+      "simulation": {
+        "10_qubit": 25,
+        "15_qubit": 1024,
+        ">=20_qubit": 8192
+      },
+      "hardware": {
+        "26_qubit": 28,
+        ">=40_qubit": 8192
+      }
+    },
+    "circuit_depth_transpiled": {
+      "range": "17–20 (depending on device and mapping)"
+    },
+    "two_qubit_gate_counts": {
+      "ibm_brisbane": 25,
+      "ibm_osaka": 39,
+      "ibm_torino": 49,
+      "ibm_torino_80_qubit_run": 158
+    },
+    "measurement_mitigation": "M3 (matrix-free measurement mitigation)",
+    "error_suppression": "Dynamical decoupling during idle periods",
+    "baseline_solver": "IBM ILOG CPLEX"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit MPS simulator",
+    "qpu_models": [
+      {
+        "name": "ibm_brisbane",
+        "type": "IBM Eagle-family processor (heavy-hex layout)",
+        "native_two_qubit_gate": "ECR",
+        "qubits_available": 26
+      },
+      {
+        "name": "ibm_osaka",
+        "type": "IBM Eagle-family processor (heavy-hex layout)",
+        "native_two_qubit_gate": "ECR",
+        "qubits_available": 40
+      },
+      {
+        "name": "ibm_torino",
+        "type": "IBM Heron (133-qubit tunable-coupler) processor",
+        "native_two_qubit_gate": "CZ",
+        "qubits_used_in_experiments": [
+          50,
+          80
+        ]
+      }
+    ],
+    "cloud_provider": "IBM Quantum"
+  },
+  "reproducibility_notes": "The paper describes the full methodological pipeline (QUBO formulation, quartet preprocessing, use of nearest-neighbor thermodynamic parameters, CVaR-VQE with NFT optimizer, ansatz and mitigation strategies) and names the software used (Qiskit, CPLEX). However, no public code repository or explicit experiment seeds, exact sequences for all runs, or detailed parameter files are provided in the paper text. Reproducing the results would require re-implementing the quartet-generation preprocessing, QUBO conversion (penalty values), the exact NFT/CVaR hyperparameters and random seeds, and access to the same IBM hardware models or equivalent. The use of standard tools (Qiskit, CPLEX, NN thermodynamic parameters) aids reproducibility but explicit artifacts are not provided in the preprint.",
+  "key_findings": [
+    "[supported] The authors formulated mRNA secondary structure prediction (including pseudoknot-capable models via quartet variables) as a QUBO and solved it with a CVaR-VQE variational hybrid algorithm on gate-based quantum processors.",
+    "[supported] Noise-free MPS simulations of CVaR-VQE (two-local ansatz, p=2, CVaR α=0.1) for problems of 10–40 qubits produced high success probabilities (average ~0.4–1.0 across instances) and average optimality gaps under ~20%.",
+    "[supported] Hardware experiments on IBM Eagle/Heron-family devices for 26-, 40-, and 50-qubit instances produced nontrivial results: success probabilities ≥ ~0.38 and average optimality gaps ≤ ~34% using minimal error mitigation (dynamical decoupling and matrix-free measurement mitigation) and fixed-depth circuits.",
+    "[supported] An 80-qubit (42-nucleotide) run on ibm_torino (Heron) using circuit parameters optimized offline by MPS simulation sampled the optimal bitstring (matching the classical solver CPLEX) with measured probability ≈0.045.",
+    "[supported] Classical solver CPLEX solved instances with up to 327 variables and ~38,946 constraints in this dataset, but worst-case running time (measured) grows rapidly (box-plot suggests exponential scaling) with sequence length.",
+    "[supported] Using a CVaR objective (α < 1), NFT (sequential minimal) optimizer, and a hardware-efficient two-local ansatz produced robust convergence behavior that tolerated hardware noise in these experiments.",
+    "[supported] The authors used low-overhead error suppression/mitigation (Dynamical Decoupling and M3 readout mitigation) and circuit transpilation optimizations (Qiskit level 3) to obtain reliable outputs on noisy hardware for the studied instances.",
+    "[supported] The particular heavy-hex-layout circuits and shallow depths used remain classically simulatable (enabling offline parameter optimization via MPS), and the authors acknowledge this simulability.",
+    "[speculative] The paper claims that utility-scale quantum processors enable exploration of relatively large problem sizes for RNA folding and motivates further development — a forward-looking claim about future practical impact.",
+    "[speculative] The authors state (\"to the best of our knowledge\") that this is the first study to run RNA sequences up to 42 nucleotides on a gate-based quantum processor — a novelty claim that could be true but is presented as best-effort rather than proven exhaustive.",
+    "[speculative] The paper notes that scalability beyond ~100 qubits and whether variational schemes remain practical at that scale remain open questions requiring further research."
+  ],
+  "results_summary": "The authors demonstrate feasibility of formulating mRNA secondary structure prediction as a QUBO and solving it with CVaR-VQE on utility-scale, gate-based quantum hardware and simulators. Noise-free MPS simulations (10–40 qubits) yielded high success probabilities and low optimality gaps; hardware runs on IBM Eagle/Heron-family devices (26, 40, 50 qubits) produced the lowest-energy structures matching classical CPLEX results with moderate success probabilities (≥ ~0.38) and optimality gaps (≤ ~34%) using minimal error mitigation. An 80-qubit / 42-nucleotide instance run with offline-optimized parameters sampled the CPLEX-optimal bitstring with ~4.5% probability. The authors conclude that variational quantum algorithms can be executed end-to-end on current noisy hardware for these problem sizes, but the question of scalability beyond ~100 qubits remains open.",
+  "performance_claims": [
+    "Noise-free MPS CVaR-VQE (p=2, α=0.1): average success probability across problem sizes 10–40 qubits in range ~0.4–1.0; average optimality gap < ~20%.",
+    "Hardware CVaR-VQE runs (26, 40, 50 qubits): success probability per instance ≥ ~0.38; average optimality gap ≤ ~34%.",
+    "80-qubit (42-nucleotide) ibm_torino run (parameters optimized offline): optimal bitstring sampled with probability ≈ 0.045 (≈4.5%), matching CPLEX minimum energy of -140 for that instance.",
+    "CPLEX solving up to 327 variables and up to 38,946 constraints in their dataset; CPLEX found optimal solutions in seconds on instances they tested, but worst-case CPU time grows quickly (box-plot indicates rapid/exponential growth with sequence length).",
+    "Transpiled circuit depths used on hardware were in the range ~17–20 with two-qubit gate counts reported (e.g., 158 CZ gates for the 80-qubit circuit in the 42-nt instance).",
+    "NFT optimizer evaluates neval = 3 parameter sets per iteration; typical VQE convergence achieved in ~100–200 iterations in simulations; hardware runs used up to several hundred iterations depending on instance (see Table I)."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper demonstrates feasibility and matching of classical-optimal solutions (CPLEX) on quantum hardware for moderate problem sizes, but it does not claim or demonstrate a quantum advantage (no runtime or quality improvement over classical solvers is shown). The experiments emphasize feasibility and scalability exploration rather than superiority to classical methods.",
+  "limitations": [
+    "Scalability to larger problem sizes (>100 qubits) remains an open question",
+    "Performance declines as problem size increases (declining success probability and larger optimality gaps)",
+    "Use of fixed-depth (shallow) circuits (constant p), which likely limits expressivity and solution quality",
+    "Only minimal error mitigation was applied; more powerful schemes (e.g., ZNE, PEC) were not used",
+    "The 80-qubit experiment used offline (classical) parameter optimization — the optimization step was not performed on-hardware for that instance",
+    "MPS (matrix-product-state) simulations are limited by entanglement growth, restricting simulation to shallow-depth circuits",
+    "Hardware experiments were limited in scope (e.g., typically one sequence per problem size on hardware), limiting statistical generality of hardware results",
+    "Classical optimizers (e.g., NFT) can get stuck in local minima, requiring multiple independent trials to obtain good solutions",
+    "The number of quantum circuit executions (Ncircuit) can be large (driven by 1/psucc, Niter, Nshots) and its scaling with problem size is uncertain",
+    "[inferred] Heavy-hex lattice circuits at the employed depths are classically simulatable, so these experiments do not demonstrate a clear quantum advantage",
+    "[inferred] The QUBO/formulation and experiments focused on a particular modeling choice (quartets, rewards/penalties); alternative formulations or more complex motifs (e.g., full treatment of pseudoknots or other biological constraints) were not fully explored and may be challenging",
+    "[inferred] Limited exploration of ansatz design, optimizer choices, and objective variants beyond the specific two-local + NFT + CVaR(α) configuration used"
+  ],
+  "open_questions": [
+    "Can the variational quantum approach (CVaR-VQE with two-local ansatz and NFT) scale favorably to problem sizes substantially beyond those tested (e.g., >100 qubits)?",
+    "Do the critical factors determining total circuit executions (1/psucc, Niter, Nshots) scale exponentially with the number of qubits, or can they be controlled algorithmically?",
+    "To what extent will increasing ansatz depth (number of layers p) improve solution quality versus increasing noise/complexity in the hardware context?",
+    "What is the optimal choice of the CVaR parameter α for different problem sizes and noise regimes, and can adaptive/advanced CVaR schemes yield systematic improvements?",
+    "How much can more advanced error mitigation techniques (e.g., zero-noise extrapolation, probabilistic error cancellation) improve results for these problems when combined with CVaR objectives?",
+    "Can improved mapping/qubit-selection and calibration strategies materially improve success probabilities on real devices for larger problems?",
+    "Can quantum algorithms meaningfully outperform classical solvers on RNA secondary structure prediction in regimes beyond classical simulatability (i.e., demonstrate practical quantum advantage)?",
+    "How well do the chosen QUBO formulation and the quartet-variable representation generalize to sequences with biologically important features such as pseudoknots or to much longer mRNA sequences?",
+    "What are the trade-offs between doing full on-hardware parameter optimization versus offline/classical parameter optimization (re: scalability, fidelity, and practicality)?"
+  ],
+  "future_work": [
+    "Investigate increasing the number of layers in the ansatz to improve performance",
+    "Optimize the choice of the CVaR parameter α (and possibly use adaptive α strategies)",
+    "Incorporate and test other recent advancements in CVaR-based objectives",
+    "Explore more advanced optimization techniques and algorithmic variants beyond NFT and two-local ansatz",
+    "Study the interplay of CVaR objectives with noise and error mitigation (including examining bounds and robustness in noisy regimes)",
+    "Examine improved error mitigation strategies and their impact on variational optimization performance",
+    "Continue research into scaling behavior and feasibility for larger problem instances and different hardware topologies"
+  ],
+  "topic_tags": [],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "low",
+  "relevance_phase3": "medium",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Demonstrates CVaR-VQE executed on utility-scale IBM processors (up to 80 qubits executed) with minimal error mitigation and reports hardware results that match classical CPLEX solutions for small RNA instances.",
+    "#idea:hybrid-approach — Uses a hybrid VQE workflow (CVaR objective, NFT classical optimizer) with classical preprocessing (QUBO formulation, CPLEX baseline) and classical offline training for the largest run, illustrating a practical quantum-classical pipeline.",
+    "#limitation:qubit-count — Problem mapping (enumeration of quartet variables) leads to QUBOs with hundreds of variables in classical baselines; hardware experiments are limited to relatively small logical problem instances (10–50 qubits for in-hardware training, with 80-qubit execution relying on offline-trained parameters).",
+    "#limitation:noise — Results rely on aggressive transpilation, minimal mitigation (dynamical decoupling, M3), and short-depth circuits (p=1 on hardware), indicating sensitivity to hardware noise and limited circuit depth.",
+    "#limitation:simulation-only — Many parameter training and larger-instance optimizations were performed in noise-free MPS simulation; the largest 80-qubit execution used parameters trained offline in simulator rather than end-to-end on hardware.",
+    "#limitation:data-encoding — The QUBO formulation requires enumeration of 'quartet' variables and many penalty constraints (up to tens of thousands in large classical baselines), implying substantial classical pre-processing and growth in logical qubit requirements."
+  ],
+  "contradictions": [
+    "The paper demonstrates matching classical solutions on small instances yet relies on simulator-based parameter training for the largest (80-qubit) execution and uses minimal mitigation and p=1 hardware circuits — this undermines claims of practical scalability to larger, real-world problems and contradicts any implication of near-term large-scale applicability (contradiction:scalability)."
+  ]
+}

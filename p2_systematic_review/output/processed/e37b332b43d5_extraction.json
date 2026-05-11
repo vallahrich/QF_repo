@@ -1,0 +1,212 @@
+{
+  "source_type": "industry-whitepaper",
+  "source_type_confidence": "medium",
+  "reasoning": "Authored by BNP Paribas staff with company affiliation and corporate emails, contains applied methods, implementation details and experiments but no journal or conference venue; tone and structure resemble an applied industry report/whitepaper rather than a peer-reviewed academic article.",
+  "title": "Algorithm for pricing Asian-style FX options on a gate-based quantum computer",
+  "authors": [
+    "Rafał Pracht",
+    "Adam Ryterski",
+    "Julia Plewa",
+    "Marek Stefaniak"
+  ],
+  "year": "",
+  "journal_or_venue": "BNP Paribas (industry whitepaper)",
+  "doi": "",
+  "abstract_summary": "Presents a gate-based quantum Monte Carlo algorithm to price European-style Asian FX options (EUR/PLN) under a time-dependent Black–Scholes–Merton/local volatility framework. Introduces a novel distribution-loading approach allowing local volatility, a QFT-based addition to compute arithmetic means without extra ancilla qubits, implementation of the payoff mapping and use of amplitude estimation, and provides simulator-based comparisons and error analysis against classical Monte Carlo, noting challenges for deep out-of-the-money cases and instability in amplitude estimation.",
+  "methodology_description": "The authors design and evaluate a gate-based quantum algorithm to price European-style Asian FX options under a Black–Scholes–Merton risk-neutral model with time-dependent rates and volatilities. They (1) generate a discrete representation of the joint distribution of the underlying exchange-rate values at M = 4 sampling times by computing lognormal transition PDFs (closed-form step distributions derived from the SDE) and mapping continuous prices into 2^N bins per time point (N qubits per time point); (2) load the joint probability amplitudes into a quantum register using an isometry-based distribution-loading procedure (Qiskit implementation, following Grover–Rudolph / Iten et al. style isometries); (3) compute the arithmetic average of the discretized path prices using a QFT-based adder (Draper-style addition in the Fourier domain) while avoiding additional ancillary qubits by allocating ˜N = N + log2(M) qubits for the sum; (4) compare the average against a fixed strike using a comparator built from a ripple-carry adder / two’s-complement trick (Cuccaro-style adder and ripple-carry carry logic tuned to the known strike); (5) encode the option payoff into an ancilla qubit with controlled Ry rotations (mapping payoff values into sin^2-rotations after linear rescaling to [−1,1]) and (6) extract the resulting amplitude (probability of ancilla |1>) via amplitude estimation. They evaluate three operational stages: (A) classical evaluation on the discretized grid (discretization error only), (B) quantum circuit evaluation using a statevector simulator (discretization + payoff-encoding errors), and (C) full pipeline including QAE (additional QAE sampling/estimation error). They compare outputs to a classical Monte Carlo baseline (Euler–Maruyama / Monte Carlo pricing) across multiple strikes and vary algorithmic parameters (N, c scaling for the sine approximation, and QAE variant/parameters) to analyze error sources.",
+  "algorithms_used": [
+    "Distribution loading via isometry (Grover–Rudolph / Iten et al. style)",
+    "Quantum Fourier Transform (QFT) based addition (Draper adder)",
+    "Ripple-carry comparator / two's complement compare (Cuccaro-style adder logic)",
+    "Controlled-Ry payoff encoding (sine mapping approximation)",
+    "Quantum Amplitude Estimation (QAE) and QPE-free variants: Iterative Amplitude Estimation (IAE), Maximum Likelihood Amplitude Estimation (MLAE), Faster Amplitude Estimation (FAE)",
+    "Classical Monte Carlo (Euler–Maruyama discretization)"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Experiments were performed on a Qiskit statevector simulator for circuit validation and on Qiskit's amplitude-estimation implementations for the QAE experiments. The financial model is a Black–Scholes–Merton SDE with time-dependent rd, rf, and sigma at four observation times. Primary experiments used M=4 time points and N=3 qubits per time point (also reported results with N=4). They compared three evaluation modes: classical MC on the discretized grid, quantum circuit evaluation using statevector access, and full pipeline using QAE (IAE chosen for main experiments).",
+  "dataset_used": "Synthetic EUR/PLN exchange-rate paths generated from a time-inhomogeneous Black–Scholes–Merton model. Parameters provided per time point (tj): tj = [90/365, 182/365, 274/365, 365/365]; rd = [2.79%, 3.383%, 3.596%, 3.661%]; rf = [−0.61%, −0.551%, −0.491%, −0.430%]; sigma = [6.036%, 6.275%, 6.146%, 6.607%]; S0 = Strike = 4.6265 for a baseline instance. The continuous distributions are discretized into bins over [low, high] = [mu − 3σ, mu + 3σ] with ∆ = (high − low)/(2^N − 1).",
+  "experiment_input": {
+    "source": "Simulated from analytic single-step lognormal transition PDFs derived from the Black–Scholes–Merton model (Algorithm 1 in paper).",
+    "size": "Joint grid of (2^N)^M discrete states; with example N=3 and M=4 this yields 8^4 = 4096 joint paths/entries enumerated and loaded as amplitudes.",
+    "preprocessing": "Continuous transition PDFs computed per step (lognormal with µ = exp((r−0.5σ)∆t + ln(S)), σstep = σ sqrt(∆t)). Mapped each continuous value to a bin midpoint via linear mapping using low/high = µ ± 3σ. Computed product probabilities p_{I1,...,IM} by sequentially evaluating step PDFs at the bin midpoints (Algorithm 2). Rescaled payoff values to [−1,1] before controlled-Ry encoding using a linear mapping with parameter c to control sine approximation error."
+  },
+  "experiment_process": [
+    "1) Generate per-step lognormal PDFs and compute joint discrete probabilities for all combinations of discretized bin midpoints (Algorithm 2).",
+    "2) Load joint amplitude state |ψ> = Σ sqrt(p_{I1,...,IM}) |I1>...|IM> into quantum register using isometry-based loading (Qiskit implementation).",
+    "3) Allocate ˜N = N + log2 M qubits for the running sum. Apply QFT to the target sum register and perform Draper-style controlled phase rotations from each input index register to add indices in the Fourier domain; inverse-QFT to obtain summed index (arithmetic mean after dividing by M via bit-shift).",
+    "4) Map summed index to average price Sj = low + ˜∆ * j (˜∆ = ∆/M).",
+    "5) Apply comparator circuit: compute two's complement of strike and use ripple-carry logic to set a comparator ancilla |c> = 1 iff average ≥ strike.",
+    "6) Encode payoff into a dedicated ancilla via controlled Ry rotations whose angles are functions of the rescaled payoff (sin^2 approximation); constants g0 and per-bin increments g(j) computed from scaling parameter c.",
+    "7) Use amplitude estimation to estimate the probability a = Pr(ancilla |1>) which equals expected payoff under discretized distribution. QAE implementations tested: IAE (selected for main runs), MLAE, FAE. IAE run parameters used: epsilon=0.001, alpha=0.05.",
+    "8) Post-process: map estimated amplitude back to option price using inverse of the rescaling transformation and discounting.",
+    "9) Baseline comparison vs classical Monte Carlo (Euler–Maruyama and Monte Carlo average) evaluated for multiple strike values; experiments also varied N (3 and 4) and scaling parameter c (0.05, 0.01) to probe discretization and payoff-encoding errors."
+  ],
+  "experiment_output": {
+    "format": "Numerical option price estimates (domestic currency units), reported per strike. For QAE runs they reported min/average/max across runs; for statevector runs exact amplitude-derived price; for classical MC a Monte Carlo price estimate.",
+    "metrics": "Absolute option price comparisons against classical Monte Carlo baseline, and analysis of error contributions (discretization error, payoff-sine-approximation error controlled by c, and QAE estimation variability).",
+    "baseline": "Classical Monte Carlo pricing (Euler–Maruyama discretization and Monte Carlo averaging) on the same discretized grid."
+  },
+  "experiment_parameters": {
+    "M_time_points": 4,
+    "time_points_tj": [
+      "90/365",
+      "182/365",
+      "274/365",
+      "365/365"
+    ],
+    "rd_tj_percent": [
+      2.79,
+      3.383,
+      3.596,
+      3.661
+    ],
+    "rf_tj_percent": [
+      -0.61,
+      -0.551,
+      -0.491,
+      -0.43
+    ],
+    "sigma_tj_percent": [
+      6.036,
+      6.275,
+      6.146,
+      6.607
+    ],
+    "S0": 4.6265,
+    "strikes_tested": [
+      4.1639,
+      4.3952,
+      4.6265,
+      4.8578,
+      5.0892
+    ],
+    "N_qubits_per_time": [
+      3,
+      4
+    ],
+    "sum_register_qubits_tildeN": "˜N = N + log2(M) (used ˜N = N+2 in examples)",
+    "distribution_range": {
+      "low": 3.941,
+      "high": 5.949,
+      "construction_rule": "low = µ − 3σ, high = µ + 3σ (µ and σ from maturity marginal)"
+    },
+    "bin_width_formula": "∆ = (high − low) / (2^N − 1)",
+    "joint_state_size_example": "with N=3, M=4: 8^4 = 4096 joint entries",
+    "payoff_scaling_parameter_c": [
+      0.05,
+      0.01
+    ],
+    "QAE_parameters": {
+      "method": "IAE (main)",
+      "epsilon": 0.001,
+      "alpha": 0.05
+    },
+    "classical_method": "Euler–Maruyama single-step lognormal transitions; Monte Carlo aggregation"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit statevector simulator (used for exact amplitude evaluation and circuit validation)",
+    "qae_implementations": "Qiskit implementations of IAE, MLAE, FAE (IAE used for main experiments)",
+    "quantum_hardware": "No physical QPU used / no cloud QPU reported"
+  },
+  "reproducibility_notes": "Paper provides detailed algorithmic descriptions, parameter lists (time points, rd/rf/sigma per time point, S0, strikes, N, M, low/high mapping, and QAE parameters), and references to specific implementations (Qiskit, Iten et al. isometry loading, Draper adder, Cuccaro ripple-carry adder). However, the authors do not publish code, circuit circuits/ANSATZ files, random seeds, classical Monte Carlo sample sizes, or precise implementation scripts. Distribution-loading relies on isometry routines in Qiskit but exact invocation, Qiskit versions, and full circuit gate counts/depths are not provided. Reproducibility is therefore partial: sufficient detail to reimplement the pipeline exists, but exact replication would require choices not fully specified (e.g., number of classical Monte Carlo paths, random seeds, shot counts for QAE runs, and complete circuit transpilation settings).",
+  "key_findings": [
+    "[supported] A full gate-model quantum algorithm was implemented (in simulation) for pricing European-style Asian FX options, covering distribution loading, arithmetic-mean calculation, comparator, payoff encoding and use of amplitude estimation.",
+    "[speculative] The distribution-loading approach is presented as allowing extension to a local volatility model (they implement time-dependent r(t), σ(t) and claim this enables local-volatility extension).",
+    "[supported] The arithmetic mean over the sampled times is computed using a QFT-based adder that avoids additional ancilla qubits for the sum register.",
+    "[speculative] The authors claim novelty: first paper to price Asian options using four time points and without ancilla qubits (due to the QFT adder).",
+    "[supported] Statevector-simulation results (their quantum circuit up to the payoff encoding) match classical Monte Carlo results reasonably well for most strikes tested.",
+    "[supported] Deep out-of-the-money strikes produced larger discrepancies between the quantum-simulated (statevector) results and classical Monte Carlo; these instances are harder to price with their discretization / approximation choices.",
+    "[supported] The sine-based mapping used to encode payoff values (sin^2 approximation) is a nontrivial source of approximation error; reducing the mapping parameter c reduces this error empirically in simulation.",
+    "[supported] Increasing the discretization resolution (number of qubits per marginal) did not always reduce total error for deep OTM options in their experiments — an empirical observation that they flag for further research.",
+    "[supported] Quantum Amplitude Estimation (QAE) methods tested (IAE, MLAE, FAE via Qiskit) were unstable in their experiments; Iterative Amplitude Estimation (IAE) was identified as the most promising among those tried.",
+    "[speculative] The authors assert that the QFT-based adder 'meets the challenge' for practical applications requiring many averaging points (e.g., ~300), but no empirical scaling study on that size is provided.",
+    "[supported] All experiments reported were done in simulation (statevector and QAE simulators); no hardware demonstrations or empirical runtime/speedup were shown.",
+    "[speculative] The paper restates the widely-cited theoretical quadratic speed-up of (quantum) amplitude-estimation-based Monte Carlo over classical Monte Carlo from prior literature but does not demonstrate a practical speedup in this work."
+  ],
+  "results_summary": "The authors present and simulate a gate-model quantum algorithm for pricing arithmetic-average (Asian) FX options in a time-dependent Black–Scholes framework. They implement distribution loading for multiple observation times, a QFT-based adder to compute the arithmetic mean without extra ancilla sum qubits, a comparator and payoff-encoding circuit, and use amplitude estimation routines to extract expectation values. In statevector simulations the quantum circuit (up to payoff encoding) produces option values close to classical Monte Carlo for several strikes; discrepancies arise for deep out-of-the-money strikes. The sine-based payoff encoding and the amplitude estimation stage were identified as important error sources; reducing the mapping parameter c improves the payoff approximation, while QAE produced unstable estimates in their experiments. The work is presented as extensible to local volatility models, and the QFT adder is proposed as favorable for higher-dimensional sums, but those extensions are speculative without further empirical scaling results.",
+  "performance_claims": [
+    "For strike 4.1639: Classical MC = 554,135.97; Discretization = 553,930.15; Statevector = 554,053.05; QAE = 589,825.94 (Table 1).",
+    "For strike 4.3952: Classical MC = 333,190.20; Discretization = 332,950.70; Statevector = 333,259.19; QAE = 364,011.45 (Table 1).",
+    "For strike 4.6265 (ATM): Classical MC = 140,896.63; Discretization = 140,640.47; Statevector = 141,219.63; QAE = 142,442.56 (Table 1).",
+    "For strike 4.8578: Classical MC = 32,870.59; Discretization = 31,701.01; Statevector = 32,424.13; QAE = 94,697.46 (Table 1).",
+    "For strike 5.0892 (deep OTM): Classical MC = 3,579.75; Discretization = 3,431.16; Statevector = 4,061.46; QAE = 27,998.40 (Table 1).",
+    "QAE variability (Table 3): For strike 4.1639 QAE Min/Avg/Max = 559,535.99 / 589,825.94 / 627,083.38; for 4.3952 = 321,729.64 / 364,011.45 / 430,522.03; for 4.6265 = 141,521.11 / 142,442.56 / 143,943.22; for 4.8578 = 44,926.82 / 94,697.46 / 163,125.44; for 5.0892 = 15,685.70 / 27,998.40 / 45,607.69.",
+    "Effect of parameters for strike 5.0892 (Table 2): With c=0.05, N=3 => Statevector = 4,061.46; c=0.05, N=4 => Statevector = 3,778.65; c=0.01, N=3 => 3,456.39; c=0.01, N=4 => 3,250.31 (Classical MC = 3,579.75)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper references the standard theoretical quadratic speed-up of amplitude-estimation-based Quantum Monte Carlo from prior literature but does not empirically demonstrate runtime, complexity or hardware advantage in this work. The experiments are simulation-based and do not show an actual, practical quantum speed-up.",
+  "limitations": [
+    "Discretization error introduced by mapping continuous asset distributions to a finite grid (distribution loading / interval mapping).",
+    "Payoff calculation error stemming from the sin^2 approximation used to encode payoffs as rotation angles and the need to tune the parameter c (trade-off between approximation quality and amplitude-estimation sensitivity).",
+    "Instability and limited accuracy of Quantum Amplitude Estimation (QAE) in the experiments; QAE is computationally expensive and requires additional auxiliary qubits to improve accuracy.",
+    "Observed poor accuracy for deep out-of-the-money options (the quantum result deviates notably from classical Monte Carlo for deep OTM strikes).",
+    "Dependence on statevector simulation to obtain exact probabilities in parts of the evaluation (the full pipeline with amplitude estimation on realistic hardware was not solved to production quality).",
+    "[inferred] Limited qubit counts and circuit depth constraints in current hardware—experiments use small N (e.g., N=3) which constrains discretization resolution and practical applicability.",
+    "[inferred] Scalability and resource requirements for realistic problems (e.g., hundreds of averaging time points typical in practice) remain unproven: while a QFT-based adder is used to avoid ancillas, the gate count and depth for large M and high precision are not demonstrated.",
+    "[inferred] Noisy, real-device effects and error mitigation were not addressed (experiments appear to be on simulators), so feasibility on NISQ hardware is unclear.",
+    "[inferred] The method hinges on model assumptions (Black–Scholes–Merton with deterministic/local volatility terms); potential model risk and extension to more complex dynamics (stochastic volatility, jumps) are not demonstrated."
+  ],
+  "open_questions": [
+    "Why does increasing the number of qubits N (finer discretization) sometimes increase error for deep out-of-the-money options?",
+    "How can the instability and large variance of QAE-based probability estimates be reduced in practice (on simulators and real hardware)?",
+    "How to choose and tune the sin^2 mapping parameter c to balance approximation error and amplitude-estimation sensitivity robustly across strikes and market regimes?",
+    "What are the concrete resource (qubit, gate-depth) requirements to scale this algorithm to realistic production settings (e.g., ~300 averaging points) while maintaining accuracy?",
+    "How will realistic hardware noise affect the overall error profile (discretization, payoff mapping, QAE) and what error-mitigation strategies are required?",
+    "Can the approach be generalized and validated for more realistic asset dynamics (stochastic volatility, jumps) and for other payoff specifications commonly used in FX markets?",
+    "Which QAE variant (IAE, MLAE, FAE or others) or hybrid classical–quantum estimation strategy offers the best trade-off between accuracy, circuit depth, and variance for option pricing workloads?",
+    "What is the end-to-end performance and cost (time-to-solution, wall-clock, and monetary) compared to optimized classical methods when accounting for quantum overheads and required precision?",
+    "How to integrate variance-reduction techniques (classical or quantum) into the Quantum Monte Carlo framework effectively for derivative pricing?"
+  ],
+  "future_work": [
+    "Investigate why the algorithm performs poorly for deep out-of-the-money options and develop fixes or mitigations.",
+    "Continue research to improve and stabilize Quantum Amplitude Estimation algorithms within this pricing pipeline.",
+    "Explore tuning strategies for the payoff-encoding parameter (c) to reduce approximation error without amplifying amplitude-estimation sensitivity.",
+    "Extend and benchmark the algorithm toward practical deployments in financial institutions (scaling, resource estimation, and integration).",
+    "Increase discretization resolution (more qubits) and study the effect on accuracy and resource use.",
+    "Study scaling to many averaging points (e.g., ~300) and validate the QFT-based summation approach for larger M.",
+    "Move experimental evaluation from simulators to real quantum hardware, including assessment and mitigation of noise effects."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "qft-phase-estimation",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Use classical preprocessing to compute per-step lognormal PDFs and joint discrete probabilities, then load those amplitudes into a quantum register via isometry-based distribution loading.",
+    "#idea:quantum-advantage — Use Quantum Amplitude Estimation (and QAE variants like IAE/MLAE/FAE) to estimate expected payoff potentially offering quadratic sample complexity improvement over classical Monte Carlo in principle.",
+    "#idea:hybrid-approach — Compute arithmetic path average on-qubit using a QFT-based Draper adder that avoids extra ancilla by allocating extra sum qubits (˜N = N + log2 M).",
+    "#idea:near-term-feasibility — Experiments on a statevector simulator with small instances (M=4, N=3/4) show feasibility at toy scale but highlight practical obstacles for realistic settings.",
+    "#idea:quantum-advantage — Payoff encoding via controlled-Ry rotations with sine^2 mapping and linear rescaling is used to map payoff to an ancilla amplitude for amplitude estimation.",
+    "#idea:hybrid-approach — Final price recovered by classical postprocessing (rescaling/inverse transform and discounting); classical baseline (Euler–Maruyama MC) used for comparative error analysis."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — Although amplitude estimation promises quadratic speedup, the paper shows simulator-based instability in QAE and significant discretization / payoff-encoding errors that can negate practical advantages versus classical Monte Carlo for realistic option settings.",
+    "contradiction:scalability — The approach requires discretizing each time step into 2^N bins and loading a joint (2^N)^M amplitude vector; the authors demonstrate only very small instances (N=3,4; M=4) and highlight exponential growth and qubit-count requirements that contradict some optimistic claims about near-term scalability of gate-based pricing algorithms."
+  ],
+  "has_limitations": null,
+  "limitation_tags": [
+    "limitation:qubit-count",
+    "limitation:data-encoding",
+    "limitation:simulation-only"
+  ]
+}

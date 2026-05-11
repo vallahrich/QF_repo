@@ -1,0 +1,190 @@
+---
+aliases:
+- 'CircuitHunt: Automated Quantum Circuit Screening for Superior Credit-Card Fraud
+  Detection'
+- CircuitHunt Automated Quantum Circuit
+authors:
+- Nouhaila Innan
+- Akshat Singh
+- Muhammad Shafique
+auto_detected: true
+classification: ''
+contradiction_flags:
+- contradiction:classical-vs-quantum
+- contradiction:scalability
+doi: ''
+evaluation_type: simulator
+evidence_type: ''
+has_quantitative_results: true
+idea_tags:
+- idea:quantum-advantage
+- idea:near-term-feasibility
+- idea:hybrid-approach
+journal_or_venue: arXiv:2508.21366 (arXiv preprint)
+methodology_tags:
+- variational-nisq
+- quantum-ml
+- hybrid-quantum-classical
+paper_type: ''
+quantum_advantage_claim: speculative
+related_papers: []
+relevance_phase1: high
+relevance_phase3: high
+source_type: preprint
+source_type_confidence: high
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/fraud-detection
+- topic/quantum-ml-finance
+- method/variational-nisq
+- method/quantum-ml
+- method/hybrid-quantum-classical
+- idea/quantum-advantage
+- idea/near-term-feasibility
+- idea/hybrid-approach
+- contradiction/classical-vs-quantum
+- contradiction/scalability
+title: 'CircuitHunt: Automated Quantum Circuit Screening for Superior Credit-Card
+  Fraud Detection'
+topic_tags:
+- fraud-detection
+- quantum-ml-finance
+year: '2025'
+zotero_key: ''
+---
+
+## Abstract summary
+The paper presents CircuitHunt, an automated pipeline for selecting high-performing parameterized quantum circuits from the KetGPT dataset for hybrid quantum-classical models applied to credit-card fraud detection. The method applies hardware- and parameter-aware filtering, integrates each candidate into a standardized QNN with a learnable residual skip connection, and uses rapid validation-driven training (macro-F1 checkpointing) to pick a top circuit which, when fully trained, achieves ~97% test accuracy and strong macro-F1 performance on a rebalanced fraud dataset.
+## Methodology
+The authors propose CircuitHunt, an automated pipeline to discover high-performing parameterized quantum circuits (PQCs) from the KetGPT dataset for a binary credit-card fraud detection task. The workflow consists of three stages: (1) Data preprocessing: they apply SMOTE to address extreme class imbalance, Min-Max scale features to [0, π], and split the data via stratified sampling into train/validation/test sets (60/10/30). (2) Quantum circuit filtering: they load 1,000+ circuits from the KetGPT dataset and filter candidates by hardware and learning constraints — qubit budget (3–10 qubits), presence of at least one parameterized gate (RY, RZ, U2), a max trainable parameter budget (≤30), and a basic execution validation (finite Pauli-Z expectation values at zero parameters). (3) Candidate evaluation & selection: each filtered circuit is embedded in a fixed hybrid quantum-classical architecture (a pre-quantum classical encoder Linear(28→64)→ReLU→Linear(64→n), angle/rotation encoding into n qubits, the candidate KetGPT PQC followed by entangling CNOT chain, measurement of Pauli-Z on each qubit, a learnable scalar residual skip zres = zquantum + α·zclassical, and a post-quantum MLP Linear(n→16)→ReLU→Linear(16→1) with sigmoid) and trained briefly (Tshort = 5 epochs) using Adam (LR=0.01) with binary cross entropy loss. Validation macro-F1 is used as the selection criterion; the top circuit (index #221: 6 qubits, 9 trainable parameters) is then re-trained from scratch for Tfull = 20 epochs and evaluated on the held-out test set. Models are simulated with PennyLane default.qubit via PyTorch-compatible QNodes on a local Apple M3 machine. Ablation studies (removing the learnable residual skip) and comparisons against several manually designed QML baselines are reported using accuracy, precision, recall, macro-F1 and ROC-AUC metrics.
+
+**Algorithms used:** Hybrid Quantum Neural Network (HQNN), Variational / Parameterized Quantum Circuit (VQC / PQC), SMOTE (Synthetic Minority Oversampling Technique), Adam optimizer
+**Frameworks:** PennyLane, PyTorch
+
+**Experimental setup:** Local MacBook Air (Model Mac15,13) with Apple M3 chip (8-core CPU: 4 performance + 4 efficiency cores), 16 GB RAM. Quantum simulation via PennyLane default.qubit; QNodes integrated as PyTorch-compatible nodes.
+
+**Dataset:** Kaggle Credit Card Fraud dataset (original highly imbalanced dataset with 28 PCA-transformed features). The authors constructed a balanced dataset using SMOTE and report 10,000 samples per class (after preprocessing/selection).
+## Experiment details
+### Input
+{'source': 'Kaggle Credit Card Fraud dataset (https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud/data)', 'original_features': 28, 'class_imbalance': 'Fraud ~1% originally', 'post_processing_size': 'Samples per class reported as 10,000 (balanced via SMOTE then equal sampling)', 'preprocessing_steps': ['Apply SMOTE to increase minority class representation', 'Min-Max scale features to [0, π]', 'Stratified split into train/val/test (60/10/30)']}
+
+### Process
+{'pipeline_steps': ['Load KetGPT circuits and filter by qubit count (3–10), parameterized gate presence, and trainable parameter budget (≤30).', 'Validate execution of each candidate circuit with zero-initialized parameters (finite Pauli-Z expectation values).', 'For each surviving circuit, construct a standardized hybrid model: classical pre-encoder → angle encoding → candidate PQC → entangling CNOT chain → measure Z on each qubit → learnable residual add with classical latent → post-quantum MLP → sigmoid output.', 'Train each hybrid model for Tshort = 5 epochs using Adam (LR=0.01), batch size 32, BCEWithLogits loss; monitor validation macro-F1 and checkpoint best-performing circuit per qubit width.', 'Select circuit maximizing validation macro-F1; re-train selected circuit for Tfull = 20 epochs and evaluate on test set.'], 'selection_criterion': 'Validation macro-F1 (macro average of F1 for fraud and non-fraud)', 'iterations': 'Each candidate circuit trained independently for 5 epochs during search; top circuit trained for 20 epochs.', 'embedding_details': {'data_encoding': 'Angle encoding (RX or similar rotations)', 'parameterized_gates_considered': ['RY(θ)', 'RZ(θ)', 'U2(φ, λ)'], 'entanglement': 'Linear chain of CNOTs', 'residual': 'Learnable scalar α initialized to 0.1; zres = zquantum + α·zclassical'}}
+
+### Output
+{'metrics_reported': ['Accuracy', 'Precision', 'Recall', 'Macro-F1 score', 'ROC-AUC'], 'best_model_performance': {'selected_circuit_index': 221, 'qubits': 6, 'trainable_parameters': 9, 'test_accuracy': 0.97, 'macro_f1': 0.97, 'roc_auc': 0.9946}, 'baselines_compared': ['EstimatorQNN', 'QGNN', 'SQNN', 'QFDNN'], 'ablation_results': 'Removing the learnable residual skip connection reduced test accuracy/F1 (~0.70) and ROC-AUC to 0.7706'}
+
+### Parameters
+- qubit_range_searched: [3, 4, 5, 6, 7, 8, 9, 10]
+- selected_circuit_qubits: 6
+- selected_circuit_trainable_parameters: 9
+- trainable_parameters_max: 30
+- parameterized_gate_set: ['RY', 'RZ', 'U2']
+- encoding: Angle encoding (mapped from scaled features)
+- entanglement_pattern: Linear CNOT chain
+- optimizer: Adam
+- learning_rate: 0.01
+- loss_function: Binary Cross-Entropy with Logits
+- batch_size: 32
+- epochs_search: 5
+- epochs_final: 20
+- residual_initialization: 0.1
+- post_nn_hidden_size: 16
+- device: PennyLane default.qubit simulator (CPU)
+
+### Hardware
+{'local_machine': {'model': 'MacBook Air (Mac15,13)', 'cpu': 'Apple M3 (8-core: 4 performance + 4 efficiency)', 'ram': '16 GB'}, 'simulator': {'name': 'PennyLane default.qubit', 'integration': 'PyTorch-compatible QNode'}, 'qpu_provider': None, 'shots': 'Not applicable (state-vector expectation simulation)'}
+
+### Reproducibility
+Datasets referenced and publicly available: KetGPT dataset (PennyLane / Kaggle links cited) and the Kaggle Credit Card Fraud dataset. The paper specifies model architectures, hyperparameters, and the selected KetGPT circuit index (#221). Implementation uses PennyLane and PyTorch with default.qubit simulator. No dedicated code repository or release URL is provided in the manuscript; replication would require re-implementing the pipeline using the described settings and publicly available datasets.
+## Findings
+- [supported] CircuitHunt is an end-to-end automated pipeline that filters candidate circuits from the KetGPT dataset using qubit and parameter constraints, embeds each candidate into a standardized hybrid QNN, and selects the best circuit via short validation-guided training runs.
+- [supported] The CircuitHunt-selected circuit (KetGPT index #221) uses 6 qubits and 9 trainable parameters and, when fully trained, achieves strong empirical performance on a (SMOTE-augmented) credit-card fraud detection benchmark: ~97% test accuracy, macro-F1 ≈ 0.97, and ROC-AUC ≈ 0.9946.
+- [supported] A learnable residual skip connection from the classical branch to the quantum output materially improves learning: removing it drops test-class metrics to ≈0.70 accuracy and ROC-AUC to 0.7706 in their ablation.
+- [supported] Preliminary analysis reported that only ~33% of manually designed or randomly initialized circuits produced meaningful gradients or converged (macro-F1 > 0.5), whereas over 85% of KetGPT-generated circuits were executable/trainable in their setup (with macro-F1 across candidates ranging 0.325–0.686).
+- [supported] Constraint-aware filtering (3–10 qubits, ≥1 trainable gate, ≤30 trainable parameters, execution validation) yields a tractable candidate set for empirical screening.
+- [supported] On their experimental setup (PennyLane default.qubit simulator on an Apple M3 laptop), the pipeline trains candidate circuits briefly (5 epochs) for selection and re-trains the chosen circuit for 20 epochs for final evaluation.
+- [supported] Authors report the approach outperforming several recent QML architectures (EstimatorQNN, QGNN, SQNN, QFDNN) on reported metrics for this fraud dataset.
+- [speculative] CircuitHunt reduces architecture search time from days to hours while maintaining performance (claimed speedup without quantified runtime baselines in the paper).
+- [speculative] The pipeline and automatically discovered circuits are positioned as broadly useful for real-world financial deployment; transferability and hardware-noise robustness are noted as open issues.
+- [speculative] Integrating classical design principles (e.g., residual connections) into hybrid QNNs generally improves optimization dynamics and representational depth across tasks beyond the presented benchmark.
+- [supported] The authors acknowledge limitations: computational expense when scaling filtering/validation, and that the evaluation was performed in simulation so hardware noise/resource constraints remain untested.
+
+**Results summary:** CircuitHunt is presented as an automated framework that filters realistic circuits from the KetGPT corpus under hardware- and parameter-aware constraints, embeds each candidate into a fixed hybrid classical-quantum neural architecture (with a learnable residual skip), and selects the best circuit by brief validation-guided training. In simulation on a SMOTE-augmented credit-card fraud dataset, the selected 6-qubit/9-parameter circuit attained ~97% test accuracy, macro-F1 ≈ 0.97, and ROC-AUC ≈ 0.9946. Ablation shows the residual skip connection is important for optimization: removing it degrades performance to ~70% accuracy/AUC 0.7706. The paper reports that KetGPT circuits are substantially more trainable than a small set of manual/random designs in their preliminary analysis. The authors claim faster architecture search (days → hours) and better performance than several reported QML baselines, while noting computational scaling and hardware-noise evaluation remain open challenges.
+
+**Performance claims:**
+- CircuitHunt-selected model: test accuracy = 0.97, macro-F1 ≈ 0.97, ROC-AUC = 0.9946; per-class precision/recall ≈ 0.969–0.970.
+- Ablated model without residual skip connection: per-class precision/recall/accuracy ≈ 0.70; ROC-AUC = 0.7706.
+- Preliminary circuit trainability: only 33% of manually designed or randomly initialized circuits produced meaningful gradients or converged (macro-F1 > 0.5), while >85% of KetGPT-generated circuits were trainable/executable; KetGPT candidate macro-F1 ranged from 0.325 to 0.686.
+- Filtering constraints applied: qubit count between 3 and 10, at least one trainable gate, and ≤30 trainable parameters.
+- Training regimen used for selection: short training Tshort = 5 epochs (initial selection), final training Tfull = 20 epochs; optimizer Adam with learning rate 0.01; batch size 32; BCE-with-logits loss.
+## Quantum advantage claim
+**Classification:** speculative
+
+The paper argues that hybrid QNNs and automatically discovered PQCs can leverage quantum representational capacity to improve classification on a fraud detection benchmark and demonstrates strong empirical results in simulation. However, it does not present a provable or experimentally demonstrated computational or asymptotic quantum advantage over classical methods: results are simulation-based, rely on classical preprocessing (PCA, SMOTE, classical encoder), and compare only to other QML architectures rather than classical baselines or complexity-theoretic metrics. Thus any claim of quantum advantage remains speculative.
+## Limitations
+- The filtering and validation stages are computationally expensive, especially when scaling to larger architectures or datasets (author-stated).
+- The evaluation is performed in simulation; hardware noise and real-device resource limitations may affect real-world deployment (author-stated).
+- The transferability of the selected circuit to other domains or datasets is not guaranteed and requires further investigation (author-stated).
+- [inferred] Experiments were executed on a single MacBook Air using PennyLane's default.qubit simulator, implying limited compute resources that may have constrained the scale and breadth of the search.
+- [inferred] The pipeline enforces strict budget constraints (3–10 qubits, ≤30 trainable parameters), which restricts the search space and may exclude higher-capacity circuits that could perform better.
+- [inferred] The short screening training regime (Tshort = 5 epochs) could prematurely discard circuits that require longer training to demonstrate competitive performance.
+- [inferred] The dataset preprocessing (use of SMOTE and selecting equal number of samples per class) produces an artificially balanced dataset that may not reflect real-world, highly imbalanced operational distributions and could bias performance estimates.
+- [inferred] Evaluation is reported for a single dataset (credit card fraud) and a single selected circuit (KetGPT index #221), limiting claims about generality across datasets, tasks, or circuit samples.
+- [inferred] Reliance on a single circuit source (KetGPT) and a single encoding/entanglement scheme limits exploration of circuit design modalities and may bias outcomes to properties of that dataset.
+- [inferred] Model selection is driven solely by validation macro-F1; other objectives important in fraud detection (e.g., maximizing recall for fraud, cost-sensitive metrics) were not explicitly optimized.
+- [inferred] Comparative results against other QML architectures may not be directly comparable due to differences in data preprocessing, balancing, hyperparameters, and evaluation protocols.
+- [inferred] Limited ablation: the paper investigates the impact of removing the residual skip connection but does not comprehensively ablate other design choices (e.g., encoder type, entangling strategy, parameter budgets).
+- [inferred] No explicit noise-aware or hardware-aware filtering was incorporated, so selected circuits may perform poorly under realistic noisy hardware constraints.
+## Open questions
+- How well does CircuitHunt scale to much larger circuit libraries, higher qubit counts, and larger datasets while remaining computationally feasible?
+- How robust are the selected circuits when executed on real quantum hardware with noise, limited connectivity, and finite shot budgets?
+- To what extent do circuits selected by CircuitHunt transfer to other datasets, tasks, or domains beyond the evaluated credit-card fraud dataset?
+- Does the use of SMOTE and artificial balancing materially change the types of circuits favored by CircuitHunt compared to training on naturally imbalanced data or using alternative imbalance-handling strategies?
+- How sensitive are selection outcomes to the screening protocol choices (e.g., Tshort length, optimizer, learning rate, batch size) and to random initialization?
+- Would expanding or changing the filtering constraints (qubit/parameter budgets, permitted gate sets) lead to substantially different and potentially better-performing circuits?
+- Are there alternative validation or multi-objective criteria (e.g., cost-sensitive loss, precision/recall trade-offs, latency or resource usage) that should be used for circuit selection in operational fraud-detection systems?
+- How reproducible are results across different KetGPT circuit samples, different versions of circuit-generation datasets, or different random seeds?
+- Can CircuitHunt be adapted to incorporate hardware-aware metrics (noise resilience, connectivity mapping) during screening to improve real-device performance?
+- What are the computational tradeoffs between exhaustive empirical screening (as done here) and more guided quantum architecture search methods (e.g., differentiable NAS, reinforcement learning) in practical deployments?
+
+**Future work:**
+- Addressing computational scalability of the pipeline to enable broader applicability (author-stated).
+- Improving hardware robustness and investigating real-device deployment to account for noise and resource limitations (author-stated).
+- Further investigation into the transferability of selected circuits to other domains and datasets (author-stated).
+## Key ideas
+- #idea:quantum-advantage — CircuitHunt automatically searches a KetGPT corpus of PQCs and selects a 6-qubit, 9-parameter circuit that achieves ~97% test accuracy and macro-F1 ≈0.97 (ROC-AUC ≈0.9946) on a SMOTE-balanced credit-card fraud dataset.
+- #idea:hybrid-approach — Uses a standardized hybrid architecture: classical encoder → angle encoding → candidate PQC (variational) → linear CNOT entanglement → measured Z outputs + learnable scalar residual skip → post-quantum MLP, demonstrating practical integration of classical pre/post-processing with PQCs.
+- #idea:near-term-feasibility — Focuses on NISQ-scale circuits (3–10 qubits, ≤30 trainable parameters) and an automated filtering pipeline that enforces hardware- and parameter-aware constraints to find compact PQCs suitable for near-term devices.
+- #limitation:simulation-only — All experiments run on PennyLane default.qubit state-vector simulator on a local Apple M3 CPU; no noisy simulator or real QPU runs are reported.
+- #limitation:qubit-count — The search is explicitly limited to small qubit budgets (3–10 qubits) and selected circuits have very few trainable parameters (selected: 6 qubits, 9 parameters), limiting claims about larger-scale applicability.
+- #limitation:noise — No noise modelling or error mitigation is reported, so performance may not transfer to real noisy hardware.
+- #limitation:data-encoding — Features are angle-encoded after a classical encoder; dataset preprocessing (SMOTE to 10k samples/class) and the classical encoder may substantially affect apparent quantum-model performance and obscure encoding costs.
+- #limitation:no-empirical-validation — While quantitative metrics and ablations are provided, there is no QPU-based empirical validation; comparisons appear limited to other quantum baselines rather than strong classical baselines.
+## Contradictions
+- The paper asserts superior performance of the selected PQC but comparisons are primarily against other quantum QNN baselines (EstimatorQNN, QGNN, SQNN, QFDNN) rather than standard classical ML baselines; this weakens claims of a quantum advantage (contradiction:classical-vs-quantum).
+- The work promotes near-term applicability (NISQ feasibility) by restricting circuits to 3–10 qubits, yet evaluation is performed on an ideal state-vector simulator with no noise modelling and small-scale problems, which contradicts strong claims about practical deployment on real hardware (contradiction:scalability).
+- High reported metrics are obtained on a heavily rebalanced dataset created via SMOTE (10,000 samples per class); synthetic oversampling and potential issues (e.g., information leakage or optimistic evaluation on synthetic data) may inflate performance and conflict with claims of robust real-world superiority.
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

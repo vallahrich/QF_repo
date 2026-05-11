@@ -1,0 +1,156 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes an arXiv identifier (arXiv:1912.02753v2), standard academic structure (abstract, methods, results, references, appendices) but no journal or conference venue indicated, consistent with an arXiv preprint.",
+  "title": "A QUANTUM ALGORITHM FOR LINEAR PDES ARISING IN FINANCE",
+  "authors": [
+    "Filipe Fontanela",
+    "Antoine Jacquier",
+    "Mugad Oumgari"
+  ],
+  "year": "2021",
+  "journal_or_venue": "arXiv preprint (arXiv:1912.02753, q-fin.CP)",
+  "doi": "",
+  "abstract_summary": "The authors propose a hybrid quantum-classical algorithm to price European and arithmetic Asian options in the Black–Scholes model by exploiting the equivalence between the pricing PDE and the Schrödinger equation in imaginary time. The method uses a variational imaginary-time evolution with a shallow, few-qubit ansatz circuit to approximate the time-evolved state, and numerical experiments show accurate option pricing on low-qubit circuits, suggesting applicability on near-term noisy quantum devices.",
+  "methodology_description": "The paper develops a hybrid quantum-classical method to price European and arithmetic Asian options by (i) mapping the Black-Scholes PDE to a heat equation and then to a Schrödinger equation along imaginary time (Wick rotation), (ii) discretising the spatial domain (second-order finite differences) to obtain a sparse matrix Hamiltonian H (decomposed as a sum of Pauli-tensor products), and (iii) approximating the normalised imaginary-time evolution |psi(τ)⟩ = γ(τ) e^{-H τ} |psi(0)⟩ with a parameterised quantum trial state |φ(θ(τ))⟩ (ansatz). The time evolution of the ansatz parameters θ(τ) is obtained from McLachlan's variational principle which yields a linear ODE A(τ) ˙θ(τ) = C(τ). The matrix A and vector C are evaluated as expectation values of (modified) quantum circuits (circuits constructed from the ansatz plus extra gates and an ancilla for measurement). The (classical) update uses a forward Euler integrator: θ_{τ+Δτ} = θ_τ + Δτ A(τ)^{-1} C(τ), where ill-conditioning of A is handled by solving a regularised/least-squares problem with an eigenvalue cutoff. The ansatz is a shallow 4-qubit circuit composed primarily of Ry rotations, controlled-Ry, H and X gates; initial parameters θ(0) are obtained by solving a classical optimisation problem (minimising || |φ(θ)⟩ - |ψ(0)⟩ ||, e.g. with Differential Evolution) and ansatz depth is increased until the initial approximation error is below tolerance. Numerical experiments discretise the PDE on 16 grid points (4 qubits), simulate the measurement of A and C and advance θ for many small time steps (example: nT = 500 for European case), reconstruct prices by scaling the quantum-state outputs back to PDE coordinates, and compare to classical PDE solutions via pointwise and norm errors.",
+  "algorithms_used": [
+    "Variational quantum imaginary time evolution (ansatz-based imaginary time)",
+    "McLachlan's variational principle",
+    "Euler time integration (forward Euler)",
+    "Finite-difference spatial discretisation (second-order)",
+    "Hamiltonian Pauli decomposition",
+    "Least-squares solver for ill-conditioned linear systems (numpy.linalg.lstsq)",
+    "Classical optimisation for ansatz initialisation (e.g. Differential Evolution)"
+  ],
+  "frameworks": [],
+  "experimental_setup": "Numerical experiments simulate the hybrid algorithm classically: 4-qubit ansatz (so state vector of size 16) corresponding to 16 spatial grid points; Hamiltonian built by second-order finite differences and decomposed into Pauli terms; expectation values (A and C) are computed as circuit expectation values but simulated, not executed on a reported QPU. Example parameter values: Black-Scholes with S0=K=100, σ=20%, T=1, r=0; spatial log-grid [xmin,xmax] -> [3.9,5.0] (S in [50,150]) for European; Asian grid [ymin,ymax]=[-0.5,0.4]; time discretisation nT=500 (European) leading to Δτ = σ^2 T / nT. Ill-conditioned A handled via least-squares with cutoff ratio 1e-8.",
+  "dataset_used": "Synthetic model-generated data under the Black-Scholes model: European call payoff f(S_T)=max(S_T-K,0) and fixed-strike arithmetic Asian call payoff max((1/T)∫_0^T S_t dt - K, 0). No external market data used. Specific experiment parameters: S0=K=100, σ=0.20, T=1, r=0.",
+  "experiment_input": {
+    "source": "synthetic (Black-Scholes analytic model)",
+    "size": "state discretised on 16 spatial grid points (4 qubits); time grid nT (example nT=500)",
+    "preprocessing": "log-price change of variables (s = e^x), scaling V -> u via V(t,s)=e^{a x + b τ} u(τ,x) to obtain heat equation; initial quantum state |ψ(0)⟩ is the normalised mapped payoff vector (multiplied by e^{-a x}); Hamiltonian obtained by finite-difference Laplacian (or space-dependent diffusion for Asian case)."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Transform Black-Scholes PDE to heat equation and then to Schrödinger (imaginary time).",
+      "Discretise space with second-order finite differences to obtain sparse Hamiltonian H matrix and boundary handling.",
+      "Decompose H into Pauli-tensor-product terms (Assumption: H = Σ_i λ_i h_i).",
+      "Choose a parameterised ansatz circuit (shallow 4-qubit circuit with Ry and controlled-Ry gates, H and X).",
+      "Initialise θ(0) by classical minimisation of || |φ(θ)⟩ - |ψ(0)⟩ || (using a global optimizer e.g. Differential Evolution); increase ansatz depth until error tolerance met.",
+      "For each time step τ: (a) compute A(τ) and C(τ) by evaluating expectation values of constructed quantum measurement circuits (simulated in the paper), (b) solve A(τ) ˙θ = C(τ) using least-squares with eigenvalue cutoff (1e-8) to mitigate ill-conditioning, (c) update θ via forward Euler: θ ← θ + Δτ ˙θ, (d) optionally update time-dependent Hamiltonian H(τ) for Asian option case.",
+      "Reconstruct normalised quantum state |φ(θ(τ))⟩ and scale back using γ(τ) to obtain PDE solution; compute option price in original coordinates.",
+      "Compare quantum-ansatz-derived prices with classical PDE solution (pointwise and L2-type errors)."
+    ],
+    "iterations": "Time marching over nT steps (example nT=500). Ansatze depth selection is iterative (increase until initial fit error ≤ tolerance). Inner linear solve at each time step."
+  },
+  "experiment_output": {
+    "format": "Numerical vectors/curves of option price vs. space (asset price) and vs. time; also norms/errors.",
+    "metrics_reported": [
+      "Pointwise price comparisons (quantum vs classical PDE)",
+      "Approximation error ∥|ψ(τ)⟩ - |φ(θ(τ))⟩∥ (plotted over τ and space)",
+      "Visual comparisons at maturity and at inception"
+    ],
+    "baselines": "Classical PDE (finite-difference) solution for the same discretisation and parameter settings",
+    "other_outputs": "Tables of final and initial ansatz parameters θ (provided in appendix)"
+  },
+  "experiment_parameters": {
+    "qubits": 4,
+    "ansatz_parameters": 25,
+    "spatial_grid_points": 16,
+    "time_steps_nT": 500,
+    "delta_tau": "Δτ = σ^2 T / nT (used as Euler step)",
+    "hamiltonian_discretisation": "second-order finite differences (Laplace-like operator 1/2 ∂xx)",
+    "A_cutoff_eigenvalue_ratio": 1e-08,
+    "ansatz_gates": "Ry single-qubit rotations, controlled-Ry, H, X",
+    "optimizer_for_initial_theta": "classical global optimizer suggested (e.g. Differential Evolution)",
+    "linear_solver": "least-squares (numpy.linalg.lstsq) for A ˙θ = C"
+  },
+  "hardware_details": null,
+  "reproducibility_notes": null,
+  "key_findings": [
+    "[supported] The Black–Scholes pricing PDE can be transformed via change of variables into a heat equation and then mapped to a Schrödinger equation along imaginary time.",
+    "[supported] A hybrid quantum–classical algorithm (variational imaginary-time evolution) can be used to approximate the Schrödinger dynamics for pricing PDEs using a parameterised ansatz circuit and classical update of parameters via McLachlan's variational principle.",
+    "[supported] The paper implements a shallow ansatz (4 qubits, 25 Ry rotation gates) and demonstrates via classical simulation that it can approximate European and arithmetic Asian call option prices with small errors.",
+    "[supported] In the hybrid workflow A(τ) and C(τ) matrices required by the parameter update ODE can be estimated (simulated in the paper) using quantum circuits, while the parameter update (linear solve / Euler step) is done on a classical computer.",
+    "[supported] For the European example the authors used 4 qubits (2^4 = 16 spatial grid points), 500 time steps (nT = 500), and reported maximum errors on the order of 1e-3 in the imaginary-time wavefunction approximation.",
+    "[supported] For the arithmetic Asian example they used a 4-qubit spatial discretisation and reported maximum errors on the order of a few 1e-3 to 1e-2 in the wavefunction approximation.",
+    "[supported] The algorithm requires an ansatz that can represent the terminal payoff (initial quantum state) accurately; the optimisation to match the payoff (θ0) is crucial and non-convex.",
+    "[supported] Practical implementation issues observed: the linear system for parameter updates can be ill-conditioned and the authors apply a cutoff and least-squares regularisation (cutoff ratio used: 1e-8).",
+    "[speculative] The approach is a promising candidate for near-term (NISQ) quantum hardware because it uses few qubits and shallow circuits.",
+    "[speculative] The authors suggest the method could be extended to higher-dimensional PDEs such as basket option pricing (potential mitigation of the curse of dimensionality), but provide no empirical demonstration of that in the paper.",
+    "[speculative] The paper proposes that time-dependent Hamiltonians (e.g., Asian option PDEs) can be handled by piecewise freezing the Hamiltonian on each time interval.",
+    "[speculative] The main limitation identified is reliance on a suitable ansatz and the associated optimisation; authors note that ansatz-free imaginary-time methods might be investigated in future work."
+  ],
+  "results_summary": "The preprint proposes a hybrid quantum–classical algorithm that maps Black–Scholes pricing PDEs to an imaginary-time Schrödinger equation and solves the latter via a variational imaginary-time evolution (McLachlan's principle). The authors design a shallow ansatz quantum circuit (4 qubits, 25 Ry gates), determine initial parameters to match the payoff, and simulate the parameter evolution classically while estimating required expectation values as if on a quantum device. Classical simulations reproduce European and arithmetic Asian call option prices on a 16-point spatial grid with small approximation errors (wavefunction error ≲ 1e-3 for the European example, up to a few 1e-3–1e-2 for the Asian example). The paper highlights practical issues (need for a good ansatz, nonconvex initial optimisation, ill-conditioned linear systems) and positions the method as a promising, but not yet empirically hardware-demonstrated, candidate for NISQ-era use and possible extension to higher-dimensional problems.",
+  "performance_claims": [
+    "4 qubits used in examples → spatial resolution of 2^4 = 16 grid points",
+    "Ansatz circuit uses 25 Ry rotation gates (θ ∈ R^25)",
+    "European option example: Black–Scholes parameters σ = 20%, S0 = K = 100, T = 1, zero interest rate; spatial grid S ∈ [50,150] (x ∈ [3.9,5]); nT = 500 time steps",
+    "Reported maximum wavefunction approximation error for the European example ≲ 0.0012 (from plotted results)",
+    "Asian option example: spatial grid y ∈ [−0.5,0.4], reported maximum wavefunction approximation error up to ~0.005 (from plotted results)",
+    "Regularisation/cutoff for ill-conditioned A(τ) linear solves: eigenvalue cutoff ratio used = 1e-8",
+    "Hamiltonian discretised with second-order finite differences; imaginary-time evolution advanced by explicit Euler scheme for θ updates"
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors argue the method is a promising candidate for near-term quantum hardware because it uses few qubits and shallow circuits, but they do not demonstrate any theoretical or empirical quantum speedup. Results are classical simulations of the variational algorithm; no runtime, complexity or provable advantage over classical PDE or Monte Carlo methods is shown. Claims about mitigation of the curse of dimensionality or NISQ suitability remain speculative.",
+  "limitations": [
+    "Requirement for an ansatz circuit and solving a (non-convex) optimisation problem to fit the initial payoff (author-stated).",
+    "Error checking only at the payoff level; no rigorous control of error propagation through time — the assumption that initial approximation error does not amplify may fail when |ψ(τ)⟩ varies significantly (author-stated).",
+    "Ill-conditioning of the matrix A(τ) and the need to solve an (often ill-conditioned) linear system on the classical side; requires cut-offs and least-squares regularisation (author-stated).",
+    "Handling time-dependent Hamiltonians by freezing the Hamiltonian on each time step is an approximation that may limit accuracy (author-stated).",
+    "Current demonstration on low-dimensional examples (European and arithmetic Asian options) using only few qubits (4 qubits, 16 grid points) — scalability to larger problems not demonstrated (author-stated / implied).",
+    "Near-term quantum hardware constraints: actual quantum devices are noisy and have few qubits; decoherence/noise will affect implementation (author-stated).",
+    "[inferred] The reported results appear to be simulations rather than runs on noisy intermediate-scale quantum (NISQ) hardware, so real-device performance and noise resilience are untested.",
+    "[inferred] The approach requires a Hamiltonian decomposition into sums of Pauli-tensor products (Assumption 3.1(ii)); this may be nontrivial or inefficient for large or dense discretisations.",
+    "[inferred] The number of variational parameters must be balanced — rich enough ansatz increases classical computation burden (computing A and solving for ˙θ), limiting practical depth/expressivity.",
+    "[inferred] No quantitative comparison of computational cost or speed (classical vs hybrid/quantum) and no demonstrated quantum advantage.",
+    "[inferred] Trotter/unitary-based approaches are not straightforward for imaginary-time evolution; the proposed indirect variational method may have limitations not yet fully characterised."
+  ],
+  "open_questions": [
+    "How to design efficient, compact ansatz circuits that can accurately represent option value functions for more complex payoffs and over full time evolution?",
+    "Can ansatz-free or alternative imaginary-time evolution algorithms (that bypass the high-dimensional optimisation) be adapted to financial PDEs and scale better?",
+    "How do approximation errors in the ansatz at initialization propagate through imaginary-time evolution? Can one derive rigorous error bounds?",
+    "How to efficiently and stably solve the classical linear systems (A(τ)˙θ = C(τ)) for large numbers of parameters, and how to regularise/condition A(τ) systematically?",
+    "How to handle time-dependent Hamiltonians more accurately than freezing per time interval, and what is the cost/benefit trade-off?",
+    "Can the Hamiltonian decomposition into Pauli strings be done efficiently for higher-resolution discretisations or multi-dimensional PDEs?",
+    "How does the hybrid algorithm perform on real noisy quantum hardware (NISQ devices)? What is the impact of noise and limited qubit counts?",
+    "What is the practical scaling of the method to multi-dimensional problems (e.g., basket options) and can it overcome the classical curse of dimensionality in practice?",
+    "What are the concrete resource requirements (qubits, circuit depth, classical computation time) to reach parity or advantage over classical PDE/Monte Carlo methods?",
+    "Are there systematic ways to choose the ansatz depth/layout jointly with the optimisation method to avoid local minima and improve convergence?"
+  ],
+  "future_work": [
+    "Designing efficient ansatz circuits for more complex financial products and development of ansatz-free approaches (author-stated).",
+    "Investigating alternative imaginary-time evolution algorithms that bypass the optimisation step for large-scale applications (author-stated).",
+    "Studying error propagation beyond payoff-level checks and addressing the high-dimensional minimisation problem (author-stated).",
+    "Extending and adapting the method to multi-dimensional problems, in particular basket options, to explore potential benefits in high dimensions (author-stated).",
+    "Exploring modifications of the algorithm tailored to larger-scale quantum simulations of Schrödinger-type systems arising in finance (author-stated / implied)."
+  ],
+  "topic_tags": [
+    "derivative-pricing"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Map Black–Scholes PDE to a heat/Schrödinger equation in imaginary time and approximate the imaginary-time evolution with a parameterised quantum trial state whose parameters are evolved via McLachlan's variational principle.",
+    "#idea:hybrid-approach — Use a shallow, few-qubit ansatz (4 qubits, 25 parameters) and classical optimisation (e.g. Differential Evolution) to initialise parameters, then time-step parameters classically (forward Euler) using expectation values measured from the quantum circuit.",
+    "#idea:near-term-feasibility — Numerical simulations on a 4-qubit (16 spatial grid point) discretisation show accurate European and arithmetic-Asian option prices compared to classical PDE solutions, suggesting potential NISQ-era applicability.",
+    "#idea:hybrid-approach — Hamiltonian obtained from finite-difference discretisation is decomposed into Pauli terms; expectation values A(τ) and C(τ) are estimated (simulated) and a classical least-squares solve with eigenvalue cutoff handles ill-conditioning of the parameter-update linear system.",
+    "#limitation:simulation-only — All experiments are classical simulations of the quantum circuits; no runs on real quantum hardware are reported.",
+    "#limitation:qubit-count — Demonstrations are limited to 4 qubits (16 grid points); scaling to realistic asset-space resolution would require substantially more qubits and resources.",
+    "#limitation:noise — The study does not model hardware noise or apply error mitigation; claims of near-term applicability are not validated under realistic noisy device conditions.",
+    "#limitation:data-encoding — The method requires spatial discretisation, state normalisation and scaling (γ(τ)) to encode PDE solutions into quantum states; the overhead and fidelity of encoding for larger problems are not quantified."
+  ],
+  "contradictions": []
+}

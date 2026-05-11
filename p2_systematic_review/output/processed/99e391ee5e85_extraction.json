@@ -1,0 +1,155 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "The manuscript states it was accepted for publication in the proceedings of the 1st International Quantum Engineering conference (QUEST-IS 2025) and has the structure of a conference paper (abstract, methods, experiments, references). Although also on arXiv, the explicit proceedings acceptance indicates a conference paper.",
+  "title": "Toward Quantum Utility in Finance: A Robust Data-Driven Algorithm for Asset Clustering",
+  "authors": [
+    "Shivam Sharma",
+    "Supreeth Mysore Venkatesh",
+    "Pushkin Kachroo"
+  ],
+  "year": "2025",
+  "journal_or_venue": "Proceedings of the 1st International Quantum Engineering conference and exhibition (QUEST-IS 2025)",
+  "doi": "",
+  "abstract_summary": "The paper adapts the GCS-Q (Graph-based Coalition Structure Generation) algorithm to cluster signed, weighted asset correlation graphs directly, formulating each partitioning step as a QUBO solved on a D-Wave quantum annealer. Evaluated on synthetic and real-world (Yahoo Finance) data, the method dynamically infers the number of clusters and outperforms classical baselines (SPONGE, k-Medoids) in clustering quality while preserving signed correlation structure.",
+  "methodology_description": "The authors represent assets as nodes in a signed, weighted undirected graph where edge weights are pairwise Pearson correlations (ρij ∈ [-1,1]) computed from rolling returns. They apply the Graph-based Coalition Structure Generation algorithm (GCS-Q) to directly cluster this signed graph without transforming correlations into distances. GCS-Q begins with all nodes in one coalition and iteratively partitions subgraphs by computing minimum cuts that maximize intra-cluster total edge weight (equivalently minimize weight across the cut). Each minimum-cut step is formulated as a QUBO and solved on a quantum annealer (D-Wave Advantage_system5.4). The partitioning is applied recursively to the resulting subgraphs until a stopping condition is met (stop dividing a subgraph if no cut value is lower than the sum of all edges in that subgraph), thereby inferring the number of clusters k automatically. The study benchmarks GCS-Q against classical baselines (SPONGE, SPONGEsym, and k-Medoids/PAM), using synthetic structurally-balanced signed graphs and real-world asset return data (hourly prices from Yahoo Finance via yfinance). Evaluation metrics include Adjusted Rand Index (ARI) on synthetic data (ground truth clusters known) and a structural-balance Penalty metric on real data. The implementation uses Python 3.12, with QUBOs submitted via the D-Wave Ocean SDK to the remote D-Wave annealer and remaining computation run on a local Intel Core i7-12800H workstation with 64 GB RAM.",
+  "algorithms_used": [
+    "GCS-Q (Graph-based Coalition Structure Generation)",
+    "QUBO (Quadratic Unconstrained Binary Optimization)",
+    "Quantum annealing (D-Wave Advantage)",
+    "SPONGE (spectral method for signed graphs)",
+    "SPONGEsym",
+    "k-Medoids (PAM)",
+    "Eigengap heuristic (for estimating k)",
+    "Minimum cut (formulated as QUBO)",
+    "Pearson correlation (for adjacency weights)"
+  ],
+  "frameworks": [
+    "Python 3.12",
+    "dwave-ocean-sdk",
+    "yfinance (data retrieval)"
+  ],
+  "experimental_setup": "QUBO subproblems sent to D-Wave Advantage_system5.4 (5614 physical qubits, 40,050 couplers, Pegasus topology) via the dwave-ocean-sdk cloud APIs. Local computations performed on a workstation with 12th Gen Intel Core i7-12800H CPU and 64 GB RAM. Per-QUBO solve times were capped at 1 second; practical end-to-end runs include cloud latency and queue wait times.",
+  "dataset_used": "Synthetic: structurally balanced signed graphs with intra-cluster edges sampled from [0.1,1.0], inter-cluster edges from [-1.0,-0.1], non-uniform cluster sizes via a Dirichlet allocation, node counts varied (10 to 100), clusters varied (2 to 10), 33 random seeds. Real-world: hourly closing prices for 50 assets from diverse sectors obtained via yfinance; rolling log returns computed and Pearson correlation matrices used as signed adjacency.",
+  "experiment_input": "Synthetic graphs: generated with parameters described above (node counts 10..100, k=2..10, 33 seeds), continuous edge weights (intra [0.1,1.0], inter [-1.0,-0.1]), non-uniform cluster sizes via Dirichlet; no additional noise. Real-world: hourly closing prices from Yahoo Finance (50 assets), compute rolling log returns, compute Pearson correlation matrix used directly as signed adjacency matrix for clustering.",
+  "experiment_process": "1) Compute Pearson correlation matrix from asset returns to obtain signed weighted graph. 2) Initialize GCS-Q with the full graph. 3) For each subgraph, formulate a minimum-cut partitioning as a QUBO instance (binary variables indicate side of cut). 4) Solve QUBO on D-Wave Advantage (annealer) via dwave-ocean-sdk; retrieve cut (St, S̄t). 5) Recursively apply steps 3–4 to induced subgraphs, removing cut edges, until stopping criterion (no cut whose value is lower than the sum of all edges in that subgraph). 6) Output partition Π; compute evaluation metrics. Baselines: run SPONGE/SPONGEsym (k estimated via eigengap) and k-Medoids (PAM) with required k inputs. Repeat across seeds/rolling windows. Parameters noted: per-QUBO solve cap = 1s; graph sizes varied; embedding limited practical QUBO size (~≤175 nodes) due to hardware topology.",
+  "experiment_output": "Primary outputs: cluster partitions Π for each experiment. Evaluation metrics: Adjusted Rand Index (ARI) for synthetic experiments (ground-truth known), and Penalty metric (sum of absolute negative intra-cluster weights plus positive inter-cluster weights) for real-world data. Baselines compared: SPONGE, SPONGEsym, k-Medoids/PAM. Reported outcomes: GCS-Q achieved higher ARI on synthetic data and lower Penalty on real-world Yahoo Finance experiments, with results averaged across seeds and time windows.",
+  "experiment_parameters": {
+    "quantum_annealer_model": "D-Wave Advantage_system5.4",
+    "physical_qubits": 5614,
+    "couplers": 40050,
+    "topology": "Pegasus",
+    "per_qubo_solve_time_cap_seconds": 1,
+    "practical_embedding_limit_nodes": "~175",
+    "local_workstation_cpu": "Intel Core i7-12800H (12th Gen)",
+    "local_ram_gb": 64,
+    "python_version": "3.12",
+    "synthetic_node_counts": "10..100",
+    "synthetic_clusters_k": "2..10",
+    "synthetic_seeds": 33,
+    "synthetic_intra_edge_range": "[0.1, 1.0]",
+    "synthetic_inter_edge_range": "[-1.0, -0.1]",
+    "real_world_asset_count": 50,
+    "data_granularity_real_world": "hourly closing prices"
+  },
+  "hardware_details": {
+    "qpu_model": "D-Wave Advantage_system5.4",
+    "qpu_qubits": 5614,
+    "qpu_couplers": 40050,
+    "qpu_topology": "Pegasus",
+    "access_method": "Remote cloud via D-Wave Ocean SDK (dwave-ocean-sdk)",
+    "local_computation": {
+      "cpu": "Intel Core i7-12800H (12th Gen)",
+      "ram_gb": 64
+    },
+    "notes": "Experiments executed via remote cloud access; observed runtime overhead from internet latency and queue wait times."
+  },
+  "reproducibility_notes": "Code to reproduce experiments and plots is publicly available at the authors' GitHub: https://github.com/supreethmv/Quantum-Asset-Clustering. Real-world data are obtained via yfinance (public API), and synthetic data generation is described (edge sampling ranges, Dirichlet-based cluster sizes). Practical reproducibility requires access to D-Wave Advantage hardware (or a compatible simulator) and consideration of embedding limits and cloud queue/latency; per-QUBO solve cap of 1 second and embedding constraints (≈175-node practical limit) should be noted.",
+  "key_findings": [
+    "[supported] GCS-Q can be applied directly to signed, weighted graphs derived from asset return correlations without transforming correlations into non-negative distances.",
+    "[supported] GCS-Q dynamically infers the number of clusters k as part of its iterative minimum-cut based procedure.",
+    "[supported] The minimum-cut subproblems in GCS-Q are formulated as QUBO instances and were solved on a D-Wave Advantage_system5.4 quantum annealer in the authors' experiments.",
+    "[supported] On the authors' synthetic datasets (continuous intra-/inter-cluster edge weights, non-uniform cluster sizes) GCS-Q yielded higher clustering quality (measured by ARI) than SPONGE/SPONGEsym and k-Medoids (PAM).",
+    "[supported] On real-world (Yahoo Finance hourly returns for 50 assets) experiments GCS-Q produced lower structural-balance Penalty scores than the compared classical methods.",
+    "[supported] GCS-Q is robust to heterogeneous cluster sizes and continuous edge weights, conditions under which some classical baselines (SPONGE, PAM) degrade.",
+    "[supported] Practical hardware/embedding constraints limited the approach to roughly ~175 assets on the used quantum annealer topology.",
+    "[supported] In the authors' reported runs, per-QUBO solve times were capped at 1 second on the device, but end-to-end clustering of n=170 assets with k≈10 averaged over 10 minutes (dominated by queuing/latency).",
+    "[speculative] The authors claim that quantum annealing enables efficient exploration of exponentially large solution spaces at each GCS-Q iteration.",
+    "[speculative] Theoretical statement that optimally clustering signed graphs with weights in [−1,+1] is NP-Hard (cited literature).",
+    "[speculative] Classical commercial solvers (e.g., Gurobi, CPLEX) are asserted to struggle to scale on dense graphs (no direct benchmarking in this paper).",
+    "[speculative] The authors propose that deploying GCS-Q on devices/topologies with better connectivity (Zephyr) or using gate-model qubit-efficient strategies could further improve applicability.",
+    "[disputed] The paper asserts it is \"the first to demonstrate a quantum advantage in solution quality using real hardware for the practical task of asset clustering.\""
+  ],
+  "results_summary": "The paper adapts the GCS-Q graph coalition-structure algorithm to asset clustering on signed correlation graphs, formulates each partition step as a QUBO, and solves those QUBOs on a D-Wave quantum annealer. In both synthetic experiments (continuous-weight, non-uniform-size clusters) and a Yahoo Finance 50-asset dataset, GCS-Q produced higher clustering quality (measured by ARI on synthetic data and a structural-balance penalty on real data) than SPONGE/SPONGEsym and k-Medoids (PAM). The method determines the number of clusters automatically and preserves signed relationships without lossy transformations. Practical limitations due to hardware topology limit problem size (~175 nodes), and real-run times were dominated by cloud-access latency despite short per-QUBO anneal times.",
+  "performance_claims": [
+    "D-Wave Advantage_system5.4 used: 5614 physical qubits and 40,050 couplers (hardware specification).",
+    "Synthetic experiments varied total nodes in {10,20,...,100}, k in 2..10, across 33 random seeds (experimental design).",
+    "GCS-Q limited to roughly 175 nodes due to qubit constraints and hardware topology (scalability claim).",
+    "Per-QUBO solves were capped at 1 second on the device in experiments (operational setting).",
+    "Clustering n=170 assets with k=10 took over 10 minutes on average end-to-end (includes queue/latency)."
+  ],
+  "quantum_advantage_claim": "disputed",
+  "quantum_advantage_detail": "The authors claim a quantum advantage in solution quality based on better clustering metrics vs selected classical baselines on their datasets, but they do not benchmark against state-of-the-art classical combinatorial optimizers (e.g., Gurobi/CPLEX) nor exhaustively rule out classical heuristics matching or exceeding solution quality. The claim relies on limited comparisons and is not demonstrated under standard, rigorous criteria for quantum advantage, so it should be considered disputed.",
+  "limitations": [
+    "GCS-Q is currently limited to roughly 175 nodes due to qubit count and hardware topology constraints (explicit).",
+    "End-to-end runtime is dominated by cloud access overhead (internet latency and queue wait times), e.g., clustering n=170 took >10 minutes despite per-QUBO caps (explicit).",
+    "Optimal signed-graph clustering is NP-Hard; classical execution of GCS-Q has exponential worst-case complexity O(n·2^n) (explicit).",
+    "Quantum annealing results are affected by hardware noise and embedding/chain issues on current devices (explicit/implicit).",
+    "Synthetic experiments used noise-free, idealized graphs, limiting assessment of robustness to realistic noisy correlations (explicit).",
+    "[inferred] Experimental scale is modest on real data (50 assets), leaving open empirical scaling and operational questions for larger universes.",
+    "[inferred] Dependence on Pearson correlation as the sole similarity measure may miss non-linear or dynamic relationships in asset returns.",
+    "[inferred] Solution quality depends on quality of QUBO formulation and embedding; embedding overhead and chain breaks may impact results but were not fully characterized.",
+    "[inferred] Use of the Penalty metric and ARI does not directly demonstrate economic or trading performance (e.g., realized returns, transaction costs).",
+    "[inferred] Access to D-Wave via shared cloud limits reproducibility and practical latency; running on local or dedicated hardware may change trade-offs.",
+    "[inferred] No comprehensive benchmarking against commercial classical solvers (e.g., Gurobi, CPLEX) in terms of solution quality and runtime was provided."
+  ],
+  "open_questions": [
+    "How do clusters produced by GCS-Q perform in downstream financial tasks (portfolio construction, allocation, statistical arbitrage) measured by economic metrics such as Sharpe Ratio and realized returns?",
+    "How robust is GCS-Q to realistic noise, non-stationarity, and time-varying correlations in market data?",
+    "How does GCS-Q scale (solution quality and runtime) beyond the current ~175-node hardware limit, and what are practical limits on n and k?",
+    "What is the impact of alternative similarity measures (e.g., rank correlations, cointegration, non-linear metrics) on clustering quality with GCS-Q?",
+    "How much do hardware topology and connectivity (Pegasus vs Zephyr or other topologies) and embedding strategies affect solution quality and required resources?",
+    "How does GCS-Q compare to state-of-the-art classical optimizers (Gurobi, CPLEX) and advanced heuristics in both solution quality and wall-clock runtime on the same problems?",
+    "Can gate-model approaches (QAOA or other variational algorithms) or qubit-efficient encodings offer practical advantages over annealing for this problem?",
+    "What are the effects of annealer noise, chain strength selection, and QUBO parameter tuning on robustness and reproducibility of results?",
+    "How stable are the inferred clusters over time and across market regimes, and what is the appropriate rebalancing cadence for trading applications?",
+    "What are the operational costs, latency, and reliability trade-offs of deploying a quantum-enhanced clustering pipeline in production trading systems?"
+  ],
+  "future_work": [
+    "Apply the resulting clusters to downstream tasks such as asset allocation and evaluate performance using economic metrics (e.g., Sharpe Ratio, returns).",
+    "Deploy GCS-Q on D-Wave hardware with Zephyr topology and better connectivity, and explore custom embeddings.",
+    "Explore gate-model quantum solvers (e.g., QAOA) and qubit-efficient variational strategies as alternatives to annealing.",
+    "Benchmark GCS-Q against classical commercial solvers like Gurobi and CPLEX for solution quality and runtime.",
+    "Investigate qubit-efficient strategies and custom embeddings to scale to larger asset universes and improve practical runtimes."
+  ],
+  "topic_tags": [
+    "portfolio-optimization",
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — GCS-Q reformulates recursive minimum-cut partitioning as QUBOs and reports higher Adjusted Rand Index (synthetic) and lower structural-balance Penalty (real Yahoo Finance data) than classical baselines (SPONGE, SPONGEsym, k-Medoids/PAM).",
+    "#idea:near-term-feasibility — Method was executed on real NISQ-era hardware (D-Wave Advantage_system5.4) with practical per-QUBO solve caps (1s) and demonstrates end-to-end experiments on 50 real assets (hourly data), indicating near-term applicability for modest-size problems.",
+    "#idea:hybrid-approach — Workflow uses a hybrid QPU-CPU split: QUBO subproblems submitted to the annealer (via dwave-ocean-sdk) while preprocessing, recursion, evaluation and orchestration run on a classical workstation.",
+    "#idea:quantum-advantage — Direct clustering of signed, weighted correlation graphs (no distance transform) preserves sign structure and is claimed to be beneficial versus spectral/medoid baselines that require k as input or transform correlations.",
+    "#idea:near-term-feasibility — The algorithm dynamically infers the number of clusters (stopping criterion based on cut values) rather than requiring k, which is useful in practical asset-clustering workflows.",
+    "#limitation:qubit-count — Practical embedding/topology constraints limit embeddable QUBO/problem-subgraph size (authors report ~≤175 nodes practical limit), constraining scalability to larger asset universes without advanced embedding or decomposition.",
+    "#idea:hybrid-approach — Reproducibility is aided by public code (GitHub) and public data access (yfinance) but full replication requires access to D-Wave hardware or equivalent annealer simulator; cloud latency and queue wait-time are non-negligible runtime factors.",
+    "#idea:quantum-advantage — Extensive synthetic experiments (nodes 10–100, k=2–10, 33 seeds) validate performance on ground-truth graphs, supporting empirical claims rather than purely theoretical assertions."
+  ],
+  "contradictions": []
+}

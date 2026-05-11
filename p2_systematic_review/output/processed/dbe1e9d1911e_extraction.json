@@ -1,0 +1,195 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes journal header (Expert Systems With Applications, Elsevier), DOI and received/revised/accepted dates, structured abstract/methods/results, experiments on 24 stocks, and extensive citations—indicative of a peer-reviewed empirical research article.",
+  "title": "QuantumLeap: Hybrid quantum neural network for financial predictions",
+  "authors": [
+    "Eric Paquet",
+    "Farzan Soleymani"
+  ],
+  "year": "2022",
+  "journal_or_venue": "Expert Systems With Applications",
+  "doi": "10.1016/j.eswa.2022.116583",
+  "abstract_summary": "The paper introduces QuantumLeap, a hybrid deep quantum-classical neural network that encodes partitioned financial time series as quantum state vectors and density matrices, uses a deep quantum network to predict future density matrices, and employs a classical deep network as a learnable measurement to infer the maximum future security price. The method trains separate hybrid networks per prediction stride for parallelisation, is computationally tractable in depth, and is evaluated on 24 stocks showing accurate regression and extrapolation performance with lower RMS errors than comparable classical networks and ARIMA.",
+  "methodology_description": "The paper proposes QuantumLeap, a hybrid quantum-classical pipeline for financial time-series prediction. Time series for each security are partitioned with a sliding window (window size = 4 trading days) into segments; each window is encoded into an unnormalized complex state vector using daily low (min) and high (max) prices, then normalized and converted to an input density matrix (outer product). A deep quantum neural network (DQNN) composed of an input density matrix, L hidden layers of unitary operators (quantum perceptrons) and an output density matrix is trained to map input density matrices to future output density matrices for a given prediction stride. Training of the DQNN uses a fidelity-based cost (maximize fidelity between predicted and target pure-state density matrices) and updates unitaries via exponential-map updates U' = exp(i K) U with a layer-wise parameter matrix K (following Beer et al. 2020). For each prediction horizon (stride) a separate hybrid model is trained in parallel (Tmax = 20 strides/networks). The classical measurement network (a dense deep neural network) is trained independently with Adam to map the predicted output density matrix to a real-valued predicted maximum (high) price. Experimental evaluation uses 24 stocks (various sectors) with data from 2019-01-01 to 2020-09-11; the first 407 trading days are used for training and the last 20 days for testing. Baselines include a corresponding classical implementation of the network and ARIMA; evaluation metrics reported include per-day relative error and an RMSV (root-mean-square value) metric; statistical comparison uses a Mann–Whitney–Wilcoxon test.",
+  "algorithms_used": [
+    "Deep quantum neural network (unitary-based perceptrons, Beer et al. 2020)",
+    "Fidelity-based cost function for quantum training",
+    "Unitary parameter update via exponential map (U' = exp(iK) U)",
+    "Classical dense neural network (measurement network)",
+    "Adam optimizer (for classical networks)",
+    "ARIMA (baseline)",
+    "Mann-Whitney-Wilcoxon test (statistical comparison)"
+  ],
+  "frameworks": [],
+  "experimental_setup": "Training performed on an HP Apollo system with 20 Dual Intel Xeon Gold 6149 processors and 968 GB RAM. A total of 24 stocks × 20 strides = 480 hybrid models were trained in parallel in batches of 20. Total training duration reported ~24 hours.",
+  "dataset_used": "Price time series for 24 stocks (AAPL, AMZN, BA, BAC, BP, CAT, CSCO, GE, GOOGL, HD, IBM, JNJ, JPM, JWN, KO, MFC, MMM, MRK, MSFT, ORCL, PFE, RDSB, TD, WMT) from 2019-01-01 to 2020-09-11. Training set: first 407 trading days; test set: last 20 trading days. Features: daily min (low) and max (high) prices; model predicts daily maximum (high) price at future stride.",
+  "experiment_input": {
+    "source": "Historical daily stock prices (tickers listed above) covering 2019-01-01 to 2020-09-11",
+    "size": "Approximately 427 trading days total per stock (407 train + 20 test); 24 stocks",
+    "preprocessing": "Sliding-window partitioning with window size = 4 days. For each window construct an unnormalized complex state vector from daily min/max values; apply a custom complex normalization (as per paper Eq. 18) to produce normalized state vectors; create density matrices via outer product of normalized state vectors; create training pairs (input density matrix -> target output density matrix) for each stride. Classical measurement nets trained using the predicted output density matrices paired with the real maximum price (high) as target."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Partition each stock time-series into overlapping windows (window size = 4 days).",
+      "For each window build unnormalized complex state vectors using daily low/high values; normalize to unit norm and compute density matrix (input).",
+      "Define target output state vector/density matrix at stride r (predicting max price at time t + r) using analogous construction on future window.",
+      "Train a separate DQNN per stride (Tmax = 20). DQNN architecture: input density matrix, L hidden layers of unitary operators (quantum perceptrons), output density matrix.",
+      "Quantum training: compute density matrices layer-wise, evaluate fidelity-based loss, compute parameter matrix K (via partial traces over unaffected qubits), update unitary U via U' = exp(i * K) * U. Training proceeds layer-by-layer requiring only two layers in memory at once.",
+      "Train classical dense neural network (measurement apparatus) per stride to map predicted output density matrix to the scalar maximum price using Adam.",
+      "Evaluation: produce per-day predicted maximum prices for the 20-day test set (each day predicted by its corresponding stride-model), compute relative errors and RMSV; compare against a classical implementation of the network and ARIMA; statistical test via Mann-Whitney-Wilcoxon."
+    ],
+    "parameters_and_iterations": "Quantum training: 20 epochs reported; classical measurement nets: trained with Adam for 20 epochs. Quantum parameter update uses a learning-rate-like scalar (eta) and layer-wise computed K; paper indicates a quantum learning-rate (eta) value 0.1 in hyperparameter table. Classical Adam parameters: beta1=0.9, beta2=0.999, learning_rate=1e-5."
+  },
+  "experiment_output": {
+    "outputs": "Per-stock per-day predicted maximum (high) prices for up to 20 future trading days; also predicted density matrices (quantum network outputs).",
+    "metrics_reported": [
+      "Per-day relative error (%) between predicted and actual maximum prices",
+      "RMSV (root-mean-square value) per stock used to compare models",
+      "Statistical significance p-values from Mann-Whitney-Wilcoxon tests comparing RMSV distributions"
+    ],
+    "baselines": [
+      "Classical implementation of the same network architecture (no quantum unitary formulation)",
+      "ARIMA models (parameters chosen by maximum likelihood)"
+    ]
+  },
+  "experiment_parameters": {
+    "window_size_days": 4,
+    "prediction_horizons_Tmax": 20,
+    "num_stocks": 24,
+    "training_days_per_stock": 407,
+    "test_days_per_stock": 20,
+    "quantum_epochs": 20,
+    "classical_epochs": 20,
+    "quantum_learning_rate_eta": 0.1,
+    "classical_optimizer": "Adam",
+    "adam_beta1": 0.9,
+    "adam_beta2": 0.999,
+    "adam_learning_rate": 1e-05,
+    "unitary_operator_dimensions_reported": [
+      "32x32",
+      "128x128",
+      "32x32"
+    ],
+    "implied_qubits_per_unitary": [
+      "32x32 -> 5 qubits",
+      "128x128 -> 7 qubits"
+    ],
+    "total_models_trained": 480
+  },
+  "hardware_details": {
+    "system": "HP Apollo",
+    "cpu": "20 Dual Intel Xeon Gold 6149 processors",
+    "memory": "968 GB RAM",
+    "accelerator_qpu": null,
+    "simulator": "classical CPU-based numerical simulation of density matrices/unitaries (no quantum hardware/QPU used)",
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "The paper provides algorithmic descriptions, hyperparameter values (epochs, Adam betas, Adam LR, quantum learning-rate, unitary matrix dimensions), stock tickers, date range, windowing and encoding scheme, and hardware used. However, no code repository, simulation scripts, random seeds, or explicit layer-by-layer unitary configurations are provided. Data sources are standard historical stock prices but no direct download links or exact data vendor are given. Reproduction would require re-implementing the custom encoder/normalization and the Beer et al. (2020) training routine for unitary updates; full reproducibility is limited by absence of published code and some implementation details.",
+  "key_findings": [
+    "[supported] The paper introduces QuantumLeap, a hybrid system combining an encoder that maps sliding windows of financial time series to quantum state vectors/density matrices, a deep quantum neural network that predicts future density matrices, and a classical deep neural network that 'measures' the predicted density matrix to output a predicted maximum price.",
+    "[supported] Experimental evaluation on 24 equities (data from 2019-01-01 to 2020-09-11) with 407 training days and 20 test days shows the proposed hybrid quantum-classical approach produces accurate predictions in both regression and short-term extrapolation regimes.",
+    "[supported] Across the 24-stock testbed QuantumLeap achieved substantially lower RMSV than the implemented classical counterpart and ARIMA for most stocks (Table 5), e.g. AAPL RMSV: Quantum 2.83 vs Classical 6.05 vs ARIMA 8.37; GOOGL RMSV: Quantum 8.64 vs Classical 45.73 vs ARIMA 76.85.",
+    "[supported] Non-parametric testing (Mann–Whitney–Wilcoxon) indicates statistically significant differences between QuantumLeap and both the classical neural network and ARIMA (p = 6.6e-05 and p = 9.3e-05 respectively), while the classical NN and ARIMA were not significantly different (p = 0.94).",
+    "[supported] Per-day relative prediction errors over the 20-day test window were typically small (often <1% for many stocks); exceptions included Apple, Boeing and Cisco with occasional errors up to about 8% as reported.",
+    "[supported] Implementation details: the authors trained Tmax = 20 independent hybrid quantum networks (one per forecast stride), i.e. 24 stocks × 20 strides = 480 hybrid models, for 20 epochs each; total wall-clock training time reported ≈ 24 hours on a high-memory classical cluster (20 Dual Intel Xeon Gold 6149 processors, 968 GB RAM).",
+    "[supported] Methodological claim: each forecast stride uses its own dedicated hybrid quantum+classical network, enabling parallelised training of the per-stride models.",
+    "[speculative] The authors claim the deep quantum network is isomorphic to a deep classical network and that the quantum architecture is 'computationally tractable in terms of the number of hidden layers' (argument based on representation as compositions of completely positive maps and layer-wise training referencing Beer et al. 2020).",
+    "[speculative] The paper argues that financial time series dynamics can be fruitfully modelled in quantum-mechanical terms (path integrals, unitary temporal evolution), and that the quantum network better captures such dynamics than classical networks.",
+    "[speculative] General claims that quantum computers/qubits provide an exponential computational boost for simultaneous processing and that quantum algorithms can improve many ML tasks (stated in background/motivation).",
+    "[speculative] The authors suggest the approach could be extended to other instruments (options, futures, swaps) and to multi-asset settings using mixed-state density matrices (future work)."
+  ],
+  "results_summary": "QuantumLeap, a hybrid pipeline that encodes sliding windows of financial high/low data as quantum state vectors/density matrices, trains deep quantum networks to predict future density matrices and uses classical deep networks to extract predicted maximum prices. Evaluated on 24 equities (407 training days, 20 test days) the system produced low per-day relative errors (often <1% for many securities) and lower RMSV than both a corresponding classical neural network implementation and ARIMA. Statistical tests (Mann–Whitney–Wilcoxon) found the quantum-model error distribution significantly different (better) than the classical baselines (p ≈ 6.6e-05 and 9.3e-05). The authors trained 480 hybrid models (one per stock per stride) in parallel; total training took ≈24 hours on a large classical server. While empirical results on this dataset support improved predictive accuracy of the proposed hybrid architecture, claims that this constitutes a fundamental quantum computational advantage or that financial dynamics are inherently quantum-mechanical remain theoretical/speculative within the paper.",
+  "performance_claims": [
+    "RMSV (AAPL): QuantumLeap 2.83 vs Classical NN 6.05 vs ARIMA 8.37 [supported]",
+    "RMSV (AMZN): QuantumLeap 37.86 vs Classical NN 146.35 vs ARIMA 139.70 [supported]",
+    "RMSV (GOOGL): QuantumLeap 8.64 vs Classical NN 45.73 vs ARIMA 76.85 [supported]",
+    "RMSV (MSFT): QuantumLeap 1.39 vs Classical NN 8.71 vs ARIMA 8.93 [supported]",
+    "RMSV (most other stocks): QuantumLeap has lower RMSV than classical NN and ARIMA as reported in Table 5 [supported]",
+    "Mann–Whitney–Wilcoxon test p-values: QNN vs Classical NN = 0.000066; QNN vs ARIMA = 0.000093; Classical NN vs ARIMA = 0.94 [supported]",
+    "Per-day relative prediction errors over the 20-day test window are typically <<1% for many securities; Apple, Boeing and Cisco had outliers up to ~8% [supported]",
+    "Total models trained: 24 stocks × 20 strides = 480 hybrid networks trained in parallel; training duration ≈ 24 hours on an HP Apollo system with 20 Dual Intel Xeon Gold 6149 CPUs and 968 GB RAM [supported]",
+    "Training epochs: 20 epochs for the quantum networks (and Adam-trained classical measurement networks) [supported]"
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper reports empirical predictive improvements using a hybrid quantum-classical model (simulated on classical hardware) relative to classical NN and ARIMA on the chosen dataset. However, the work does not demonstrate a provable or hardware-level quantum computational advantage (speedup or asymptotic resource gain) on quantum hardware; claims about exponential computational benefits of qubits and that financial dynamics are intrinsically quantum are theoretical/speculative rather than demonstrated.",
+  "limitations": [
+    "Predictions and evaluation limited to a dataset of 24 stocks (mostly NASDAQ) over the period 2019-01-01 to 2020-09-11 (dataset size and diversity limitation) [inferred]",
+    "Extrapolation (out-of-sample prediction) was tested only up to a 20 trading-day horizon (short prediction horizon)",
+    "Model targets only the daily maximum price (high); other targets such as open, close, low, intraday dynamics or returns are not predicted",
+    "Quantum network was simulated/trained on classical HPC hardware (HP Apollo) — no experiments on real quantum hardware or treatment of quantum noise and device constraints [inferred]",
+    "Comparison baselines are limited (classical implementation of the proposed quantum network and ARIMA); no comparison with modern state-of-the-art ML time-series models (e.g., LSTM, Transformer, XGBoost) [inferred]",
+    "Economic usefulness not evaluated: no trading simulation, transaction costs, risk-adjusted returns, or hedging performance reported [inferred]",
+    "Scalability not fully characterized: claims of tractability are in terms of number of hidden layers, but practical scaling with larger qubit counts, larger datasets, or more complex circuits is not fully evaluated [inferred]",
+    "Approach evaluated per-security only; multi-asset or cross-asset forecasting and portfolio-level evaluation were not performed",
+    "Model robustness to regime shifts and structural breaks (e.g., different market conditions) not systematically assessed [inferred]",
+    "Normalization and encoder choices are ad-hoc (special normalisation to avoid information loss); sensitivity to encoding/normalisation choices is not explored [inferred]",
+    "Hyperparameter sensitivity and ablation analyses are not reported (impact of window size, stride, layer sizes, dimensions of unitary operators etc.) [inferred]",
+    "Interpretability and financial explainability of the learned quantum representations and the classical measurement network are not addressed [inferred]",
+    "Uncertainty quantification is absent: predictions are point estimates with no confidence intervals or probabilistic outputs [inferred]",
+    "Only maximum price per day is measured by the classical measurement network; minimum prices are treated as hidden parameters/constraints rather than predicted outputs (limiting usefulness for some applications)",
+    "Practical deployment considerations (latency, inference cost, integration with trading systems) are not discussed [inferred]"
+  ],
+  "open_questions": [
+    "How would the proposed hybrid quantum neural network perform when implemented and run on real quantum hardware, in the presence of device noise and limited qubit counts?",
+    "How does QuantumLeap compare to modern, high-performing classical ML/time-series models (e.g., LSTM/GRU, temporal convolutional networks, Transformers, gradient-boosted trees, GAN-based forecasters) on the same tasks?",
+    "Does the modelling approach generalize to longer prediction horizons beyond 20 trading days, and how does performance degrade with horizon?",
+    "Can the architecture be scaled to larger numbers of qubits / larger input windows and still remain computationally feasible in practice?",
+    "How robust are the learned models to market regime changes, structural breaks, or non-stationarity (e.g., different crisis periods outside the 2019–2020 window)?",
+    "What is the sensitivity of results to choices in encoding, normalisation, window size, stride, network depth, unitary dimensions and other hyperparameters?",
+    "Can the density-matrix outputs and the classical measurement networks provide interpretable insights about market dynamics, and how can such interpretations be related to financial theory?",
+    "What is the economic value of the predictions after accounting for transaction costs, slippage and risk management (i.e., can they be turned into profitable trading or hedging strategies)?",
+    "How to extend the approach to multi-asset forecasting and portfolio optimization — e.g., by using mixed-state density matrices — and how will cross-asset correlations be captured?",
+    "How to incorporate nonlinearity handling intrinsic to financial data into quantum unitaries or into the hybrid architecture more effectively?",
+    "What are the practical memory/time limits when training many parallel hybrid networks (one per stride) for larger universes of assets or longer horizons?",
+    "How does the classical measurement network generalize to different target variables (e.g., returns, volatility, risk measures) and different market microstructures?"
+  ],
+  "future_work": [
+    "Extend the method to risk management tasks, including hedging and risk mitigation",
+    "Apply the approach to pandemic evolution prediction (as an interdisciplinary extension mentioned by the authors)",
+    "Extend the approach to other financial instruments such as options, forward and future contracts, and swaps",
+    "Consider multiple financial instruments simultaneously using mixed-state density matrices (multi-asset / portfolio-level modelling)"
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach",
+    "idea:near-term-feasibility"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — The hybrid deep quantum-classical network (QuantumLeap) achieved lower RMSV and per-day relative errors on a 24-stock test set and reported statistically significant improvements versus a classical analogue and ARIMA.",
+    "#idea:hybrid-approach — Architecture separates a deep quantum neural network (unitary-layer DQNN mapping input density matrices to output density matrices) from a classical measurement network that maps predicted density matrices to scalar price predictions; training is split between quantum parameter updates and classical Adam optimization.",
+    "#idea:near-term-feasibility — Encoding uses small unitaries (reported 32x32 and 128x128 matrices implying ~5-7 qubits per unitary) and trains separate models per prediction stride for parallelisation; authors claim computational tractability in depth and report full experiments via classical simulation on conventional HPC.",
+    "#idea:hybrid-approach — Time-series preprocessing encodes 4-day sliding windows into complex state vectors and density matrices (outer products), enabling quantum-state-based learning and a fidelity-based loss for DQNN training.",
+    "#idea:near-term-feasibility — Training procedure (layer-wise exponential-map unitary updates) requires only two layers in memory at once, reducing memory footprint and enabling training of many small hybrid models in parallel (480 models trained)."
+  ],
+  "contradictions": [],
+  "synthesis_tags_used": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach",
+    "idea:near-term-feasibility",
+    "limitation:simulation-only",
+    "limitation:no-empirical-validation",
+    "limitation:data-encoding",
+    "limitation:qubit-count"
+  ],
+  "limitations_inferred": [
+    "limitation:simulation-only — Quantum network evaluated via classical simulation on HPC (no experiments on quantum hardware).",
+    "limitation:no-empirical-validation — No real-QPU validation; results may not reflect noise or gate errors present on hardware.",
+    "limitation:data-encoding — The approach relies on explicit complex state-vector and density-matrix encodings of short time windows (window size=4), which may not scale or may incur high overhead for larger inputs.",
+    "limitation:qubit-count — Demonstrated unitary sizes imply very small qubit counts (5–7 qubits per unitary); scalability to industrial-scale time-series or larger models is unproven."
+  ]
+}

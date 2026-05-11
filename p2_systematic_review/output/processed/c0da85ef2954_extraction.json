@@ -1,0 +1,179 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an IEEE conference header, DOI, page numbers and venue (2024 IEEE International Conference on Quantum Computing and Engineering), structured abstract, methods, results and references consistent with a peer-reviewed conference paper.",
+  "title": "Train-and-Scaling the Quantum Alternating Operator Ansatz to Solve Portfolio Diversification",
+  "authors": [
+    "Hannes Leipold",
+    "Sarvagya Upadhyay"
+  ],
+  "year": "2024",
+  "journal_or_venue": "2024 IEEE International Conference on Quantum Computing and Engineering (QCE)",
+  "doi": "10.1109/QCE60285.2024.10266",
+  "abstract_summary": "The paper introduces Train-and-Scale, a method that trains QAOA/QAOA-like circuits on smaller problem instances to obtain high-quality parameters and then incrementally scales circuit depth and instance size with warm-started retraining. Applied to a Maximum Independent Set formulation of portfolio diversification on SP500-derived subgraphs (n=6–30), the approach yields high-quality solutions (average approximation ratio < 0.4), modest depth growth (p ≈ 54 at n = 30), and low sampling complexity.",
+  "methodology_description": "The authors propose Train-and-Scale, an iterative training protocol for QAOA (Quantum Alternating Operator Ansatz) applied to the Maximum Independent Set (MIS) formulation of Portfolio Diversification. They generate size-parameterized families of graph instances by thresholding monthly SP500 asset return correlations and extracting subgraphs of size n via breadth-first search around a random seed node. Starting from small instances (nmin = 6) and a low initial depth (pmin = 6), they train a p-depth constrained QAOA (using an MIS-specific embedded constraint operator and a mixer whose local generators are partitioned into commuting groups) using the parameter-shift rule to estimate gradients. After training on a dataset of k instances at size n, they choose a target depth ptarget (in experiments p increased by 2 per size increment), insert an identity (zero-parameter) layer into the middle of the circuit to increase depth, train only the newly inserted layer, and then retrain all parameters. Training uses stochastic coordinate updates (a parameter chosen uniformly at random each update) with ~130,000 parameter-shift finite-difference gradient updates split across 64 epochs, an initial learning rate 0.02 decayed exponentially to 0.002, and a shift size 0.01. Instances are weighted during training by the standard-deviation range of their approximation gap with a temperature parameter set to 1. They evaluate solution quality via the approximation gap and empirical sampling complexity (inverse success probability) and compare empirical scaling to classical simulated annealing.",
+  "algorithms_used": [
+    "Quantum Alternating Operator Ansatz (QAOA)",
+    "QAOA with MIS-specific embedded constraint and constrained mixer",
+    "Parameter-shift rule for gradient estimation",
+    "Randomized partitioning algorithm (for commuting mixer grouping)",
+    "Simulated Annealing (classical baseline)",
+    "Breadth-First Search (for subgraph generation)"
+  ],
+  "frameworks": [],
+  "experimental_setup": "Classical simulation of QAOA circuits and parameter-shift gradient estimation (no specific quantum hardware reported). Experiments trained QAOA on datasets of thresholded-covariance subgraphs drawn from SP500 data; typical training used up to p=54 for n=30. Training employed ~130k parameter-shift gradient updates over 64 epochs with coordinate updates, lr schedule (0.02 -> 0.002), shift size 0.01. No QPU or cloud provider reported.",
+  "dataset_used": "Historical SP500 daily price data from a public Kaggle dataset (cleaned). For each month (2010–2020) daily returns were computed per asset, sample means and Pearson correlations computed to build covariance/correlation matrices; an absolute-correlation threshold λ (values in {0.1,0.2,0.3,0.4,0.5}) was applied to form unweighted graphs. After cleaning the dataset contained ~350–500 tradable stocks per month.",
+  "experiment_input": {
+    "source": "Kaggle SP500 historical daily prices (public dataset referenced by authors).",
+    "time_range": "2010–2020 (monthly slices used to compute correlations).",
+    "assets_per_month": "Approximately 350–500 after cleaning (survivorship bias noted).",
+    "preprocessing": "Compute daily returns; compute sample mean and sample covariance; compute Pearson correlation matrix Cm; threshold absolute correlations |Cm_ij| > λ to form unweighted graphs.",
+    "instance_generation": "For each desired subgraph size n (nmin=6 up to nmax tested up to 100; main reported experiments up to n=30) generate D_n_k datasets of k=500 graphs by breadth-first search around a random start node from the full-month graphs.",
+    "thresholds": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5
+    ],
+    "dataset_sizes": "For each n, D_n_500 (500 graphs); training primarily reported for n in [6,30]."
+  },
+  "experiment_process": {
+    "overview": "Iterative Train-and-Scale loop over instance sizes. For each size n: generate dataset D_n_k; train a p-depth QAOA circuit on D_n_k using parameter-shift gradient updates; decide a target depth ptarget (e.g., p + 2); incrementally increase p by inserting an identity (zero-parameter) layer at index ceil(p/2), train only the new layer, then retrain all parameters; repeat until p reaches ptarget; then move to n+1 and repeat with warm-started parameters.",
+    "initial_state": "All-zeros computational basis state (empty set).",
+    "circuit": "MIS-constrained QAOA: phase-separating cost unitary Uc(α)=∏_i e^{i α σ0_i} and constrained mixer Ud(β)=∏_{commuting groups}∏_{g_j in group} e^{-i β g_j}, where g_j = σ^x_j ∏_{(j,k)∈E} σ^0_k.",
+    "mixer_partitioning": "Randomized algorithm to partition local mixer generators into commuting groups to reduce circuit depth.",
+    "gradient_estimation": "Parameter-shift rule (finite-difference style); shift size 0.01.",
+    "optimization_routine": "Stochastic coordinate updates: at each gradient step choose a parameter uniformly at random, apply gradient update with learning rate schedule. Total ~217 ≈ 130,000 updates across 64 epochs. Initial lr=0.02, final lr=0.002 via exponential decay.",
+    "instance_weighting": "Compute energy and approximation gap per instance; weight instances by standard-deviation range of their gap and temperature β=1 during training.",
+    "evaluation": "Compute approximation gap, empirical success probability (used to estimate sampling complexity). Compare scaling to constant-temperature (T=1) simulated annealing.",
+    "training_hyperparameters": {
+      "pmin": 6,
+      "nmin": 6,
+      "growth_per_size": "p increased by 2 per size increment in reported experiments",
+      "epochs": 64,
+      "total_gradient_updates": 130000,
+      "initial_learning_rate": 0.02,
+      "final_learning_rate": 0.002,
+      "shift_size": 0.01,
+      "dataset_per_n": 500
+    }
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Approximation gap / approximation ratio (quality of solutions)",
+      "Empirical sampling complexity (inverse success probability) to sample best solution",
+      "p-depth as function of instance size (e.g., p=54 for n=30)",
+      "Comparison of empirical scaling exponents vs simulated annealing"
+    ],
+    "result_format": "Aggregated statistics over 500 graphs per size: medians with quartile bands reported for metrics; plots of approximation gap vs n, inverse success probability vs n, and p vs n.",
+    "baselines": [
+      "Classical simulated annealing (constant temperature T=1) used for empirical comparison of sampling complexity scaling"
+    ]
+  },
+  "experiment_parameters": {
+    "qubits": "n (varied); reported up to n=30 in main results, experiments generated up to n=100 for some analyses",
+    "max_depth_reported": 54,
+    "p_initial": 6,
+    "p_growth_step": 2,
+    "shots": "Not specified (classical simulator expectation values used; sampling probability computed empirically from state amplitudes/simulation)",
+    "gradient_updates": 130000,
+    "epochs": 64,
+    "initial_learning_rate": 0.02,
+    "final_learning_rate": 0.002,
+    "shift_size_parameter_shift": 0.01,
+    "dataset_instances_per_size": 500,
+    "thresholds_lambda": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5
+    ],
+    "optimizer": "Stochastic coordinate descent-like updates using parameter-shift gradients (no named optimizer like Adam reported)"
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "Data source is specified (public Kaggle SP500 historical prices) and preprocessing steps (daily returns, Pearson correlations, thresholding, BFS subgraph extraction) are described. Training hyperparameters (epochs, lr schedule, shift size, total gradient updates, dataset sizes, pmin) are reported, enabling reproduction on a classical simulator. No code repository or implementation details (simulator name, circuit compiler, random seeds, exact randomized partitioning algorithm code) are provided in the paper, and authors note survivorship bias in the dataset. Reproducing exact reported plots will require reimplementing the mixer partitioning, dataset generation (BFS seed selection), and the exact stochastic coordinate update schedule.",
+  "key_findings": [
+    "[supported] The authors introduce Train-and-Scale, a training protocol that iteratively increases QAOA circuit depth while scaling instance size using warm-started parameters and repeated retraining.",
+    "[supported] Empirical results on SP500-derived graph instances (subgraphs n=6..30) show Train-and-Scale finds high-quality parameters with average approximation ratios below 0.4.",
+    "[supported] The experiments report a modest growth in circuit depth as instance size grows (example: p = 54 for n = 30).",
+    "[supported] Learned parameters transfer to unseen instances within the trained family (good transferability up to n = 30).",
+    "[supported] The authors trained on datasets of 500 graphs per size (Dn_500) for multiple correlation thresholds λ and used ≈130,000 finite-difference (parameter-shift) gradient updates (2^17 ≈ 131,072).",
+    "[supported] In the reported benchmarks (λ = 0.1), the empirical sample-complexity scaling exponent for Train-and-Scale QAOA is smaller (0.044) than for simulated annealing (0.057) on the tested instances.",
+    "[supported] The training setup: pmin = 6, nmin = 6, training split into 64 epochs with initial learning rate 0.02 decaying to 0.002; during scaling p increased by 2 per n in experiments (QAOA-2n).",
+    "[speculative] The paper suggests that modest (linear) growth in p-depth might suffice to maintain solution quality for much larger instances (potentially hundreds of variables) in the near future.",
+    "[speculative] The authors claim (qualitatively) that Train-and-Scale is a robust method to keep circuit depth and sampling complexity modest for larger optimization problems.",
+    "[speculative] The statement 'To the best of our knowledge, we report scaling on the largest size instances of hard optimization problems for QAOA-p to date' is a claimed novelty/record by the authors (not independently verified here).",
+    "[speculative] The paper reiterates known concerns about barren plateaus / vanishing gradients when training high-depth VQAs, motivating the need for warm-start and layerwise growth strategies."
+  ],
+  "results_summary": "The paper proposes Train-and-Scale, a practical protocol to train QAOA on families of size-parameterized instances by warm-starting parameters from smaller instances and incrementally inserting and training new layers as instance size grows. Empirical benchmarks on SP500-derived maximum-independent-set graphs (sizes 6–30, 500 graphs per size, multiple correlation thresholds) show the method produces high-quality solutions (average approximation ratio < 0.4), good parameter transferability, and a modest increase in circuit depth (e.g., p = 54 for n = 30). Training used ≈131k parameter-shift gradient updates and a staged learning-rate decay; the authors report favorable empirical sampling-scaling (exponent 0.044) compared to simulated annealing (0.057) on the tested instances. The authors argue this approach may enable scaling QAOA to larger problem sizes with controlled depth growth, but claims about applicability to hundreds of variables are presented as prospects rather than demonstrated facts.",
+  "performance_claims": [
+    "Average approximation ratio below 0.4 across tested instances (abstract / experiments).",
+    "p = 54 reported for instance size n = 30 (end of Train-and-Scale run).",
+    "Training used ≈2^17 ≈ 131,072 finite-difference / parameter-shift gradient updates.",
+    "Datasets: Dn_500 with 500 graphs per size for n between 6 and 100 (training focused on n up to 30 for λ values {0.1,0.2,0.3,0.4,0.5}).",
+    "Training hyperparameters: pmin = 6, nmin = 6, 64 epochs, initial learning rate 0.02 decaying to 0.002, uniform random selection of parameter per update, shift size 0.01.",
+    "Experimental schedule increased p by 2 per n in the presented runs (QAOA-2n).",
+    "Empirical sample-complexity scaling exponent for Train-and-Scale QAOA: 0.044; for simulated annealing: 0.057 (on the tested λ = 0.1 correlation graphs).",
+    "Observed sampling probabilities for finding best solutions in experiments did not fall below 2^-20 for the sizes considered."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper presents empirical improvements in trained QAOA sampling and scaling behavior on medium-size SP500-derived instances and reports a lower empirical scaling exponent versus simulated annealing on the tested set, but it does not demonstrate a conclusive, general quantum advantage. Claims about potential usefulness for much larger instances remain prospective and are not proven or benchmarked rigorously against state-of-the-art classical solvers across broader instance families.",
+  "limitations": [
+    "Low-depth quantum circuits have well-studied limitations that reduce their usefulness for solving hard optimization problems (author-stated).",
+    "Training high-depth variational circuits from identity or random initializations is likely to suffer from vanishing gradients / barren plateaus (author-stated).",
+    "The grouping / partitioning of mixer generators to reduce circuit depth is itself NP-hard; the authors resort to a simple randomized algorithm (author-stated).",
+    "Classical simulation cost limited experiments (e.g., prevented exploring larger n for larger correlation thresholds λ) (author-stated).",
+    "The SP500 dataset used (Kaggle) contains survivorship bias (author-stated).",
+    "The approach could suffer if the sampling probability of good solutions becomes very low (sampling complexity can be problematic); in these experiments this did not occur up to n=30 (author-stated).",
+    "[inferred] Transferability was demonstrated only up to n=30 (p=54); it is not established that learned parameters or the Train-and-Scale schedule generalize to arbitrary larger graphs or different instance distributions.",
+    "[inferred] Experiments were performed via classical simulation; performance and robustness on real noisy quantum hardware (noise, connectivity, gate fidelity) were not evaluated.",
+    "[inferred] The training protocol is computationally intensive (∼130k parameter-shift gradient updates in experiments); training cost may scale poorly with n and p.",
+    "[inferred] The specific layer-insertion strategy (inserting identity layers at the circuit middle and increasing p by fixed increments) is heuristic and may not be optimal.",
+    "[inferred] The discretization of Portfolio Diversification to unweighted thresholded graphs (using a correlation threshold λ) may lose granular portfolio information (e.g., weights, continuous correlations) and hence limit applicability to practical portfolio construction."
+  ],
+  "open_questions": [
+    "Does the observed modest (approximately linear) growth in p-depth and the favorable sampling-complexity scaling continue to hold for problem instances with hundreds (or more) variables?",
+    "How well does Train-and-Scale perform on real quantum hardware in the presence of noise, limited qubit connectivity, and realistic gate errors?",
+    "How well do parameters learned on BFS subgraphs (from SP500) transfer to out-of-distribution instances or to graph families with different topologies or statistics?",
+    "Can the mixer-generator partitioning be improved beyond the simple randomized algorithm to yield lower-depth mixers or better performance?",
+    "What is the effect of different correlation thresholds λ on scaling behavior for larger n beyond the range the authors could classically simulate?",
+    "What is the optimal strategy for inserting layers (where to insert, how many at each scaling step) when growing circuit depth in Train-and-Scale?",
+    "How does the overall training cost (number of gradient evaluations, wall-clock time) scale with n and p, and is the protocol practical for larger problem sizes?",
+    "How sensitive are the results to the survivorship bias in the SP500 dataset, and do similar results hold on other financial datasets (with different time windows, asset classes, or without survivorship bias)?"
+  ],
+  "future_work": [
+    "Scale experiments to much larger instances (hundreds of variables) to test whether the favorable depth and sampling scaling trends continue and whether Train-and-Scale remains effective.",
+    "Evaluate Train-and-Scale and the learned QAOA parameters on real quantum hardware (noisy devices) to assess robustness to noise and hardware constraints.",
+    "Investigate improved methods for mixer partitioning and more efficient circuit constructions to reduce depth.",
+    "Study transferability and generalization of learned parameters across different graph families, thresholds λ, and financial datasets (addressing survivorship bias)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Train-and-Scale: warm-start QAOA parameters on small MIS instances, incrementally insert identity layers to grow depth, train new layer then retrain all parameters to scale to larger portfolio graphs.",
+    "#idea:quantum-advantage — On SP500-derived MIS subgraphs (n=6–30) the method attains high-quality solutions (median approximation gap/ratio reported, e.g., average approximation ratio < 0.4), modest circuit-depth growth (p ≈ 54 at n=30) and favorable empirical sampling-complexity scaling versus a simulated-annealing baseline.",
+    "#idea:near-term-feasibility — Design choices (MIS-specific embedded constraint, partitioned commuting mixers, randomized partitioning to reduce depth) and reported low sampling complexity are positioned as NISQ-friendly, suggesting potential near-term applicability—though evaluated in noiseless simulation.",
+    "#idea:hybrid-approach — Training uses classical parameter-shift gradient estimation with stochastic coordinate updates (~130k updates across 64 epochs) and classical preprocessing (graph extraction from thresholded correlations), exemplifying a hybrid QPU-CPU workflow even though executed via classical simulation.",
+    "#limitation:simulation-only — All experiments run in classical simulators; no quantum hardware/cloud QPU experiments reported, so hardware/runtime considerations (latency, noise) are not evaluated.",
+    "#limitation:no-empirical-validation — The paper lacks real-device validation or noise-aware experiments; claims about trainability, sampling complexity and modest depth growth are not empirically demonstrated on physical quantum hardware."
+  ],
+  "contradictions": []
+}

@@ -1,0 +1,259 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier and date (arXiv:2601.04049v1), has academic structure (abstract, methods, results, references) but no journal or conference venue indicated, consistent with an arXiv preprint rather than a peer-reviewed publication.",
+  "title": "Quantum computing for multidimensional option pricing: End-to-end pipeline",
+  "authors": [
+    "Julien Hok",
+    "Álvaro Leitao"
+  ],
+  "year": "2026",
+  "journal_or_venue": "arXiv preprint arXiv:2601.04049",
+  "doi": "",
+  "abstract_summary": "The paper presents an end-to-end framework that calibrates arbitrage-free marginal risk-neutral densities from market option quotes using the Normal Inverse Gaussian model, couples marginals via a Gaussian copula, and applies Quantum Accelerated Monte Carlo (QAMC) based on Quantum Amplitude Estimation to compute high-dimensional option integrals. Theoretical accuracy bounds and empirical tests on Credit Agricole, AXA, and Michelin show high calibration accuracy and that QAMC attains quadratic convergence, requiring roughly 10–100× fewer queries than classical Monte Carlo for comparable precision.",
+  "methodology_description": "The paper develops an end-to-end pipeline for multi-asset European option pricing that combines market-consistent marginal recovery with quantum-accelerated numerical integration. Marginal risk-neutral densities are calibrated per maturity from market vanilla option quotes using an exponential Normal Inverse Gaussian (NIG) time-slice model. Calibration is posed as a Tikhonov-regularized nonlinear least-squares problem (weights inversely proportional to bid–ask spreads, prior set from Black–Scholes ATM volatility, location parameter µ fixed to zero) solved with grid-search initialization and scipy.optimize.minimize (trust-constr). Calibrated marginals (analytic NIG density) are approximated on a compact interval [a,b] via a cosine-series (Fourier–cosine / COS) orthogonal expansion; coefficients are estimated either classically via Monte Carlo / Riemann sums or via quantum-accelerated Monte Carlo (QAMC). Dependence across assets is introduced with a Gaussian copula; the joint expectation is then evaluated either by (a) preparing a quantum state encoding the approximated joint density and payoff (joint formulation) or (b) preparing independent-marginal states and applying a copula-weighted payoff (independent formulation). For quantum acceleration the authors employ Quantum Amplitude Estimation (QAE) variants: Real QAE for signed cosine coefficients and Iterative QAE for nonnegative payoffs. Experiments compare classical Monte Carlo (CMC) and QAMC in coefficient estimation and multi-asset pricing, measuring error vs sample/query counts and reporting calibration pricing errors and convergence speedups. Implementation uses Python, NEASQC financial library and myQLM simulator, with an ideal (noise-free) quantum simulator.",
+  "algorithms_used": [
+    "Normal Inverse Gaussian (NIG) model (exponential NIG for log-price)",
+    "Tikhonov-regularized nonlinear least squares calibration",
+    "Grid-search initialization",
+    "trust-constr optimizer (scipy.optimize.minimize)",
+    "Fourier-cosine (COS) orthogonal-series density expansion",
+    "Gaussian copula for dependence",
+    "Classical Monte Carlo (CMC)",
+    "Quantum Amplitude Estimation (QAE)",
+    "Real Quantum Amplitude Estimation (Manzano et al.)",
+    "Iterative Quantum Amplitude Estimation (Grinko et al.)",
+    "Quantum state preparation oracles (AXi, AX, Aind_X) and controlled rotations (Wγk, Wh)"
+  ],
+  "frameworks": [
+    "Python 3.10",
+    "SciPy (scipy.optimize.minimize, trust-constr)",
+    "NEASQC: Financial Applications Library",
+    "myQLM (quantum package) 1.12.2"
+  ],
+  "experimental_setup": "Development machine: Intel Core Ultra 9 285H CPU, 64 GB RAM. Implementation in Python 3.10 using NEASQC and myQLM 1.12.2. Quantum computations executed on an ideal, noise-free simulator backed by C-based linear algebra libraries (no hardware noise model). QAE variants used: Real QAE for signed coefficient estimation and Iterative QAE for option pricing.",
+  "dataset_used": "Market mid-prices (computed from bid–ask) for European call and put options on three equities (Credit Agricole, AXA, Michelin) sourced from Euronext (data date 24/12/2024), multiple maturities and strikes; spot prices from Yahoo Finance; stock futures curves from market data. Dataset includes strikes, bid–ask quotes and maturities; implied volatilities computed via Black–Scholes.",
+  "experiment_input": {
+    "source": "Euronext option quotes (24/12/2024) and Yahoo Finance spot",
+    "assets": [
+      "Credit Agricole",
+      "AXA",
+      "Michelin"
+    ],
+    "data_components": "Strikes, bid/ask quotes for calls and puts across maturities; futures curve; spot price",
+    "preprocessing": [
+      "Compute mid-prices from bid/ask",
+      "Convert mid-prices to implied volatilities with Black–Scholes",
+      "Arbitrage sanity checks: digital and butterfly arbitrage detection and removal in tails",
+      "Estimate market-implied forward and discount via put–call parity and linear regression across strikes",
+      "Infer continuous dividend yield q from forward relationship",
+      "Set NIG location µ=0 (analytical justification)",
+      "Weights in calibration set inversely proportional to bid–ask spreads"
+    ],
+    "sizes_and_discretization_examples": {
+      "coefficient_experiment": {
+        "J": 25,
+        "n (qubits per marginal)": 5,
+        "K_terms": 24
+      },
+      "pricing_experiments": {
+        "spread_option (N=2)": {
+          "J_per_dim": 23,
+          "Nn_total_qubits": 6
+        },
+        "basket_option (N=3)": {
+          "J_per_dim": 22,
+          "Nn_total_qubits": 6
+        }
+      },
+      "repetitions": 25
+    },
+    "calibration_parameters_examples": {
+      "regularization_lambda": 5e-07,
+      "prior_theta0": "Black–Scholes ATM implied volatility",
+      "parameter_bounds": "α>0, δ>0, β^2<α^2, (β+1)^2<α^2",
+      "optimizer": "trust-constr (scipy)"
+    }
+  },
+  "experiment_process": [
+    "Ingest market option quotes and spot/futures data.",
+    "Preprocess: compute mid-prices, implied vols (Black–Scholes), perform arbitrage sanity checks (digital and butterfly), remove inconsistencies, estimate forward/discount factors via put–call parity regression and infer dividend yields.",
+    "Per asset and maturity: calibrate NIG parameters (α, β, δ) with µ set to 0 by minimizing Tikhonov-regularized least-squares objective J(θ) = Σ wm (V_NIG(θ) − V_market)^2 + λ||θ − θ0||^2. Use grid-search for initial guesses and trust-constr optimizer; weights inversely proportional to bid–ask spreads.",
+    "Compute analytic NIG density f_i(x) for each marginal.",
+    "Choose a compact truncation interval [a_i, b_i] and expand f_i via a K-term cosine-series (COS) approximation: f_i ≈ Σ_{k=0}^{K−1} a_{i,k} γ_k(x).",
+    "Estimate coefficients a_{i,k} either classically (Riemann sum/CMC) or via QAMC:",
+    "  - Build state-preparation oracle AXi that loads sqrt(f_i(x_j)) amplitudes over J = 2^n grid points (n qubits per marginal).",
+    "  - Apply controlled-rotation oracle W_{γk} to encode γ_k(x_j) into an ancilla amplitude (signed encoding uses Real QAE).",
+    "  - Use Real QAE variant to estimate signed coefficients and Iterative QAE for nonnegative expectation estimates; record number of quantum queries.",
+    "Construct joint model via Gaussian copula: c(F1(x1),...,FN(xN)). Two evaluation strategies:",
+    "  - Joint formulation: prepare AX that loads sqrt(ˆf_joint(x_j)) amplitudes (using approximated marginals and copula) and apply Wh to load payoff h(x) into ancilla; use QAE to estimate E[h].",
+    "  - Independent formulation: prepare independent-marginal state Aind_X (product of marginals), define adjusted payoff ˆH(x)=h(x)c(ˆF1,...)/c_max, load via rotation W_{ˆH}, and use QAE; rescale by c_max and account for copula approximation error.",
+    "Compare QAMC results with classical Monte Carlo (CMC/Riemann sum) using the same discretizations, repeating experiments 25 times to obtain averages and confidence intervals.",
+    "Measure metrics: absolute estimation error versus number of samples/queries, calibration pricing errors (normalized by spot), and compute query reductions (QAMC vs CMC)."
+  ],
+  "experiment_output": {
+    "formats": "Numerical tables and plots (error vs samples/queries, implied volatility smiles, calibrated density plots, distribution functions, convergence lines with confidence intervals).",
+    "primary_metrics": [
+      "Calibration pricing error (absolute and normalized by spot; reported ~6–21 basis points depending on asset and tail region)",
+      "Estimation absolute error of coefficients and option prices",
+      "Convergence rates (empirical slopes comparing O(1/√L) for CMC and O(1/L) in queries for QAMC—as stated, quadratic improvement in sample complexity)",
+      "Number of samples/queries required to reach a target precision",
+      "Query reduction factor (QAMC requires ~10–100x fewer queries than CMC for high precision<=1e-3)"
+    ],
+    "baselines": "Classical Monte Carlo (CMC) and Riemann-sum reference integrals",
+    "other_outputs": "Calibrated NIG parameters per asset/maturity (¯α,¯β,¯δ), COS expansion coefficients, joint pricing estimates for spread and basket options using both joint and independent formulations"
+  },
+  "experiment_parameters": {
+    "qubits_per_dimension_examples": {
+      "n": 5,
+      "Nn_total_example": 6
+    },
+    "discretization": {
+      "J_values": [
+        25,
+        23,
+        22
+      ],
+      "J_definition": "J = 2^n grid points per dimension"
+    },
+    "cosine_terms_K": [
+      24,
+      25,
+      27
+    ],
+    "calibration": {
+      "regularization_lambda": 5e-07,
+      "weights": "inversely proportional to bid–ask spreads",
+      "prior_theta0": "Black–Scholes ATM implied volatility",
+      "optimizer": "trust-constr (scipy.optimize.minimize)"
+    },
+    "QAE_parameters": {
+      "algorithms": {
+        "coefficients": "Real QAE (Manzano et al.)",
+        "option_price": "Iterative QAE (Grinko et al.)"
+      },
+      "confidence_and_precision_examples": "experiments select ε and ρ values to target error bounds; theoretical query counts reported as O(1/ε log(1/ρ))"
+    },
+    "repetitions": 25,
+    "assets_tested": [
+      "Credit Agricole",
+      "AXA",
+      "Michelin"
+    ]
+  },
+  "hardware_details": {
+    "development_machine": {
+      "cpu": "Intel Core Ultra 9 285H",
+      "ram": "64 GB"
+    },
+    "software_stack": {
+      "python_version": "3.10",
+      "libraries": [
+        "NEASQC: Financial Applications Library (2024)",
+        "myQLM 1.12.2"
+      ],
+      "simulator": "Ideal (noise-free) quantum simulator using C-based linear algebra back end"
+    },
+    "qpu": null,
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "The paper documents algorithmic choices (calibration objective, regularization, optimizer, COS expansion, QAE variants) and reports concrete parameter examples (λ, K, J, n, repetitions). The data source is commercial market data from Euronext (24/12/2024) and spot from Yahoo Finance; these datasets are not bundled with the paper. Implementation uses NEASQC and myQLM but no public code repository or data release is provided in the preprint. Therefore reproducing results requires access to equivalent market data and reimplementation of the pipeline; many hyperparameters (grid search ranges, exact ε/ρ settings for QAE runs, and state-preparation circuits) are described at a high level but full code and raw inputs are not made available in the manuscript.",
+  "key_findings": [
+    "[supported] Implemented an end-to-end pipeline that combines market-consistent marginal recovery (exponential NIG model), Gaussian-copula joint construction, and quantum-accelerated Monte Carlo (QAMC) valuation; experiments run on real market option quotes for three equities (Credit Agricole, AXA, Michelin).",
+    "[supported] Calibration of NIG marginals to market option quotes produced high fit accuracy: reported maximum normalized pricing errors ≈21 basis points (Credit Agricole), ≈10 bps (AXA), ≈6 bps (Michelin) and typical ATM errors ≈10 bps for one case.",
+    "[speculative] Formal theoretical results are provided for properties of the NIG calibration problem (independence of option price from NIG location parameter µ, continuity of model prices w.r.t. parameters, and existence of a minimizer for the Tikhonov-regularized calibration problem).",
+    "[speculative] Use of cosine-series (Fourier–cosine) expansions to approximate marginal densities and CDFs, with stated uniform/algebraic or exponential convergence rates under smoothness or analyticity assumptions.",
+    "[supported] The paper demonstrates (in simulation) that QAMC methods based on Quantum Amplitude Estimation achieve the expected quadratic convergence rate advantage over classical Monte Carlo (QAMC O(1/ϵ) vs CMC O(1/ϵ^2)) for both marginal coefficient estimation and final multi-asset pricing.",
+    "[supported] Empirical simulation results indicate QAMC needs roughly 10–100× fewer queries/samples than CMC to reach comparable precision in the reported experiments (particularly for errors below ~1e-3).",
+    "[supported] Two ways to apply QAMC are implemented/tested: a 'joint' formulation loading the joint (copula-weighted) density and an 'independent' formulation that samples independent marginals and weights payoffs by copula density; the joint QAMC variant performed better (lower intercept) in reported experiments.",
+    "[speculative] Theoretical query-complexity bounds for the marginal-recovery and pricing subroutines are derived (presented in Theorems 3.4 and 3.5) under the assumed oracles/state-preparation models.",
+    "[speculative] The pipeline is claimed to be modular (can swap marginals/copulas) and extensible to richer dependence structures, path-dependent payoffs and future hardware implementations (not demonstrated).",
+    "[speculative] Justification for use of NIG marginals: analytic density, flexible skew/kurtosis, arbitrage-free time-slice calibration and prior literature indicating empirical fit to equity options."
+  ],
+  "results_summary": "The preprint presents a complete workflow that: (1) fits exponential NIG marginals to market option quotes with Tikhonov regularization (demonstrating low calibration errors on three equities), (2) combines marginals using a Gaussian copula to obtain joint distributions, (3) represents marginals via cosine-series expansions for efficient numerical handling, and (4) applies Quantum Accelerated Monte Carlo (QAMC) based on Quantum Amplitude Estimation to estimate expansion coefficients and final multi-asset option prices. Theoretical lemmas and theorems on calibration and QAE-based complexities are provided, and numerical experiments on an ideal quantum simulator confirm the expected quadratic convergence and a reported 10–100× reduction in queries relative to classical Monte Carlo for comparable precision. The work is presented as a modular pipeline with directions for extensions, while practical hardware deployment is not demonstrated.",
+  "performance_claims": [
+    "Max calibration errors (normalized by spot): Credit Agricole ≈ 21 basis points; AXA ≈ 10 bps; Michelin ≈ 6 bps (figures reported for 1-year expiry).",
+    "QAE / QAMC theoretical convergence: O(1/ϵ) query complexity compared to classical Monte Carlo O(1/ϵ^2).",
+    "Empirical speedup on simulator: QAMC required approximately 10–100× fewer queries/samples than CMC to attain comparable precision (noted particularly when target error < 1e-3).",
+    "Example discretization parameters used in experiments: per-dimension grid J up to 25 (n = 5 qubits per dimension); experiments used Nn = 6 qubits total for multi-asset valuations in reported cases.",
+    "Cosine-series truncation sizes K used in experiments: examples shown with K = 24, 25 and K = 27 for marginal reconstructions.",
+    "Regularization parameter used in calibrations: λ = 5 × 10^{-7} (reported in figure captions)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper provides theoretical complexity results (QAE yields O(1/ϵ) vs CMC O(1/ϵ^2)) and demonstrates the quadratic convergence advantage in numerical experiments on an ideal (noise-free) quantum simulator; however, no demonstration on noisy hardware or end-to-end resource accounting for realistic quantum devices is provided, so the advantage remains theoretically established and empirically supported in simulation but not demonstrated on real quantum hardware.",
+  "limitations": [
+    "Calibration objective is generally non-convex leading to possible multiple local minima and non-uniqueness of solutions (author-stated).",
+    "Stability and sensitivity of the calibration with respect to perturbations in market data is not fully addressed; Tikhonov regularization is used but full stability analysis is lacking (author-stated).",
+    "The pipeline calibrates time-slice marginals independently per maturity; no enforcement of inter-temporal (calendar) arbitrage constraints across maturities is implemented (inferred).",
+    "Use of a Gaussian copula: chosen for tractability but limited in modelling tail dependence and complex dependence structures (author-stated/inferred).",
+    "Assumptions required for cosine-series exponential/algebraic convergence (compact effective support [a,b], smoothness, vanishing endpoint derivatives) may not hold accurately for all market marginals, especially with heavy tails (author-stated/inferred).",
+    "Theoretical complexity results are stated in terms of oracle/query counts; practical resource metrics (gate counts, circuit depth, qubit counts, wall-clock time) and classical vs. quantum runtime are not provided (author-stated/inferred).",
+    "State preparation costs and the practical feasibility/scalability of constructing the required amplitude-encoded quantum states are assumed but not fully quantified or implemented (inferred).",
+    "The paper assumes that querying a quantum oracle is equivalent to drawing a classical sample and therefore does not account for the potentially significant overhead of quantum state preparation and rotations (author-stated/inferred).",
+    "Experimental evaluation uses an ideal (noise-free) simulator and does not model hardware noise, decoherence, or error correction overheads; hence reported query advantages may not translate directly to current noisy devices (author-stated/inferred).",
+    "Simulator memory / computation constraints forced reduced discretization in higher-dimensional experiments (authors note they adapt discrete points), which limits demonstration of scalability (author-stated).",
+    "The QAE variants used (iterative / real QAE) are more hardware friendly but their end-to-end cost including state preparation and controlled operations is not fully analyzed (author-stated/inferred).",
+    "Copula-related assumptions such as the existence of a uniform bound on partial derivatives (c'_max) are needed for theoretical bounds; these may not hold or be hard to estimate for arbitrary copulas (author-stated/inferred).",
+    "The analysis presumes payoff functions scaled to [0,1] (or bounded) for controlled rotations; some realistic payoffs require nontrivial scaling or transformation which can influence numerical stability (inferred).",
+    "Calibration removed a small number of arbitrage violations in market data (practical data-cleaning step); the impact of such preprocessing on downstream pricing is not deeply analysed (author-stated/inferred).",
+    "[inferred] The work does not provide sensitivity/robustness analysis of final option prices to mis-specification or calibration errors in marginals and copula parameters."
+  ],
+  "open_questions": [
+    "How can the pipeline be extended to richer dependence structures beyond the Gaussian copula (e.g., t-copulas, vine copulas, factor copulas) while preserving computational tractability for QAMC?",
+    "How can the approach be extended to path-dependent payoffs (Asian, barrier, American-style features) where temporal dynamics of the process matter?",
+    "What are realistic end-to-end resource requirements (qubit counts, gate counts, circuit depth, coherence times) for implementing the proposed QAMC pipeline on near-term or fault-tolerant quantum hardware?",
+    "How can state preparation (loading densities and payoff-related rotations) be implemented efficiently and scalably in practice, and what is its cost relative to the claimed query savings?",
+    "How does the quantum advantage observed in query complexity translate to overall wall-clock speedups once state preparation, classical pre/post-processing, and hardware constraints are accounted for?",
+    "How does the choice of discretization (number of grid points J, interval [a,b], number of cosine terms K) affect the practical balance between classical and quantum costs, especially in higher dimensions?",
+    "How robust are final option prices to calibration uncertainty, regularization choices (λ), and non-uniqueness of calibrated NIG parameters?",
+    "Can the pipeline be adapted to ensure absence of calendar arbitrage across maturities (i.e., consistent multi-maturity modelling) rather than time-slice independent calibration?",
+    "What is the impact of heavy tails and non-smooth features of empirical marginals on the convergence rates of the cosine expansion and on the realized quantum/classical performance?",
+    "How does the state-preparation overhead affect the practical break-even point (in terms of problem size and target precision) between QAMC and advanced classical techniques such as quasi-Monte Carlo or variance reduction?",
+    "What are the implications of hardware noise and error mitigation strategies for the QAE variants used, and can near-term devices deliver the predicted quadratic benefit with realistic noise levels?",
+    "How well does the Gaussian-copula-based weighting approach perform for payoffs that are highly sensitive to tail dependence (e.g., worst-of, basket options under joint extreme events)?",
+    "How to incorporate efficient sampling from NIG or other Lévy-process-driven models within the classical parts of the pipeline when required (they note NIG quantiles not closed-form and sampling is expensive)?",
+    "What are the implications for regulatory validation, model risk and explainability when combining parametric arbitrage-aware calibration (NIG) with quantum-accelerated numerical routines?"
+  ],
+  "future_work": [
+    "Explore richer dependence structures beyond Gaussian copulas.",
+    "Extend the pipeline to path-dependent payoffs.",
+    "Investigate hardware implementations to assess real-world resource constraints.",
+    "Consider modular replacements for marginals and copulas (the pipeline is modular and amenable to alternative marginals and copulas)."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Quantum Accelerated Monte Carlo (QAMC) via Quantum Amplitude Estimation yields quadratic convergence in coefficient and price estimation and is reported to require ~10–100× fewer queries than classical Monte Carlo for comparable precision (simulator experiments).",
+    "#idea:hybrid-approach — End-to-end hybrid pipeline: classical preprocessing (market data ingestion, arbitrage checks, NIG marginal calibration via regularized least squares and COS density expansion) combined with quantum subroutines for coefficient estimation and high-dimensional integration.",
+    "#idea:hybrid-approach — Two quantum evaluation strategies presented: (a) joint-state preparation encoding the full joint density and payoff, and (b) independent-marginal state preparation with Gaussian-copula weighting (joint vs independent formulations).",
+    "#idea:quantum-advantage — Uses Real QAE for signed cosine coefficients and Iterative QAE for nonnegative payoffs to estimate expectations with recorded query-count vs error comparisons against classical Monte Carlo on market-derived test cases (Credit Agricole, AXA, Michelin)."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — The reported 10–100× query reductions are measured on an ideal, noise-free simulator and count QAE queries but do not account for the practical costs of state preparation, amplitude encoding of continuous densities, circuit depth, or classical-quantum I/O. This undermines direct claims of end-to-end runtime/resource advantage over classical methods in real hardware settings.",
+    "contradiction:scalability — Experiments use small grid sizes (e.g., n=5 qubits per marginal, J=2^n grid points) and an ideal simulator; scaling to realistic precision and many assets would substantially increase qubit and circuit-depth requirements. Thus the demonstrated quadratic convergence on small instances does not by itself establish scalability to production-sized multi-asset option pricing."
+  ],
+  "limitation:qubit-count": true,
+  "limitation:noise": true,
+  "limitation:data-encoding": true,
+  "limitation:no-empirical-validation": false,
+  "limitation:simulation-only": true
+}

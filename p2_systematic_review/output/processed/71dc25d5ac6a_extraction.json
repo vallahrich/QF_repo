@@ -1,0 +1,197 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "The document carries IEEE conference headers, DOI, venue name (9th International Conference on Computer Science and Engineering - UBMK 2024), page footers, and a typical conference-paper structure (abstract, related work, methods, results, references), indicating a peer-reviewed conference paper.",
+  "title": "Leveraging Quantum Computing and Optimization to Estimate Financial Crashes in Small and Medium-Sized Enterprises",
+  "authors": [
+    "Berkay Coskuner",
+    "Ege Dincer",
+    "Ege Bilaloglu",
+    "Bilge Koroglu"
+  ],
+  "year": "2024",
+  "journal_or_venue": "2024 9th International Conference on Computer Science and Engineering (UBMK)",
+  "doi": "10.1109/UBMK63289.2024.10773505",
+  "abstract_summary": "The paper formulates a quadratically constrained quadratic optimization model to estimate financial crashes in a network of SMEs by encoding dependencies such as cross-holdings, self-holdings, asset ownership and failure costs. Because the resulting NP-hard problem is intractable classically, the authors leverage D-Wave hybrid quantum solvers (CQM) to find equilibria rapidly and report high detection of non-performing loans on 2019–2020 data, with solutions obtained in seconds rather than infeasible classical runtimes.",
+  "methodology_description": "The authors formulate financial-crash estimation for a network of SME customers as a quadratically constrained quadratic optimization problem that models inter-firm debt relations as cross-holdings. They build a directed weighted financial network from trial balances and balance sheets (receivables/payables become edges) and compute parameters such as crossholding ratios Cij, self-holdings Ĉii, asset ownership proportions Dik, market prices pk, book values Vi and a dependency matrix A = Ĉ (I − C)^{-1}. A discrete integer/binary decision model is used: integer market-value variables vi and binary failure indicators yi, with an objective minimizing sum_i (vi − Ĉii (sum_j≠i Cij Vj + sum_k Dik pk − βi(p) yi))^2 subject to logical constraints linking vi and yi and integrality bounds. Preprocessing converts floating-point financial numbers to integers by scaling (multiply by 10^{max_decimal_places}). The constrained quadratic model (CQM) is solved using D-Wave’s Hybrid CQM solvers (quantum annealing + classical components). Experiments use repeated runs (five repeats) to explore multiple equilibrium points, with a recommended solver time of ~7 seconds per run. Postprocessing maps predicted failed firms to real-world unpaid-debt outcomes (future quarters) and evaluates the coverage of actual non-performing loans (reported as TL amounts and percent coverage).",
+  "algorithms_used": [
+    "Quantum annealing (D-Wave)",
+    "D-Wave Hybrid Solver (CQM)",
+    "Quadratically Constrained Quadratic Programming (model formulation)"
+  ],
+  "frameworks": [
+    "D-Wave Hybrid Solver (Constrained Quadratic Model - CQM)"
+  ],
+  "experimental_setup": "Problem formulated as a constrained quadratic model (integer vi, binary yi) solved with D-Wave hybrid CQM solver. Floating point financial values scaled to integers by multiplying by 10^{max_decimal_places}. Each experiment repeated 5 times to sample multiple equilibrium points; recommended hybrid solve time ~7 seconds per run. Postprocessing compares predicted failing firms to real unpaid-debt amounts in subsequent reporting quarters.",
+  "dataset_used": "Proprietary financial records (trial balances and balance sheets) of Yapı Kredi Bank SME customers for 2019–2020. Selection: customers whose Strategic Business Unit (SBU) segment remained unchanged between 01-01-2019 and 31-12-2020. Features include cash & equivalents, securities, trade receivables, financial liabilities, trade payables, advances received, total equity, and pairwise payables/receivables (to form network edges). Dataset sizes (number of firms) are not specified in the paper.",
+  "experiment_input": {
+    "source": "Yapı Kredi Bank internal SME customer trial balances and balance sheets",
+    "timeframe": "2019–2020 (experiments reported on 2019 Q4 and 2020 Q4 predictions and subsequent quarters)",
+    "selection_criteria": "Customers with unchanged SBU segment across the period; classified into Type 1 (NPL at least once), Type 2 (watchlist ≥3 consecutive months), Type 3 (otherwise)",
+    "features": [
+      "Cash & Cash Equivalents",
+      "Securities",
+      "Trade Receivables",
+      "Financial Liabilities",
+      "Trade Payables",
+      "Advances Received",
+      "Total Equity",
+      "Pairwise payable/receivable amounts between firms"
+    ],
+    "edges": "Directed weighted edges from debtor to creditor with weight = debt amount (used to compute crossholding ratios Cij)",
+    "size": "Not specified in the paper (number of SMEs not reported)",
+    "preprocessing": "Floating numbers scaled to integers by multiplying by 10^{maximum decimal places} in the data; computation of Cij, Ĉii, Dik, pk, Vi, failure-cost βi(p), threshold vCi (using theta values {.9,.93,.935,.94,.945}), construction of dependency matrix A = Ĉ (I − C)^{-1}; restrict vi to integer domain 0..vmax_i."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Construct directed financial network from trial balance/payable-receivable relations.",
+      "Compute model parameters: crossholding ratios Cij, self-holdings Ĉii, asset ownership Dik, market prices pk, book values Vi, unit liquidation costs λik, failure-cost functions βi(p), threshold values vCi, dependency matrix A = Ĉ (I − C)^{-1}.",
+      "Formulate constrained quadratic optimization: minimize sum_i (vi − Ĉii(sum_j≠i Cij Vj + sum_k Dik pk − βi(p) yi))^2 subject to logical constraints linking vi and yi, yi ∈ {0,1}, vi ∈ {0,1,…,vmax_i}.",
+      "Preprocess numeric data to integers (scale by 10^{max_decimals}).",
+      "Solve the CQM with D-Wave hybrid solver (quantum annealing + classical hybrid components), using recommended solve time (~7s).",
+      "Repeat optimization 5 times to sample different equilibrium solutions due to multiple equilibria and solver randomness.",
+      "Postprocess solutions: map yi=1 firms to predicted unpaid debt amounts, propagate effects via dependency matrix to observe cascade effects, and compare predicted unpaid debt totals against observed real unpaid debt in future quarters."
+    ],
+    "solver_settings": {
+      "solver": "D-Wave Hybrid CQM solver",
+      "solve_time_seconds": 7,
+      "repeats": 5,
+      "float_to_int_scaling": "multiply by 10^{max_decimal_places}",
+      "threshold_theta_values": [
+        0.9,
+        0.93,
+        0.935,
+        0.94,
+        0.945
+      ],
+      "note_on_feasibility": "Shorter solve times produced infeasible solutions with constraint violations; longer times above recommended did not improve feasibility for reported runs."
+    }
+  },
+  "experiment_output": {
+    "format": "Predicted failing-firm indicators (yi), predicted unpaid-debt amounts aggregated (million TL), and propagated unpaid-debt effects on connected firms. Quantitative comparisons to observed unpaid debt in subsequent quarters.",
+    "reported_metrics": [
+      "Predicted unpaid debt in million TL per quarter",
+      "Real unpaid debt in million TL (observed)",
+      "Accuracy percentage computed as predicted / real unpaid debt (reported as coverage percentages)"
+    ],
+    "example_results": {
+      "2019_Q4_predicted_unpaid_M_TL": 90.98,
+      "2019_Q4_real_unpaid_M_TL": 107.0,
+      "2019_Q4_accuracy_pct": 84.13,
+      "2020_Q4_predicted_unpaid_M_TL": 669.92,
+      "2020_Q4_real_unpaid_M_TL": 726.0,
+      "2020_Q4_accuracy_pct": 92.28
+    },
+    "baselines": "No empirical classical solver baseline run on the same proprietary dataset; comparison is qualitative to literature claim that classical solution would be intractable (~13.7 billion years for similar problems)."
+  },
+  "experiment_parameters": {
+    "theta_values": [
+      0.9,
+      0.93,
+      0.935,
+      0.94,
+      0.945
+    ],
+    "repeats": 5,
+    "solver_time_seconds": 7,
+    "float_scaling_rule": "multiply by 10^{maximum decimal places in data}",
+    "vi_domain": "integer 0..vmax_i (vmax_i problem-dependent)",
+    "vmax_i": "problem-dependent, not specified numerically in paper",
+    "qubits": null,
+    "annealing_time_ms": null,
+    "num_reads/shots": null,
+    "optimizer": null
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "The dataset is proprietary bank internal financial records (not publicly available) and the paper does not provide code or detailed solver configuration (e.g., embedding, exact hybrid parameters, or QPU model). The methodology is described sufficiently to reproduce conceptually, but exact replication would require access to the same dataset and private solver/hardware settings; therefore reproducibility is limited.",
+  "key_findings": [
+    "[supported] The authors formulated the financial crash estimation problem for a network of SMEs as a quadratically constrained quadratic optimization model (CQM) that captures inter-firm dependencies and cascade effects.",
+    "[supported] The optimization model was solved using D-Wave's hybrid solvers (CQM) and integer-encoded data preprocessing, with multiple repeated runs to explore multiple equilibria.",
+    "[supported] Empirical results reported that the solver produced feasible solutions in approximately 7 seconds per run (reported solve time by the hybrid solver for their problem instance).",
+    "[supported] Using 2019 data the model identified roughly 90 million Turkish Lira (TL) of unpaid debt out of about 107 million TL of known non-performing loans (NPLs) in the dataset (reported in the paper).",
+    "[supported] Using 2020 data the model identified roughly 669.92 million TL out of about 726 million TL of known NPLs in the dataset (reported in the paper).",
+    "[supported] The authors observed multiple equilibrium solutions for the network model and therefore repeated experiments (5 times) to sample different equilibria; they post-processed solutions against real unpaid debt to evaluate usefulness.",
+    "[speculative] The paper asserts that quantum computing (and quantum annealing/hybrid approaches) provides a revolutionary and practical approach to solve high-dimensional, non-linear, interdependent financial-network optimization problems that are intractable for classical methods.",
+    "[speculative] The authors compare their 7-second hybrid-solver runtime to a literature estimate that a classical solution would take ~13.7 billion years, implying a massive speedup (this comparison is presented as an argument for quantum approaches).",
+    "[speculative] The paper suggests that collecting more complete trial-balance data and including larger firms in the network would improve model realism and predictive performance (future-work recommendation).",
+    "[supported] The authors report that post-processing model output against subsequent quarters' real-world unpaid-debt information produced higher alignment for the 2020 Q4 prediction (reported accuracy for that case).",
+    "[supported] Preprocessing steps (scaling floating numbers to integers) and domain restrictions (integer vi and binary yi) were necessary to adapt the problem to the hybrid quantum solver input format."
+  ],
+  "results_summary": "The authors developed a constrained quadratic optimization model (CQM) to estimate financial crashes in an SME network and solved it using D-Wave's hybrid solvers. They preprocessed financial data (integer encoding), repeated runs to explore multiple equilibria, and evaluated model outputs against real unpaid-debt records. Empirical runs reported feasible solutions in ≈7 seconds and identified substantial portions of known NPLs: about 90M TL of ~107M TL (2019) and about 669.92M TL of ~726M TL (2020). The work emphasizes cascading default dynamics, the need to handle multiple equilibria, and argues for quantum or hybrid quantum-classical methods as a practical way to tackle such NP-hard financial-network problems.",
+  "performance_claims": [
+    "Solver runtime: approximately 7 seconds per solution using D-Wave hybrid CQM solver (reported).",
+    "Classical-computation comparison: cited literature claim that a similar problem would take about 13.7 billion years to solve classically (cited from Orus et al.).",
+    "2019 result: model identified ~90.04 million TL (paper abstract) or ~90.98 million TL (tables) of unpaid debt out of ~107 million TL of real NPLs (reported coverage).",
+    "2020 result: model identified ~669.92 million TL of unpaid debt out of ~726 million TL of real NPLs (reported coverage).",
+    "Repeated experiments: each configuration repeated 5 times to sample different equilibrium points (reported)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors report empirical hybrid-solver runtimes (~7 s) and cite literature claiming infeasibility for classical methods (~13.7 billion years). However, the solution uses D-Wave's hybrid (quantum+classical) solver, the classical vs. quantum comparison is taken from prior theoretical work, and no controlled classical-baseline benchmark on the same instance is provided in this paper; therefore the claim of concrete quantum advantage is presented but remains speculative rather than demonstrated.",
+  "limitations": [
+    "Multiple equilibrium points in the optimization problem require repeated runs and post-processing to identify banking-feasible solutions (authors stated).",
+    "Incomplete observability of firms' outside-network assets/receivables means some mathematically-viable equilibria are not realistic in practice and require manual filtering (authors stated).",
+    "Evaluation relies on matching model-indicated crash firms to real unpaid-debt amounts rather than standard ML metrics (precision/recall) because ground truth for equilibria is incomplete (authors stated).",
+    "Quantum hybrid solver randomness and multiple possible equilibria necessitated repeating experiments (5 times) to sample different optima; shorter solve times produced infeasible (constraint-violating) solutions (authors stated).",
+    "QPU / solver input restrictions forced numeric preprocessing (elimination of floating-point numbers via scaling), which increases magnitudes and may introduce numerical/representation limitations (authors stated).",
+    "The dataset lacks market values and equity-share crossholdings (SMEs are private), so receivables/payables were reinterpreted as crossholding-like relations — a modeling approximation (authors stated).",
+    "Network excludes large companies; authors note including larger firms would make projections more realistic (authors stated).",
+    "[inferred] Scalability and generalizability beyond the studied SME network are uncertain — reported solve time (7s) and feasibility may not hold for larger or more complex networks.",
+    "[inferred] Dependence on a specific vendor's hybrid quantum-classical solver (D-Wave hybrid solvers) may limit reproducibility and portability to other quantum platforms.",
+    "[inferred] Discretization of market value variable vi to integer levels may reduce fidelity of financial valuations and sensitivity to small changes.",
+    "[inferred] The model's sensitivity to parameter choices (e.g., threshold theta values, failure cost function βi(p), scaling factors) is not fully characterized.",
+    "[inferred] Lack of a standardized benchmarking comparison against state-of-the-art classical solvers on the same dataset limits assessment of quantum advantage in this concrete setting.",
+    "[inferred] Reproducibility concerns from quantum annealing randomness and multiple equilibria — results may vary across solver runs and settings.",
+    "[inferred] Practical operational constraints (data availability frequency, legal/privacy issues) may impede routine application in banks despite the method's promise."
+  ],
+  "open_questions": [
+    "How should practitioners select among multiple mathematically-valid equilibrium points to obtain the most realistic/banking-feasible outcome?",
+    "How can unobserved external assets and receivables outside the constructed network be incorporated to reduce false-positive failure predictions?",
+    "What systematic testing or validation mechanisms can be developed to filter out mathematically-viable but practically infeasible equilibria (authors explicitly call for this)?",
+    "How sensitive are the model outputs to choices of thresholds (vCi), failure cost functions βi(p), discretization levels, and other hyperparameters?",
+    "How does the quantum-hybrid solution quality and runtime compare to best-in-class classical optimization/heuristic methods on the same real-world dataset?",
+    "To what extent do quantum solver randomness and limited QPU precision affect the stability and reproducibility of crash predictions?",
+    "How would inclusion of large firms and more complete inter-firm relationships change the modeled contagion dynamics and predictive performance?",
+    "What are the data governance, privacy, and operational implications for collecting more frequent and complete trial balances from customers?",
+    "Can the mapping of receivables/payables to cross-holdings be theoretically justified across different sectors, or does it introduce biases in certain industries?",
+    "What is the robustness of the method across different time periods or stress scenarios beyond the two years analyzed (2019–2020)?",
+    "Is the reported quantum speedup/tractability sustained as network size, density, or asset types scale up?"
+  ],
+  "future_work": [
+    "Develop a testing mechanism to select applicable (bank-feasible) solutions from the set of multiple equilibrium points and reduce the need for repeated runs.",
+    "Improve data quality by ensuring more frequent and complete collection of companies' trial balances to build higher-fidelity financial networks.",
+    "Include large companies in the network alongside SMEs to provide more realistic projections of contagion and system-wide risk.",
+    "Extend statistical modeling by involving domain experts and incorporating more diverse documents (beyond trial balances) to enrich inputs and validation."
+  ],
+  "topic_tags": [
+    "risk-management",
+    "credit-lending"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Authors report D-Wave Hybrid CQM finds equilibria in seconds and achieves high coverage of observed unpaid debt (examples: 2019_Q4 coverage ~84.13%, 2020_Q4 ~92.28%), arguing classical solution would be infeasible for the NP-hard formulation.",
+    "#idea:hybrid-approach — The constrained quadratic integer model (vi integer, yi binary) is solved with D-Wave Hybrid CQM (quantum annealing + classical components); repeated short runs (~7s) and classical postprocessing are used to sample multiple equilibria.",
+    "#idea:near-term-feasibility — Demonstrated on proprietary 2019–2020 SME trial-balance / balance-sheet networks, indicating potential near-term applicability of hybrid quantum solvers to bank risk-detection pipelines.",
+    "#idea:quantum-advantage — Financial-crash estimation is modelled as a quadratically constrained quadratic program encoding cross-holdings and cascade effects via dependency matrix A = Θ (I − C)^{-1}, enabling mapping to CQM.",
+    "#limitation:data-encoding — Preprocessing requires scaling floating financials to integers (multiply by 10^{max_decimal_places}), which can increase problem magnitudes/representation costs and may affect solver behaviour and scalability.",
+    "#idea:hybrid-approach — Uses threshold parameter sweep (theta values) and multiple repeats to explore different failure scenarios and aggregate predicted unpaid-debt amounts for comparison to observed outcomes."
+  ],
+  "contradictions": [
+    "The paper asserts that the D-Wave hybrid solver finds solutions 'rapidly' and that classical runtimes would be infeasible, yet it provides no empirical classical-solver baseline or head-to-head runtime/solution-quality comparison on the same dataset, undermining the strength of the quantum-advantage claim.",
+    "Problem size details (number of firms, number of variables/qubits, constraint counts) are not reported; claiming scalability or practical superiority is contradicted by the absence of evidence about how the approach scales to larger, real-world networks.",
+    "Results come from a hybrid (quantum + classical) solver but the contribution of the quantum component versus the classical components is not quantified; therefore claims of quantum superiority are not clearly substantiated and could be driven largely by classical processing."
+  ]
+}

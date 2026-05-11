@@ -1,0 +1,196 @@
+---
+aliases:
+- 'Quantum Computing and Its Implications for Theoretical and Applied Economics: From
+  Shor’s Algorithm to Models of Uncertainty'
+- Quantum Computing Its Implications
+authors:
+- Chris Aznaouridis
+- Ioannis Aznaouridis
+auto_detected: true
+classification: ''
+contradiction_flags:
+- contradiction:classical-vs-quantum
+- contradiction:scalability
+doi: https://doi.org/10.63711/ijdr.net20250401
+evaluation_type: conceptual-only
+evidence_type: ''
+has_quantitative_results: false
+idea_tags:
+- idea:quantum-advantage
+- idea:near-term-feasibility
+- idea:hybrid-approach
+journal_or_venue: International Journal of Digital Research
+methodology_tags:
+- quantum-annealing-qubo
+- variational-nisq
+- amplitude-estimation
+- quantum-ml
+- grover-search
+- hybrid-quantum-classical
+- quantum-cryptography
+- qft-phase-estimation
+- error-mitigation
+paper_type: ''
+quantum_advantage_claim: theoretical
+related_papers: []
+relevance_phase1: high
+relevance_phase3: medium
+source_type: review-article
+source_type_confidence: high
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/portfolio-optimization
+- topic/derivative-pricing
+- topic/risk-management
+- topic/quantum-ml-finance
+- topic/cryptography-security
+- topic/simulation-monte-carlo
+- method/quantum-annealing-qubo
+- method/variational-nisq
+- method/amplitude-estimation
+- method/quantum-ml
+- method/grover-search
+- method/hybrid-quantum-classical
+- method/quantum-cryptography
+- method/qft-phase-estimation
+- method/error-mitigation
+- idea/quantum-advantage
+- idea/near-term-feasibility
+- idea/hybrid-approach
+- contradiction/classical-vs-quantum
+- contradiction/scalability
+title: 'Quantum Computing and Its Implications for Theoretical and Applied Economics:
+  From Shor’s Algorithm to Models of Uncertainty'
+topic_tags:
+- portfolio-optimization
+- derivative-pricing
+- risk-management
+- quantum-ml-finance
+- cryptography-security
+- simulation-monte-carlo
+year: '2025'
+zotero_key: ''
+---
+
+## Abstract summary
+This review synthesizes interdisciplinary literature on how quantum computing—through principles such as superposition, entanglement, and algorithms like Shor’s and Grover’s—can transform both applied economic tasks (e.g., optimization, forecasting, cryptography) and foundational concepts of uncertainty and decision-making. It surveys quantum machine learning and hybrid methods, highlights practical and epistemological challenges (noise, measurement irreversibility, post-quantum cryptography), and raises ethical and policy concerns about unequal access and the need for interdisciplinary research.
+## Methodology
+The paper employs a non-empirical, review-based bibliographic methodology. It conducts a structured literature review of contemporary research across quantum information science, computational theory, and economics, synthesizing cross-disciplinary contributions to trace conceptual and practical intersections. The approach combines (a) a comprehensive review of scholarly publications and technical reports (including algorithmic and hardware developments), (b) a theoretical investigation of conceptual bridges between quantum principles (superposition, entanglement, measurement irreversibility) and economic modeling/epistemology, and (c) an analysis of selected economic case studies and application domains (e.g., cryptography, portfolio optimization, decision theory) to illustrate potential impacts. The paper is interpretive and analytical rather than experimental, emphasizing conceptual mapping, identification of research gaps, and outlining directions for future empirical and policy research.
+
+**Algorithms used:** Shor's algorithm, Grover's algorithm, Quantum Approximate Optimization Algorithm (QAOA), Variational Quantum Eigensolver (VQE), Quantum Principal Component Analysis (Quantum PCA), Quantum Support Vector Machines (QSVM), Quantum annealing methods (D-Wave), Quantum Monte Carlo methods / quantum Monte Carlo pricing
+**Frameworks:** Qiskit, D-Wave Leap SDK, OpenQASM
+## Experiment details
+<!-- Step 3 output — experiment replication details -->
+
+## Findings
+- [supported] Quantum computing is grounded in well-established quantum mechanics principles (superposition, entanglement, irreversible measurement, probabilistic outcomes).
+- [speculative] Qubits and quantum gates expand computational state-space exponentially compared to classical bits, enabling parallel exploration of alternatives for certain problem classes.
+- [speculative] Shor's algorithm provides exponential speedup for integer factorization and therefore threatens widely used asymmetric cryptosystems (e.g., RSA) when large-scale fault-tolerant quantum computers become available.
+- [speculative] Grover's algorithm gives a quadratic (square-root) speedup for unstructured search problems and is potentially useful for some large-scale data retrieval tasks in finance.
+- [speculative] Hybrid NISQ-era algorithms (QAOA, VQE) offer promising approaches for approximate optimization problems relevant to economics (portfolio optimization, resource allocation), though practical advantage is not yet established.
+- [supported] There is an active empirical and engineering effort (IBM, Google, IonQ, Rigetti, D-Wave, Quantinuum) to build quantum hardware and provide cloud access to quantum backends.
+- [supported] Google's 2019 Sycamore experiment reported a sampling task completed in ~200 seconds that the authors estimated would take a classical supercomputer orders of magnitude longer; that claim has been influential though it attracted methodological criticism.
+- [supported] The NIST post-quantum cryptography initiative and proposed PQC candidates (e.g., lattice-based Kyber, Dilithium) are real, ongoing responses to quantum threats to classical cryptography.
+- [supported] 'Harvest now, decrypt later' is a recognized and substantiated security risk: adversaries can store encrypted data now and decrypt later once quantum resources permit.
+- [speculative] Quantum machine learning (QSVM, quantum PCA, quantum-enhanced feature maps) promises speedups in pattern extraction and predictive tasks for large economic/financial datasets, but demonstrated, practical advantages on real-world financial services tasks remain preliminary.
+- [speculative] Quantum computing invites an epistemological reframing of economic uncertainty (e.g., modeling preferences or cognitive states as superpositions) and can inform alternative decision-theoretic models.
+- [speculative] Quantum-enabled cryptographic primitives (QKD, other quantum-safe mechanisms) could contribute to a new layered trust framework for financial systems, but broad deployment and systemic integration are unresolved challenges.
+- [speculative] Quantum annealers and hybrid quantum-classical simulators can act as experimental platforms ('quantum simulators') for agent-based or other complex economic models, though the representativeness and advantage of such simulations are not definitively established.
+- [speculative] Explainability and interpretability (XAI) become more difficult in quantum models, raising ethical and accountability challenges for financial decision-making driven by quantum or quantum-inspired systems.
+- [speculative] Access to quantum computational capabilities will be unequally distributed globally and corporately, posing geopolitical and distributional concerns.
+- [speculative] The transition to quantum-resilient financial infrastructure requires not only algorithm replacement but systemic, institutional restructuring (blockchain, PKI, interbank systems).
+
+**Results summary:** The paper reviews foundational quantum computing concepts and maps their potential impacts on economic theory and financial services. It highlights established scientific principles (superposition, entanglement, measurement irreversibility) and documented engineering efforts (e.g., Google's Sycamore, IBM roadmaps, NIST PQC). The authors argue—mostly at a theoretical/speculative level—that quantum algorithms (Shor, Grover, QAOA/VQE) could reshape cryptography, optimization, decision models, and risk analysis in finance, while also raising practical limits (NISQ-era noise, decoherence), governance, and ethical challenges. Empirical demonstrations of practical, industry-scale quantum advantage in finance remain limited, and many claims about economic transformation are prospective rather than proven.
+
+**Performance claims:**
+- Shor's algorithm: exponential speedup for integer factorization (theoretical result).
+- Grover's algorithm: quadratic speedup for unstructured search (O(√n) vs O(n)).
+- Google Sycamore (Arute et al., 2019): reported completing a sampling task in ~200 seconds that was estimated to take ~10,000 years on a classical supercomputer (empirical claim; later contested regarding practical relevance).
+- BQP complexity class: problems solvable in polynomial time by a quantum computer with error probability < 1/3 (theoretical definition).
+- Landauer's limit cited: energy per bit E = kT ln(2) (thermodynamic bound mentioned).
+- IBM announced roadmap target: 100,000 logical qubits by 2033 (organizational roadmap/claim).
+## Quantum advantage claim
+**Classification:** theoretical
+
+The article documents theoretical and laboratory-scale demonstrations of quantum advantage for specific tasks (Shor, Grover, Google sampling) and proposes many potential economic applications, but does not present robust empirical evidence of scalable, practical quantum advantage in financial services; the advantage remains primarily theoretical or demonstrated on contrived/specialized tasks.
+## Limitations
+- Quantum computing is at an early/experimental stage (NISQ era) with practical constraints on scale and reliability (decoherence, noise, measurement errors, limited qubit counts).
+- Effective quantum error correction and fault-tolerant, large-scale quantum systems remain undeveloped, limiting real-world deployment.
+- Full exploitation of quantum advantage for general-purpose economic/financial problems remains an open technical challenge.
+- Quantum computations are intrinsically probabilistic and rely on measurement-induced collapse, complicating deterministic outputs and requiring statistical sampling/repeated measurements.
+- Demonstrations of 'quantum supremacy' have been criticized for limited practical relevance to economically meaningful problems.
+- Existing cryptographic infrastructures (RSA, ECC, etc.) are vulnerable to quantum attacks (Shor); migrating to post-quantum cryptography is non-trivial and systemic.
+- Temporal asymmetry between the present harvesting of encrypted data ('harvest now, decrypt later') and slow institutional transition to quantum-safe systems creates a security window of vulnerability.
+- Explainability and interpretability of quantum machine learning and quantum-enhanced decision systems are limited; XAI for quantum models is underdeveloped.
+- Access to quantum computational resources is currently uneven and concentrated among a few actors, raising equity and geopolitical concerns.
+- Transitioning financial infrastructures (blockchains, clearing, digital currency systems) to quantum-secure alternatives requires major restructuring and coordination.
+- Claims about future energy-efficiency advantages of quantum systems are conditional on scalable, fault-tolerant implementations and therefore uncertain.
+- [inferred] Lack of standardized regulatory frameworks and institutional preparedness for quantum-secure finance and quantum risk governance.
+- [inferred] Limited empirical evidence of quantum advantage on large-scale, real-world financial datasets; positive results mainly on limited/synthetic datasets.
+- [inferred] Skills, education, and disciplinary capacity gaps in the economics/finance community to design, evaluate, and govern quantum-enabled systems.
+- [inferred] High capital and technological costs plus platform centralization risk concentrating 'quantum economic power' and increasing systemic dependency.
+- [inferred] Integration and operational complexity when retrofitting existing financial systems (legacy software, standards, legal frameworks) with quantum-safe technologies.
+- [inferred] Reproducibility, validation, and auditability challenges arising from probabilistic outputs and measurement irreversibility in quantum computations applied to economic decision-making.
+## Open questions
+- What is the ontological and operational definition of 'information' within economic frameworks when quantum representations (superposition, entanglement) are used?
+- How should choice and preferences be defined when alternatives can exist in superposition rather than as discrete classical options?
+- What does rationality mean if the act of measurement/observation (information elicitation) can affect the decision outcome?
+- How can quantum decision-making models be implemented in real-time economic and market environments?
+- What role does quantum uncertainty play in markets and how would it reshape risk theory and risk management practices?
+- How can quantum algorithms (QAOA, VQE, Grover, etc.) be effectively and robustly applied to core economic problems like portfolio optimization, matching, and equilibrium computation?
+- What institutional, political, and governance frameworks are appropriate for a post-classical era of economic computability?
+- How can trust and security be preserved in financial systems vulnerable to quantum attacks, and what combination of PQC, QKD, and institutional mechanisms is required?
+- How should blockchain and distributed ledger technologies be redesigned or migrated to remain secure under quantum-capable adversaries?
+- Who will have access to quantum computational capabilities, how will that uneven access affect markets (the meaning of 'quantum influence'), and how can distributional effects be measured and mitigated?
+- How can quantum machine learning models be made explainable and auditable for high-stakes economic applications (e.g., credit scoring, regulatory decisions)?
+- What metrics, testing standards, and validation protocols are appropriate to assess quantum-enabled economic models and their outputs?
+- Can quantum probability/probabilistic frameworks provide a superior empirical account of observed deviations from classical rational choice (framing effects, intransitive preferences)?
+- What are the social and ethical implications of deploying quantum economic technologies, and how should they inform policy and design choices?
+- How to quantify and monitor the transitional risks associated with 'harvest now, decrypt later' strategies and coordinate a timely global migration to quantum-safe systems?
+
+**Future work:**
+- Establish Quantum Economics Laboratories for interdisciplinary research and shared infrastructure.
+- Pilot development of hybrid (classical-quantum) models for financial forecasting and optimization.
+- Experimental research on decision-making under multi-state (quantum-like) uncertainty environments.
+- Comparative analysis between classical and quantum formulations of rationality.
+- Develop ontological and epistemological grounding of information within economic frameworks incorporating quantum concepts.
+- Quantify the unequal distribution of access to quantum computational power and measure its economic impacts.
+- Design governance scenarios for quantum technology in global economic networks and institutional policy studies.
+- Develop open-access educational resources in quantum economics to build capacity.
+- Organize collaborative/competitive technological workshops (hackathons) that combine technical innovation with ethical foresight.
+## Key ideas
+- #idea:quantum-advantage — Theoretical quantum algorithms (Shor, Grover, QAE) offer provable asymptotic speedups for selected tasks relevant to finance (factorization/cryptanalysis, unstructured search, Monte Carlo integration), but concrete industry-scale advantages remain unproven.
+- #idea:near-term-feasibility — NISQ-era methods (QAOA, VQE, quantum annealing) are promising for approximate optimization and simulation tasks (e.g., small portfolio problems, quantum-inspired Monte Carlo), yet noise, decoherence, and limited qubit counts constrain practical deployment.
+- #idea:hybrid-approach — Hybrid quantum-classical architectures and algorithms are presented as the most pragmatic path forward for financial applications, combining classical preprocessing/postprocessing with parameterised quantum circuits.
+- #limitation:noise — Hardware noise and decoherence are highlighted as primary obstacles to reliable financial computations and model interpretability in the near term.
+- #limitation:qubit-count — Many algorithmic promises (e.g., Shor, large-scale QAE) require far greater qubit counts and error correction than currently available.
+- #limitation:data-encoding — The review flags the cost and complexity of encoding large financial datasets into quantum states (feature maps, state preparation) as a significant practical limitation.
+- #limitation:no-empirical-validation — The authors emphasize that many finance-related claims remain speculative and lack rigorous empirical validation on real-world financial datasets or production hardware.
+- #limitation:simulation-only — Much of the literature surveyed relies on classical simulations or small-scale experiments; generalisability to industrial-scale problems is uncertain.
+- #idea:quantum-advantage — The paper contextualises high-profile empirical claims (e.g., Sycamore sampling) and notes methodological critiques, arguing that proclaimed quantum supremacy results do not straightforwardly translate to financial advantage.
+## Contradictions
+- The review highlights a tension between theoretical algorithmic speedups (Shor's exponential factorization, Grover's quadratic search, QAE for Monte Carlo) and the lack of demonstrated, practical advantage on financial services problems — it explicitly notes that empirical/industry-scale quantum advantage has not been established and that some high-profile experimental claims (e.g., Google's Sycamore sampling task) attracted methodological criticism.
+- Scalability contradiction: while many surveyed works claim future transformative impacts, the paper argues these rely on large-scale, fault-tolerant hardware that is not imminent; this contradicts narratives that near-term NISQ devices will soon deliver substantive gains for realistic financial workloads.
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

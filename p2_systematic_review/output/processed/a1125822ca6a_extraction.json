@@ -1,0 +1,246 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes arXiv identifier and date (arXiv:2111.00796v3), has typical preprint structure (abstract, methods, results, references) and no journal or conference venue—indicative of an arXiv preprint rather than peer-reviewed publication.",
+  "title": "Quantum optimisation via maximally amplified states",
+  "authors": [
+    "T. Bennett",
+    "J. B. Wang"
+  ],
+  "year": "2022",
+  "journal_or_venue": "arXiv preprint (quant-ph)",
+  "doi": "",
+  "abstract_summary": "This preprint introduces the Maximum Amplification Optimisation Algorithm (MAOA), a quantum algorithm for combinatorial optimisation on near-term devices that constructs states which maximally amplify optimal solutions subject to restricted circuit depth, avoiding the costly variational tuning of QAOA. It connects the approach to Grover search, proposes a restricted Grover adaptive search (RGAS) baseline, and presents simulations on vehicle routing and portfolio optimisation demonstrating that MAOA outperforms RGAS and classical random sampling, with speedup that scales linearly with achievable circuit depth.",
+  "methodology_description": "The authors develop and analyse the Maximum Amplification Optimisation Algorithm (MAOA) within the Quantum Walk Optimisation Algorithm (QWOA) framework and relate its dynamics to truncated Grover search. They show analytically that using a binary marking function on a complete graph and repeatedly applying the phase shift γ = π and walk time t = π/N yields maximal amplitude amplification of marked (high-quality) solutions for restricted circuit depth (rotation count r). They then implement numerical experiments (simulations) to compare MAOA performance with the Grover Adaptive Search (GAS), a restricted-circuit variant (RGAS), and classical random sampling. Simulations use precomputed solution-quality distributions (synthetic data for a capacitated vehicle routing problem and real financial data for a portfolio optimisation problem, plus an idealised large normal distribution) and a probabilistic Grover-amplitude model: P(r, ρ) = sin((2r+1)arcsin(sqrt(ρ)))^2. The MAOA contains a threshold-finding procedure that navigates threshold-response curves by starting at r=1 (sampling median from a small random sample), iteratively finding peaks and doubling r until the user-specified r_f is reached, then performing an adaptive search to select a threshold that lies in the low-convergence regime (P(r, ρ) ≤ 1/40). Once the threshold is found the maximally amplified state is repeatedly prepared and measured. Optimization of variational parameters (where done for comparison/analysis) uses Nelder–Mead from multiple random initializations. Experiment outputs are success-probability-vs-computational-effort curves (10,000 Monte Carlo trials per experiment), amplification factors, and analytic expressions for expected speedup (lim_{μ→0} e_C/e_Q = 2r+1). Numerical resources included Pawsey Supercomputing Centre resources and in-house QWOA simulation software (unnamed).",
+  "algorithms_used": [
+    "MAOA (Maximum Amplification Optimisation Algorithm)",
+    "Grover adaptive search (GAS)",
+    "Restricted Grover adaptive search (RGAS)",
+    "QWOA / QAOA (discussed and used as conceptual baseline)",
+    "Grover's algorithm (truncated / amplitude amplification)",
+    "Nelder–Mead (classical optimizer for parameter tuning)"
+  ],
+  "frameworks": [
+    "QWOA (Quantum Walk Optimisation Algorithm framework)",
+    "Grover amplitude-amplification framework",
+    "QAOA (alternating-operator ansatz) — discussed as baseline"
+  ],
+  "experimental_setup": "Numerical simulations (no physical QPU). Solution-quality distributions are precomputed for each problem instance. Simulations model Grover-amplitude dynamics by using the closed-form probability P(r,ρ)=sin((2r+1)arcsin(√ρ))^2 and assume each Grover-phase application requires two calls to the objective (quality) function; cost per state preparation and measurement is taken as 2r+1. Monte Carlo ensembles of 10,000 simulation runs are used to produce success-probability vs computational-effort curves. Computational resources: Pawsey Supercomputing Centre and local/ in-house QWOA simulation software.",
+  "dataset_used": "Portfolio optimisation: daily adjusted close prices from 2019-01-01 to 2020-12-31 for 20 ASX stocks (ASX20 subset listed in paper). Vehicle routing: synthetically generated instance (randomly generated depot/location costs and demand vector). Also idealised standard normal distribution used to emulate arbitrarily large problems.",
+  "experiment_input": {
+    "portfolio": {
+      "source": "Daily adjusted close prices (public market data) for 20 ASX stocks (AMP, ANZ, AMC, BHP, BXB, CBA, CSL, IAG, MQG, GMG, NAB, RIO, SCG, S32, TLS, WES, BKL, CMW, HUB, ALU)",
+      "date_range": "2019-01-01 to 2020-12-31",
+      "n_assets": 20,
+      "net_position_constraint": 7,
+      "solution_space_size": 61757600,
+      "preprocessing": "Compute daily expected percentage returns Ri and covariance matrix σij; represent portfolio choices z with zi in {-1,0,1} constrained by sum zi = I; enumerate all valid portfolios to obtain full solution-quality distribution (return and risk for each portfolio)."
+    },
+    "vehicle_routing": {
+      "source": "Synthetic random instance as described in paper",
+      "locations": 10,
+      "solution_space_size": 58941091,
+      "preprocessing": "Randomly generate demand vector (integers [5,30]), symmetric cost matrix (depot-to-location costs integers [10,20], inter-location costs integers [1,15]), vehicle capacity = 20; compute cost for every feasible routing solution to build full quality distribution."
+    },
+    "normal_distribution_sim": {
+      "source": "Analytic standard normal distribution",
+      "preprocessing": "Use cumulative distribution function to map threshold T to marked-solution ratio ρ(T) for arbitrarily large N; simulate using analytic amplitude formulas."
+    }
+  },
+  "experiment_process": {
+    "overview": "For each problem instance the pipeline is: (1) precompute full solution-quality distribution (or use analytic normal), (2) for target restricted rotation counts r (various values) run MAOA's threshold-finding routine to identify a threshold T that yields low-convergence marked ratio (P(r,ρ(T)) ≤ 1/40), (3) prepare the maximally amplified state (equivalent to r Grover rotations using γ = π and t = π/N), (4) repeatedly measure the state, counting success as sampling a solution inside the target optimal set; (5) aggregate results across 10,000 Monte Carlo trials to obtain success-probability vs computational-effort curves; (6) compare with RGAS/GAS and classical random sampling baselines.",
+    "MAOA_threshold_finding": "Start at r=1; sample 200 random solutions to estimate median and quartile; iteratively find peak on P(r,ρ(T)) using a peak-finding routine (pseudocode in Appendix C) that tests thresholds stepping away from median and requires sequences of consecutive successful marked measurements (e.g., 20 in a row) to identify and hold a peak; double r and repeat until desired final r_f (a power of two) is reached; perform a final adaptive search with fixed r to find threshold in low-convergence regime.",
+    "MAOA_state_prep": "Use phase shift γ = π and walk time t = π/N on complete-graph walk (equivalent to Grover diffusion) repeated r times to produce the amplified state; after threshold found, repeatedly prepare and measure this state.",
+    "RGAS/GAS": "Run Grover adaptive search with randomised rotation counts up to a growing upper bound; RGAS limits the maximum rotation count to the restricted depth; GAS uses D¨urr and Høyer randomised-rotation approach with λ=1.34 (as used in prior literature and validated by the authors for normal-like distributions).",
+    "parameter_search": "Where variational parameters are optimised (e.g., for analysing alternative partitions), use multiple random initialisations (10,000 or 240 depending on experiment), select top candidates and run Nelder–Mead local optimisation; repeated-parameter application behaviour was explored (showing repeated γ=π, t=π/N is optimal for binary marking).",
+    "monte_carlo": "10,000 simulation runs per experiment to estimate empirical success probabilities; assumptions used: (i) marked-solution ratio ρ(T) known from precomputed distribution, (ii) measurement probability given by analytic Grover formula P(r,ρ), (iii) when a marked solution is observed it is uniformly random among the marked set, (iv) computational cost of one prepare+measure = 2r+1."
+  },
+  "experiment_output": {
+    "formats": "Success-probability vs computational-effort curves (plots), amplification factors, analytic formulae validation.",
+    "metrics": [
+      "Success probability (probability of finding an optimal/target solution after specified computational effort)",
+      "Computational effort measured as number of objective-function calls (2r+1 per prepare+measure)",
+      "Amplification factor of marked set (theoretical (2r+1)^2 in low-convergence regime)",
+      "Speedup relative to classical random sampling (analytic limit: e_C/e_Q → 2r+1 as μ→0)"
+    ],
+    "baselines": [
+      "Classical random sampling",
+      "Grover adaptive search (GAS, unrestricted)",
+      "Restricted Grover adaptive search (RGAS, limited rotation count)",
+      "QWOA / QAOA discussed qualitatively (variational approaches) but not used as a primary quantitative baseline"
+    ],
+    "presentation": "Empirical curves and comparison plots (Figures in paper); numerical agreement with derived analytic expressions (e.g., Eq. (17) and small-ρ approximations)."
+  },
+  "experiment_parameters": {
+    "rotation_counts_r_tested": {
+      "vehicle_routing": [
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "portfolio": [
+        32,
+        64,
+        128,
+        256,
+        512
+      ],
+      "GAS_rmax_values": {
+        "vehicle_routing": 6029,
+        "portfolio": 6172
+      },
+      "normal_dist_experiment": [
+        64
+      ]
+    },
+    "MAOA_fixed_parameters": {
+      "phase_shift_gamma": "π",
+      "walk_time_t": "π / N",
+      "low_convergence_threshold_probability": "≤ 1/40",
+      "amplification_formula_low_rho": "PLC(r,ρ) = ρ (2r+1)^2"
+    },
+    "MonteCarlo_runs": 10000,
+    "optimisation": {
+      "method": "Nelder–Mead",
+      "initial_samples_for_search": "varied (e.g., 10,000 random sets for some analyses; 240 for specific landscape studies)",
+      "repeats": "multiple restarts (e.g., 24 repeated Nelder–Mead runs in one experiment)"
+    },
+    "threshold_finding_routine": {
+      "initial_sample_size_for_median": 200,
+      "consecutive_successes_to_hold_peak": 20,
+      "adaptive_search_hold_count": 40
+    }
+  },
+  "hardware_details": {
+    "compute_resources": "Pawsey Supercomputing Centre and in-house computing resources",
+    "simulator": "In-house QWOA/Grover simulation code (unnamed) modelling analytic Grover amplitude formulas",
+    "QPU_model": null,
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "The paper describes algorithms and provides pseudocode for the MAOA threshold-finding routine (Appendix C) and details the experimental assumptions and analytic formulas used to model Grover amplitudes. Precomputed solution-quality distributions for the two problem instances are described and the financial input data (ASX20 tickers and date range) are public. However, the authors do not provide links to code, specific simulator package names, or public datasets in the preprint; the QWOA simulation software used is referenced but unnamed. Reproducing the experiments would require reimplementation of the simulation code (or contacting authors) and reconstruction of the problem-instance enumerations from the described generation procedures.",
+  "key_findings": [
+    "[supported] The paper introduces the Maximum Amplification Optimisation Algorithm (MAOA), which prepares quantum states that aim to maximally amplify optimal (or near-optimal) solutions subject to a user-specified restricted circuit depth, and then repeatedly samples that state.",
+    "[supported] For a binary marking of solutions on the complete graph the QWOA/Grover-style alternating operators with parameters γ = π and t = π/N are equivalent to Grover rotations; repeated application gives the same amplitude amplification as r Grover rotations.",
+    "[supported] In the low-convergence regime the marked-set measurement probability scales approximately as PLC(r,ρ) = ρ(2r + 1)^2, so the amplitude amplification factor is (2r + 1)^2 and the asymptotic speedup (effort ratio) over classical random sampling is ≈ 2r + 1.",
+    "[supported] The MAOA is able to locate a threshold (marking function) that places the problem into the low-convergence regime by iteratively doubling the rotation count and doing peak-finding on threshold-response curves, avoiding high-dimensional variational parameter searches.",
+    "[supported] The authors implemented a restricted-circuit variant of Grover Adaptive Search (RGAS) as a baseline; both MAOA and RGAS outperform naive classical random sampling in their simulations, and MAOA consistently outperforms RGAS at restricted depths.",
+    "[supported] Numerical simulations on specific combinatorial instances (a 10-location capacitated vehicle routing problem, N ≈ 5.8941e7, and a 20-asset portfolio selection problem, N ≈ 6.17576e7) show the MAOA and RGAS produce success-probability vs effort curves that lie significantly above classical random sampling for the tested rotation counts.",
+    "[supported] The authors numerically verify that the derived amplification law ((2r + 1)^2) and the speedup (2r + 1) are observed in their simulated thresholded/marked complete-graph models up to the tested r regimes.",
+    "[speculative] The paper claims MAOA represents the upper limit of speedup available within the class of deterministic amplitude-amplification algorithms under restricted circuit depth (i.e., within algorithms built from alternating phase-shift and diffusion/mixing operators).",
+    "[supported] The analysis and simulations indicate that optimising expectation value (the typical QAOA objective) can favour amplifying numerous suboptimal solutions rather than maximally amplifying the true optimal solutions under restricted depth, motivating MAOA's focus on direct amplification of optima.",
+    "[speculative] The MAOA approach can be generalized to multi-dimensional thresholding (e.g., fixing risk then maximizing return) by sequential threshold finding; the method is claimed to be flexible for multi-criteria problems."
+  ],
+  "results_summary": "The paper presents the MAOA, an algorithm designed for near-term (restricted-depth) quantum optimisation which replaces high-dimensional variational tuning with a binary-threshold + complete-graph strategy that is equivalent to truncated Grover rotations. Analytic expressions (and numerical simulations) show that in the low-convergence regime the marked-set probability scales as ρ(2r+1)^2 and implies an asymptotic effort-speedup factor ≈2r+1 over classical random sampling. Simulations on a vehicle routing instance (N≈5.9e7), a portfolio problem (N≈6.18e7), and modelled large normal-distribution instances show that MAOA outperforms a restricted Grover adaptive search (RGAS) and classical sampling under the tested rotation-count limits, and that the observed amplification matches the derived theoretical bound in the tested regimes.",
+  "performance_claims": [
+    {
+      "claim": "Marked-set measurement probability in low-convergence regime: PLC(r,ρ) = ρ(2r + 1)^2",
+      "type": "[supported]",
+      "evidence": "Analytical derivation and numerical verification in simulations (figures show matching curves)."
+    },
+    {
+      "claim": "Asymptotic speedup over classical random sampling (small target ratio µ): effort ratio ≈ 2r + 1",
+      "type": "[supported]",
+      "evidence": "Analytical derivation (Eq. 18) and numerical convergence shown in simulations (sec. VII and Fig. 12)."
+    },
+    {
+      "claim": "Low-convergence regime threshold criterion: P(r,ρ) ≤ 1/40",
+      "type": "[supported]",
+      "evidence": "Used in analysis; authors state the low-convergence approximation accurate to within 1% when amplified probability < 1/40."
+    },
+    {
+      "claim": "Binary marking with γ = π and t = π/N on the complete graph produces maximal amplification equivalent to Grover rotations",
+      "type": "[supported]",
+      "evidence": "Mathematical equivalence shown (Sec. III) and numerical amplification curves (Fig. 3) match derived (2r+1)^2 scaling."
+    },
+    {
+      "claim": "Simulated instances: CVRP (l=10) with N=58,941,091 and GAS full-convergence rotation rc=6029; portfolio (n=20,I=7) N=61,757,600 and rc=6172",
+      "type": "[supported]",
+      "evidence": "Problem construction and rc values reported in Sec. VI; simulation results plotted (Figs. 9 and 11)."
+    },
+    {
+      "claim": "MAOA consistently outperforms RGAS at restricted rotation counts tested (examples r in {8,16,32,64,128} and {32,64,128,256,512})",
+      "type": "[supported]",
+      "evidence": "Simulation plots comparing MAOA and RGAS for CVRP and portfolio examples (Sec. VI, Figs. 9 and 11)."
+    }
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper demonstrates (through analytic derivations and classical simulations of idealised quantum operations) an algorithmic speedup over classical random sampling quantified as ≈(2r+1) in effort for restricted-depth amplitude-amplification protocols. This is a theoretical/simulation-level advantage (no hardware experiments), and the authors themselves limit the claim to the class of amplitude-amplification algorithms and to idealised models (complete-graph binary marking, Grover-equivalent operations).",
+  "limitations": [
+    "MAOA and analyses are restricted to the class of amplitude-amplification algorithms (alternating phase-shift and diffusion/mixing operators); the paper shows MAOA is optimal only within this class.",
+    "The analysis and simulations do not account for the quantum walk / mixing operator implementation cost; the paper explicitly states that mixing/walk overheads are not included in the computational-effort comparisons.",
+    "Simulations assume idealised Grover-like phase shifts and perfect implementation of the complete-graph quantum walk (e.g., parameters γ = π and t = π/N).",
+    "The threshold-finding subroutine depends on statistical sampling assumptions (e.g., initial sampling to estimate a median and quantiles) and on navigating threshold-response curves; robustness to atypical or heavy-tailed quality distributions is not proven.",
+    "The MAOA requires repeated calls to the objective (quality) function and treats objective-evaluation cost as the dominant cost metric; gate-level resource costs, ancilla usage, noise, decoherence and error-correction overheads are not modelled in the effort metric.",
+    "The paper uses precomputed, exact quality distributions for the simulation studies (especially for RGAS evaluation); in practical, classically-intractable problems those distributions are unknown and must be estimated.",
+    "GAS (and RGAS) comparisons assume a user-specified maximum rotation count derived from N; in practice the choice and randomness of rotation counts may be constrained differently on hardware.",
+    "The MAOA’s threshold approach relies on being able to produce a binary marking function (thresholding) that meaningfully separates very small fractions of the best solutions; for instances where such thresholds do not exist or are extremely sparse, performance may degrade.",
+    "[inferred] The paper does not model noise, gate errors, or limited qubit connectivity; the demonstrated speedups may be reduced or lost under realistic NISQ hardware constraints.",
+    "[inferred] Efficient implementation of the complete-graph quantum walk (or Grover diffusion) for very large N on actual hardware may require significant resources or nontrivial compilation, which could negate some of the predicted speedup.",
+    "[inferred] The threshold-finding algorithm assumes the final rotation count is a power of two and relies on heuristic parameters (e.g., 20 consecutive successes) — its sensitivity to those hyperparameters and failure modes is not fully characterised.",
+    "[inferred] The method assumes that the objective function evaluation can be embedded into phase-oracle-like operations; constructing such oracles for complex finance payoffs may be expensive or infeasible.",
+    "[inferred] Multi-dimensional optimisation is handled by sequential thresholding in the paper’s examples (fix risk then optimise return); scalability and generalisation to higher-dimensional, strongly coupled objectives is not demonstrated."
+  ],
+  "open_questions": [
+    "How robust is the MAOA to realistic hardware noise, decoherence, finite gate fidelity, and restricted qubit connectivity on near-term devices?",
+    "What is the full end-to-end cost (including mixing/walk implementation, gate counts, ancilla qubits, error mitigation/correction) of MAOA on realistic quantum hardware, and does the theoretical speedup survive when these costs are included?",
+    "Can efficient, scalable circuits be constructed for the complete-graph quantum walk or equivalent Grover diﬀusion for very large N in practical quantum architectures?",
+    "How well does the threshold-finding procedure perform when the true quality distribution deviates from the assumed/observed shapes (e.g., heavy tails, multimodality, strong skew) or when the distribution is only poorly sampled?",
+    "Are there classes of optimisation instances (quality distributions, problem structures) for which MAOA performs poorly compared to variational or non-amplitude-amplification approaches?",
+    "Can algorithms outside the amplitude-amplification framework (e.g., filtering variational quantum algorithms) provide better end-to-end speedup than MAOA when their variational overheads are included?",
+    "How sensitive is MAOA to the choice of hyperparameters in the threshold-finding routine (sample sizes, consecutive-success thresholds, step sizes), and can these parameters be adapted theoretically?",
+    "How to construct practical phase-oracles (quality-dependent phase shifts) for complex, real-world financial objective functions without prohibitive overhead?",
+    "How does MAOA scale for truly large, multi-dimensional optimisation problems when thresholds must be found and tuned across several correlated objective dimensions?",
+    "What are the failure modes and guarantees (if any) for MAOA when the low-convergence regime assumption (P(r,ρ) ≤ 1/40) does not hold or cannot be reliably achieved?"
+  ],
+  "future_work": [
+    "Incorporate and quantify the quantum walk / mixing operator implementation cost (gate counts, connectivity, ancilla) into the performance model and compare end-to-end against classical baselines and other quantum algorithms.",
+    "Study MAOA’s robustness and performance on realistic noisy intermediate-scale quantum (NISQ) hardware or noise models (including error mitigation strategies).",
+    "Explore efficient circuit constructions and compilation strategies for implementing complete-graph walks/Grover diﬀusion at large N on practical architectures.",
+    "Investigate analytic derivation of optimal parameters (beyond γ = π and t = π/N) in a broader set of cases and characterise parameter-insensitivity regions.",
+    "Compare MAOA against non-amplitude-amplification quantum ansatzes (e.g., filtering variational quantum algorithms) with full accounting of variational optimisation costs to evaluate overall speedup.",
+    "Generalise and test the threshold-finding and multi-stage optimisation approach for true multi-dimensional objective spaces and more complex constraints.",
+    "Assess methods to build practical quality-dependent phase oracles for realistic financial objective functions and evaluate their resource costs.",
+    "Characterise the sensitivity of the threshold-finding heuristics (sample size, success streak thresholds, step sizes) and develop theoretically justified or adaptive replacements.",
+    "Extend simulations and analysis to a wider set of combinatorial optimisation problems and quality distributions to map regimes where MAOA provides meaningful advantage.",
+    "[inferred] Develop and evaluate error-tolerant or hardware-aware variants of MAOA that adapt to limited qubit counts, connectivity and gate fidelities."
+  ],
+  "topic_tags": [
+    "portfolio-optimization",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "grover-search",
+    "quantum-walks",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — MAOA constructs maximally amplified states (using restricted Grover-like rotations with γ = π and t = π/N) and, in simulations, outperforms restricted Grover adaptive search (RGAS) and classical random sampling on vehicle routing and a 20-asset portfolio instance.",
+    "#idea:near-term-feasibility — The algorithm is explicitly designed for restricted circuit depth (small rotation count r) and avoids costly variational parameter tuning (contrasting with QAOA), positioning MAOA as a candidate for near-term/NISQ-era optimisation.",
+    "#idea:hybrid-approach — The workflow is hybrid: heavy classical pre-processing (full enumeration / precomputed solution-quality distributions) and classical threshold-finding drive the quantum preparation and measurement phases; classical optimisation (Nelder–Mead) is used where variational comparisons are made.",
+    "#limitation:simulation-only — All results are from numerical simulation using analytic Grover-amplitude formulas (P(r,ρ)=sin((2r+1)arcsin(√ρ))^2) and Monte Carlo trials; no experiments on noisy QPUs or hardware emulators are reported.",
+    "#limitation:no-empirical-validation — The paper provides no real-hardware runs or noise-inclusive simulations to validate performance under realistic device constraints.",
+    "#limitation:noise — The cost and success-probability analyses assume ideal, noise-free amplitude amplification; hardware noise and error accumulation effects are not modelled.",
+    "#limitation:data-encoding — The approach assumes objective-function oracle calls (counted as two calls per Grover phase) and relies on enumerated quality distributions; the practical cost of encoding/marking real-world financial objectives at scale is not addressed.",
+    "#idea:quantum-advantage — The paper derives an analytic expected speedup expression (lim_{μ→0} e_C/e_Q = 2r+1) showing a linear advantage in the achievable rotation count r under the authors' cost model."
+  ],
+  "contradictions": [
+    "The paper's claim of near-term applicability conflicts with its reliance on full enumeration / precomputed solution-quality distributions for the tested instances (enumerating all feasible portfolios for 20 assets and all routes for a 10-location VRP) — this classical preprocessing is exponential and not feasible for large N, undermining practical scalability.",
+    "The analytic speedup (e_C/e_Q = 2r+1) and simulation results assume an idealised cost model (each Grover phase = two objective calls) and noise-free amplitude amplification; these assumptions conflict with real-device constraints (noise, oracle construction costs), so the claimed scaling advantage may not hold in practice.",
+    "MAOA is presented as a near-term alternative to variational methods (e.g., QAOA) yet all evidence is from ideal simulations; absence of noise modelling and hardware validation contradicts strong claims about NISQ-era feasibility."
+  ]
+}

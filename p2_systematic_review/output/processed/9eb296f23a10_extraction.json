@@ -1,0 +1,240 @@
+{
+  "source_type": "industry-whitepaper",
+  "source_type_confidence": "high",
+  "reasoning": "The document explicitly calls itself a \"white paper\" in the abstract, authors are primarily industry (Quantinuum) and include patent disclosures, and the content focuses on an engineering/productized QMCI engine with technical specification and benchmarks rather than a conventional peer-reviewed theoretical/empirical study. (It is also posted to arXiv as a preprint, but its structure and provenance indicate an industry white paper.)",
+  "title": "A MODULAR ENGINE FOR QUANTUM MONTE CARLO INTEGRATION",
+  "authors": [
+    "Ismail Yunus Akhalwaya",
+    "Adam Connolly",
+    "Roland Guichard",
+    "Steven Herbert",
+    "Cahit Kargi",
+    "Alexandre Krajenbrink",
+    "Michael Lubasch",
+    "Conor Mc Keever",
+    "Julien Sorci",
+    "Michael Spranger",
+    "Ifan Williams"
+  ],
+  "year": "2023",
+  "journal_or_venue": "Quantinuum white paper; arXiv:2308.06081",
+  "doi": "",
+  "abstract_summary": "This white paper presents Quantinuum's Quantum Monte Carlo Integration (QMCI) engine, a modular quantum tool for evaluating high-dimensional integrals with a focus on financial applications. Key contributions include a library of distribution-loading methods, an enhanced P-builder for composing financial payoffs, a novel LCU-based amplitude estimation method that improves statistical robustness, and a resource mode that provides detailed circuit resource estimates along with benchmark results for representative financial instruments.",
+  "methodology_description": "The authors design, implement and benchmark an end-to-end Quantum Monte Carlo Integration (QMCI) engine targeted at financial applications. Methodologically the work combines: (i) algorithm design (Fourier-series based QMCI to avoid explicit quantum arithmetic; three QAE variants including a novel LCU QAE that uses linear combinations of unitaries to improve estimator robustness; noise-aware QAE ideas); (ii) distribution-loading methods (reversible compilation of classical samplers, quantum-walk constructions for binomial distributions, PDE-based approaches for Fokker–Planck/heat equations, and parametrized quantum-circuit (PQC) state preparation trained to represent Gaussians/lognormals using both hardware-efficient and tensor-network/MPS-based training); (iii) extensive numerical simulation experiments (state-vector simulation) to evaluate statistical performance (bias, RMSE, skewness, excess kurtosis) and to derive c_QAE constants and resource estimates; and (iv) a resource-mode analysis (NISQ and fault-tolerant) that compiles circuits to {TK1,CNOT} for NISQ counts and to Clifford+T for T-count estimates, with analytic bounds for rotation synthesis error. Experiments include training PQCs for discrete approximations of Gaussians/lognormals, QAE statistical robustness studies over a grid of amplitudes, and end-to-end resource benchmarks for several path-dependent derivative payoffs (barrier, look-back, autocallable) constructed by the enhanced P-builder. Statistical uncertainty on metrics is assessed with bias-corrected and accelerated bootstrap intervals.",
+  "algorithms_used": [
+    "Fourier QMCI (Fourier-series decomposition of integrand)",
+    "Quantum Amplitude Estimation (QAE)",
+    "LCU QAE (linear-combination-of-unitaries modification)",
+    "MLQAE (maximum-likelihood QAE)",
+    "IQAE (iterative QAE)",
+    "Prepare-and-Measure (PAM baseline)",
+    "Noise-aware QAE (co-learning noise parameter)",
+    "Reversible classical sampling circuits (Toffoli-based)",
+    "Quantum walk state preparation (continuous-time walk on hypercube and symmetrized quotient)",
+    "PDE-based state preparation (Fokker–Planck / Schrödingerisation / HHL approaches discussed)",
+    "Parameterized Quantum Circuits (PQC) training (hardware-efficient ansatz)",
+    "Tensor-Network / MPS-based PQC training (brickwall ansatz with SVD environment updates)",
+    "Bootstrapped statistical analysis (bias-corrected and accelerated bootstrap)"
+  ],
+  "frameworks": [
+    "pytket / tket (compiler and circuit optimisation)",
+    "state-vector simulator (unnamed, used for all numerical experiments)"
+  ],
+  "experimental_setup": "All algorithmic evaluations and statistical benchmarks were performed via state-vector simulation (exact simulation) after compilation/optimisation with pytket/tket (RebaseTket and FullPeepholeOptimise). PQCs (5–6 qubits) were trained classically (L1/L2/L∞ cost functions; L2 found best for many tasks) using two training regimes: hardware-efficient (Ry layers + entanglers) and tensor-network (MPS) with SVD-based gate updates. QAE statistical robustness experiments used grids of amplitudes (49 values from 0.02 to 0.98) and repeated sampling 10,000 times per configuration to estimate empirical bias, RMSE, skewness and excess kurtosis; bootstrapping (bias-corrected and accelerated) computed 68% confidence intervals. Resource-mode compilation used TK1/CNOT rebasing for NISQ counts and Clifford+T rebasing approximated rotations with asymptotic T-count models. Financial time-series were synthetic (discrete approximations of Brownian / geometric Brownian motion using 32- or 64-point PMFs).",
+  "dataset_used": "Synthetic data derived from parametric stochastic models: discrete approximations of Gaussian and lognormal distributions used as iid increments to build Brownian / geometric Brownian motion time-series. Specifics: 5-qubit (32-point) and 6-qubit (64-point) PMFs approximating N(0,1) or LN(0,σ^2), mapping support to ±5σ. Time-series benchmarks use 4 and 8 time-slices (low-volatility overall, total volatility 10%). No real market data used.",
+  "experiment_input": {
+    "source": "synthetic / model-generated",
+    "supported_distributions": [
+      "Discrete Gaussian approximations (32 or 64 points over [-5σ, +5σ])",
+      "Discrete Lognormal approximations (32 or 64 points)"
+    ],
+    "qubit_encodings": "5-qubit (32 grid points) and 6-qubit (64 grid points) registers; multivariate distribution composed by tensoring independent copies and using enhanced P-builder arithmetic to build sums/products/max/min",
+    "time_series_configurations": [
+      "4 time-slices (each increment ~N(0,1/400))",
+      "8 time-slices (each increment ~N(0,1/800))"
+    ],
+    "preprocessing": "Discretisation on uniform grids (∆), affine mapping of register values to real support (x_ℓ, ∆), optional shifting/scaling for exponential expectations; PQC training to match target PMFs; enhanced P-builder operations to create compound registers (sums/products/indicator qubits/ESOP logic).",
+    "size_notes": "49 amplitude grid points for QAE robustness experiments; 10,000 repeated trials per configuration for statistics; PQC training on small registers (5–6 qubits)."
+  },
+  "experiment_process": {
+    "overview_steps": [
+      "Design or obtain distribution-loading circuit P (PQC-trained or other loader).",
+      "If needed, use enhanced P-builder to add dimensions and indicator qubits (sum/product/max/threshold/ESOP) to create path-dependent payoffs.",
+      "Construct circuits A(P,i,β,m,ω) implementing sine/cosine harmonics per the Fourier QMCI approach (see Fig.4 of paper).",
+      "Select QAE subroutine (LCU QAE / MLQAE / IQAE / PAM) and determine usage allocation (number of uses q). For LCU: prepare LCU state-prep circuits with post-selection and m-sequence (EIS) and shot allocations (m=0: nshots=66; other m: nshots=44; LCU shots split among 4 categories).",
+      "Execute circuits under state-vector simulation: measure, collect outcomes.",
+      "Classical post-processing: ML / MMSE / Bayesian updates (as applicable) to produce amplitude estimates or confidence intervals; combine harmonic estimates to produce expectation estimate.",
+      "Compute empirical metrics (bias, RMSE, skewness, excess kurtosis) across repeats, with bootstrap to obtain 68% CIs.",
+      "Resource-mode analysis: compile circuits to TK1+CNOT to count gates/depth/ancillas; compile to Clifford+T and apply rotation-synthesis bounds to estimate T-count and T-depth for fault-tolerant estimates."
+    ],
+    "QAE_specifics": "LCU QAE uses linear combinations of A and S_χ A (and variants with A flipped) to widen starting-angle distribution; uses EIS (m ∈ {0,1,2,4,...}) with adaptive allocation for leftover uses; post-selection probability bounded via chosen β and p_max-fail. MLQAE and IQAE modified to accept arbitrary total number of uses by truncation/extension strategies. PAM corresponds to classical sampling from the prepared state. For QAE robustness experiments: grid of 49 amplitudes in [0.02,0.98], 10,000 repeats each; shot allocation as above; outputs aggregated per amplitude."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Bias (absolute)",
+      "RMSE",
+      "Mean-squared error (MSE)",
+      "Skewness (absolute)",
+      "Kurtosis / Excess kurtosis",
+      "Empirical c_QAE constants (upper-bounds and asymptotic fits)",
+      "Resource metrics: qubit count, total gate count, CNOT count, TK1 count and depths, T-count and T-depth for fault-tolerant compilation",
+      "Optimised allocation of uses (q) for target RMSE"
+    ],
+    "baselines_compared": [
+      "MLQAE",
+      "IQAE",
+      "Prepare-and-Measure (classical Monte Carlo baseline)"
+    ],
+    "output_format": "Numeric tables and plots (RMSE vs uses, bias/skew/kurtosis heatmaps across amplitudes), compiled circuit listings for benchmarks, and resource-count tables for NISQ and fault-tolerant scenarios. Bootstrapped confidence intervals provided (68%)."
+  },
+  "experiment_parameters": {
+    "qubits": [
+      5,
+      6,
+      100,
+      119,
+      307,
+      439
+    ],
+    "pqc_layers": {
+      "HWE_ansatz_layers": "up to 9 (varied in experiments)",
+      "brickwall_layers": "up to 5 (tested)"
+    },
+    "shots_and_allocations": {
+      "QAE_m=0_nshots": 66,
+      "QAE_m>0_nshots_each": 44,
+      "LCU_segments_per_m": 4,
+      "LCU_shots_per_segment": 11
+    },
+    "QAE_uses_range": "tested up to thousands of uses (figures show up to ~7500 uses)",
+    "repetitions": 10000,
+    "PQC_training_costs": [
+      "L2 (preferred)",
+      "L1",
+      "L∞"
+    ],
+    "rotation_synthesis_model": "approx T-count per rotation ≈ 3 * log2(1/ϵ) (used for fault-tolerant estimates)",
+    "bootstrap": "bias-corrected and accelerated bootstrap, 68% CI",
+    "notes": "Optimiser names for HWE PQC training are not specified; TN training uses SVD-based environment update (exact gate optimization via SVD of environment tensor A)."
+  },
+  "hardware_details": {
+    "simulator": "state-vector simulator (unnamed / standard high-fidelity simulator)",
+    "compiler_and_tools": "pytket / tket (RebaseTket, FullPeepholeOptimise)",
+    "QPU_model": null,
+    "cloud_provider": null,
+    "notes": "All experiments reported were simulated; no physical QPU runs reported. Resource-mode outputs are analytic/compiled estimates for hypothetical NISQ and fault-tolerant devices."
+  },
+  "reproducibility_notes": "The paper includes detailed algorithm descriptions, pseudocode examples, circuit diagrams and many implementation details (e.g., shot allocations, PQC ansatz, training norms, compilation gatesets). It states that pytket code for circuits can be supplied upon request and reproduces benchmark circuit listings in appendices. However there is no public code repository or raw data link provided in the paper; therefore partial reproducibility is feasible from the provided descriptions but full replication would require contacting the authors for code or re-implementing many components (PQCs, LCU constructions and resource-mode compilation) using the documented algorithms.",
+  "key_findings": [
+    "[supported] Fourier QMCI (Fourier-series decomposition of the Monte Carlo integrand) retains the full quadratic RMSE advantage of quantum amplitude estimation while avoiding deep quantum-arithmetic circuits.",
+    "[supported] The QMCI engine implements an enhanced P-builder that composes distribution-loading circuits with reversible arithmetic, max/min, sum/product, thresholds and ESOP logical operations to construct many common derivative payoffs (e.g., Asian, barrier, look-back, autocallable).",
+    "[supported] Grover–Rudolph state-preparation is inadequate to deliver overall quantum advantage for QMCI in practical settings because its circuit depth scales with desired estimator accuracy (authors' prior result summarized here).",
+    "[supported] Sampling via reversible classical sampling circuits (compiled into Toffoli-style reversible circuits) provides an equivalence between classical sample cost and quantum P-circuit uses (citing and using this construction in the engine).",
+    "[supported] The QMCI engine includes multiple distribution-loading approaches (quantum-walk construction for binomial, PDE/Hamiltonian-based approaches for Fokker–Planck types, and parameterized quantum circuits trained to reproduce target PMFs); PQC loaders can produce useful small-state approximations (5–6 qubit) to Gaussians/lognormals with L∞ errors ~1e-5–1e-6.",
+    "[supported] LCU QAE (introducing a linear combination of unitaries to vary the initial rotation angle before amplitude amplification) substantially improves statistical robustness (bias/skew/kurtosis) compared to reference QPE-free QAE variants (MLQAE, IQAE) in numerical simulations.",
+    "[supported] Noise-aware QAE (co-learning a noise-parameter alongside amplitude) allows deeper effective circuits by treating hardware noise as an additional parameter and compensating via extra sampling (authors' prior work summarized and referenced).",
+    "[supported] The QMCI engine provides a resource mode that outputs precise resource estimates (qubit counts, gate counts, depths, and fault-tolerant T-counts/depths) for end-to-end QMCI workflows; representative benchmarks are reported.",
+    "[supported] Benchmarked path-dependent financial examples (barrier, look-back, autocallable on a single low-volatility underlying with 4 or 8 timesteps) require of order 100–400 logical qubits and millions of gates in the NISQ-style gate counts reported, and tens to hundreds of millions of T gates in the coarse fault-tolerant estimates.",
+    "[supported] The authors provide analytical RMSE upper bounds for their chosen periodic piecewise extensions (used to convert target g(x) to Fourier series) for several statistical quantities: mean (constant factor 1.68), second moment (2.82), and exponential expectation (2.59), enabling end-to-end RMSE bounds for QMCI.",
+    "[speculative] Useful quantum advantage for real financial workflows is expected when (1) classical MCI is the best classical approach; (2) high precision is required that is hard classically; and (3) there is complementary quantum advantage in distribution loading — the paper argues these conditions (particularly the third) are plausible for Greeks and portfolio risk but does not empirically demonstrate end-to-end advantage at scale.",
+    "[speculative] Quantum-walk and PDE-based distribution loaders could offer complementary quantum advantage in distribution loading for large/structured distributions; those approaches are theoretically promising but presently lead to deep circuits and are not near-term practical.",
+    "[supported] The QMCI engine is modular and extensible (distribution loaders, enhanced P-builder, multiple QAE backends, resource mode) and is presented as an R&D tool bridging small-scale experiments and full-scale resource estimates.",
+    "[supported] Statistical robustness is an important practical deficiency of several available QPE-free QAE algorithms (skewed and heavy-tailed estimators); the LCU QAE variant addresses this and yields near-Gaussian estimators in simulations."
+  ],
+  "results_summary": "This industry whitepaper presents Quantinuum's QMCI (Quantum Monte Carlo Integration) engine: a modular end-to-end framework for quantum Monte Carlo integration tailored to financial use-cases. Key technical elements include: (i) Fourier-series decomposition of integrands to avoid costly quantum arithmetic while preserving the quadratic RMSE advantage of QAE; (ii) an enhanced P-builder to compose distribution-loading circuits into complex payoffs (sums, products, maxima, thresholds, ESOP logic); (iii) multiple distribution loaders including PQC-trained state preparation, quantum-walk constructions, and PDE/Hamiltonian approaches; (iv) several QAE backends (MLQAE, IQAE, a novel LCU QAE and prepare-and-measure), with numerical experiments showing LCU QAE substantially improves statistical robustness (reduced skewness / excess kurtosis) while retaining competitive RMSE; (v) noise-aware QAE concepts for mitigating hardware noise; and (vi) a resource mode that outputs detailed NISQ and fault-tolerant resource estimates. Benchmarks on simple path-dependent option payoffs (4 and 8 time-slices) demonstrate concrete resource figures (order 10^2–10^3 qubits, millions of gates in the NISQ-style counts and tens-to-hundreds of millions of T gates in coarse fault-tolerant syntheses). The work provides analytic end-to-end RMSE bounds for several statistical quantities and positions the engine as an R&D tool to explore practical paths toward useful quantum advantage (not yet demonstrated experimentally at production scale).",
+  "performance_claims": [
+    "cQAE constants (empirical) for RMSE upper-bound RMSE ⩽ c_QAE * q^{-1}: LCU QAE maximum (finite-use conservative) 13.3, LCU QAE asymptotic ≈ 7.82, MLQAE ≈ 8.02, IQAE ≈ 14.4, Prepare-and-measure (classical) = 0.5 (Table 7).",
+    "Analytical RMSE multiplicative constants for statistical quantities (in Fourier QMCI construction): mean c_x = 1.68; second moment c_{x^2} = 2.82; exponential expectation c_{exp} ⩽ 2.59 (Section 8 and Eqns. 8.4, 8.7, 8.9).",
+    "PQC-trained loaders: 5–6 qubit Gaussian/lognormal approximations achieved L∞ errors in the 10^{-6}–10^{-4} range and KL/JS/TV distances shown in Tables 4–5 (L∞ ~ 10^{-5} to 10^{-6} reported for some HWE/TN ansätze).",
+    "NISQ-style benchmark resource totals (examples from Table 8): 4-slice barrier option (value payoff) uses 119 qubits, total gate count ≈ 4.95 × 10^6, CNOT count ≈ 2.44 × 10^6; 8-slice look-back (value payoff) uses 439 qubits, total gate count ≈ 2.45 × 10^7, CNOT count ≈ 1.22 × 10^7.",
+    "Fault-tolerant T-count estimates (coarse synthesis, Table 9): 4-slice barrier option (value) T-count ≈ 7.27 × 10^7 (total), largest-circuit T-count ≈ 1.18 × 10^6; 8-slice autocallable (value) total T-count ≈ 7.54 × 10^8, largest-circuit T-count ≈ 4.71 × 10^6.",
+    "Benchmark RMSE targets used: example target RMSE ≈ 1.04 × 10^{-2} (1% of the chosen support range) for value payoffs; 1.0 × 10^{-2 for binary payoffs (Section 11).",
+    "In numerical robustness benchmarks (10,000 repetitions across 49 amplitudes) LCU QAE produced near-zero excess kurtosis (typically ≪ 1) and small skewness, whereas MLQAE and IQAE often showed much larger excess kurtosis and skewness (figures and plots in Section 5 and Appendix A)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper reiterates the established theoretical quadratic quantum advantage of QAE-based QMCI in RMSE (RMSE ∝ q^{-1} vs classical q^{-1/2}) and shows how Fourier decomposition can avoid deep arithmetic while retaining that asymptotic scaling. However, the authors do not empirically demonstrate end-to-end practical advantage on hardware at scale; instead they provide resource estimates, small-scale PQC demonstrations and simulator benchmarks. Thus, advantage is presented as a theoretically proven asymptotic property and as a plausible near-to-medium-term prospect contingent on hardware scaling and improvements in distribution loading and compilation (speculative/practical pathways), not as an experimentally demonstrated, production-level advantage.",
+  "limitations": [
+    "Grover–Rudolph state preparation is inadequate for QMCI (circuit depth grows with desired accuracy so overall convergence no better than classical MCI) (author-stated).",
+    "Many distribution-loading methods have practical limitations: classical reversible compilation (Toffoli) may be expensive; quantum-walk and PDE-based loaders require deep Hamiltonian simulation circuits or large ancilla counts (author-stated).",
+    "Unstructured state-preparation methods require specifying 2^n classical values and therefore do not scale (author-stated).",
+    "PQC-based distribution loaders can prepare low-dimensional distributions with relatively modest resources, but (a) training cost is not accounted for in resource-mode estimates, and (b) continuous-rotation gates used in PQCs make fault-tolerant (Clifford+T) synthesis costly (author-stated / emphasized).",
+    "Existing QAE methods (MLQAE, IQAE) exhibit poor statistical robustness (skewness / heavy tails / high excess kurtosis) for some amplitudes; this undermines practical reliability despite RMSE scaling (author-stated).",
+    "LCU QAE improves robustness but introduces nonzero postselection failure probability and overhead; performance still depends on parameter choices (β, pmax-fail) (author-stated).",
+    "Resource-mode fault-tolerant estimates are conservative (e.g., pessimistic Clifford+T synthesis bounds) and result in high T-counts; current synthesis assumptions likely overestimate eventual resources (author-stated).",
+    "Benchmarks show that nontrivial QMCI problems can require hundreds of qubits and millions of gates—likely necessitating error-corrected logical qubits for larger instances (author-stated).",
+    "NISQ execution of benchmark examples (4-slice) would demand extremely high two-qubit fidelities (rule-of-thumb ~99.99%), making near-term practical execution challenging (author-stated).",
+    "Enhanced P-builder operations (permutations, controlled rotations, multi-controlled Toffoli patterns) are currently not optimally compiled for fault-tolerant execution and are ancilla-hungry in the present decomposition (author-stated).",
+    "The Fourier-piecewise construction for exponentials is optimized for a low-volatility regime (e.g., σ≈0.1); high-volatility cases are not covered by the presented optimized extension and would require redesign (author-stated).",
+    "The RMSE/cost analysis in the paper focuses on number-of-samples (q) and gate counts; practical adoption also depends on external system-level factors (parallelisation, quantum/classical clock rates, error-correction overhead) which are not resolved here (author-stated).",
+    "[inferred] The resource-mode over-counting (treating all subcircuits as quantum-executed) may misrepresent realistic hybrid (quantum+classical) strategies and hence the practical resource gap.",
+    "[inferred] PQC generalisation risk: PQCs trained for one instance (parameters/volatility) may not generalise; per-instance retraining could negate the quantum advantage if retraining cost is large.",
+    "[inferred] The LCU approach trades statistical robustness against extra circuit complexity and probabilistic post-selection overhead; in noisy hardware the interplay could reduce practical benefits.",
+    "[inferred] The work does not fully characterise performance of the proposed QAE variants under realistic, device-specific noise models beyond the Gaussian noise abstraction used in noise-aware QAE."
+  ],
+  "open_questions": [
+    "Can distribution-loading methods be improved to provide genuine complementary quantum advantage (i.e., sample preparation asymptotically or practically cheaper quantumly than classically) for realistic financial time-series?",
+    "How much can fault-tolerant resource estimates (T-count, T-depth, qubit overhead) be reduced in practice by improved compilation and by exploiting structure in the Fourier-controlled rotation bank?",
+    "How should continuous-parameter PQC circuits be designed or compiled so that their fault-tolerant (Clifford+T) synthesis cost is acceptable—can structured or ancilla-assisted synthesis drastically cut T-costs?",
+    "What is the full, end-to-end cost (including PQC training, any classical pre-/post-processing, and error mitigation) and does it preserve the theoretical quantum advantage for realistic problem instances?",
+    "How robust is LCU QAE (and noise-aware QAE) under realistic device noise (non-Gaussian, correlated noise, crosstalk)—and what are the best strategies to co-learn noise parameters practically?",
+    "How to choose LCU parameters (e.g., β, pmax-fail) optimally and adaptively without prior knowledge of the amplitude, to guarantee robust performance across amplitudes while minimising expected cost?",
+    "Can the enhanced P-builder be extended efficiently to include full arithmetic and all classical-sampling operations without losing the quantum advantage in practice?",
+    "What are the practical thresholds (qubit count, gate fidelities, parallelisation) and timelines for useful quantum advantage in concrete financial workflows (e.g., Greeks, CVaR on large portfolios)?",
+    "How to optimise multi-controlled gates and ancilla usage in the Q operator to reduce the practical qubit footprint for near-term devices?",
+    "How to extend the Fourier piecewise design to high-volatility exponentials (and other non-monotonic or ill-behaved payoff functions) while keeping low circuit depth?",
+    "What hybrid strategies (partially classical evaluations for low-m harmonics, classical importance sampling, quasi-Monte Carlo hybrids) yield the best practical trade-offs between classical and quantum resources?",
+    "To what extent can classical pre- or post-processing (e.g., variance reduction, reuse of classical samples) reduce quantum resource needs without compromising quantum advantage?",
+    "How well do the presented methods scale for real-world portfolio risk problems with many correlated assets (higher-dimensional joint distributions)?",
+    "Can better fault-tolerant synthesis exploiting repeated/structured rotations (powers of two bank) be developed to lower total T-count proportionally?"
+  ],
+  "future_work": [
+    "Add more complex and realistic financial time-series models beyond geometric Brownian motion (author-mentioned).",
+    "Extend and enrich the enhanced P-builder with additional arithmetic operations and logical primitives so classical sampling circuits can be encoded more directly (author-mentioned / patent work).",
+    "Develop and integrate additional distribution-loading methods (improved quantum-walk constructions, PDE solvers, and PQC-based loaders) and make the loader library extensible (author-stated).",
+    "Refine and optimise the LCU QAE method, including parameter selection strategies and further empirical robustness studies (author-proposed).",
+    "Incorporate PD E-based and variational PDE solvers, tensor-network training, and machine-learning approaches as distribution loaders (author-discussed).",
+    "Tighten fault-tolerant resource estimates by improving Clifford+T synthesis (exploit quasi-orthogonality bounds, structure of controlled rotations, and subcircuit rewriting) (author-suggested).",
+    "Optimize enhanced P-builder and permutational subcircuits for fault-tolerant execution and reduce ancilla usage in multi-controlled patterns (author-noted).",
+    "Include the cost of PQC training and methods to amortize trained PQCs (resource-state reuse) within resource-mode accounting (author-identified gap).",
+    "Implement and benchmark alternative QAE algorithms, and allow plug-in of new QAE subroutines without disturbing the QMCI architecture (modular design stated).",
+    "Explore and quantify hybrid classical–quantum strategies to reduce quantum load (author suggested in discussion of resource-mode overcount).",
+    "Add more application classes (e.g., Greeks estimation, portfolio risk / optimisation, other industry domains) and supply example workflows (author-mentioned).",
+    "Improve resource-mode features (e.g., user-defined gatesets, resource boxes, tighter noise models) and support more realistic hardware/backends (author-noted).",
+    "Investigate and possibly include particle filtering or more advanced Bayesian updates in QAE post-processing (author-suggested in Algorithm discussion)."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "variational-nisq",
+    "quantum-ml",
+    "quantum-walks",
+    "quantum-linear-systems",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Introduces an LCU-based QAE variant that empirically improves statistical robustness (bias/RMSE/skewness/kurtosis) compared to other QAE variants and PAM baselines in state-vector simulation, suggesting a path to more reliable quantum Monte Carlo integration for financial payoffs.",
+    "#idea:hybrid-approach — Uses PQC-based and classical reversible samplers for distribution loading, with classical optimizers and bootstrap-based postprocessing (ML/MMSE/Bayesian) forming a hybrid pipeline for end-to-end QMCI.",
+    "#idea:near-term-feasibility — Provides NISQ and fault-tolerant resource-mode estimates (TK1/CNOT rebasing and Clifford+T T-counts) and demonstrates PQC loaders on 5–6 qubits, indicating limited near-term demonstrability but detailed resource projections for scaling.",
+    "#idea:quantum-advantage — Employs a Fourier-series QMCI approach to avoid explicit quantum arithmetic, reducing circuit depth for integrating payoff harmonics and enabling composition with the enhanced P-builder for path-dependent derivatives.",
+    "#limitation:qubit-count — State-of-the-art experiments and PQC training are limited to 5–6 qubits (32–64 grid points); path-dependent payoffs and higher time-slice resolutions will require substantially more qubits than demonstrated.",
+    "#limitation:simulation-only — All numerical experiments are performed with exact state-vector simulation; no real-hardware runs are reported, so hardware noise/latency effects remain unvalidated experimentally.",
+    "#limitation:data-encoding — Multiple distribution-loading strategies are benchmarked (reversible samplers, quantum walks, PDE-based, PQC training) highlighting the nontrivial costs and trade-offs of encoding continuous financial distributions into qubit registers.",
+    "#limitation:noise — Although noise-aware QAE variants are discussed and resource-mode includes NISQ counts, the absence of noisy-hardware experiments means the practical impact of noise and error mitigation on the proposed QAE variants is not empirically demonstrated."
+  ],
+  "contradictions": []
+}

@@ -1,0 +1,218 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document displays an arXiv identifier (arXiv:2402.05549v2) and date, with no journal or conference venue listed. It has the standard preprint structure (abstract, methods, results, references) and versioning typical of arXiv submissions, indicating a preprint.",
+  "title": "Transfer learning of optimal QAOA parameters in combinatorial optimization",
+  "authors": [
+    "J. A. Montañez-Barrera",
+    "Dennis Willsch",
+    "Kristel Michielsen"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint arXiv:2402.05549",
+  "doi": "",
+  "abstract_summary": "This preprint investigates transfer learning (TL) for reusing QAOA parameters across different combinatorial optimization problems (COPs). The authors find that parameters trained on small bin packing problem (BPP) instances transfer particularly well to larger instances and to other COPs, demonstrate experiments on multiple gate-based quantum processors, and show cross-platform TL by mapping learned QAOA schedules to modified annealing schedules on a D-Wave quantum annealer, yielding improvements over default protocols.",
+  "methodology_description": "The authors study transfer learning (TL) of optimal QAOA parameters across multiple combinatorial optimization problems (COPs). They generate random problem instances (TSP, Bin Packing (BPP), Knapsack (KP), Portfolio Optimization (PO), MaxCut, Maximal Independent Set (MIS)) of various sizes, encode each as QUBO/Ising Hamiltonians (using squared penalties for equalities and an unbalanced penalization scheme for inequalities), normalize Hamiltonians, and obtain optimal classical solutions with CPLEX for benchmarking. QAOA circuits with p = 10 layers are initialized using a quantum-annealing-style linear ramp schedule. Parameters (γ, β) are optimized for small instances via COBYLA (classical optimizer) with a maximum iteration budget max_iter = 20 * Nq * p. Transfer learning consists of reusing these pre-optimized (γ, β) across other instances, larger problem sizes, and different COPs without re-optimization, and evaluating performance. Performance metrics include probability of finding ground-state solutions probability(∗x), mean and minimum cost over samples, and sample-efficiency estimates (e.g., number of samples required for 99% success). Postprocessing mitigation of single-qubit bitflip errors is applied by Hamming-distance-1 correction. They also demonstrate cross-platform TL by mapping QAOA parameters to custom annealing schedules on a D-Wave Advantage quantum annealer (modifying A(s) or B(s) via a user-specified s(t) schedule with up to 12 control points). Numerical simulations (statevector and sampling) are performed at scale using JUQCS–G on JUWELS Booster; experiments are executed on multiple gate-based QPUs (IonQ Harmony & Aria, Rigetti Aspen-M-3, IBM Brisbane) and on D-Wave Advantage for large MIS instances.",
+  "algorithms_used": [
+    "QAOA",
+    "Quantum annealing (annealing schedules on D-Wave)",
+    "COBYLA (classical optimizer)",
+    "Hamming-distance-1 postprocessing"
+  ],
+  "frameworks": [
+    "JUQCS–G (simulator)",
+    "Open-QAOA SDK (mentioned acknowledgment)",
+    "CPLEX (classical solver)",
+    "AWS Amazon Braket (access to some QPUs)",
+    "IBM Quantum services (access)"
+  ],
+  "experimental_setup": "Simulations: JUQCS–G on JUWELS Booster (3744 NVIDIA A100 GPUs). Gate-based hardware: IonQ Harmony, IonQ Aria-1, Rigetti Aspen-M-3, IBM Brisbane accessed via cloud services (Amazon Braket and IBM Quantum). Quantum annealer: D-Wave Advantage with custom annealing schedules. Shot counts: 1000 samples for 8-qubit hardware runs; 5000 samples for 14- and 18-qubit hardware runs and for D-Wave MIS experiments. QAOA depth p = 10 in all reported experiments. Initial parameter schedules use a linear ramp (quantum-annealing-style) initialization.",
+  "dataset_used": "Synthetic random instances of COPs. For Portfolio Optimization (PO) only: synthetic financial-style data with randomly chosen expected returns (µi), correlation entries drawn from {−0.1, 0, 0.1, 0.2}, and asset costs uniformly in [0.5, 1.5]. No real-world financial datasets are used.",
+  "experiment_input": {
+    "source": "synthetic / randomly generated instances per problem class",
+    "size_and_variation": {
+      "TSP": "3-6 cities → 9,16,25,36 qubits",
+      "BPP": "3-6 items → 12,20,30,42 qubits",
+      "KP, PO, MIS, MaxCut": "problem sizes 4,6,8,10,12,14,16,18,20,25,30,35,40,42 (qubits)",
+      "Large_MIS_for_D-Wave": "100,125,150,160,170 qubits"
+    },
+    "instances_per_size": "5 random instances (seeds) per problem size",
+    "random_generation_details": {
+      "TSP": "distances ~ Normal(mean=10, std=0.1)",
+      "BPP": "item weights integer 1..10, bin capacity 20",
+      "KP": "values 5..63, weights 1..20, capacity = 0.5 * sum(weights)",
+      "PO": "µi in [0,1], correlations from {-0.1,0,0.1,0.2}, costs in [0.5,1.5], budget = 0.5 * sum(costs)",
+      "MaxCut": "edge probability 70%, weights in [0,1]",
+      "MIS": "edge probability 50%"
+    },
+    "preprocessing": "Encode constraints into QUBO with squared penalties for equalities and unbalanced penalization for inequalities; transform QUBO to Ising via xi=(1−zi)/2; normalize Hamiltonian by max{|Jij|,|hi|}; ground states of modified Hamiltonian cross-checked with CPLEX for optimal solutions."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "1) Generate random COP instance and encode as QUBO/Ising (with specified penalty coefficients).",
+      "2) Normalize Hamiltonian.",
+      "3) Initialize QAOA parameters (γ, β) using a linear ramp quantum-annealing-style schedule (quantum-annealing initialization).",
+      "4) Optimize γ, β using COBYLA with max_iter = 20 * Nq * p for small instances (self-optimization).",
+      "5) Save optimized parameters (transfer checkpoint).",
+      "6) Apply transferred parameters (no re-optimization) to other instances and larger problem sizes (TL experiments).",
+      "7) Execute QAOA circuits via simulator (statevector) or sample on hardware (shots as specified).",
+      "8) Postprocess sampled bitstrings using Hamming-distance-1 bitflip correction.",
+      "9) Evaluate performance metrics (probability of ground state, mean/min cost, sample-efficiency).",
+      "10) For cross-platform TL: map learned γ or β schedules to D-Wave A(s)/B(s) via modified s(t) schedule (up to 12 control points) and run annealing experiments."
+    ],
+    "key_parameters_and_values": {
+      "QAOA_depth": 10,
+      "optimizer": "COBYLA",
+      "max_iter": "20 * Nq * p",
+      "initialization": "quantum-annealing linear ramp",
+      "penalty_parameters": "Problem-specific λ0, λ1, λ2 (e.g., BPP: λ0=15, λ1=4.2, λ2=0.4; see Appendix Table)",
+      "postprocessing": "Hamming-distance-1 correction"
+    },
+    "stopping_criteria": "COBYLA maximum iterations per problem (max_iter) or early termination by optimizer; for TL no re-optimization is performed."
+  },
+  "experiment_output": {
+    "metrics": [
+      "probability(∗x) — probability of sampling a ground-state/optimal solution (primary metric)",
+      "mean cost over samples",
+      "minimum cost found among samples",
+      "sample-efficiency estimates (e.g., N_99% = log(1−0.99)/log(1−probability(∗x)))"
+    ],
+    "baselines_and_comparisons": [
+      "Self-optimization (COBYLA optimized parameters per-instance)",
+      "Random sampling (uniform bitstrings baseline)",
+      "D-Wave default annealing schedule (for annealer comparison)"
+    ],
+    "output_format": "Statistics over 5 random instances per size (means/medians and quartiles/standard deviation); histograms/distributions of sampled bitstrings; plots of parameter schedules (γ,β) and annealing schedules"
+  },
+  "experiment_parameters": {
+    "qubits_range": "4 to 42 (gate-based experiments); up to 170 (D-Wave annealer MIS)",
+    "QAOA_depth_p": 10,
+    "shots_per_run": "1000 (8-qubit hardware runs); 5000 (14-, 18-qubit hardware runs and D-Wave MIS runs)",
+    "optimizer": "COBYLA",
+    "max_iterations": "max_iter = 20 * Nq * p",
+    "instances_per_size": 5,
+    "initialization_method": "quantum-annealing linear ramp",
+    "postprocessing": "Hamming-distance-1 correction",
+    "D-Wave_schedule_control_points": "up to 12 user-specified s(t) points"
+  },
+  "hardware_details": {
+    "simulator": {
+      "name": "JUQCS–G",
+      "platform": "JUWELS Booster (Jülich), 3744 NVIDIA A100 GPUs"
+    },
+    "gate_based_QPUs": [
+      {
+        "vendor": "IonQ",
+        "models": [
+          "Harmony",
+          "Aria-1"
+        ],
+        "access": "AWS Amazon Braket"
+      },
+      {
+        "vendor": "Rigetti",
+        "model": "Aspen-M-3",
+        "access": "AWS Amazon Braket"
+      },
+      {
+        "vendor": "IBM",
+        "model": "Brisbane",
+        "access": "IBM Quantum services"
+      }
+    ],
+    "annealer": {
+      "vendor": "D-Wave",
+      "model": "Advantage",
+      "notes": "Custom annealing schedules by mapping s(t) with up to 12 points; A(s) and B(s) modified separately"
+    }
+  },
+  "reproducibility_notes": {
+    "code_availability": "Source code for results is provided at https://jugit.fz-juelich.de/qip/transfer-learning-QAOA (as stated in the paper).",
+    "data_availability": "Problem instances are synthetically generated using described random distributions; parameter tables (penalties) are listed in Appendix A.",
+    "reproducibility_comments": "Key parameters (p=10, COBYLA max_iter formula, penalty coefficients per problem) and hardware/simulator details are specified; reproducing hardware experiments requires cloud access to listed QPUs (Amazon Braket, IBM Quantum, D-Wave). The paper provides sufficient procedural detail (initialization, encoding, preprocessing, postprocessing) to replicate simulations and TL methodology."
+  },
+  "key_findings": [
+    "[supported] Transfer learning (TL) of QAOA parameters between different combinatorial optimization problems (COPs) is feasible: parameters optimized on one problem can be reused on other problem instances without re-running the full classical optimization.",
+    "[supported] Parameters obtained from small Bin Packing Problem (BPP) instances (3 items, 12 qubits, p=10) show particularly strong transferability to larger instances of the same problem and to other COPs, maintaining a probability of finding optimal solutions above a quadratic improvement over random guessing for problem sizes up to 42 qubits (p=10) in simulation.",
+    "[supported] Self-optimization (re-optimizing γ/β for each instance) yields higher success probabilities than pure TL, but TL substantially reduces classical optimization effort and sample/circuit resources.",
+    "[supported] TL parameters (from BPP) were tested on multiple gate-based quantum devices (IonQ Harmony and Aria, Rigetti Aspen-M-3, IBM Brisbane) for MIS instances up to 18 qubits; IonQ Aria produced the closest sampling distribution to the ideal simulator among tested hardware.",
+    "[supported] A simple Hamming-distance-1 postprocessing mitigation was used and reported to improve observed success probabilities on hardware when single-qubit bitflip errors dominate.",
+    "[supported] Cross-platform TL is possible: QAOA-derived parameters (from BPP) were mapped to modified annealing schedules on a D-Wave Advantage quantum annealer; modifying the mixer schedule A(s) using QAOA β parameters gave consistent improvements (average and minimum cost) over the device's default annealing schedule for MIS instances up to 170 qubits.",
+    "[supported] TL results and effectiveness vary by problem class: e.g., MaxCut showed weaker transfer performance and different scaling trends compared to KP and MIS in the tested regimes.",
+    "[speculative] The authors suggest that the effectiveness of TL can be interpreted as optimizing an effective, digitized annealing schedule that generalizes across problems within the limited-layer (p=10) QAOA regime.",
+    "[speculative] Extending TL analysis to Higher-Order Unconstrained Binary Optimization (HUBO) formulations is proposed as a promising future direction."
+  ],
+  "results_summary": "The paper empirically investigates transfer learning of QAOA parameters across multiple combinatorial optimization problems (TSP, BPP, KP, PO, MaxCut, MIS) using p=10 layers. Parameters optimized (via COBYLA) on small instances—particularly a 3-item BPP (12 qubits)—transfer well to larger instances and to other problem classes in simulation, maintaining success probabilities above a quadratic-improvement-over-random baseline up to 42 qubits. Hardware experiments on IonQ (Harmony, Aria), Rigetti (Aspen-M-3), and IBM (Brisbane) for MIS instances (8, 14, 18 qubits) show that IonQ Aria best reproduces the ideal sampling distribution; however, for deeper circuits and larger sizes noise severely limits performance on most devices. Cross-platform TL mapping QAOA parameters to modified annealing schedules on D-Wave Advantage improved average and minimum costs for MIS problems up to 170 qubits. Overall, TL reduces classical optimization overhead and provides useful initial parameter schedules, with effectiveness depending on problem class and device noise profiles.",
+  "performance_claims": [
+    "BPP-derived parameters (from 3-item / 12-qubit instance, p=10) maintain a probability of finding optimal solutions above a quadratic improvement over random guessing for problem sizes up to 42 qubits (simulation).",
+    "Self-optimization vs TL sample-effort comparison examples: for 14-qubit MaxCut, N_99% samples to observe optimal solution = 16 (self-optimization) vs 20 (TL); for 18-qubit MaxCut = 28 (self-optimization) vs 41 (TL); for 20-qubit BPP = 339 (self-optimization) vs 848 (TL).",
+    "8-qubit MIS hardware results (probability of optimal solution shown as raw and with Hamming-distance-1 postprocessing): Rigetti Aspen-M-3 (2.9%, 27.9%), IBM Brisbane (4.7%, 32.5%), IonQ Harmony (3.0%, 21.2%), IonQ Aria-1 (34.8%, 81.5%), ideal simulator (89.1%, 94.0%), random sampling baseline (2.4%, 21.0%).",
+    "14-qubit MIS hardware results (raw, postprocessed): Rigetti Aspen-M-3 (0.0%, 0.2%), IBM Brisbane (0.06%, 0.16%), IonQ Aria-1 (4.46%, 12.3%), ideal simulator (19.8%, 30.7%), random (0.0%, 0.22%).",
+    "18-qubit MIS hardware results (raw, postprocessed): Rigetti Aspen-M-3 (0.03%, 0.34%), IBM Brisbane (0.0%, 0.03%), ideal simulator (24.1%, 34.8%), random (0.0%, 0.04%).",
+    "Cross-platform: On D-Wave Advantage (5000 samples per instance) modifying the mixer schedule A(s) using QAOA β parameters produced consistent improvements in average and minimum cost for MIS instances of sizes 100, 125, 150, 160, and 170 qubits compared to the device's default anneal schedule (no absolute numbers reported in the paper for cost improvement magnitude)."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper does not claim a demonstration of quantum computational advantage. It reports that TL of QAOA parameters yields improved sampling success probabilities relative to random guessing and reduces classical optimization effort; it also shows cross-platform improvements on a quantum annealer. These are empirical improvements in parameter transfer and sampling, not claims of outperforming classical algorithms or demonstrating a general quantum advantage.",
+  "limitations": [
+    "Finding optimal QAOA parameters is NP-Hard and classical optimization can get trapped in many local minima (author-stated).",
+    "Noise in current quantum hardware severely limits the search for good parameters and makes parameter optimization unfeasible after only a few QAOA layers (author-stated).",
+    "Self-optimization yields better probability(∗x) than TL but requires many more resources (samples, iterations and HPC for large Nq), so TL is a trade-off rather than strictly superior (author-stated).",
+    "The study used p = 10 layers only; conclusions may not hold for other p or very deep circuits (author-stated by experimental setup).",
+    "Initial classical optimization used COBYLA with an arbitrary max_iter schedule (max_iter = 20 p Nq); that choice may bias results and not be optimal for all problems (author-stated procedural detail).",
+    "The unbalanced penalization approach for inequality constraints does not guarantee that the optimal solution of the original constrained problem is encoded in the ground state of the resulting Ising Hamiltonian (author-stated in Appendix).",
+    "D-Wave hardware limitations: A(s) and B(s) annealing functions are fixed and only the s(t) mapping (up to 12 points) can be changed; A(s) and B(s) cannot be modified simultaneously and initial/final anneal points are constrained (author-stated).",
+    "Empirical TL results are demonstrated on a limited set of COP classes and instance distributions (TSP, BPP, KP, PO, MaxCut, MIS) with randomly generated instances—generalization to other problem types or structured instances is not established (inferred).",
+    "[inferred] The observed superior transferability of BPP parameters lacks a theoretical explanation in the paper and may be instance- or encoding-dependent.",
+    "[inferred] Real-device QAOA implementations at the tested circuit depths were practically infeasible on several devices (Aspen-M-3, IBM Brisbane) beyond small sizes because of gate/noise limitations—results are heavily hardware-dependent.",
+    "[inferred] Postprocessing via Hamming-distance-1 mitigation assumes mostly single-qubit bitflip errors and relies on the ground state probability being relatively large; effectiveness breaks down with higher error rates or different error models.",
+    "[inferred] The experiments and simulations are limited up to 42 qubits for gate-model TL tests and up to 170 qubits for the annealer tests, leaving uncertain behavior for intermediate or larger ranges in gate-model devices.",
+    "[inferred] Normalizing the Hamiltonian by the maximum weight (and not rescaling β and γ explicitly with problem size) may impact TL performance as problem size grows—rescaling strategies were not exhaustively explored."
+  ],
+  "open_questions": [
+    "Why do parameters learned on small BPP instances generalize particularly well to other COPs and larger instances (empirical observation lacking an obvious explanation)?",
+    "How broadly does transferability hold across other COP formulations, structured real-world instances, different instance distributions, or entirely different problem families (beyond the six COPs studied)?",
+    "Can TL parameters be systematically rescaled or adapted (e.g., magnitude of β and γ) to maintain performance as problem size grows, especially for problems like MaxCut where performance degrades with size?",
+    "To what extent can TL serve as a practical initialization for subsequent classical optimization on noisy hardware, and what are the best hybrid strategies (single TL pass vs. TL + further optimization)?",
+    "What is the robustness of TL parameters to realistic noise models across different quantum hardware families and device generations?",
+    "Can TL be extended to and retain benefits for higher circuit depths (p ≫ 10) or for parameter patterns that exploit problem structure at larger p?",
+    "How effective is cross-platform TL in general — e.g., transferring gate-model QAOA parameters to different annealers or mapping annealing schedules back to gate-model circuits — beyond the single D-Wave Advantage case tested?",
+    "What are the fundamental or theoretical reasons (if any) for why certain COP encodings (like the BPP QUBO/Ising encoding) produce universally transferable schedules?",
+    "How sensitive are TL results to the choice of classical optimizer, initialization strategy (beyond the linear ramp annealing initialization used), and the penalty-encoding choices for constraints?",
+    "What are the limits of the Hamming-distance-1 postprocessing mitigation used on real hardware, and what alternative mitigation/postprocessing approaches would be effective for TL outputs?"
+  ],
+  "future_work": [
+    "Extend the analysis of transfer learning to Higher-Order Unconstrained Binary Optimization (HUBO) formulations of combinatorial optimization problems."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Transfer learning (TL) of QAOA parameters trained on small instances can yield improved performance (higher ground-state sampling probability and sample-efficiency) when applied without re-optimization to larger instances and other COPs.",
+    "#idea:near-term-feasibility — Empirical demonstrations on multiple gate-based QPUs (IonQ, Rigetti, IBM) and on D-Wave Advantage indicate TL methods can be applied on current NISQ-era hardware (p=10, up to 18 qubits on gate devices, and large MIS on D-Wave).",
+    "#idea:hybrid-approach — Workflow uses classical optimizers (COBYLA) to find parameters on small instances and then reuses those parameters on target instances (no re-optimization), illustrating a practical quantum-classical hybrid strategy to reduce on-device training costs.",
+    "#idea:quantum-advantage — Cross-platform TL: mapping learned QAOA schedules to modified annealing schedules on D-Wave produced improvements over the annealer's default schedule for large MIS instances, suggesting schedule-transfer utility beyond gate-model devices.",
+    "#idea:near-term-feasibility — Using quantum-annealing-style linear-ramp initialization and a fixed depth (p=10) facilitates parameter transferability across problem sizes and problem classes (BPP, TSP, KP, PO, MaxCut, MIS).",
+    "#limitation:qubit-count — Gate-based hardware experiments are limited to small qubit counts (8, 14, 18 qubits reported), limiting direct applicability to realistic financial portfolio sizes without further scaling advances.",
+    "#limitation:noise — Results required postprocessing (Hamming-distance-1 correction) and are subject to hardware noise; robustness of TL under realistic noise regimes remains a concern.",
+    "#limitation:data-encoding — The work relies on QUBO/Ising encodings with problem-specific penalty terms and normalization; encoding choices and penalty tuning are necessary and may affect transferability and scaling.",
+    "#idea:hybrid-approach — Extensive simulation (statevector and sampling on JUQCS-G) combined with selective hardware runs exemplifies a pipeline where large-scale validation is performed in simulation while key demonstrations are executed on real devices."
+  ],
+  "contradictions": []
+}

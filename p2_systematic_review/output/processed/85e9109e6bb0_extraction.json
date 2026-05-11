@@ -1,0 +1,215 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2503.11273v1) and date, lacks a journal or conference venue, and is structured like a research preprint (abstract, methods, results, references, appendix). Although empirical, there is no evidence of peer review or formal conference publication; authors are industry-affiliated and provide a code repository.",
+  "title": "Financial Fraud Detection with Entropy Computing",
+  "authors": [
+    "Babak Emami",
+    "Wesley Dyk",
+    "David Haycraft",
+    "Carrie Spear",
+    "Lac Nguyen",
+    "Nicholas Chancellor"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (arXiv:2503.11273)",
+  "doi": "",
+  "abstract_summary": "This preprint introduces CVQBoost, a boosting algorithm formulated as a continuous quadratic optimization designed to run on Quantum Computing Inc.'s Dirac-3 entropy quantum computing (EQC) hardware. Applied to credit card fraud detection and large synthetic datasets, CVQBoost attains comparable AUC to XGBoost while substantially reducing training time and demonstrating superior scaling compared to multicore and GPU XGBoost implementations.",
+  "methodology_description": "The study introduces CVQBoost, a boosting algorithm that formulates the weak-classifier weighting problem as a continuous quadratic optimization and leverages Quantum Computing Inc.'s Dirac-3 Entropy Quantum Computing (EQC) photonic-hybrid device as a continuous quadratic solver. Weak classifiers (implemented primarily as logistic regression models built from one- or two-feature subsets) are combined linearly with non-negative continuous weights wi subject to a normalization constraint (sum_i wi = 1). The training objective minimized is a squared-error loss across labeled training samples plus an L2 regularization term: min_w sum_s (sum_i wi hi(xs) - ys)^2 + lambda * sum_i (wi)^2. The quadratic form is expressed via Jij = sum_s hi(xs) hj(xs) + delta_ij * lambda and Ci = -2 sum_s ys hi(xs) and is solved by Dirac-3; additional solver comparisons used Hexaly (commercial optimizer) and SciPy SLSQP. Experiments benchmark CVQBoost against XGBoost across multiple hardware configurations (single-core, multi-core up to 48 cores, GPUs up to four NVIDIA L4) and datasets (the Kaggle Credit Card Fraud Detection dataset and large synthetic datasets generated with scikit-learn's make_classification). Imbalanced-class handling strategies (ADASYN, SMOTE, SMOTE-SVM, and majority downsampling) were applied to training data while the test set remained unchanged. Performance metrics included AUC for classification quality, runtimes (seconds) and solution energy (objective value) for solver comparisons. Results report averages over repeated runs (typically 5–10) with error bars given as two standard deviations.",
+  "algorithms_used": [
+    "CVQBoost (continuous-variable boosting using Dirac-3 EQC)",
+    "QBoost (referenced / conceptual predecessor)",
+    "XGBoost (baseline)",
+    "Logistic Regression (used as weak classifiers)",
+    "Sequential Least Squares Programming (SLSQP) via SciPy",
+    "Hexaly optimizer (commercial solver)",
+    "ADASYN (oversampling)",
+    "SMOTE",
+    "SMOTE-SVM",
+    "Majority class downsampling",
+    "make_classification (scikit-learn synthetic data generator)"
+  ],
+  "frameworks": [
+    "XGBoost library",
+    "NVIDIA RAPIDS AI (used for GPU XGBoost)",
+    "scikit-learn",
+    "SciPy"
+  ],
+  "experimental_setup": "Dirac-3 (QCi) used as the native continuous quadratic solver; comparisons run on conventional hardware including single-core CPU, multi-core machines (experiments on 8-core, 16-core, and a high-performance machine with up to 48 CPU cores at 2.64 GHz), and GPU acceleration with up to four NVIDIA L4 GPUs (24 GB each) via NVIDIA RAPIDS AI. Kaggle Credit Card Fraud dataset (~200k transactions, 38 features) used for classification accuracy and moderate-scale runtime tests. Large-scale synthetic datasets created with scikit-learn (1M–70M samples, 100–900 features) were used for scalability benchmarks. Runtimes reported in seconds; experiments repeated (typically 5–10 runs) and averaged; error bars are two standard deviations.",
+  "dataset_used": "Kaggle Credit Card Fraud Detection dataset (MACHINE LEARNING GROUP – ULB, 2013): ~200,000 transactions, 38 features, highly imbalanced (~0.1% fraudulent). Additionally, synthetic datasets generated with scikit-learn's make_classification ranging from 1 million to 70 million samples with 100 to 900 features (80% used for training).",
+  "experiment_input": {
+    "real_dataset": {
+      "name": "Kaggle Credit Card Fraud Detection",
+      "source_url": "https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud",
+      "approx_size": 200000,
+      "features": 38,
+      "imbalance": "approx 0.1% fraud",
+      "preprocessing": "Training set balancing applied with ADASYN, SMOTE, SMOTE-SVM, and majority-class downsampling; test set left unchanged; weak classifiers constructed from one- or two-feature subsets (logistic regression). Minority-to-majority ratios tested: 0.01, 0.02, 0.05, 0.1, 0.5, 1.0."
+    },
+    "synthetic_dataset": {
+      "generator": "scikit-learn.make_classification",
+      "sizes": "1e6 to 7e7 samples",
+      "features_range": "100 to 900 features",
+      "train_split": 0.8,
+      "preprocessing": "Standard setup for classification experiments; Hamiltonians built from training data for optimizer inputs."
+    },
+    "repetitions_and_statistics": {
+      "runs": "typically 5–10 runs per experiment (varies by experiment)",
+      "error_bars": "two standard deviations (reported)"
+    }
+  },
+  "experiment_process": {
+    "pipeline": [
+      "Construct a set of N weak classifiers hi(x) (in this work primarily logistic regression models trained on 1–2 feature subsets).",
+      "Formulate the global objective as a continuous quadratic program with L2 regularization: J and C constructed via Jij = sum_s hi(xs) hj(xs) + delta_ij * lambda and Ci = -2 sum_s ys hi(xs).",
+      "Enforce constraints wi >= 0 and sum_i wi = 1 (continuous weights).",
+      "Solve the continuous quadratic optimization using Dirac-3 EQC device; for comparisons also solve using Hexaly and SciPy SLSQP (default tolerances, iteration caps applied).",
+      "Assemble the strong classifier y_hat(x) = sum_i wi hi(x).",
+      "Evaluate classifier on held-out test data using AUC; measure runtimes (total and breakdown: pre/post-processing vs Dirac-3 time) and solution energy (objective value) for solver comparisons.",
+      "Benchmark against XGBoost across single-core, multi-core (1–48 cores; found diminishing returns beyond ~8 cores), and GPU (NVIDIA L4 via RAPIDS) setups.",
+      "For scalability testing, run experiments on synthetic datasets varying sample counts and feature dimensionality, record runtimes and scaling behavior."
+    ],
+    "parameters_and_settings_notes": "Regularization coefficient lambda is included in formulation but no fixed numeric value is specified in the manuscript. Dirac-3 has an operational dynamic-range limitation around 23 dB noted by authors. Solver tolerances: default SLSQP tolerances used; Hexaly allowed to terminate on default optimality gap or predefined max iteration/runtime threshold. Averaging over multiple runs reported (5 or 10)."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Area Under the ROC Curve (AUC) for classification performance",
+      "Training runtimes in seconds (total and breakdown: Dirac-3 time vs pre/post-processing time)",
+      "Solution energy / objective value (for solver comparisons)"
+    ],
+    "baselines": [
+      "XGBoost (single-core, multi-core parallelized, and GPU via NVIDIA RAPIDS)",
+      "Alternative optimizers for CVQBoost formulation: Hexaly optimizer and SciPy SLSQP"
+    ],
+    "output_format": "Averages across repeated runs with error bars (two standard deviations), tabular results and plotted figures showing AUC vs imbalance ratios, runtime vs training sample counts, runtime vs number of features, scalability plots for synthetic data, and solver runtime/energy comparisons."
+  },
+  "experiment_parameters": {
+    "regularization_lambda": null,
+    "weight_constraints": "wi >= 0, sum_i wi = 1",
+    "variable_type": "continuous",
+    "dirac3_dynamic_range_limit_db": 23,
+    "kaggle_dataset_size": 200000,
+    "kaggle_num_features": 38,
+    "synthetic_sample_sizes": "1e6 to 7e7",
+    "synthetic_features_range": "100 to 900",
+    "synthetic_train_split": 0.8,
+    "runs_per_experiment": "typically 5-10 (varies by experiment)",
+    "cpu_configurations_tested": [
+      "single-core",
+      "8 cores",
+      "16 cores",
+      "48 cores (2.64 GHz)"
+    ],
+    "gpu_configuration_tested": "up to 4 x NVIDIA L4 (24GB each)",
+    "solver_settings": {
+      "SLSQP_tolerances": "default",
+      "Hexaly_termination": "default optimality gap or max iteration/runtime cap"
+    }
+  },
+  "hardware_details": {
+    "dirac3": "Quantum Computing Inc. Dirac-3 (photonic hybrid Entropy Quantum Computing device; continuous-variable quadratic solver)",
+    "cpu": "High-performance machines tested, up to 48 CPU cores at 2.64 GHz; experiments also on 16-core and 8-core machines",
+    "gpu": "NVIDIA L4 GPUs (tests used up to four L4 units, 24 GB memory each); NVIDIA RAPIDS AI used for GPU-accelerated XGBoost",
+    "other_solvers": "Hexaly commercial optimizer; SciPy SLSQP (CPU-based)",
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "Authors provide a code repository: https://github.com/qci-github/eqc-studies/tree/main/CVQBoost and use publicly available Kaggle dataset (link cited). However, exact numeric hyperparameters (e.g., the regularization lambda value) are not specified in the manuscript, and Dirac-3 is proprietary hardware with operational limits (e.g., ~23 dB dynamic range) that may affect replication. Alternative solver experiments (Hexaly, SciPy SLSQP) are described enabling partial reproducibility on conventional hardware, and synthetic data generation parameters are provided (scikit-learn make_classification ranges).",
+  "key_findings": [
+    "[supported] CVQBoost (the continuous-variable boosting algorithm) obtains comparable classification accuracy (AUC) to XGBoost on the Kaggle Credit Card Fraud dataset when common class-balancing techniques (ADASYN, SMOTE, SMOTE-SVM, downsampling) are applied.",
+    "[supported] In some balanced-training settings (example: ADASYN with minority:majority ratio = 1.0) CVQBoost slightly outperforms XGBoost on AUC (paper example: CVQBoost AUC 0.8855 vs XGBoost AUC 0.8826).",
+    "[supported] CVQBoost running on QCi’s Dirac-3 hardware shows substantially shorter training runtimes than single-core XGBoost as dataset size and number of features increase (paper example: for 150k training samples CVQBoost total time ~2.2s vs XGBoost on 1 core ~117.4s).",
+    "[supported] CVQBoost on Dirac-3 exhibits favorable scaling with training data size and feature dimensionality (near-linear scaling reported), whereas XGBoost shows much faster runtime growth and diminishing returns when parallelized across many CPU cores or GPUs.",
+    "[supported] On very large synthetic datasets (1M–70M samples, up to 900 features) the authors report that CVQBoost on Dirac-3 scales better (runtime advantage) than XGBoost run on 48 CPU cores or four NVIDIA L4 GPUs.",
+    "[supported] When the same CVQBoost Hamiltonians are solved with other solvers, Dirac-3 demonstrates superior runtime scaling for large problem sizes relative to Hexaly and SciPy SLSQP, though solution energies can be slightly worse for problems with large dynamic range.",
+    "[supported] The authors observed a practical limitation: Dirac-3 performance is affected when the Hamiltonian dynamic range exceeds ~23 dB, which can impact solution quality on high-dynamic-range problems.",
+    "[speculative] The paper asserts (but does not empirically measure) that using Dirac-3/CVQBoost yields power-efficiency advantages compared to classical GPU/CPU training.",
+    "[speculative] The authors propose that CVQBoost’s structure offers enhanced explainability (by inspection of highly weighted weak classifiers) making it attractive for regulated domains like finance and scientific applications; this is discussed but not demonstrated in-depth in the experiments.",
+    "[speculative] The claim that CVQBoost is broadly a promising alternative to gradient boosting methods for many high-dimensional ML applications is presented as an outlook/generalization beyond the datasets and hardware tested."
+  ],
+  "results_summary": "The preprint introduces CVQBoost, a continuous-variable boosting algorithm designed to run on Quantum Computing Inc.'s Dirac-3 entropy quantum computing hardware. On the Kaggle credit-card fraud dataset (and on large synthetic datasets up to 70M samples), CVQBoost achieved AUC scores comparable to XGBoost when class-balancing techniques were applied, and in some balanced settings it slightly exceeded XGBoost. Importantly, CVQBoost on Dirac-3 demonstrated a substantial runtime advantage and more favorable scaling behavior versus XGBoost run on single-core, multi-core (up to 48 cores) and multi-GPU (up to 4 × NVIDIA L4) classical hardware. Solver comparisons also showed Dirac-3 scaling better than Hexaly and SciPy SLSQP for large Hamiltonians, though solution energies degraded slightly for very large dynamic ranges that exceed Dirac-3's operational limit (~23 dB). The authors note potential explainability benefits and suggest power-efficiency advantages, but power was not measured in the presented experiments.",
+  "performance_claims": [
+    "CVQBoost AUC (ADASYN, minority:majority = 1.0): 0.8855 ± 0.0019 vs XGBoost AUC: 0.8826 ± 0.0 (Table 1).",
+    "Kaggle dataset, 150,000 training samples, 38 features: CVQBoost total training time 2.2 ± 0.5 s (Dirac-3 time ~1.3 ± 0.5 s) vs XGBoost (1 core) 117.4 ± 4.0 s (Table 2).",
+    "Kaggle dataset, varying feature counts (5–38): CVQBoost total training time ranged ≈1.2–1.9 s versus XGBoost (1 core) ≈13.7–41.1 s, with Dirac-3 component ~1.2–1.6 s (Table 3).",
+    "Parallel XGBoost on 8 CPU cores (150k samples, 38 features): 4.2 ± 0.1 s (Table 4); XGBoost on single NVIDIA L4 GPU (150k samples, 38 features): 3.6 ± 0.0 s (Table 5); CVQBoost remained comparable or faster in the reported experiments.",
+    "Synthetic large-scale experiments (1M–70M samples, 100–900 features): authors report CVQBoost on Dirac-3 scales substantially better than XGBoost on 48 CPUs or 4 NVIDIA L4 GPUs (figures show XGBoost runtimes reaching thousands of seconds while CVQBoost scaling remains much lower).",
+    "Solver comparison for Hamiltonians: at 900 variables Dirac-3 runtime ~106.2 ± 12.5 s vs Hexaly ~322.1 ± 9.1 s and SciPy SLSQP ~274.8 ± 3.2 s; at smaller sizes other solvers can be faster (Table 6 / Fig. 7)."
+  ],
+  "quantum_advantage_claim": "demonstrated",
+  "quantum_advantage_detail": "The authors present empirical experiments showing that CVQBoost running on QCi's Dirac-3 optical EQC hardware achieves comparable predictive performance (AUC) to XGBoost while producing substantially shorter training runtimes and better scaling on larger datasets and higher feature counts versus classical implementations on single-core, multi-core, and GPU hardware. Limitations are noted for very large Hamiltonian dynamic ranges (>~23 dB) and power-efficiency claims are asserted but not experimentally quantified.",
+  "limitations": [
+    "Dirac-3 has a known performance limitation at 23 dB dynamic range which can impact optimization quality for Hamiltonians with larger dynamic ranges (author-stated).",
+    "CVQBoost attains comparable accuracy to XGBoost primarily after class-balancing techniques are applied; for heavily imbalanced training sets (minimal balancing) XGBoost outperforms CVQBoost (author-stated).",
+    "For small datasets XGBoost is faster; CVQBoost's runtime advantage appears only beyond a certain dataset size threshold (author-stated).",
+    "Solutions found by Dirac-3 exhibit a slight energy gap relative to other solvers on larger problem instances (author-stated).",
+    "CVQBoost runtimes show high variability across runs (author-stated).",
+    "All authors and the work are fully supported by Quantum Computing Inc., presenting a potential conflict of interest (author-stated disclosure).",
+    "[inferred] The study uses a single real-world dataset (Kaggle Credit Card Fraud) plus synthetic datasets; generalizability across diverse financial datasets and other problem domains is not demonstrated.",
+    "[inferred] The present experiments used logistic regression weak classifiers; the behaviour of CVQBoost with other weak classifier types and richer weak-model pools is not fully evaluated.",
+    "[inferred] No measured energy / power consumption data are reported despite claims about power efficiency; energy efficiency advantages are asserted but not quantified.",
+    "[inferred] The mapping to the Dirac-3 quadratic form imposes positivity and a sum-to-one constraint on weights (wi >= 0 and sum wi = 1); this constraint may limit expressivity compared to unconstrained boosting formulations.",
+    "[inferred] There is limited theoretical analysis or guarantees about solution optimality, convergence, or how close Dirac-3 solutions are to global optima for the formulated QP problems.",
+    "[inferred] Comparison is limited to XGBoost (and solver comparisons include Hexaly and SLSQP); other high-performance boosting frameworks (e.g., LightGBM, CatBoost) are not benchmarked.",
+    "[inferred] Pre- and post-processing overheads are reported to scale with data and features; for complete end-to-end assessments, these software pipeline costs may be significant in production and are not deeply analyzed.",
+    "[inferred] Hardware-specific dependencies (Dirac-3, NVIDIA L4, particular multicore configs) restrict portability of the performance findings; different hardware or software stacks may yield different relative performance.",
+    "[inferred] The study does not evaluate robustness to realistic hardware noise, drift, or failure modes of the Dirac-3 device, nor long-term stability/repeatability in production settings."
+  ],
+  "open_questions": [
+    "How well does CVQBoost generalize to other real-world financial datasets (different fraud types, geographies, feature distributions) and to other application domains beyond fraud detection?",
+    "How does CVQBoost perform with a wider variety of weak classifiers (decision trees, Gaussian processes, Naive Bayes, etc.) and with ensembles of heterogeneous weak learners?",
+    "Can the positivity and sum-to-one constraints on weights be relaxed or otherwise adapted to improve model expressivity without sacrificing Dirac-3 compatibility?",
+    "What are the precise causes of the observed runtime variability of CVQBoost runs on Dirac-3, and how can variability be reduced?",
+    "How do hardware imperfections, noise, and dynamic-range limitations of Dirac-3 affect solution quality and reproducibility in real-world deployments?",
+    "Can the dynamic-range limitation (23 dB) be mitigated by preconditioning, rescaling, regularization, or hardware improvements, and what are practical strategies to do so?",
+    "What are the formal optimization guarantees (if any) for CVQBoost when solved on Dirac-3 relative to classical solvers — e.g., bounds on suboptimality or probabilistic guarantees?",
+    "How does CVQBoost compare to other modern gradient boosting implementations such as LightGBM or CatBoost in accuracy and runtime across a range of datasets and hardware configurations?",
+    "What are the end-to-end costs and benefits (including pre/post-processing, data movement, queuing/latency to access Dirac-3) for production deployment compared to optimized classical pipelines?",
+    "What are the measured power and energy consumption characteristics of CVQBoost on Dirac-3 versus GPU/CPU baselines under comparable workloads?",
+    "How interpretable and actionable are the explanations purportedly available from highly weighted weak classifiers in real regulatory or operational contexts (e.g., GDPR compliance, auditability)?",
+    "How does CVQBoost scale in distributed or multi-device settings, and what bottlenecks (networking, orchestration) arise at production scale?",
+    "What is the impact of extremely high dimensionality (beyond tested ranges) and feature engineering choices on both accuracy and runtime of CVQBoost?",
+    "How sensitive are results to hyperparameters (e.g., regularization λ, number/selection of weak classifiers), and what automated tuning strategies are effective?"
+  ],
+  "future_work": [
+    "Apply CVQBoost to other application domains such as computational bioscience and chemistry (explicitly mentioned as a promising future direction).",
+    "Investigate and demonstrate explainability by examining highly weighted weak classifiers and validating their interpretability in domain contexts (authors noted they did not pursue this in the present work).",
+    "Measure and report power consumption and energy efficiency of Dirac-3/CVQBoost in comparison to GPU and CPU baselines to substantiate claims about efficiency.",
+    "Explore and exploit additional Dirac-3 capabilities such as higher-order coupling which were not used in this study.",
+    "Address the Dirac-3 dynamic-range limitation (23 dB) via hardware improvements or algorithmic/preconditioning approaches to handle Hamiltonians with larger dynamic ranges.",
+    "Extend benchmarking to additional classical and commercial solvers (and additional boosting frameworks) across more diverse datasets and hardware configurations.",
+    "Develop more detailed analyses of solution quality, convergence behavior, and theoretical guarantees for the CVQBoost formulation when solved on entropy quantum computing hardware."
+  ],
+  "topic_tags": [
+    "fraud-detection"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — CVQBoost on Dirac-3 achieved comparable AUC to XGBoost while reporting substantially reduced training time and better scaling behavior than single-/multi-core and multi-GPU XGBoost on the tested datasets.",
+    "#idea:hybrid-approach — The pipeline is hybrid: classical weak learners (logistic regressions on 1–2 feature subsets) are combined via continuous non-negative weights; the continuous quadratic program (J, C) built from training data is solved on the Dirac-3 EQC device with classical pre- and post-processing.",
+    "#idea:near-term-feasibility — The authors ran end-to-end experiments on real Dirac-3 hardware and benchmarked against optimized classical hardware (up to 48 CPU cores and up to four NVIDIA L4 GPUs), and evaluated scaling on synthetic datasets up to 70M samples.",
+    "#limitation:noise — The Dirac-3 device has an operational dynamic-range limitation (~23 dB) noted by the authors, which constrains solver precision and may affect solution quality.",
+    "#limitation:data-encoding — The approach requires building Jij and Ci (sums over training samples) for the quadratic solver (a form of Hamiltonian construction), which can be costly for very large datasets and may shift runtime burden to preprocessing.",
+    "#limitation:no-empirical-validation — Although real hardware was used, some solver hyperparameters (e.g., regularization lambda) are not fixed/clearly reported, and solver tolerance/termination settings differ across solvers, reducing reproducibility and making head-to-head claims harder to validate."
+  ],
+  "contradictions": [
+    "#contradiction:classical-vs-quantum — The paper claims substantial training-time advantages over XGBoost (including GPUs), but it's unclear whether the comparisons fully account for end-to-end preprocessing/postprocessing costs, solver parameter tuning, and equivalent engineering optimizations of the classical baselines (e.g., RAPIDS/XGBoost hyperparameter and system tuning). This raises doubt about the extent of the claimed quantum superiority.",
+    "#contradiction:scalability — Superior scaling is reported on very large synthetic datasets, yet the Dirac-3 device has a finite dynamic range (~23 dB) and the manuscript omits fixed values for regularization and some solver settings; together, these factors leave open whether the observed scaling will hold on noisy real-world data and across different problem formulations."
+  ]
+}

@@ -1,0 +1,203 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "The document has a full academic structure (abstract/keywords, introduction, methods, results, figures, references, acknowledgements, supplementary data) and mentions a Springer Nature template and funding—consistent with a peer-reviewed empirical journal article presenting simulation experiments and benchmarking.",
+  "title": "Benchmarking the performance of portfolio optimization with QAOA",
+  "authors": [
+    "Sebastian Brandhofer",
+    "Daniel Braun",
+    "Vanessa Dehn",
+    "Gerhard Hellstern",
+    "Matthias Hils",
+    "Yanjun Ji",
+    "Ilia Polian",
+    "Amandeep Singh Bhatia",
+    "Thomas Wellens"
+  ],
+  "year": "2021",
+  "journal_or_venue": "Springer Nature (conference/journal)",
+  "doi": "",
+  "abstract_summary": "This paper presents a detailed study of applying the Quantum Approximate Optimization Algorithm (QAOA) to binary portfolio optimization with a fixed budget constraint. It compares standard and various XY-type mixers (ring, parity ring, full, QAMPA), discusses practical implementation choices (penalty scaling, parameter initialization, classical optimizers), benchmarks performance on DAX30-derived instances, introduces an easy/hard instance criterion, and analyzes robustness under NISQ noise, finding full XY/QAMPA best in noiseless cases but more noise-sensitive than the standard mixer.",
+  "methodology_description": "The study benchmarks variants of the Quantum Approximate Optimization Algorithm (QAOA) on a binary portfolio optimization problem (select B assets out of n) formulated as a quadratic unconstrained binary optimization with a penalty term to enforce the budget constraint when needed. The authors (1) map the cost function to a Hamiltonian, scale it by a global factor to align spectral widths with the mixer operator, and implement different mixers: the original single-qubit (standard) mixer and several XY-type mixers (ring, parity-ring, full, and a QAMPA variant). (2) They prepare initial states either as uniform |+> product states (standard mixer) or Dicke states (XY mixers). (3) Parameter optimization is performed via a classical outer loop: for p=1 a logarithmic grid search over two canonical parameters (m1,m2) is used to choose a good starting minimum; for increasing depth p the paper uses extrapolation heuristics (linear ansatz interpolation, quadratic ansatz, and zero-padding) and repeats optimization from four different starts to mitigate local minima. (4) Different classical optimizers are used depending on noise and simulator: gradient-based SLSQP (SciPy) for noise-free statevector simulations and gradient-free methods (Nelder-Mead, COBYLA) for shot-noisy qasm/density-matrix simulations; Nelder-Mead specifics: initial simplex size 0.5 and max iterations = 10*(#parameters). (5) Simulations are performed on Qiskit simulators: statevector simulator (ideal), qasm simulator (shot noise, typically 1000 shots), and density-matrix simulations (8192 samples) when evaluating noise models. (6) Noise experiments apply a depolarizing channel after each single- and two-qubit gate; noise strengths are swept and sometimes normalized by circuit size to compare ansatz robustness. Performance is measured by a constraint-independent approximation ratio, ground-state (optimal-portfolio) probability, and expectation values; experiments are run across ensembles of instances (random subsets of DAX30) and a larger Monte Carlo study to characterize \"easy\" vs \"hard\" instances by statistics (variances of returns, correlations, and energy landscape).",
+  "algorithms_used": [
+    "QAOA",
+    "Quantum Alternating Operator Ansatz (generalized QAOA)",
+    "QAMPA (Quantum Alternate Mixer-Phase Ansatz, variant of QAOA)",
+    "Brute-force classical search (for small n)",
+    "Classical optimizers: SLSQP, Nelder-Mead, COBYLA, gradient descent, stochastic gradient descent"
+  ],
+  "frameworks": [
+    "Qiskit (statevector simulator, qasm simulator, density-matrix functionality)",
+    "SciPy (scipy.optimize: SLSQP, Nelder-Mead, COBYLA)"
+  ],
+  "experimental_setup": "Simulations use Qiskit statevector simulator (ideal, no shot noise), Qiskit qasm simulator (shot noise; typically 1000 shots per circuit), and density-matrix simulator runs with 8192 samples for noisy performance estimates. Depolarizing noise channel applied after each single- and two-qubit gate for noise studies. Problem sizes: n = 5 (B=2) and n = 10 (B=5) qubits; QAOA depth p varied up to p_max = 7. Ensembles: typically 20 random portfolio instances per configuration; larger Monte Carlo of ~2400 instances used for instance-hardness analysis.",
+  "dataset_used": "Historical daily prices for the German DAX 30 index constituents (as of 01/02/2021) over the period 01/01/2016 to 31/12/2020. From these daily prices the authors compute daily percentage returns, annualized returns and annualized covariance matrices. Random subsets of n assets (from the 30) are used to form problem instances.",
+  "experiment_input": {
+    "source": "German DAX 30 historical daily prices",
+    "timeframe": "2016-01-01 to 2020-12-31 (daily prices)",
+    "size": "Full universe = 30 assets; experiments use random subsets of n=5 (B=2) and n=10 (B=5); Monte Carlo study used ~2400 randomly generated baskets",
+    "preprocessing": "Compute daily percent changes from consecutive prices; compute annualized returns as product/aggregation of daily returns; compute annualized covariance matrix using sample covariances of daily returns and scale appropriately. Correlations are normalized (Pearson) when needed. For small n, brute-force evaluation over all 2^n portfolios to obtain exact F_min, F_max and statistics. Penalty factor A for soft constraint is chosen via an iterative classical procedure ensuring separation of infeasible states from feasible ones per a heuristic inequality."
+  },
+  "experiment_process": "Pipeline: (1) Formulate portfolio cost F(z) (quadratic binary) and optionally add penalty term A*(sum z_i - B)^2; convert to Hamiltonian H = A * F_operator and scale by a global scalar to align spectral width with mixer. (2) Choose mixer variant: standard (single-qubit X-rotations) or XY variants (ring, parity-ring, full, QAMPA). Prepare initial state: |+>^n for standard, Dicke state (uniform superposition over Hamming-weight-B basis states) for XY mixers. (3) For p=1: perform grid search over m1,m2 (logarithmic grid) to find promising starting minima. (4) For p>1: initialize parameters by extrapolating optimized parameters from p-1 using linear interpolation, quadratic fit, or zero-padding; perform three additional optimizations per p starting from these alternatives (total four starts) and pick best result. (5) Classical optimization: use gradient-based SLSQP for statevector (ideal) runs; use Nelder-Mead or COBYLA for shot-noisy qasm/density-matrix runs; Nelder-Mead configured with initial simplex size 0.5 and max iterations = 10*(#parameters). (6) Rescale Hamiltonian (and parameters) between successive p to keep parameter magnitudes comparable. (7) Repeat for ensemble of problem instances, record expectation values, approximation ratio, ground-state probability, and analyze energy landscapes. (8) Noise experiments: insert depolarizing channel after every gate with varying noise strengths (absolute and circuit-size-normalized) and re-run optimization and evaluation to assess robustness.",
+  "experiment_output": {
+    "metrics": [
+      "Approximation ratio (modified to be independent of how the budget constraint is enforced)",
+      "Probability of obtaining optimal portfolio (ground-state probability)",
+      "Expectation value of cost function",
+      "Energy-landscape visualizations (F as function of parameters)",
+      "Instance statistics: mean and variance of energy distribution, variances of returns and correlations"
+    ],
+    "baselines": [
+      "Standard single-qubit mixer QAOA",
+      "XY mixers (ring, parity-ring, full) and QAMPA variant",
+      "Comparison across noisy vs noise-free simulators"
+    ],
+    "output_format": "Numerical time-series and aggregated statistics over ensembles (means and standard deviations), plots of r and P vs QAOA depth p, parameter landscapes for p=1, and heatmaps for noise sensitivity."
+  },
+  "experiment_parameters": {
+    "qubits_n": [
+      5,
+      10
+    ],
+    "budget_B": {
+      "n=5": 2,
+      "n=10": 5
+    },
+    "QAOA_depth_p": {
+      "min": 1,
+      "max": 7
+    },
+    "shots": {
+      "qasm_simulator": 1000,
+      "density_matrix_runs": 8192
+    },
+    "optimizers": {
+      "statevector": "SLSQP (SciPy)",
+      "qasm/shot-noisy": "Nelder-Mead (simplex size 0.5, max iterations = 10 * num_params), COBYLA as alternative"
+    },
+    "noise_model": "Depolarizing channel applied after each single- and two-qubit gate; noise strength swept, sometimes normalized by number of gates (circuit size)",
+    "ensemble_sizes": {
+      "main_comparisons": 20,
+      "instance_hardness_MonteCarlo": 2400
+    },
+    "penalty_factor_selection": "Iterative classical search starting from A=0; increase by computed delta until infeasible-state min satisfies inequality (see paper eqs.)",
+    "parameter_initialization_methods": [
+      "Grid search in (m1,m2) for p=1 (log-spaced)",
+      "Linear ansatz extrapolation across depths",
+      "Quadratic ansatz fit across depths",
+      "Zero-padding of previous depth parameters"
+    ]
+  },
+  "hardware_details": {
+    "simulators": [
+      "Qiskit statevector simulator (ideal)",
+      "Qiskit qasm simulator (shot-based; used with 1000 shots)",
+      "Density-matrix simulator (used with 8192 samples; unspecified exact backend—presumably Qiskit Aer density matrix)"
+    ],
+    "quantum_hardware": "No real quantum processing unit was used in experiments (NISQ hardware discussed conceptually, but experiments are simulator-based).",
+    "classical_libraries": [
+      "SciPy (scipy.optimize)",
+      "Qiskit (for circuit construction and simulators)"
+    ]
+  },
+  "reproducibility_notes": "The authors provide ancillary CSV files containing annualized covariance matrices and returns for the German DAX 30 (2016-2020) as supplementary material. Specific code, notebooks, or exact random seeds are not provided in the paper. Parameter selection heuristics and optimizer configurations are described in detail (optimizer types and Nelder-Mead settings specified), enabling reimplementation, but reproducibility would require re-creating the exact circuit construction and the reported random instance sampling. No public code repository is referenced.",
+  "key_findings": [
+    "[supported] The portfolio optimization problem is formulated as a quadratic binary optimization with a constraint on the number of assets and implemented for QAOA (including both soft-penalty and constraint-preserving XY mixers).",
+    "[supported] Multiple mixer variants were implemented and benchmarked: standard (single-qubit mixer), XY ring, XY parity-ring, full XY, and QAMPA (reshuffled full XY).",
+    "[supported] In noise-free (statevector) simulations the XY mixers outperform the standard mixer, with the full XY and QAMPA mixers converging fastest as QAOA depth p increases.",
+    "[supported] For n=10 assets (B=5) at p=7 the full XY and QAMPA achieved high approximation ratios (~0.98) and ~0.6 probability of obtaining the optimal portfolio in simulation.",
+    "[supported] Measurement sampling noise (qasm simulator, 1000 shots) produced only minor degradation compared with statevector results except very near extremely high approximation ratios.",
+    "[supported] Under gate noise modeled by depolarizing channels, XY mixers become more sensitive than the standard mixer; above a noise-dependent threshold the standard mixer can outperform XY mixers.",
+    "[supported] The sensitivity threshold of XY vs. standard mixer decreases with increasing QAOA depth p (reported approximate thresholds in their noise model: ~0.003 for p=3, ~0.002 for p=5, ~0.001 for p=7).",
+    "[supported] The QAMPA variant reduces the number of CNOT gates compared to the full XY implementation (circuit decomposition shows fewer CNOTs), improving noise resilience relative to full XY in practice.",
+    "[supported] They propose and use a heuristic global scaling factor A (set to align spectral widths of cost and mixer operators) to improve numerical behaviour of the classical optimizer.",
+    "[supported] They provide an automated procedure to choose a penalty factor for the soft-constraint formulation that is smaller than previously suggested large penalties, based on separating distributions of feasible vs. unfeasible objective values.",
+    "[supported] They tested multiple classical optimizers and initialization strategies: gradient-based SLSQP performs well in statevector simulations; gradient-free (Nelder-Mead, COBYLA) are more robust with shot noise.",
+    "[supported] The optimization landscape at p=1 exhibits several local minima; extrapolation (linear/quadratic ansatz) from lower-p optimal parameters is effective for initializing higher-p runs and avoiding poor minima.",
+    "[supported] Instance hardness correlates with instance statistics: larger variance in asset returns and pairwise correlations (and correspondingly larger variance/mean separation in the objective-energy landscape) correlates with easier optimization performance.",
+    "[speculative] The observed instance-hardness dependence is attributed primarily to the classical optimization landscape (i.e., is an effect of the classical part of the hybrid algorithm rather than a quantum-specific effect).",
+    "[speculative] Heuristic improvements to parameter initialization and scaling could reduce the exponential cost of parameter optimization sufficiently to change practical runtimes at larger scales (suggested, not proven here).",
+    "[supported] Practical recommendations: choose mixer variant according to expected hardware noise; use QAMPA/full XY for low-noise hardware, prefer standard or smaller ring XY variants when noise is higher; select optimizer according to presence/absence of shot noise."
+  ],
+  "results_summary": "This paper presents an extensive, empirical benchmarking study of QAOA variants applied to binary (cardinality-constrained) portfolio optimization. The authors implement multiple mixers (standard, ring XY, parity-ring XY, full XY, and QAMPA), detail heuristics for penalty selection, global scaling of the cost Hamiltonian, and multi-stage parameter initialization/interpolation strategies. In statevector (noise-free) simulations, XY mixers—especially full XY and the QAMPA variant—achieve the fastest convergence and highest approximation ratios; for n=10, B=5 at p=7 they report approximation ratios ~0.98 and ~0.6 probability of sampling the optimal portfolio. Sampling noise (1000 shots) has limited effect except when performance is already extremely high. When realistic gate noise (depicted by depolarizing channels applied after gates) is included, XY mixers become more susceptible and there exist noise-dependent thresholds beyond which the simpler standard mixer performs better. The authors also identify instance-level statistics (variance of returns and correlations and energy-landscape variance) that correlate with optimization difficulty and provide practical recommendations about mixer choice and optimizer selection depending on expected hardware noise.",
+  "performance_claims": [
+    "For ensembles of 20 random instances with n=5 (B=2), full XY and QAMPA mixers show the fastest convergence to optimal solutions in statevector simulations (up to p=7). [supported]",
+    "For n=10 (B=5) at p=7, full XY and QAMPA achieve approximation ratios ~0.98 and probability of sampling the optimal portfolio ~0.6 in statevector simulations. [supported]",
+    "Measurement sampling noise with 1000 shots yields only minor degradation relative to statevector results, with significant differences appearing only near approximation ratios ≳99%. [supported]",
+    "Depolarizing noise causes a crossover where the standard mixer outperforms XY mixers above a noise-dependent threshold; reported approximate thresholds (in their noise model) are ~0.003 for p=3, ~0.002 for p=5, and ~0.001 for p=7. [supported]",
+    "QAMPA reduces the number of CNOT gates (claimed factor ~3/4 fewer CNOTs than a straightforward full XY ordering) and thus improves noise resilience relative to full XY. [supported]",
+    "Optimization landscape visualizations show multiple local minima at p=1; a linear initialization grid of 100 logarithmically spaced m1,m2 candidates is used to select a good p=1 starting point. [supported]",
+    "Classical optimizer guidance: SLSQP recommended for statevector (gradient-based), Nelder-Mead or COBYLA for shot-noise simulations. [supported]",
+    "Monte Carlo study of 2400 baskets: instances with larger variance of returns and normalized correlations correlated with better QAOA performance (selected best/worst 20 showed clear separations). [supported]"
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper does not demonstrate a provable or empirical quantum advantage on real hardware; it focuses on benchmarking QAOA variants and implementation heuristics in simulation and on how noise and instance statistics affect performance. The authors discuss the possibility of future quantum speed-ups (citing literature) but do not claim a demonstrated advantage in this work.",
+  "limitations": [
+    "QAOA parameter optimization is exponential in general and NP-hard (author-stated).",
+    "Study limited to small instances (n up to 10 assets) because of qubit/simulator limits; results may not generalize to larger problem sizes (author-stated).",
+    "Brute-force computation of Fmin, Fmax and related statistics was used for the studied instances; this approach is not scalable to larger n and requires replacement by efficient classical approximations for future larger-scale studies (author-stated).",
+    "No rigorous proof of quantum advantage for QAOA on portfolio optimization; conclusions about advantage remain extrapolations from small sizes (author-stated).",
+    "Strong dependence of QAOA performance on the classical parameter-optimization routine and initialization strategy; performance can vary widely by optimizer and noise regime (author-stated).",
+    "Results rely on specific mixers and initialization heuristics whose suitability for larger instances or different problem families is not guaranteed (author-stated).",
+    "Noise modeling in the paper uses depolarizing channels (normalized by circuit size) and shot-limited qasm simulations; this simplified noise model may not capture full complexity of real NISQ hardware (inferred).",
+    "[inferred] The parameter-scaling (global factor A) and penalty-factor selection procedure are tuned on small instances with access to exact classical solutions; these procedures may be hard to apply or tune when exact classical values are unavailable.",
+    "[inferred] The study focuses on historical DAX subsets (random draws); the diversity of real-world market instances and their temporal dynamics may produce different behaviors not captured here.",
+    "[inferred] The chosen number of measurement shots (e.g., 1000) and optimizer settings may affect conclusions and are not exhaustively explored across regimes, leaving sensitivity to these practical choices uncertain.",
+    "[inferred] The impact of other realistic error sources (coherent errors, crosstalk, non-Markovian effects, readout bias) on the relative performance of mixers and ansätze was not addressed."
+  ],
+  "open_questions": [
+    "Can heuristic strategies for classical parameter optimization be found that reduce the exponential cost and scale well to larger n?",
+    "How can the penalty factor A be chosen efficiently and robustly when brute-force classical evaluation of unfeasible states is infeasible?",
+    "How does QAOA performance (approximation ratio and ground-state probability) scale with increasing number of assets/qubits beyond the small n studied?",
+    "Which parameter-initialization and extrapolation heuristics generalize reliably to larger p and larger problem sizes?",
+    "How do realistic device noise profiles (including coherent, gate-dependent, crosstalk and non-Markovian noise) affect the comparative performance of standard mixer vs XY-mixers and QAMPA?",
+    "Does the CNOT-count reduction of QAMPA translate to materially better resilience on real hardware, across hardware backends with different gate fidelities?",
+    "Are there alternative or better measures of instance 'hardness' than the variance of returns and normalized correlations identified here?",
+    "To what extent is the observed dependence of hardness on distribution variances a property of the classical optimization landscape (and therefore classical algorithms) rather than an inherently quantum effect?",
+    "Can Dicke-state preparation (required by XY-mixers) be performed efficiently and robustly on noisy devices, or does this requirement limit practical applicability of XY-based QAOA variants?",
+    "How does the number of measurement shots interact with instance hardness, mixer choice and optimizer selection in practical (shot-limited) execution?",
+    "Will QAOA (with the proposed improvements) be competitive with state-of-the-art classical portfolio-optimization heuristics on realistic problem instances and input data?"
+  ],
+  "future_work": [
+    "Develop and test more efficient heuristic strategies for the classical optimization of QAOA parameters to reduce runtime and improve scalability.",
+    "Replace brute-force computations of Fmin, Fmax and mean values with scalable classical approximation algorithms for larger numbers of assets/qubits.",
+    "Study QAOA performance on larger instance sizes (more assets/qubits) as more qubits become available.",
+    "Investigate the impact of realistic hardware noise models and device-specific noise characteristics on mixer/ansatz selection (including coherent and non-Markovian errors).",
+    "Evaluate QAMPA and other ansätze on real NISQ hardware to validate the observed CNOT-count benefits and noise resilience.",
+    "Explore and validate additional instance-characterization measures (beyond return/correlation variances and energy landscape moments) that predict QAOA hardness.",
+    "Examine whether the hardness-dependency observed here also appears in classical portfolio-optimization algorithms.",
+    "Further refine parameter-initialization and extrapolation techniques (linear, quadratic, other) and quantify their generalization across problem families and sizes.",
+    "Systematically study the interaction between shot noise (finite measurements) and optimizer choice to derive robust practical guidelines for shot-limited executions.",
+    "Benchmark QAOA-based portfolio optimization against best-in-class classical methods on realistic datasets to assess practical advantage or competitiveness."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Use of classical outer-loop optimizers (SLSQP, Nelder-Mead, COBYLA) with QAOA parameter optimization; multiple starts and extrapolation heuristics (linear/quadratic/zero-padding) improve finding good parameters as depth p increases.",
+    "#idea:near-term-feasibility — Empirical NISQ-focused study: compares performance under ideal statevector simulation, shot noise (qasm), and realistic depolarizing noise (density-matrix), assessing robustness of ansatz variants for small problem sizes (n=5,10).",
+    "#idea:hybrid-approach — Practical implementation choices (penalty scaling, Hamiltonian rescaling to align spectral widths with mixers, parameter initialization grids for p=1) are crucial for stable QAOA performance on portfolio instances.",
+    "#idea:near-term-feasibility — Different mixer choices (standard single-qubit X mixer vs several XY-type mixers including ring, parity-ring, full, and QAMPA) show trade-offs: full XY / QAMPA achieve best performance in noiseless simulations but are more sensitive to noise than the standard mixer.",
+    "#idea:near-term-feasibility — Introduces an easy/hard instance criterion via Monte Carlo analysis (~2400 instances) and correlates instance hardness with statistics like return variances, asset correlations and features of the energy landscape.",
+    "#limitation:qubit-count — Experiments limited to small problem sizes (n = 5 and n = 10), restricting conclusions about scaling to realistic portfolio dimensions.",
+    "#limitation:noise — Noise sensitivity observed: the best-performing mixers in ideal simulations (full XY / QAMPA) degrade faster under depolarizing noise, indicating practical NISQ limitations.",
+    "#limitation:simulation-only — All results are from simulators (statevector, qasm, density-matrix); no real QPU experiments are reported, so real-hardware performance and calibration issues remain untested.",
+    "#idea:hybrid-approach — Noise-aware evaluation includes normalizing noise strength by circuit size to compare robustness of different ansatzes and to gain fairer assessments across varying circuit depths/mixers."
+  ],
+  "contradictions": []
+}

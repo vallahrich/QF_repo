@@ -1,0 +1,177 @@
+{
+  "_description": "Theoretical complexity and circuit resource formulas for quantum algorithm families. Used to compute derived fields when papers don't report complexity. Every entry has a citation.",
+
+  "grover": {
+    "citation": "Grover, L.K. (1996). A fast quantum mechanical algorithm for database search. STOC 1996.",
+    "quantum_complexity": "O(sqrt(N))",
+    "classical_complexity": "O(N)",
+    "speedup_order": "quadratic",
+    "k": 2,
+    "circuit": {
+      "qubits": "ceil(log2(N)) + ancilla",
+      "depth": "O(sqrt(N) * oracle_depth)",
+      "total_gates": "O(sqrt(N) * oracle_gates)"
+    },
+    "notes": "N = search space size. Oracle depth depends on the problem."
+  },
+
+  "amplitude-estimation": {
+    "citation": "Brassard, G., Hoyer, P., Mosca, M., & Tapp, A. (2002). Quantum amplitude amplification and estimation. Contemporary Mathematics 305.",
+    "quantum_complexity": "O(1/epsilon)",
+    "classical_complexity": "O(1/epsilon^2)",
+    "speedup_order": "quadratic",
+    "k": 2,
+    "circuit": {
+      "qubits": "n_problem + ceil(log2(1/epsilon)) ancilla for phase estimation",
+      "depth": "O(1/epsilon * oracle_depth)",
+      "total_gates": "O(1/epsilon * oracle_gates)"
+    },
+    "notes": "epsilon = target precision. Used in Monte Carlo integration, derivative pricing, risk estimation."
+  },
+
+  "qaoa": {
+    "citation": "Farhi, E., Goldstone, J., & Gutmann, S. (2014). A Quantum Approximate Optimization Algorithm. arXiv:1411.4028.",
+    "quantum_complexity": "O(p * N) per evaluation",
+    "classical_complexity": "Problem-dependent (often O(2^N) for exact, O(poly(N)) for heuristics)",
+    "speedup_order": "none_proven",
+    "k": null,
+    "circuit": {
+      "qubits": "N (one per variable for QUBO/MaxCut)",
+      "qubits_formula": "N",
+      "depth": "O(p * N) for all-to-all; O(p * N * sqrt(N)) for 2D grid",
+      "depth_formula_alltoall": "2 * p * N",
+      "total_gates": "O(p * (N + edges))",
+      "total_gates_formula": "p * (N + num_edges)",
+      "variational_params": "2 * p"
+    },
+    "notes": "p = QAOA depth/rounds. N = number of variables. No proven polynomial speedup over classical for general combinatorial optimization. Performance depends on problem structure and p."
+  },
+
+  "vqe": {
+    "citation": "Peruzzo, A. et al. (2014). A variational eigenvalue solver on a photonic quantum processor. Nature Communications 5, 4213.",
+    "quantum_complexity": "O(d * N) per evaluation",
+    "classical_complexity": "O(2^N) for exact diagonalization",
+    "speedup_order": "none_proven",
+    "k": null,
+    "circuit": {
+      "qubits": "N",
+      "qubits_formula": "N",
+      "depth": "O(d * N)",
+      "depth_formula": "d * N * 2",
+      "total_gates": "O(d * N^2) for hardware-efficient; O(d * N^4) for UCCSD",
+      "variational_params": "d * N * 2 (hardware-efficient) or d * N^2 * 2 (UCCSD)",
+      "variational_params_formula_hw_efficient": "d * N * 2"
+    },
+    "notes": "d = number of ansatz layers. N = number of qubits. No proven polynomial speedup for general optimization. May have advantage for specific chemistry problems."
+  },
+
+  "quantum-annealing": {
+    "citation": "Kadowaki, T. & Nishimori, H. (1998). Quantum annealing in the transverse Ising model. Physical Review E 58(5).",
+    "quantum_complexity": "Heuristic — no proven complexity bound",
+    "classical_complexity": "Problem-dependent",
+    "speedup_order": "none_proven",
+    "k": null,
+    "circuit": {
+      "qubits": "N (one per binary variable in QUBO)",
+      "qubits_formula": "N",
+      "depth": "Not applicable (analog process)",
+      "notes": "D-Wave: physical qubits = N * embedding_overhead (typically 3-10x)"
+    },
+    "notes": "No proven polynomial speedup over simulated annealing for general problems. Specific instances may show speedup but no general proof exists."
+  },
+
+  "hhl": {
+    "citation": "Harrow, A.W., Hassidim, A., & Lloyd, S. (2009). Quantum algorithm for linear systems of equations. Physical Review Letters 103, 150502.",
+    "quantum_complexity": "O(log(N) * kappa^2 * poly(1/epsilon))",
+    "classical_complexity": "O(N * kappa) for conjugate gradient",
+    "speedup_order": "exponential",
+    "k": null,
+    "circuit": {
+      "qubits": "O(log(N)) for state + ancilla for phase estimation",
+      "depth": "O(kappa^2 * poly(log(N)/epsilon))"
+    },
+    "caveats": [
+      "Matrix must be sparse or efficiently row-computable — cannot load dense matrix from classical data",
+      "Solution is a quantum state — reading out full solution vector requires O(N) measurements, negating speedup",
+      "Only practical when sampling properties of solution (e.g., expectation values)",
+      "Condition number kappa must be polylog(N) for exponential speedup"
+    ],
+    "notes": "Exponential speedup is conditional on input/output constraints. In quantum finance: useful for structured linear systems (e.g., PDE discretizations) but NOT for general portfolio optimization."
+  },
+
+  "quantum-simulation": {
+    "citation": "Feynman, R.P. (1982). Simulating physics with computers. International Journal of Theoretical Physics 21(6/7). Lloyd, S. (1996). Universal quantum simulators. Science 273.",
+    "quantum_complexity": "O(poly(N) * t)",
+    "classical_complexity": "O(exp(N))",
+    "speedup_order": "exponential",
+    "k": null,
+    "circuit": {
+      "qubits": "N (one per simulated quantum degree of freedom)",
+      "depth": "O(t * N) for Trotter; O(t * polylog(t*N/epsilon)) for qubitization"
+    },
+    "notes": "Exponential speedup for simulating quantum systems. Most promising application per Hoefler. In finance: applicable when financial model maps to quantum Hamiltonian."
+  },
+
+  "quantum-ml": {
+    "citation": "Multiple sources. Dequantization: Tang, E. (2019). A quantum-inspired classical algorithm for recommendation systems. STOC 2019.",
+    "quantum_complexity": "Problem-dependent, often O(polylog(N*M))",
+    "classical_complexity": "O(poly(N*M))",
+    "speedup_order": "none_proven",
+    "k": null,
+    "circuit": {
+      "qubits": "O(log(N)) for amplitude encoding; O(N) for angle/basis encoding",
+      "depth": "Problem-dependent"
+    },
+    "caveats": [
+      "Many QML speedups have been dequantized (Tang 2019)",
+      "Data loading bottleneck: encoding N classical data points requires O(N) operations",
+      "No proven general speedup for QML over classical ML",
+      "Kernel methods may have advantage for specific kernels (Liu et al. 2021)"
+    ],
+    "notes": "No general proven speedup. Individual QML algorithms may have conditional advantages for specific problems, but dequantization results limit the scope."
+  },
+
+  "quantum-svm": {
+    "citation": "Rebentrost, P., Mohseni, M., & Lloyd, S. (2014). Quantum support vector machine for big data classification. Physical Review Letters 113, 130503. Dequantized by Tang (2019).",
+    "quantum_complexity": "O(log(N*M))",
+    "classical_complexity": "O(N*M) standard; O(polylog(N*M)) dequantized",
+    "speedup_order": "none_proven",
+    "k": null,
+    "notes": "Original exponential speedup claim was dequantized by Tang (2019). Classical algorithms with similar performance exist."
+  },
+
+  "quantum-walk": {
+    "citation": "Szegedy, M. (2004). Quantum speed-up of Markov chain based algorithms. FOCS 2004.",
+    "quantum_complexity": "O(sqrt(hitting_time))",
+    "classical_complexity": "O(hitting_time)",
+    "speedup_order": "quadratic",
+    "k": 2,
+    "circuit": {
+      "qubits": "O(log(N)) for graph with N nodes",
+      "depth": "O(sqrt(hitting_time) * step_cost)"
+    },
+    "notes": "Quadratic speedup for Markov chain problems. Used in Monte Carlo sampling. Insufficient per Hoefler."
+  },
+
+  "qubo": {
+    "citation": "Not an algorithm but an encoding. Solved via quantum annealing (SA-01) or QAOA (SA-02).",
+    "quantum_complexity": "Depends on solver algorithm",
+    "classical_complexity": "O(2^N) exact; efficient heuristics exist",
+    "speedup_order": "none_proven",
+    "k": null,
+    "circuit": {
+      "qubits": "N (one per binary variable)",
+      "qubits_formula": "N"
+    },
+    "notes": "QUBO is a problem formulation, not an algorithm. Speedup depends on the solver used."
+  },
+
+  "hybrid": {
+    "citation": "Various. Hybrid approaches combine classical and quantum subroutines.",
+    "quantum_complexity": "Depends on quantum subroutine used",
+    "classical_complexity": "Depends on problem",
+    "speedup_order": "none_proven",
+    "k": null,
+    "notes": "Hybrid approaches inherit the speedup (or lack thereof) from their quantum subroutine. Assess the quantum component separately."
+  }
+}

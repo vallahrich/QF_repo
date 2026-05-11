@@ -1,0 +1,155 @@
+{
+  "_citation": "Babbush, McClean, Newman, Gidney, Boixo, Neven. 'Focus beyond quadratic speedups for error-corrected quantum advantage.' PRX Quantum 2, 010103 (2021). arXiv:2011.04149",
+
+  "fault_tolerance_model": {
+    "architecture": "surface_code_superconducting",
+    "code_distance": 30,
+    "surface_cycle_us": 1.0,
+    "toffoli_cycles_per_gate": 5.5,
+    "t_gate_time_us": 170,
+    "t_gate_time_note": "tG = 30 * 5.5 * 1us = 170us per Toffoli/CCZ (Eq. 6)",
+    "alternative_ion_trap_tG_us": 17000
+  },
+
+  "quantum_primitive_time_lower_bound": {
+    "formula": "tQ >= 170us * N",
+    "min_qubits": 100,
+    "tQ_lower_bound_ms": 17,
+    "sa_example_N_512_ms": 440
+  },
+
+  "classical_primitive_time_bound": {
+    "formula": "tC <= 330ps * N",
+    "tC_upper_bound_ns": 33,
+    "sa_example_N_512_ns": 7
+  },
+
+  "advantage_condition": {
+    "equation": "Eq. (5): M > (tQ * S / tC)^(1/(d-1))",
+    "breakeven_time": "T_star = tQ * (tQ * S / tC)^(1/(d-1))",
+    "variables": {
+      "M": "Number of calls to quantum primitive",
+      "d": "Polynomial speedup order (2=quadratic, 3=cubic, 4=quartic)",
+      "tQ": "Quantum primitive time",
+      "tC": "Classical primitive time",
+      "S": "Classical parallelism factor (Amdahl)"
+    }
+  },
+
+  "classical_parallelism_scenarios": {
+    "S_1": {"label": "single_core", "S": 1},
+    "S_1e3": {"label": "typical_cluster_or_datacenter", "S": 1000},
+    "S_1e6": {"label": "extreme_sa_like_problems", "S": 1000000}
+  },
+
+  "M_min_table_I_lower_bound_regime": {
+    "_note": "From Table I (tQ=17ms, tC=33ns). M must be >= these values for advantage. Lower bound ratio tQ/tC = 5.15e5.",
+    "quadratic": {
+      "d": 2,
+      "S_1": {"M_min": 520000, "T_star_seconds": 8640, "T_star_label": "2.4 hours"},
+      "S_1e3": {"M_min": 520000000, "T_star_seconds": 8640000, "T_star_label": "100 days"},
+      "S_1e6": {"M_min": 520000000000, "T_star_seconds": 8640000000, "T_star_label": "280 years"}
+    },
+    "cubic": {
+      "d": 3,
+      "S_1": {"M_min": 720, "T_star_seconds": 12, "T_star_label": "12 seconds"},
+      "S_1e3": {"M_min": 23000, "T_star_seconds": 384, "T_star_label": "6.4 minutes"},
+      "S_1e6": {"M_min": 720000, "T_star_seconds": 12240, "T_star_label": "3.4 hours"}
+    },
+    "quartic": {
+      "d": 4,
+      "S_1": {"M_min": 80, "T_star_seconds": 1.4, "T_star_label": "1.4 seconds"},
+      "S_1e3": {"M_min": 800, "T_star_seconds": 14, "T_star_label": "14 seconds"},
+      "S_1e6": {"M_min": 8000, "T_star_seconds": 138, "T_star_label": "2.3 minutes"}
+    }
+  },
+
+  "M_min_table_I_simulated_annealing_regime": {
+    "_note": "From Table I (tQ=440ms, tC=7ns). Ratio tQ/tC = 6.29e7.",
+    "quadratic": {
+      "d": 2,
+      "S_1": {"M_min": 63000000, "T_star_seconds": 27648000, "T_star_label": "320 days"},
+      "S_1e3": {"M_min": 63000000000, "T_star_seconds": 27648000000, "T_star_label": "880 years"}
+    },
+    "cubic": {
+      "d": 3,
+      "S_1": {"M_min": 7900, "T_star_seconds": 3480, "T_star_label": "58 minutes"},
+      "S_1e3": {"M_min": 250000, "T_star_seconds": 112000, "T_star_label": "1.3 days"}
+    },
+    "quartic": {
+      "d": 4,
+      "S_1": {"M_min": 400, "T_star_seconds": 174, "T_star_label": "2.9 minutes"},
+      "S_1e3": {"M_min": 4000, "T_star_seconds": 1740, "T_star_label": "29 minutes"}
+    }
+  },
+
+  "budget_seconds": 604800,
+  "budget_label": "1 week — used as practical cap on T_star for viability",
+
+  "default_S": 1000,
+  "default_regime": "lower_bound",
+  "default_tQ_s": 0.017,
+  "default_tC_s": 33e-9,
+
+  "_verdict_rules": {
+    "_guidance": "Babbush's paper message: focus BEYOND quadratic. Quadratic is essentially infeasible under realistic assumptions; cubic is borderline; quartic+ is viable. Two conditions must BOTH hold: (1) M must exceed M_min (advantage possible), (2) T_star must fit in runtime budget.",
+    "quadratic": {
+      "default_verdict": "fails",
+      "reasoning_template": "Babbush Eq. (5): quadratic advantage requires M > {M_min:.0e}. Even if met, crossover T* = {T_star} under S={S}. Paper's central claim is that quadratic speedups are not viable under error correction."
+    },
+    "cubic": {
+      "default_verdict": "potentially_viable",
+      "reasoning_template": "Babbush Eq. (5): cubic requires M > {M_min}. If reported M in [{M_min}, M_max(budget)] and within budget, viable."
+    },
+    "quartic": {
+      "default_verdict": "likely_viable",
+      "reasoning_template": "Babbush Eq. (5): quartic M_min = {M_min} is easy to meet; T_star = {T_star} fits typical budgets."
+    },
+    "exponential": {
+      "default_verdict": "viable",
+      "reasoning_template": "Exponential speedup escapes the polynomial-crossover argument."
+    },
+    "logarithmic": {
+      "default_verdict": "likely_viable",
+      "reasoning_template": "Super-polynomial speedup comparable to exponential; beats the tQ/tC penalty."
+    },
+    "none_proven": {
+      "default_verdict": "fails",
+      "reasoning_template": "No proven speedup — Babbush framework requires a specific polynomial order d>=2."
+    }
+  },
+
+  "algorithm_speedup_mapping": {
+    "grover": {"speedup_order": "quadratic", "k": 2},
+    "amplitude_amplification": {"speedup_order": "quadratic", "k": 2},
+    "amplitude_estimation": {"speedup_order": "quadratic", "k": 2, "caveat": "Monte Carlo speedup; Babbush notes MC is highly parallelizable classically"},
+    "quantum_monte_carlo": {"speedup_order": "quadratic", "k": 2},
+    "quantum_walk": {"speedup_order": "quadratic", "k": 2, "caveat": "For search; can be higher for specific structured problems"},
+    "quantum_simulated_annealing": {"speedup_order": "quadratic", "k": 2, "caveat": "Babbush's worked example (Table I SA regime)"},
+    "hhl": {"speedup_order": "exponential", "k": null, "caveat": "Conditional on low condition number, sparse/well-structured matrix, quantum state output"},
+    "quantum_linear_systems": {"speedup_order": "exponential", "k": null},
+    "shor_factoring": {"speedup_order": "exponential", "k": null},
+    "quantum_phase_estimation": {"speedup_order": "exponential", "k": null, "caveat": "For eigenvalue problems"},
+    "vqe": {"speedup_order": "none_proven", "k": null, "caveat": "Heuristic; no rigorous polynomial speedup established"},
+    "qaoa": {"speedup_order": "none_proven", "k": null, "caveat": "Heuristic; no rigorous polynomial speedup established"},
+    "quantum_annealing": {"speedup_order": "none_proven", "k": null},
+    "qnn": {"speedup_order": "none_proven", "k": null},
+    "qsvm": {"speedup_order": "none_proven", "k": null, "caveat": "Dequantized by Tang 2019 in typical formulations"},
+    "qgan": {"speedup_order": "none_proven", "k": null},
+    "qcbm": {"speedup_order": "none_proven", "k": null},
+    "quantum_reinforcement_learning": {"speedup_order": "none_proven", "k": null},
+    "unknown": {"speedup_order": "unknown", "k": null},
+    "amplitude-estimation": {"speedup_order": "quadratic", "k": 2},
+    "quantum-walk": {"speedup_order": "quadratic", "k": 2},
+    "quantum-simulation": {"speedup_order": "exponential", "k": null},
+    "quantum-annealing": {"speedup_order": "none_proven", "k": null},
+    "quantum-ml": {"speedup_order": "none_proven", "k": null},
+    "quantum-svm": {"speedup_order": "none_proven", "k": null},
+    "hybrid": {"speedup_order": "none_proven", "k": null},
+    "other-gate-based": {"speedup_order": "unknown", "k": null},
+    "other": {"speedup_order": "unknown", "k": null},
+    "variational-nisq": {"speedup_order": "none_proven", "k": null},
+    "qft-phase-estimation": {"speedup_order": "exponential", "k": null},
+    "qubo": {"speedup_order": "none_proven", "k": null}
+  }
+}

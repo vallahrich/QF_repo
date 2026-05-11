@@ -1,0 +1,260 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "Contains a DOI and publisher metadata (Springer Nature), received/accepted dates, structured abstract, methods, experiments on real stock-index datasets with evaluation metrics and references—consistent with a peer-reviewed empirical journal article.",
+  "title": "BLS-QLSTM: a novel hybrid quantum neural network for stock index forecasting",
+  "authors": [
+    "Liyun Su",
+    "Dan Li",
+    "Dongyang Qiu"
+  ],
+  "year": "2025",
+  "journal_or_venue": "Humanities and Social Sciences Communications",
+  "doi": "10.1057/s41599-025-05348-z",
+  "abstract_summary": "The paper proposes BLS-QLSTM, a hybrid quantum-classical neural network that combines broad learning system (BLS) feature expansion with a quantum LSTM (QLSTM) whose gates are implemented by variational quantum circuits (VQCs). Using phase-space reconstruction to handle chaotic financial time series, the model is evaluated on three Chinese stock indices (CSI 300, SSEC, CSI 500) and outperforms classical LSTM and QLSTM baselines on predictive (RMSE, MAE, MAPE, R2) and directional (precision, accuracy) metrics.",
+  "methodology_description": "The study develops a hybrid prediction pipeline (BLS-QLSTM) for chaotic financial time series. It begins with phase-space reconstruction (PSR) of 1-D daily closing-price series using the Cao method to determine embedding dimension and mutual information to determine time delay, producing multivariate phase vectors. These reconstructed vectors are then fed into a Broad Learning System (BLS) for horizontal feature expansion (random mapped nodes and enhanced nodes). The BLS output is concatenated with the reconstructed phase vectors (data fusion) to form the final input Zt. A quantum–classical recurrent model (QLSTM) is used for prediction: classical LSTM gates/cell operations are replaced by parameterized Variational Quantum Circuits (VQCs) (four VQC blocks replacing the forget/input/cell/output operations). Models are trained with Adam optimizer minimizing MSE; data are standardized (zero mean, unit variance) and inverse-standardized on output. Directional labels (up/down) are also produced from daily returns using a ±1% threshold and ‘stable’ points are removed for classification analyses. Evaluation uses numeric forecasting metrics (RMSE, MAE, MAPE, R2) and classification metrics (precision, accuracy). Experiments compare LSTM, QLSTM (without BLS), and the proposed BLS-QLSTM across three stock indices.",
+  "algorithms_used": [
+    "Phase-space reconstruction (Takens embedding) using Cao method and mutual information",
+    "Broad Learning System (BLS)",
+    "Long Short-Term Memory (LSTM)",
+    "Quantum Long Short-Term Memory (QLSTM) with Variational Quantum Circuits (VQC)",
+    "Adam optimizer"
+  ],
+  "frameworks": [],
+  "experimental_setup": "PC: 12th Gen Intel Core i5-12500H, Windows 11 (64-bit). Software: Python 3.10, PyTorch 2.0.1+cpu. No quantum hardware or cloud QPU reported; experiments run on CPU environment.",
+  "dataset_used": "Daily closing prices for three Chinese stock indices (CSI 300, SSEC, CSI 500) from 2013-01-04 to 2023-12-29 (excluding holidays). Each index: 2,672 raw daily points, source: Investing.com. PSR applied yielding CSI300 -> 2576×7, SSEC -> 2572×6, CSI500 -> 2497×8. Dataset preprocessed by PSR, BLS expansion, concatenation, standardization; directional labels created with ±1% threshold and 'stable' points filtered out.",
+  "experiment_input": {
+    "source": "Investing.com",
+    "indices": [
+      "CSI 300 (000300)",
+      "SSEC (000001)",
+      "CSI 500 (000905)"
+    ],
+    "date_range": "2013-01-04 to 2023-12-29",
+    "raw_points_per_index": 2672,
+    "PSR_parameters_per_index": {
+      "CSI300": {
+        "m": 7,
+        "tau": 16,
+        "PSR_shape": [
+          2576,
+          7
+        ]
+      },
+      "SSEC": {
+        "m": 6,
+        "tau": 20,
+        "PSR_shape": [
+          2572,
+          6
+        ]
+      },
+      "CSI500": {
+        "m": 8,
+        "tau": 25,
+        "PSR_shape": [
+          2497,
+          8
+        ]
+      }
+    },
+    "BLS_preprocessing": {
+      "map_num": 3,
+      "map_fea_num": 2,
+      "enh_num": 1,
+      "enh_fea_num": 10,
+      "final_expanded_dimension": 16
+    },
+    "standardization": "zero mean, unit variance",
+    "labeling_for_classification": {
+      "threshold": "±1% daily change",
+      "stable_filtered": true
+    },
+    "train_test_split": "75% training, 25% testing"
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "1) Determine embedding dimension (Cao method) and time delay (mutual information) for each series.",
+      "2) Phase-space reconstruction to map 1-D series to m-dimensional vectors Xt.",
+      "3) Apply BLS: compute mapped nodes Hi = phi(Wi Xt + bi), enhanced nodes Ej = xi(Vj H + cj), merge to produce F.",
+      "4) Concatenate F with Xt to form input Zt.",
+      "5) Feed Zt into QLSTM where four VQC blocks replace LSTM gates/cell computations: ft, it, ~Ct, Ot computed via VQCs followed by activation functions and cell updates.",
+      "6) Train network to predict next-day closing price using MSE loss and Adam optimizer.",
+      "7) Inverse-standardize predictions for reporting. Generate up/down labels from predicted vs previous-day prices and compare to true labels for classification metrics."
+    ],
+    "training_details": {
+      "batch_size": 1,
+      "epochs": 20,
+      "optimizer": "Adam",
+      "loss_function": "MSE",
+      "learning_rate_QLSTM": 0.0004,
+      "learning_rate_LSTM": 7e-05,
+      "model_depth": "single-layer QLSTM / single-layer LSTM",
+      "LSTM_neurons": 16
+    },
+    "VQC_placement": "four VQCs replacing the standard LSTM gates/cell operations",
+    "data_handling": "standardize inputs; inverse-transform outputs"
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "RMSE",
+      "MAE",
+      "MAPE",
+      "R2 (coefficient of determination)",
+      "Precision (directional)",
+      "Accuracy (directional)"
+    ],
+    "baselines": [
+      "Classical LSTM",
+      "QLSTM without BLS (quantum LSTM with VQCs but no BLS expansion)"
+    ],
+    "output_artifacts": [
+      "Numerical tables of metric values per model and per index",
+      "Time-series prediction plots",
+      "Confusion matrices for directional classification"
+    ]
+  },
+  "experiment_parameters": {
+    "PSR": {
+      "Cao_method_used": true,
+      "mutual_information_used": true,
+      "m_and_tau_per_index": {
+        "CSI300": {
+          "m": 7,
+          "tau": 16
+        },
+        "SSEC": {
+          "m": 6,
+          "tau": 20
+        },
+        "CSI500": {
+          "m": 8,
+          "tau": 25
+        }
+      }
+    },
+    "BLS": {
+      "map_num": 3,
+      "map_fea_num": 2,
+      "enh_num": 1,
+      "enh_fea_num": 10,
+      "output_dimension": 16
+    },
+    "neural_network": {
+      "model_variants": [
+        "LSTM",
+        "QLSTM",
+        "BLS-QLSTM"
+      ],
+      "LSTM_layers": 1,
+      "LSTM_neurons": 16,
+      "QLSTM_layers": 1
+    },
+    "training": {
+      "batch_size": 1,
+      "epochs": 20,
+      "optimizer": "Adam",
+      "loss": "MSE",
+      "learning_rate_QLSTM": 0.0004,
+      "learning_rate_LSTM": 7e-05
+    },
+    "VQC": {
+      "number_of_VQCs_in_gates": 4,
+      "qubits": null,
+      "circuit_depth": null,
+      "shots": null,
+      "parameterization_details": "rotation gates (Rx/Ry/Rz) and CNOT entangling layers described qualitatively; exact angles/ansatz not specified"
+    }
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "Datasets: authors report data are available from the corresponding author upon reasonable request. No public code repository or quantum simulator/hardware configuration is provided in the paper. Key hyperparameters and PSR/BLS settings are reported, but low-level VQC circuit details (qubit count, exact ansatz, measurement shots) and the code to reproduce experiments are not supplied; full reproducibility would require contacting the authors.",
+  "key_findings": [
+    "[supported] The paper proposes a novel hybrid model BLS-QLSTM that combines Broad Learning System (BLS) for feature expansion with a QLSTM in which LSTM gates/cell operations are replaced by variational quantum circuits (VQCs).",
+    "[supported] On three real stock indices (CSI 300, SSEC, CSI 500) the BLS-QLSTM model yields lower RMSE and MAE and higher R2 than both a classical LSTM baseline and a QLSTM baseline (results reported in paper tables).",
+    "[supported] BLS-QLSTM also achieves higher directional classification performance (precision and accuracy for up/down labels) than LSTM and QLSTM across the three indices.",
+    "[supported] Phase space reconstruction (using Cao method and mutual information for embedding dimension and delay) is used as preprocessing to reconstruct chaotic financial time series prior to modeling.",
+    "[supported] The cascade (horizontal) expansion of features via BLS increases the input dimensionality / feature representation used by the subsequent QLSTM and is associated with improved predictive performance in the experiments.",
+    "[speculative] The authors attribute model improvements to quantum properties (superposition, entanglement) and quantum parallelism offered by VQCs, claiming these properties help capture microstates of chaotic systems and handle high-dimensional data more efficiently.",
+    "[speculative] Replacing LSTM gates/cell weight matrices with VQCs provides quantum computational benefits (better noise resilience, faster convergence, enhanced local feature extraction) — this is asserted but not demonstrated on quantum hardware.",
+    "[supported] Empirical improvements are consistent across three heterogeneous stock indices, indicating some robustness/generalizability of the proposed architecture on the tested datasets.",
+    "[speculative] The paper claims BLS-QLSTM mitigates the curse of dimensionality better than traditional deep models due to BLS and VQC components; this is argued theoretically and supported indirectly by experimental results but not proven with an ablation isolating this mechanism.",
+    "[speculative] The authors note practical limitations: current quantum hardware immaturity and high cost restrict large-scale real-world application — a forward-looking limitation statement rather than an experimentally tested claim.",
+    "[speculative] The model’s interpretability requires further enhancement; this is a stated limitation and future direction rather than an empirically evaluated claim."
+  ],
+  "results_summary": "The authors introduce BLS-QLSTM, a hybrid quantum–classical neural architecture that applies phase-space reconstruction and broad learning feature expansion followed by a QLSTM whose gates/cell operations are implemented by variational quantum circuits. Evaluated on three Chinese stock indices (CSI 300, SSEC, CSI 500), BLS-QLSTM consistently outperforms a classical LSTM and a QLSTM baseline on forecasting error metrics (RMSE, MAE, MAPE, R2) and on directional classification metrics (precision, accuracy). The paper reports substantial relative RMSE reductions on all datasets and higher trend-prediction accuracy, arguing that the combination of BLS and VQCs yields improved feature representation and learning capability. The authors also discuss practical limitations related to quantum hardware maturity and interpretability.",
+  "performance_claims": [
+    "CSI 300 (Table 4): BLS-QLSTM RMSE=51.64988, MAE=37.19272, MAPE=0.01018, R2=0.99570. (LSTM RMSE=65.85690, QLSTM RMSE=55.13404). Reported RMSE reduction vs LSTM = 21.6% and vs QLSTM = 6.3%.",
+    "CSI 300 classification (Table 5): BLS-QLSTM precision=0.72505, accuracy=0.72865 (LSTM precision=0.52401 accuracy=0.49708; QLSTM precision=0.53579 accuracy=0.51111).",
+    "SSEC (Table 6): BLS-QLSTM RMSE=37.99746, MAE=27.25398, MAPE=0.00926, R2=0.99344. Reported RMSE reduction vs LSTM = 23.3% and vs QLSTM = 13.3%.",
+    "SSEC classification (Table 7): BLS-QLSTM precision=0.82102, accuracy=0.78933 (LSTM precision=0.55789 accuracy=0.53371; QLSTM precision=0.53257 accuracy=0.52809).",
+    "CSI 500 (Table 8): BLS-QLSTM RMSE=83.17634, MAE=56.26406, MAPE=0.00945, R2=0.99404. Reported RMSE reduction vs LSTM = 36.5% and vs QLSTM = 19.8%.",
+    "CSI 500 classification (Table 9): BLS-QLSTM precision=0.80079, accuracy=0.77545 (LSTM precision=0.53047 accuracy=0.49108; QLSTM precision=0.55935 accuracy=0.53200).",
+    "Data/experiment setup notes: each index used 2672 daily closing prices (2013-01-04 to 2023-12-29), phase-space embedding parameters selected via Cao/mutual information; 75% train / 25% test split; models trained with Adam optimizer, MSE loss; single-layer LSTM/QLSTM with 16 neurons used, batch size 1, 20 iterations."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper attributes model improvements to quantum effects (superposition/entanglement) via VQCs and claims advantages such as enhanced parallelism and noise resilience. However, the experiments appear to use hybrid/parameterized quantum circuits in a simulated/classical environment (no large-scale quantum hardware was used or demonstrated). Therefore, while empirical model performance improved when VQCs were incorporated, a bona fide quantum hardware advantage (demonstrated quantum speedup or resource advantage) is not established; the claimed quantum advantage remains speculative/theoretical in this work.",
+  "limitations": [
+    "The maturity of current quantum computing hardware is insufficient to support large-scale applications.",
+    "The high cost of quantum computing restricts the model’s application to small-scale experimental studies.",
+    "The interpretability of the BLS-QLSTM model is limited and requires further enhancement for practical usability and transparency.",
+    "[inferred] The experiments were conducted on a modest-sized dataset (2,672 daily observations per index) and used a single-layer QLSTM, which may limit conclusions about performance on much larger datasets or deeper architectures.",
+    "[inferred] Evaluation is limited to three Chinese stock indices (CSI 300, SSEC, CSI 500), so generalizability across asset classes, other geographic markets, intraday data, or different time periods is not demonstrated.",
+    "[inferred] The study does not report results on actual quantum hardware (no hardware-in-the-loop validation); performance is shown in a classical simulation environment (PyTorch CPU).",
+    "[inferred] Practical trading aspects (e.g., transaction costs, slippage, portfolio construction, risk-adjusted returns) and economic utility of the forecasts are not evaluated.",
+    "[inferred] Sensitivity to phase-space reconstruction choices (embedding dimension, time delay) and BLS hyperparameters is not fully characterized.",
+    "[inferred] Computational cost, runtime, and resource requirements (classical vs quantum simulation) are not reported in detail, limiting assessment of real-time applicability.",
+    "[inferred] The paper does not deeply investigate model robustness to regime shifts, non-stationarities, or adversarial/noisy inputs."
+  ],
+  "open_questions": [
+    "How will the BLS-QLSTM model scale and perform on much larger datasets and higher-frequency financial data?",
+    "How does the model perform when implemented and executed on real quantum hardware rather than in classical simulation?",
+    "What specific architectural or algorithmic changes will meaningfully reduce computational costs while preserving (or improving) predictive performance?",
+    "How can the interpretability of the hybrid quantum-classical model be improved so that its predictions are actionable for investors and regulators?",
+    "To what extent do the BLS component and the VQC component each contribute to the observed performance gains (i.e., what is the marginal benefit of BLS vs VQC)?",
+    "How robust is BLS-QLSTM to market regime changes, structural breaks, and noisy or adversarial data?",
+    "How sensitive are results to the choices made in phase space reconstruction (embedding dimension and time delay) and to BLS/QLSTM hyperparameters?",
+    "Can the approach be generalized to other financial instruments (individual stocks, FX, commodities) or to multi-asset/multi-variate forecasting tasks?",
+    "What are the latency and operational constraints for deploying this model in a real-time trading or risk-monitoring environment?",
+    "What is the economic value of the model’s predictions once transaction costs, market impact, and risk-adjusted performance metrics are accounted for?"
+  ],
+  "future_work": [
+    "Optimize the model architecture to reduce computational costs and enhance interpretability and stability.",
+    "Explore the application potential of BLS-QLSTM in other complex domains such as energy, healthcare, and transportation.",
+    "Leverage advancements in quantum computing technology to enable large-scale implementation of the model in practice."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Introduces BLS-QLSTM: a hybrid pipeline combining phase-space reconstruction (PSR) and Broad Learning System (BLS) feature expansion with a QLSTM whose gates/cell computations are implemented by variational quantum circuits (VQCs).",
+    "#idea:quantum-advantage — Reports that BLS-QLSTM outperforms classical LSTM and a QLSTM baseline (without BLS) on multiple forecasting metrics (RMSE, MAE, MAPE, R2) and directional metrics (precision, accuracy) across three Chinese stock indices.",
+    "#idea:hybrid-approach — Uses classical PSR (Takens embedding with Cao and mutual information) and BLS horizontal feature expansion to reduce the burden on the quantum recurrent component, indicating a practical hybrid decomposition of tasks.",
+    "#idea:quantum-advantage — Replaces LSTM gates/cell operations with four parameterized VQC blocks (Rx/Ry/Rz rotations + CNOT entangling layers qualitatively described) as the core quantum contribution to sequence modeling.",
+    "#limitation:simulation-only — All experiments are executed in a CPU/PyTorch environment (no quantum hardware or cloud QPU reported); quantum circuits appear to be emulated/simulated rather than run on real quantum processors.",
+    "#limitation:qubit-count — Paper does not report concrete VQC implementation details such as qubit count, circuit depth, or measurement shots, limiting reproducibility and assessment of hardware feasibility.",
+    "#limitation:data-encoding — The manuscript omits explicit quantum state encoding schemes and cost of encoding the BLS/PSR features into qubit states, leaving unclear the resource/complexity implications of the proposed approach.",
+    "#limitation:noise — No discussion or experiments accounting for quantum hardware noise or error mitigation; thus reported improvements may not hold on realistic noisy QPUs."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — The paper claims quantum-enhanced forecasting (QLSTM/BLS-QLSTM outperform classical LSTM), but all results are from CPU-based experiments with emulated VQCs and no quantum hardware runs or low-level circuit/qubit details. This undermines the empirical support for a true quantum advantage.",
+    "contradiction:scalability — The proposed VQC-based gates are not accompanied by qubit counts, circuit depths, or resource scaling analysis. The paper demonstrates performance on modest-length time series but provides no evidence that the approach scales to larger problems or to real QPU constraints (qubit number, connectivity, noise), contradicting any implicit claims of practical scalability."
+  ]
+}

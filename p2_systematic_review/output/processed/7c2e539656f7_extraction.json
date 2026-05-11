@@ -1,0 +1,220 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes journal metadata (journal name, DOI, received/revised/accepted dates), a structured abstract/summary, methods, data, empirical results, and extensive citations—characteristics of a peer‑reviewed empirical article.",
+  "title": "Neural networks for estimating Macro Asset Pricing model in football clubs",
+  "authors": [
+    "David Alaminos",
+    "Ignacio Esteban",
+    "M. Belén Salas"
+  ],
+  "year": "2023",
+  "journal_or_venue": "Intelligent Systems in Accounting, Finance and Management",
+  "doi": "10.1002/isaf.1532",
+  "abstract_summary": "This empirical study applies non-linear neural network methods (Deep Recurrent Convolutional Neural Networks, Deep Neural Decision Trees, and Quantum Neural Networks) to estimate a Macro Asset Pricing model for listed European football clubs. The authors report high predictive accuracy (over 90% for top methods), find the model residual accounts for roughly 40% of the variance in the price-dividend ratio, and highlight the importance of long-term risks and habit formation, with the Quantum Neural Network giving the best performance.",
+  "methodology_description": "The authors estimate a Macro Asset Pricing (MAP) model for listed football clubs by decomposing the log price-dividend ratio into four state components (long-run growth xt, long-run volatility ~σ2_t, surplus consumption/habit ~s_t, and a permanent residual e_t). They implement three non-linear estimation methods: a Deep Recurrent Convolutional Neural Network (DRCNN), Deep Neural Decision Trees (DNDT), and a hybrid Quantum Neural Network (QNN) (quantum-inspired neural architecture). Monthly consumption, dividend and share-price data (Eurostat consumption; dividends and prices from STOXX Europe Football index and Bureau van Dijk Amadeus) for the period 2011–2020 are used. Priors for model parameters are set following prior literature and some manual choices (e.g., steady-state surplus consumption s = log 0.06, σ_e = 1). The state processes are specified (AR(1) for xt and random-walk type processes for others, specific volatility dynamics provided in the paper) and then each neural methodology is trained to map observable inputs to the price/dividend decomposition and to estimate posterior parameters. Training uses a 70%/30% train/test split. Performance is evaluated using goodness of fit, accuracy/precision, RMSE and MAPE and via variance decomposition (contributions of each MAP state to Var(pdt)). The DNDT method uses soft-binning with a Gumbel-Softmax (Straight-Through) approximation and a random subspace forest for scalability. The DRCNN is implemented as a stacked recurrent + convolutional architecture trained with stochastic gradient descent minimizing MSE. The QNN is described as a hybrid quantum-inspired neural network: qubit-like hidden units initialized in superposition, rotation gates applied to update amplitudes, and parameter updates derived from gradients (learning rate reported as 0.1). No quantum hardware, QPU, or quantum software frameworks are reported; the QNN is presented as a quantum-inspired algorithmic layer within a classical training loop.",
+  "algorithms_used": [
+    "Deep Recurrent Convolutional Neural Network (DRCNN)",
+    "Deep Neural Decision Trees (DNDT) with soft binning and Gumbel-Softmax",
+    "Quantum Neural Network (hybrid quantum-inspired neural network)"
+  ],
+  "frameworks": [],
+  "experimental_setup": "",
+  "dataset_used": "Monthly consumption (Eurostat), dividends and share prices for listed football clubs from STOXX Europe Football index (plus Manchester United via Bureau van Dijk Amadeus). Period: 2011–2020. Sample: 21 listed football clubs (STOXX Europe Football constituents listed in Appendix A). Data harmonized for European consumption.",
+  "experiment_input": {
+    "sources": [
+      "Eurostat (consumption)",
+      "STOXX Europe Football Index (share prices/dividends)",
+      "Bureau van Dijk Amadeus (company-level data referenced)"
+    ],
+    "period": "2011-01 to 2020-12 (monthly)",
+    "frequency": "monthly",
+    "entities": 21,
+    "approx_observations": "approx. 21 clubs × ~120 months (~2520 rows) (not explicitly enumerated; monthly panel aggregated/used for MAP estimation)",
+    "variables": [
+      "price",
+      "dividend",
+      "log(price/dividend) ratio",
+      "consumption (aggregate, harmonized Eurostat series)",
+      "sporting performance (Szymanski ranking)"
+    ],
+    "preprocessing": "Consumption series harmonized at European level; construction of log price/dividend ratio; computation of MAP state variables (Δc, Δd, xt, ht, ~st, et) per model equations; prior parameter setting from sample means and literature; 70% of data used for training and 30% for testing."
+  },
+  "experiment_process": [
+    "Specify MAP model: pdt = μpd + Ax xt + Av ~σ2_t + As ~s_t + Ae e_t with state dynamics for xt, ht (log volatility), ~s_t, and e_t as detailed in paper.",
+    "Set priors for parameters from sample means and literature (μpd, μc, μd) and manual choices for some priors (e.g., s = log 0.06, σe = 1).",
+    "Compute input features and state representations from raw monthly data (consumption growth, dividend growth, habit / surplus-consumption transformation, long-run volatility state variable, residual random-walk).",
+    "Train three separate models on the training set (70%): DRCNN (stacked recurrent + convolutional layers, convolutional kernels for feature extraction, recurrent layers for temporal dynamics; MSE loss; SGD optimization), DNDT (soft binning per feature using trainable cut-points, Gumbel-Softmax / Straight-Through approximation, compose tree leaves via Kronecker product concept; random subspace forest used for scalability), QNN (hybrid quantum-inspired network: quantum hidden neuron initialization in superposition, rotation gates applied to update amplitude-parameters; feedforward/backpropagation with gradient-driven angle updates; learning rate η=0.1).",
+    "For DNDT: use temperature parameter τ in softmax binning and random subspace sampling to train multiple trees.",
+    "For QNN: update quantum-inspired parameters via Δθ = -∂E/∂θ (or proportional gradient step) and apply rotation gate to amplitude pair (α,β); use squared error objective and backpropagation style weight updates.",
+    "Evaluate trained models on the held-out test set using accuracy/precision, RMSE and MAPE; extract posterior parameter estimates for MAP coefficients and perform variance decomposition to quantify contribution of each state (long-run growth, long-run volatility, surplus consumption, residual) to Var(pdt).",
+    "Perform robustness/specification checks: baseline, no long-run risks, no habit, habit responds to consumption growth, rescaled coefficients per theoretical variances."
+  ],
+  "experiment_output": {
+    "metrics_reported": [
+      "Precision/accuracy (training and test)",
+      "Root-mean-square error (RMSE, train and test)",
+      "Mean absolute percentage error (MAPE)",
+      "R-squared (%) for model/specifications",
+      "Posterior parameter estimates for MAP coefficients and state persistence parameters",
+      "Variance decomposition: percentage share of Var(pdt) attributable to each state (long-run growth, long-run volatility, surplus consumption, residual)"
+    ],
+    "representative_results": {
+      "QNN_precision": {
+        "train": "93.97%",
+        "test": "90.90%"
+      },
+      "DNDT_precision": {
+        "train": "90.63%",
+        "test": "86.74%"
+      },
+      "DRCNN_precision": {
+        "train": "79.71%",
+        "test": "74.95%"
+      },
+      "QNN_RMSE": {
+        "train": 0.52,
+        "test": 0.61
+      },
+      "DNDT_RMSE": {
+        "train": 0.63,
+        "test": 0.81
+      },
+      "DRCNN_RMSE": {
+        "train": 0.95,
+        "test": 1.13
+      },
+      "variance_decomposition_residual_share": "approx. 40% of Var(pdt) (residual component), with remaining explained by long-term risks and habit depending on specification",
+      "R2_best_specification": "around 60% for DNDT and QNN in 'including all variables' specification; other specs reported lower R2"
+    },
+    "baselines_compared": "Multiple MAP specifications (baseline and variations removing long-run risks, removing habit, altering habit dependence on consumption growth, rescaled coefficients) used as internal baselines for variance-decomposition robustness. No external algorithmic baselines (e.g., classical OLS) are shown with direct numeric comparison in results table, though paper references prior OLS results in literature for qualitative comparison."
+  },
+  "experiment_parameters": {
+    "training_test_split": {
+      "train_fraction": 0.7,
+      "test_fraction": 0.3
+    },
+    "QNN": {
+      "learning_rate": 0.1,
+      "quantum_parameters": "hybrid quantum-inspired qubit amplitudes updated via rotation gate; Δθ proportional to gradient",
+      "qubits": null,
+      "depth": null,
+      "shots": null,
+      "optimizer": "gradient-based backpropagation (SGD-like)"
+    },
+    "DRCNN": {
+      "loss": "MSE (1/2 ||r - b_r||^2)",
+      "optimizer": "stochastic gradient descent (SGD)",
+      "convolution_kernels": "trainable (sizes not specified)",
+      "recurrent_cells": "standard RNN-type (specific cell type not specified)"
+    },
+    "DNDT": {
+      "soft_binning_temperature": "τ > 0 (value not specified)",
+      "cut_points_trainable": true,
+      "use_random_subspace_forest": true,
+      "gumbel_softmax": "Straight-Through approximation used",
+      "number_of_trees": null
+    },
+    "priors_and_fixed_params": {
+      "steady_state_surplus_consumption_s": "log(0.06)",
+      "sigma_e": 1,
+      "other_priors": "set from sample means for μpd, μc, μd; parameter transformations to monthly frequency per references"
+    }
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "The paper states that the data supporting the findings are available from the corresponding author upon reasonable request. No code, implementation details (software libraries or frameworks), hyperparameter files, or model code repository are provided or referenced in the text. The QNN is described as a quantum-inspired algorithmic approach rather than an implementation on quantum hardware; no quantum framework (e.g., Qiskit, Pennylane) or QPU/cloud provider is specified. Reproducibility would therefore require contacting the corresponding author for data and re-implementing architectures from the methodological descriptions in the paper.",
+  "key_findings": [
+    "[supported] A Quantum Neural Network (QNN) implementation achieved the highest empirical predictive performance in this study (reported training accuracy 93.97% and test accuracy 90.90%).",
+    "[supported] A Deep Neural Decision Tree (DNDT) implementation achieved the second-best empirical performance (reported training accuracy 90.63% and test accuracy 86.74%).",
+    "[supported] A Deep Recurrent Convolutional Neural Network (DRCNN) implementation performed worse than DNDT and QNN on this dataset (reported training accuracy 79.71% and test accuracy 74.95%).",
+    "[supported] QNN produced the lowest RMSE among tested methods (RMSE training 0.52, RMSE test 0.61), with DNDT and DRCNN having higher RMSEs (DNDT RMSE training 0.63 / test 0.81; DRCNN RMSE training 0.95 / test 1.13).",
+    "[supported] The residual (unobserved) component explains a large share of the variance in the log price-dividend ratio for listed football clubs — the paper reports a residual contribution around 40% in the variance decomposition.",
+    "[supported] The MAP (Macro Asset Pricing) model estimated with neural-network-based methods produced higher goodness-of-fit values than some prior OLS-based estimates reported in the literature (authors report R^2 up to ~62% for QNN in the full specification vs cited prior OLS/linear results around ~30% in some references).",
+    "[disputed] The paper's abstract/summary states 'precision higher than 90% for all the estimated models', which contradicts the detailed reported results where DRCNN test accuracy is ~75% (internal inconsistency).",
+    "[supported] The paper describes the QNN method as a hybrid/quantum-inspired neural architecture built from quantum computation primitives (qubits, rotation gates, etc.) and applies it to the MAP estimation task.",
+    "[speculative] The authors claim that QNNs and other neural-network approaches 'open up new possibilities to estimate more efficiently the pricing of financial assets in the football industry' (a forward-looking claim based on the observed empirical superiority on this dataset).",
+    "[speculative] The paper asserts that valuation of football clubs using this MAP + neural-network approach is more reliable than some previous asset classes because the residual component is smaller than in earlier studies (comparative claim that is not exhaustively benchmarked across many prior works)."
+  ],
+  "results_summary": "This empirical study applies three neural-network methods (DRCNN, DNDT, and a Quantum Neural Network variant) to estimate a Macro Asset Pricing (MAP) model for listed football clubs. The QNN implementation achieved the best empirical performance on the authors' dataset (training accuracy ~93.97%, test accuracy ~90.90%, RMSE ~0.52/0.61), followed by DNDT and then DRCNN. The MAP decomposition finds a large residual/unobserved component in price-dividend variance (about 40%), while long-run growth, long-run volatility, and habit components have smaller shares. The authors report higher goodness-of-fit for their neural approaches (QNN R^2 ≈ 62% in the full specification) than prior linear estimations in cited literature. Note: an internal inconsistency exists—an abstract claim that 'precision higher than 90% for all estimated models' is contradicted by detailed reported accuracies for DRCNN (~75% test).",
+  "performance_claims": [
+    "QNN training accuracy: 93.97% (reported)",
+    "QNN test accuracy: 90.90% (reported)",
+    "QNN RMSE (training): 0.52 (reported)",
+    "QNN RMSE (test): 0.61 (reported)",
+    "DNDT training accuracy: 90.63% (reported)",
+    "DNDT test accuracy: 86.74% (reported)",
+    "DNDT RMSE (training): 0.63 (reported)",
+    "DNDT RMSE (test): 0.81 (reported)",
+    "DRCNN training accuracy: 79.71% (reported)",
+    "DRCNN test accuracy: 74.95% (reported)",
+    "DRCNN RMSE (training): 0.95 (reported)",
+    "DRCNN RMSE (test): 1.13 (reported)",
+    "QNN full-specification R^2 (reported): 62.27%",
+    "DNDT full-specification R^2 (reported): 58.19%",
+    "DRCNN full-specification R^2 (reported): 41.23%",
+    "Residual (unobserved) component explains ~40% of the variance of the log price-dividend ratio (reported)"
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper reports that a QNN variant outperformed the tested classical/deep architectures on this particular MAP estimation dataset (higher accuracy and lower RMSE). However, this is an empirical, task-specific finding rather than a demonstration of a general quantum computational advantage: there is no demonstration of provable speedup, no use of quantum hardware performance metrics, and the QNN appears as a hybrid/quantum-inspired model evaluated on classical data. Therefore claims of a general or hardware-backed 'quantum advantage' remain speculative based on the provided evidence.",
+  "limitations": [
+    "Priors and some parameters set ad hoc or by convenience (e.g., habit steady state s set to log(0.06); residual volatility σe and Ae set to 1) which may influence estimates",
+    "Volatility specification is simplified to a single long-run volatility process; authors note this assumption is restrictive",
+    "Residual component is large (~40% of price/dividend variance) and interpreted as permanent unobserved information—model leaves substantial variation unexplained",
+    "Results are sector- and sample-specific (STOXX Europe Football index plus Manchester United; 2011–2020 monthly data) which may limit generalisability [inferred]",
+    "Relatively small dataset/time-span for deep learning methods (21 listed clubs, 2011–2020), increasing risk of overfitting and estimation uncertainty [inferred]",
+    "Some coefficients (e.g., price-dividend coefficients) tended toward zero due to prior choices, indicating sensitivity to prior specification and potential identification issues",
+    "DRCNN, DNDT and QNN implementations raise scalability and practical deployment concerns: DNDT's Kronecker-product approach has scalability issues (authors used forest workaround); QNN presentation lacks demonstration on real quantum hardware (likely simulated) [inferred]",
+    "[inferred] Interpretability limitations: while DNDT aims at interpretability, deep models (DRCNN, QNN) can be opaque, complicating economic interpretation and inference",
+    "[inferred] No direct comparison with linear baselines (e.g., OLS) reported on the same dataset in this paper for model selection robustness, beyond literature references"
+  ],
+  "open_questions": [
+    "What are the economic sources driving the sizeable residual component in football-club asset pricing?",
+    "Why is the residual contribution to variance lower in this football-club sample than in previous studies of broader sectors?",
+    "How much of the residual is due to measurement error in consumption/dividend data versus genuinely unobserved risk factors?",
+    "How sensitive are the MAP decomposition results to prior choices and to different volatility specifications?",
+    "Can the reported gains from QNN and DNDT be replicated out-of-sample, across longer time spans, other leagues, regions, or other asset classes?",
+    "How can consumption measures and time-series length/quality be improved to reduce identification uncertainty (as suggested by Kleibergen & Zhan)?",
+    "[inferred] Can Quantum Neural Network approaches be implemented effectively on real quantum hardware and scaled to larger financial datasets?",
+    "[inferred] What methods (regularization, explainable-AI, alternative architectures) best preserve interpretability while retaining the predictive gains of deep models in asset-pricing contexts?",
+    "What new factors (beyond long-term growth, long-term volatility, habit and residual) might be constructible and robustly useful for asset pricing in sports or other sector-specific applications?"
+  ],
+  "future_work": [
+    "Expand the MAP estimation to data from other football clubs in other regions of the world or to different sports disciplines (explicitly recommended by the authors)",
+    "Further research on the robustness of the efficiency factor and on creating/testing new factors using sophisticated computational methodologies (as suggested by Solórzano-Taborga et al.)",
+    "Implement and evaluate Deep Learning (and quantum-inspired) methods more broadly in asset pricing as recommended (Ozbayoglu et al.)",
+    "Use robust inference methods for identification in consumption-based asset pricing and improve consumption measures and obtain more time-series observations (as recommended by Kleibergen & Zhan)",
+    "Build models embedded in richer macroeconomic frameworks (e.g., incorporating intermediaries, rare disasters, or learning) to better link financial sector, asset prices and real economy (per He & Krishnamurthy and related literature)"
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "benchmark-comparison",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — The Quantum Neural Network (QNN, quantum-inspired) yields the best empirical performance on the MAP estimation task (test precision ~90.90%, test RMSE ~0.61), outperforming DNDT and DRCNN on this dataset.",
+    "#idea:hybrid-approach — The QNN is implemented as a quantum-inspired layer inside a classical training loop: qubit-like hidden units initialized in superposition, rotation-gate-style parameter updates, and gradient-based angle updates (classical backprop style).",
+    "#limitation:simulation-only — No quantum hardware, QPU, or quantum software framework is used or reported; the QNN is a quantum-inspired classical implementation, so results are produced on classical infrastructure.",
+    "#limitation:no-empirical-validation — Although empirical metrics are reported, there is no validation on actual quantum processors to support claims about quantum computational advantage.",
+    "#limitation:data-encoding — The work does not address costs or mechanisms for encoding real-world financial panel data into genuine quantum states (since no QPU evaluation is performed).",
+    "#idea:hybrid-approach — The study benchmarks the QNN against advanced classical architectures (DRCNN, DNDT) using the same train/test splits and evaluation metrics, highlighting architecture-level gains rather than hardware-enabled speedups."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — The paper attributes superior performance to a 'Quantum Neural Network' but the implementation is quantum-inspired and executed classically (no QPU). Thus the claimed 'quantum' advantage may be an architectural/modeling advantage rather than evidence of quantum computation outperforming classical hardware.",
+    "contradiction:scalability — Strong performance is demonstrated on a relatively small panel (≈21 firms × ~120 months). The paper does not demonstrate scaling to larger universes or any evaluation on quantum hardware, so claims of broader quantum superiority or scalability to realistic financial problem sizes are unsupported."
+  ]
+}

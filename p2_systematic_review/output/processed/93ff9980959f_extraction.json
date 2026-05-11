@@ -1,0 +1,248 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2305.16395v2) and typical preprint markers (detailed author affiliations, DOI placeholder, informal disclaimer). It reads like a self-archived research manuscript with abstract, methods, results and extensive citations rather than a finalized, peer-reviewed journal article or formal industry report.",
+  "title": "Approaching Collateral Optimization for NISQ and Quantum-Inspired Computing",
+  "authors": [
+    "Megan C. Giron",
+    "Georgios Korpas",
+    "Waqas Parvaiz",
+    "Prashant Malik",
+    "Johannes Aspman"
+  ],
+  "year": "2023",
+  "journal_or_venue": "arXiv preprint (arXiv:2305.16395v2)",
+  "doi": "10.1109/TQE.2020.DOI",
+  "abstract_summary": "The paper formulates the collateral optimization (ColOpt) problem as a mixed-integer linear program (MILP) and derives Quadratic Unconstrained Binary Optimization (QUBO) encodings to enable hybrid quantum, NISQ, and quantum-inspired solution approaches. Small-scale experiments using various SDKs and annealing/emulation solvers show the QUBO methods often find near-optimal solutions but not the global optimum, and the authors survey alternative quantum and quantum-inspired techniques for tackling large-scale ColOpt instances.",
+  "methodology_description": "The authors formulate the collateral optimization (ColOpt) problem as a Mixed Integer Linear Program (MILP) and develop two QUBO encodings to make the problem amenable to quantum- and quantum-inspired solvers: a balanced (slack-variable) formulation and an unbalanced (penalization) formulation. They first test and compare several QUBO encodings on a small Knapsack instance (10 items, capacity 165) using off-the-shelf LP-to-QUBO converters (ToQUBO.jl, Qiskit) and custom encodings (log-encoding, one-hot, and unbalanced exponential/Taylor-approximation penalization). For ColOpt they binarize allocation decision variables by representing fractional allocations with B-bit binary strings (dot-product encoding), derive QUBOs for both balanced and unbalanced constraint penalizations, normalize coefficients, tune Lagrange multipliers (penalty weights), and run hybrid/quantum-inspired heuristic optimizers (D-Wave's simulated annealer via neal and Fujitsu Digital Annealer emulation) on small synthetic instances. Classical MILP solvers (HiGHS, GLPK) are used as baselines. Results (objective values, allocation vectors, constraint satisfaction) are compared to continuous MILP solutions; the paper reports that QUBO-based heuristics did not attain the global optimum for the ColOpt instance but produced solutions reasonably close to the MILP baseline.",
+  "algorithms_used": [
+    "Mixed-Integer Linear Programming (MILP)",
+    "Quadratic Unconstrained Binary Optimization (QUBO) conversion",
+    "Balanced slack-variable encoding (log-encoding, one-hot)",
+    "Unbalanced penalization encoding (exponential + 2nd-order Taylor approximation)",
+    "Binarization via fixed-length binary expansion of fractional allocations",
+    "Simulated Annealing (neal - D-Wave simulated annealer emulation)",
+    "Digital Annealer (Fujitsu DA emulation)"
+  ],
+  "frameworks": [
+    "ToQUBO.jl (Julia)",
+    "Qiskit optimization module (QuadraticProgramToQubo)",
+    "PyQubo",
+    "neal (D-Wave simulated annealer, Python)",
+    "Fujitsu Digital Annealer (emulation)",
+    "HiGHS (LP/MILP solver)",
+    "GLPK (LP/MILP solver)"
+  ],
+  "experimental_setup": "Local experiments on an Apple MacBook Pro with M2 Max processor and 16 GB RAM. Emulated annealing runs used neal (D-Wave simulated annealer emulator) and Fujitsu Digital Annealer emulation. Baseline continuous/ MILP solutions computed with HiGHS and GLPK. Small toy instances: Knapsack (10 items, capacity 165); ColOpt synthetic instance with 10 assets (~$8.86M total), 5 accounts (2 long-term, 3 short-term) and B=7 bits per allocation for binary encoding. Many-to-one (group) constraints were removed in the ColOpt experiment to relax the instance.",
+  "dataset_used": "Two small datasets: (1) Knapsack toy instance (10 items) with weights and values (capacity 165) taken from a referenced standard instance; (2) Synthetic collateral-optimization dataset: portfolio of 10 assets classified into tiers ω = {0.2, 0.5, 0.8} with counts {4,2,4}, combined market value ≈ $8.86M, to be allocated across 5 accounts with exposures (two long-term accounts totaling ≈ $1.49M, three short-term totaling ≈ $1.09M).",
+  "experiment_input": {
+    "source": "Constructed by authors (synthetic ColOpt) and standard toy instance reference for Knapsack (ref. [68])",
+    "size": {
+      "knapsack": {
+        "items": 10,
+        "capacity": 165
+      },
+      "colopt": {
+        "assets": 10,
+        "accounts": 5
+      }
+    },
+    "preprocessing": "Binarization of continuous decision variables: fractional allocations represented via fixed-length binary strings (B bits per allocation). For ColOpt used B=7 (granularity 1/127). For balanced/slack encodings, log-encoding used for slack variables (Ns = ceil(log2(u))). Coefficients in QUBO normalized by largest coefficient and scaled so minimum coefficient per term ~ O(1). Many-to-one group constraints omitted in the ColOpt experimental instance."
+  },
+  "experiment_process": [
+    "Formulate MILP for ColOpt and the Knapsack baseline problem.",
+    "For Knapsack: convert MILP to QUBO using off-the-shelf converters (ToQUBO.jl, Qiskit) and custom encodings (log-encoding slack, one-hot slack, unbalanced penalization).",
+    "For ColOpt: binarize allocation matrix Q into binary variables x_{ijb} using B-bit expansion; replace continuous variables by dot-product with coefficient vector p_{ijb}.",
+    "Construct QUBO objective combining original cost term and penalty terms for constraints. Two strategies: (a) Balanced (slack-variable) penalization with log-encoded slack bits; (b) Unbalanced penalization via exponential-toned auxiliary functions approximated by 2nd-order Taylor expansion.",
+    "Normalize QUBO coefficients and choose/tune Lagrange multipliers (penalty weights λ_i). Table III reports example λ settings for runs.",
+    "Solve QUBOs using heuristic samplers: D-Wave simulated annealer via neal and Fujitsu Digital Annealer emulation. Use HiGHS/GLPK to solve the continuous MILP for baseline.",
+    "Collect outputs: objective values, allocation matrices, constraint satisfaction (exposure met percentages). Compare QUBO results to MILP baseline.",
+    "Note: number of annealing runs described as modest (unspecified); no gate-based quantum hardware or QAOA/VQE experiments performed."
+  ],
+  "experiment_output": {
+    "format": "Objective value (scalar), allocation matrices (fractional allocations per asset-account), per-account exposure satisfaction percentages, and indication of constraint violations.",
+    "examples_reported": {
+      "knapsack": "Optimal objective 309 (known solution); QUBO encodings (log, one-hot, unbalanced) with simulated annealing and Fujitsu DA found optimal in tests.",
+      "colopt": "Continuous MILP (HiGHS) baseline objective 0.4746; balanced QUBO (neal) 0.5898; balanced QUBO (Fujitsu DA) 0.7559; unbalanced QUBO (neal) 0.5244; unbalanced QUBO (Fujitsu DA) 0.5803. QUBO solutions did not reach global optimum but were near."
+    },
+    "baselines": "Continuous MILP solutions via HiGHS/GLPK used as baseline comparison."
+  },
+  "experiment_parameters": {
+    "qubits_estimated": {
+      "raw_allocation_qubits": 350,
+      "balanced_formulation_qubits": 298,
+      "unbalanced_formulation_qubits": 228
+    },
+    "bits_per_allocation_B": 7,
+    "binary_granularity_M": 127,
+    "penalty_weights_Table_III_examples": {
+      "balanced_neal": {
+        "λ0_cost": 1000.0,
+        "λ1_consistency": 1
+      },
+      "balanced_fujitsu": {
+        "λ0_cost": 100000.0,
+        "λ1_consistency": 1,
+        "λ2_exposure": 300
+      },
+      "unbalanced_neal": {
+        "λ0_cost": 15000.0,
+        "λ1_consistency": 1,
+        "λ2_consistency_sq": 1,
+        "λ3_exposure_linear": 1,
+        "λ4_exposure_sq": 50
+      },
+      "unbalanced_fujitsu": {
+        "λ0_cost": 20000.0,
+        "λ1_consistency": 1,
+        "λ2_consistency_sq": 1,
+        "λ3_exposure_linear": 1,
+        "λ4_exposure_sq": 50
+      }
+    },
+    "annealer_runs": "modest and unspecified (authors note that larger number of runs would likely improve results)",
+    "other_params": {
+      "many_to_one_constraints": "removed for ColOpt experiments",
+      "normalization": "QUBO terms divided by largest coefficient and scaled"
+    }
+  },
+  "hardware_details": {
+    "local_machine": {
+      "type": "Apple MacBook Pro",
+      "processor": "M2 Max",
+      "memory": "16 GB"
+    },
+    "simulators_emulators": [
+      {
+        "name": "neal (D-Wave simulated annealer emulator)",
+        "type": "classical simulated annealer",
+        "provider": "D-Wave (software/neal)"
+      },
+      {
+        "name": "Fujitsu Digital Annealer (emulation)",
+        "type": "quantum-inspired digital annealer emulation",
+        "provider": "Fujitsu (emulation)"
+      }
+    ],
+    "classical_solvers": [
+      {
+        "name": "HiGHS",
+        "type": "LP/MILP solver"
+      },
+      {
+        "name": "GLPK",
+        "type": "LP/MILP solver"
+      }
+    ],
+    "quantum_hardware": "No physical quantum QPU used."
+  },
+  "reproducibility_notes": "The paper describes the formulations, encodings, solver software and penalty-weight tuning approach and identifies the packages used (ToQUBO.jl, Qiskit, PyQubo, neal, Fujitsu DA, HiGHS, GLPK). However, no public code repository, exact random seeds, exact annealing schedules, or the complete set of run parameters (number of annealing runs, temperatures/schedules, runtime limits) are provided. The datasets are synthetic or standard toy instances (Knapsack referenced) and are described in the text (weights/values and ColOpt synthetic parameters), which supports partial reproducibility, but full reproduction would require reimplementation of parameter tuning and exact solver-run settings.",
+  "key_findings": [
+    "[supported] The authors present a MILP formulation of the collateral optimization (ColOpt) problem and two QUBO formulations (balanced/slack-based and unbalanced penalization) suitable for quantum and quantum-inspired solvers.",
+    "[supported] In small-scale experiments on a toy Knapsack instance, off-the-shelf MILP solvers (HiGHS, GLPK) and several QUBO encodings (log-encoding, one-hot, unbalanced) solved that instance to optimality.",
+    "[supported] Slack-based (balanced) QUBO encodings require many slack bits (can scale poorly with constraint magnitudes) and therefore can consume many variables/qubits.",
+    "[supported] Unbalanced penalization QUBO formulations can dramatically reduce the number of binary variables required compared with balanced slack encodings.",
+    "[supported] For the small ColOpt instance tested, none of the QUBO-based heuristic solvers (simulated annealing emulators, Fujitsu Digital Annealer emulation) found the global optimum obtained by classical continuous MILP (HiGHS); unbalanced QUBO runs produced solutions closer to the optimum than balanced slack-based QUBOs.",
+    "[supported] In the Collateral Optimization experiments reported, HiGHS (continuous LP) returned an objective value of 0.4746 (baseline), while balanced D-Wave SA produced 0.5898 and balanced Fujitsu DA 0.7559 (normalized objective values reported in the paper); unbalanced D-Wave SA produced 0.5244 and unbalanced Fujitsu DA 0.5803.",
+    "[supported] QUBO converters (ToQUBO.jl, Qiskit QuadraticProgramToQubo) and heuristic samplers (neal simulated annealer, Fujitsu Digital Annealer emulation) succeeded in solving the small Knapsack instance reliably but required careful encoding and parameter tuning.",
+    "[speculative] The authors argue that QUBO/Ising formulations are a useful hardware-agnostic pathway to making ColOpt amenable to a variety of quantum, quantum-inspired, and hybrid solvers (QAOA, quantum annealing, simulated annealing, digital annealers).",
+    "[speculative] The paper suggests that unbalanced penalization may be particularly useful for near-term gate-based VQA/QAOA resources because it reduces qubit requirements.",
+    "[speculative] The authors propose that larger ColOpt instances might become tractable or benefit from quantum or quantum-inspired approaches (annealers, digital annealers, tensor networks, GNN heuristics), but stress this is heuristic and requires further study.",
+    "[supported] The authors report that formulation choice (how constraints are encoded into QUBO) significantly affects solver performance and solution quality.",
+    "[supported] The unbalanced penalization QUBO sometimes yields near-optimal low-energy eigenstates though not guaranteed to coincide with the global optimum, consistent with prior literature cited.",
+    "[supported] The authors observed sensitivity of SA-style heuristics to hyperparameter choices and the need for careful penalty-weight normalization and tuning.",
+    "[speculative] The authors survey alternative hybrid and quantum methods (Q-FW, GABO/Grover oracles, physics-informed GNNs, optical continuous relaxations, simulated quantum annealing) as promising directions without empirical comparison in this work.",
+    "[speculative] The paper emphasizes that even if heuristic QUBO-based methods do not outperform classical MILP on small instances, they may still hold potential for business advantage on sufficiently large/structured instances in the future."
+  ],
+  "results_summary": "The paper develops MILP and two QUBO reformulations (balanced/slack-based and unbalanced penalization) for the collateral optimization problem and performs small-scale numerical experiments. For a toy Knapsack test, both balanced and unbalanced QUBO encodings (via ToQUBO.jl, Qiskit, neal, and Fujitsu emulation) recovered the known optimum. For a small but realistic ColOpt instance, classical continuous MILP (HiGHS) found a better (lower) objective than the heuristic QUBO-solvers used; unbalanced QUBO formulations produced results closer to the MILP optimum than balanced/slack encodings. The study highlights that constraint encoding, choice of penalty weights, and bit-size/precision trade-offs materially affect solution quality, and that unbalanced penalization can greatly reduce binary-variable counts. The authors conclude formulations are critical for making ColOpt quantum-ready but do not demonstrate quantum advantage in these small-scale experiments.",
+  "performance_claims": [
+    "[supported] HiGHS continuous LP produced a normalized objective value of 0.4746 on the ColOpt test instance (treated as baseline).",
+    "[supported] Balanced QUBO + D-Wave simulated annealer produced objective 0.5898 (with λ0=1, λ1=1 in their tuning); Balanced QUBO + Fujitsu Digital Annealer produced 0.7559 (with λ0=1e5, λ1=1 in their tuning).",
+    "[supported] Unbalanced QUBO + D-Wave simulated annealer produced objective 0.5244 (with λ0=1.5e4 and other weights specified); Unbalanced QUBO + Fujitsu Digital Annealer produced 0.5803 (with λ0=2e4).",
+    "[supported] For the toy Knapsack instance (10 items, capacity 165), the known optimal value was 309, and multiple converters/solvers (ToQUBO.jl, Qiskit conversions, neal, Fujitsu Digital Annealer emulation) reached that optimum under tested encodings.",
+    "[supported] Binarized ColOpt variable encoding used B=7 bits per allocation in experiments (granularity 1/127) leading to up to 350 logical binaries before slack encodings; unbalanced formulation reduced variables to 228 binaries in their setup and balanced to 298 due to slack variables."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper does not demonstrate quantum advantage experimentally; instead it argues—based on formulations, prior literature, and small-scale heuristic emulations—that QUBO encodings and quantum/quantum-inspired machines may have potential for larger or structured instances. The authors explicitly state their results are heuristic, small-scale, and that classical MILP outperformed QUBO heuristics here, so any claim of advantage is prospective and speculative.",
+  "limitations": [
+    "Experiments limited to small-scale problem instances only; no large-instance testing was performed.",
+    "Limited computational resources constrained the number of runs and depth of experimentation (author-stated).",
+    "All reported results are heuristic in nature; no convergence certificates for the QUBO heuristics (author-stated).",
+    "The QUBO-based approaches (both balanced and unbalanced) failed to find the global optimum on the tested small ColOpt instance (author-stated).",
+    "No empirical comparison between quantum/hybrid solvers and state-of-the-art classical MILP solvers was performed (author-stated).",
+    "The study did not run experiments on real specialized hardware (quantum annealer or production digital annealer); only emulators/simulators were used (author-stated).",
+    "Many-to-one (group) constraints were removed/relaxed in the tested ColOpt instance to reduce complexity, so the instance is a relaxed version of the full business problem (author-stated).",
+    "Binarization/discretization of continuous allocations reduces solution precision and introduces a trade-off between accuracy and resource usage (author-stated).",
+    "Balanced/slack encodings can require a large number of bits (slack variables) when constraint bounds are large, limiting scalability (author-stated).",
+    "Unbalanced penalization reduces variable count but weakens constraint enforcement; the Hamiltonian ground state may not coincide with the true optimum (author-stated).",
+    "Fine-tuning of Lagrange/penalty multipliers is difficult; coefficient magnitude differences across QUBO terms complicate reliable parameter setting (author-stated).",
+    "Annealing-based heuristics (simulated/quantum) are prone to getting trapped in local minima; quality depends strongly on annealing schedule and runs (author-stated).",
+    "VQA / QAOA approaches face limitations such as local minima and circuit noise bias that can degrade convergence (author-cited).",
+    "[inferred] The chosen small-instance results may not generalize to realistic, large-scale ColOpt instances with many assets and accounts.",
+    "[inferred] Embedding and connectivity constraints on actual quantum hardware (qubit connectivity, chain lengths) are not addressed and may limit applicability.",
+    "[inferred] The required qubit/bit count scales as O(n m B) and can become prohibitively large for realistic portfolios (scalability/resource limitation).",
+    "[inferred] The static MILP / QUBO formulations do not explicitly model market dynamics, time evolution or stochasticity of prices — limiting realism for live collateral management.",
+    "[inferred] Operational, regulatory, and other practical business constraints of collateral management may not be fully captured in the simplified formulations used here."
+  ],
+  "open_questions": [
+    "Can QUBO formulations and quantum / quantum-inspired solvers scale to large, realistic collateral-optimization instances in a way that is competitive with classical MILP solvers?",
+    "Which QUBO encoding (balanced/slack, one-hot, log-encoding, unbalanced penalization, or others) is most effective and resource-efficient for ColOpt in practice?",
+    "To what extent do unbalanced penalization formulations maintain solution quality on large, realistic instances, and how often does the ground state diverge from the true optimum?",
+    "Can hybrid methods (e.g., Quantum Frank–Wolfe, simulated quantum annealing, stochastic quantum Monte Carlo, modular QAOA variants) provide practical advantages for ColOpt?",
+    "How should penalty/Lagrange multipliers be set or tuned automatically and robustly for complex ColOpt QUBOs so that constraints are reliably satisfied?",
+    "How effective are warm-starting, annealing-schedule optimization, and other heuristic engineering techniques (GPU acceleration, tensor cores) at improving solution quality and run-time for ColOpt?",
+    "Will actual quantum annealers or production digital-annealer hardware outperform high-quality classical MILP solvers (Gurobi, CPLEX, HiGHS) on industrial-scale ColOpt problems?",
+    "How can many-to-one grouping constraints, integer constraints (e.g., integer share lots), and other realistic business rules be incorporated without exploding resource needs?",
+    "How robust are the proposed QUBO formulations to market volatility, asset price dynamics, and time-dependent exposures?",
+    "Can recent alternative approaches surveyed (Grover-adapted binary optimization, physics-inspired GNNs, the light-solver optical approach) be adapted and benchmarked effectively against ColOpt benchmarks?",
+    "How to mitigate VQA/QAOA issues such as local minima and noise bias in practical ColOpt instances?",
+    "What is the impact of embedding/connectivity limitations of real quantum hardware on the fidelity of mapped ColOpt QUBOs (chain breaks, precision of couplers)?",
+    "What are best practices for selecting bit-resolution B for binarization in order to balance precision, constraint satisfaction, and resource cost?"
+  ],
+  "future_work": [
+    "Apply the best-performing QUBO formulations from the Knapsack study to larger and more realistic ColOpt instances.",
+    "Run experiments on dedicated quantum hardware (quantum annealers) and production quantum-inspired hardware (e.g., Fujitsu Digital Annealer) to evaluate practical performance.",
+    "Perform empirical benchmarking and detailed comparisons between quantum/hybrid solvers and classical MILP solvers (Gurobi, CPLEX, HiGHS) on varied ColOpt instances.",
+    "Investigate advanced solver engineering: warm-starting techniques, optimizing annealing schedules, automated QUBO parameter optimization (penalty weights), and the use of GPUs/tensor cores.",
+    "Explore alternative formulations and algorithms surveyed in the paper: Quantum Frank–Wolfe (Q-FW), Grover-adapted binary optimization for fault-tolerant devices, physics-inspired GNN solvers, optical continuous relaxations (light-solver), simulated quantum annealing (SQA), and stochastic quantum Monte Carlo.",
+    "Study and develop methods for robust automatic tuning of penalty/Lagrange multipliers and normalization strategies for QUBO terms.",
+    "Address scaling and resource-reduction techniques: improved encodings to lower qubit counts, hybrid decomposition strategies, and copositive relaxations.",
+    "Extend formulations to include many-to-one group constraints and integer constraints relevant for equities and other assets, and test their impact on solution quality and resource needs.",
+    "Benchmark emergent hardware-inspired heuristics (e.g., light-solver emulations) against established MIP and SAT solvers on appropriate combinatorial benchmarks.",
+    "Investigate dynamic/stochastic ColOpt formulations that model price volatility and temporal aspects of collateral posting.",
+    "Explore embedding strategies and error-resilient mappings to mitigate hardware connectivity and precision limitations."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Formulate collateral optimization (ColOpt) as MILP then convert to QUBO (balanced and unbalanced encodings) to enable hybrid/quantum-inspired solvers (simulated annealer, digital annealer emulation) with classical pre/post-processing and penalty-weight tuning.",
+    "#idea:near-term-feasibility — Targeted at NISQ-era and quantum-inspired methods; small-scale experiments on emulated annealers show near-optimal solutions are achievable for toy ColOpt instances, indicating partial near-term applicability but not full production readiness.",
+    "#limitation:data-encoding — Binarization (fixed-length B-bit expansions, one-hot/log slack encodings) is costly and requires careful normalization and penalty tuning; encoding overhead is non-trivial for fractional allocations.",
+    "#limitation:qubit-count — Practical encoding estimates require hundreds of binary variables (raw ~350, balanced ~298, unbalanced ~228 qubits for the tested toy instance), highlighting resource gaps versus current gate/QPU availability.",
+    "#limitation:simulation-only — Experiments conducted on classical emulators (neal, Fujitsu DA emulation) on a laptop; no gate-based or annealer hardware runs, so hardware noise and embedding/chain issues on real devices are not empirically evaluated.",
+    "#contradiction:classical-vs-quantum — QUBO-based heuristics did not reach the MILP global optimum for the ColOpt instance (MILP 0.4746 vs best QUBO 0.5244–0.7559), suggesting classical MILP solvers remain superior on these small instances absent further algorithmic/hardware advances.",
+    "#contradiction:scalability — Paper demonstrates encoding and solver approaches but also quantifies that scaling to realistic problem sizes would increase qubit counts substantially and require improved encodings or hybrid strategies, contradicting optimistic claims that current quantum approaches are ready for large ColOpt problems."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — The paper's experimental results show QUBO heuristics (simulated annealer / digital annealer emulation) failed to reach the MILP global optimum on the ColOpt instance, undermining claims that quantum/quantum-inspired solvers currently outperform classical MILP solvers for this task.",
+    "contradiction:scalability — Estimated qubit/bit requirements (hundreds of binary variables) and the need to omit many-to-one group constraints in the toy instance indicate that the proposed QUBO encodings do not straightforwardly scale to production-sized ColOpt problems, contradicting any assertions of immediate scalability."
+  ]
+}

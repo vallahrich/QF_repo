@@ -1,0 +1,148 @@
+---
+aliases:
+- A new time-series model based on quantum walk
+- new time series model
+authors:
+- Norio Konno
+auto_detected: true
+classification: ''
+contradiction_flags: []
+doi: ''
+evaluation_type: analytical
+evidence_type: ''
+has_quantitative_results: false
+idea_tags:
+- idea:quantum-advantage
+- idea:hybrid-approach
+journal_or_venue: arXiv preprint (arXiv:1801.04805v3)
+methodology_tags:
+- quantum-walks
+paper_type: ''
+quantum_advantage_claim: not-applicable
+related_papers: []
+relevance_phase1: medium
+relevance_phase3: not-yet-assessed
+source_type: preprint
+source_type_confidence: high
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/quantum-ml-finance
+- method/quantum-walks
+- idea/quantum-advantage
+- idea/hybrid-approach
+title: A new time-series model based on quantum walk
+topic_tags:
+- quantum-ml-finance
+year: '2019'
+zotero_key: ''
+---
+
+## Abstract summary
+The paper proposes a novel time-series modeling framework that uses quantum walks (QWs) as a non-stationary alternative to classical ARMA/GARCH models. It defines general m-state, d-dimensional QWs, introduces a parameter-estimation procedure minimizing a time-dependent evaluation function to forecast the next observation, and illustrates the approach in detail for the two-state one-dimensional QW. The method is motivated for applications such as cryptocurrency time series where stationarity may not hold.
+## Methodology
+The paper develops a theoretical, model-based methodology for time-series forecasting using discrete-time quantum walks (QWs) as the generative model. The quantum walker is defined on a d-dimensional integer lattice Z^d with Hilbert space H = H_p ⊗ H_c (position ⊗ coin). The dynamics are specified by a unitary ``coin'' operator U(θ_1) (parameterized by real parameters) acting on the coin space and a shift operator S acting on positions; the one-step propagator is S(I_p ⊗ U). The initial coin state φ(θ_2) at the origin is also parameterized. For forecasting a multivariate time series D_n = {x_0,...,x_n} (with x_0 set to the origin), the authors define a time-dependent evaluation function V_n(θ_1,θ_2) = sum_{t=0}^n sum_{||x||_1 ≤ t} ||x - x_t||_2^2 μ_t(x), where μ_t(x) is the QW probability measure at position x and time t. The methodology fits the QW to observed data by minimizing V_n over the coin and initial-state parameters (θ_1,θ_2) (Step 1). Given the fitted parameters, the forecast x*_{n+1} is the expected position E[X_{n+1}] of the QW with those parameters (Step 2). If multiple minimizers exist, their forecasts are averaged; if V_n is constant, the forecast defaults to the last observed value. The paper elaborates the approach with analytical computations for specific QW instantiations: two-state one-dimensional QW with coin U(θ) and initial state φ(ξ) (θ,ξ ∈ [0,π/2]), three-state and four-state constructions (to allow “stay” or two-dimensional joint series) and discusses analytic expressions for small n (n=0,1,2,3) and formulae for E[X_n], as well as the path-counting representation of Ξ_n(l,m). The methodology is presented as a non-stationary alternative to ARMA/GARCH: it is a parameter fitting + prediction pipeline based on QW dynamics rather than a statistical time-series estimator, and no empirical experiments or hardware/simulator implementations are reported.
+
+**Algorithms used:** Discrete-time Quantum Walk (QW), Hadamard Walk (special case), Grover Walk (special case), Quaternionic Quantum Walk (QQW) (discussed as an extension)
+## Experiment details
+### Input
+N/A
+
+### Process
+N/A
+
+### Output
+N/A
+
+### Parameters
+- model_overview: Quantum-walk generative model with parameterized coin and initial state; forecasting by minimizing evaluation function V_n and taking the QW expectation at n+1.
+- evaluation_function: V_n(θ1,θ2) = sum_{t=0}^n sum_{||x||_1 ≤ t} ||x - x_t||_2^2 μ_t(x), where μ_t(x) is the QW probability at time t and position x.
+- optimization_objective: Minimize V_n with respect to coin parameters θ1 ∈ Θ1 ⊂ R^{M1} and initial-state parameters θ2 ∈ Θ2 ⊂ R^{M2}.
+- parameterizations_examples: {'two_state_1D_coin': 'U(θ) = [[cos θ, sin θ],[sin θ,-cos θ]], θ ∈ [0, π/2] (equivalently Θ1=[0,1] in an alternate scaling in paper)', 'two_state_initial': 'φ(ξ) = [cos ξ, i sin ξ]^T, ξ ∈ [0, π/2]', 'three_state_1D_coin': '3×3 parameterized coin U(θ1) given in paper (θ1 ∈ [0,1]); initial φ(θ2) ∈ C^3 with phase parameters in [0,2π]^2', 'four_state_2D_coin': '4×4 parameterized coin U(θ1) given in paper (θ1 ∈ [0,1]); initial φ with 3 phase parameters in [0,2π]^3'}
+- parameter_ranges: {'Θ1': 'examples use Θ1 = [0,1] or θ ∈ [0,π/2] depending on formulation', 'Θ2': 'examples use Θ2 ranges such as [0,π/2] or [0,2π]^k for phase parameters'}
+- forecast_rule: Given fitted (θ*_1, θ*_2) that minimize V_n, forecast x*_{n+1} = E[X_{n+1}] under the QW with those parameters. If multiple minimizers, average their E[X_{n+1}]. If V_n constant, set x*_{n+1} = x_n.
+- algorithm_steps: ['Step 1: Minimize evaluation function V_n(θ1, θ2) over parameter domains to obtain (θ*_1,n, θ*_2,n).', 'Step 2: Compute the QW expectation E[X_{n+1}] under the quantum coin U(θ*_1,n) and initial state φ(θ*_2,n); set forecast x*_{n+1} accordingly.', 'Step 3: Repeat sequentially for future times using accumulated data.']
+- analytic_results: Closed-form/symbolic expressions are presented for small n (n=0,1,2,3) in the two-state 1D case, e.g., V1(θ,ξ) = x1^2 + 2 cos(2θ) cos(2ξ) x1 + 1 and E[X2] = -2 cos^2 θ cos(2θ) cos(2ξ).
+
+### Hardware
+N/A
+
+### Reproducibility
+N/A
+## Findings
+- [speculative] The paper proposes a new time-series modeling approach based on discrete-time quantum walks (QWs) that does not assume stationarity of the input series.
+- [speculative] The proposed method fits QW parameters (coin and initial state) at time n by minimizing a time-dependent evaluation function Vn that weights squared prediction errors by the QW probability distribution up to time n.
+- [speculative] An explicit algorithm (Steps 1-3) is given: (1) find parameters minimizing Vn, (2) compute the QW expectation E(X_{n+1}) under those parameters and use it as the prediction, (3) iterate sequentially.
+- [speculative] In the two-state one-dimensional example (specific coin and initial-state parametrization), the paper derives closed-form expressions for V1(θ,ξ) and its gradients and provides analytic decisions for n=1: from x0=0 and observed x1, the model gives x*_2 = +1 if x1>0, x*_2=0 if x1=0, x*_2=-1 if x1<0 under the proposed estimation rule.
+- [speculative] The paper provides analytic formulae (and references) for E(X_n) in the two-state 1D QW case (useful for n≥2) and indicates numerical methods are suitable for larger n.
+- [speculative] The authors describe how to extend the framework to three-state one-dimensional QWs (to allow 'no change' moves) and four-state two-dimensional QWs (to model multivariate time series such as price+volume).
+- [speculative] The method is presented as potentially applicable to non-stationary financial time series (the paper explicitly mentions cryptocurrencies as an example) because it does not require stationarity assumptions.
+- [speculative] The paper suggests future comparisons with ARMA/GARCH and possible extensions to quaternionic quantum walks and Clifford-algebra-based walks, but does not provide such comparisons or empirical tests.
+- [supported] The manuscript contains no empirical validation or experimental/real-data evaluation; results are theoretical derivations and illustrative analytic examples only.
+- [speculative] The author states the proposed QW-based time-series model is not related to the discrete-time Itô's formula for QWs introduced elsewhere.
+
+**Results summary:** This preprint introduces a theoretical framework for time-series forecasting using discrete-time quantum walks. The core idea is to fit QW parameters (coin and initial state) by minimizing a time-indexed loss Vn that is the expected squared deviation between QW positions and observed series values up to time n, where the QW probability distribution weights errors. The paper gives a concrete algorithm and works through the two-state, one-dimensional QW analytically for n=0 and n=1, deriving explicit expressions and a simple mapping for the n=1 forecast (prediction for time 2 equals the sign of x1). Extensions to three-state and four-state QWs for richer data types are outlined. No empirical experiments or performance benchmarks are provided; the contribution is a theoretical proposal with analytic derivations and suggested directions for future empirical work.
+## Quantum advantage claim
+**Classification:** not-applicable
+
+The paper proposes a quantum-walk-based modeling approach but does not claim or demonstrate any computational or forecasting advantage over classical methods; no empirical or complexity-based quantum advantage is asserted or evidenced.
+## Limitations
+- Cannot define the joint distribution P(X_t = x, X_{t+1} = y) for the QW in the presented framework (explicitly stated).
+- The paper presents only the first-step/illustrative development and lacks empirical evaluation on real financial time series (explicitly acknowledged: comparison with ARMA/GARCH and real data is left for future work).
+- Parameter estimation can yield non-unique minimizers of the evaluation function V_n; the paper resorts to averaging or ad-hoc choices in those cases (explicit in the algorithm discussion).
+- Analytic expressions become impractical for larger n; the author advises numerical methods for moderate/large horizons (explicitly stated).
+- Some parameter choices produce trivial dynamics (e.g. θ = π/2), limiting applicability of closed-form results (explicitly noted).
+- [inferred] The approach assumes the time series is shifted so x_0 = 0 (QW starts at origin), which may be restrictive or require pre-processing in real applications.
+- [inferred] The method requires selecting coin and initial-state parameterizations (θ1, θ2) and a search/optimization over them; this may be computationally intensive and subject to local minima.
+- [inferred] The paper works out only the two-state one-dimensional case in detail; generalization to higher-dimensional/multi-state QWs (necessary for richer financial datasets) is not demonstrated.
+- [inferred] There is no presented statistical assessment of forecast uncertainty, consistency, or asymptotic properties of the estimators produced by minimizing V_n.
+- [inferred] No guidance is given on model selection (e.g., how to choose m, d, or parameter set Θ1, Θ2) or hyperparameter tuning for practical deployments.
+## Open questions
+- How does the QW-based time-series method perform in practice versus standard models (ARMA, GARCH) on real financial/non-stationary data (e.g., cryptocurrencies)?
+- How should one efficiently and robustly optimize the evaluation function V_n over coin and initial-state parameters for large datasets and higher-dimensional QWs?
+- How to handle and interpret non-unique minimizers of V_n in a principled statistical way (beyond simple averaging or arbitrary tie-breaking)?
+- Can a tractable joint distribution (or useful surrogate) be defined for successive QW positions to enable richer likelihood-based inference?
+- What are the statistical properties of the proposed estimator (consistency, bias, variance, forecast error behavior) as n grows?
+- How to extend and adapt the method to multi-state and multi-dimensional QWs (e.g., to jointly model price and volume) and what benefits do such extensions provide?
+- What is the sensitivity of forecasts to the chosen coin and initial-state parameterizations and to model misspecification?
+- How to incorporate exogenous inputs, multivariate features, or market microstructure effects within the QW framework?
+- How will extensions to quaternionic quantum walks (QQW) or Clifford-algebra-based walks change modeling capacity and computational cost, and do they yield practical advantages for financial time series?
+
+**Future work:**
+- Compare the QW-based method with ARMA and/or GARCH models on real datasets (explicitly suggested).
+- Develop a time-series model based on quaternionic quantum walks (QQW) and compare its behavior to the standard QW-based model (explicitly mentioned).
+- Explore extensions from QQW to Clifford algebra-based time-series models (explicitly mentioned).
+- Use numerical methods for computing E(X_n) and parameter estimation for larger n instead of purely analytic formulas (explicit recommendation).
+- Investigate practical implementations and empirical studies (Konno et al. 'In preparation' referenced).
+## Key ideas
+- #idea:quantum-advantage — Proposes a quantum-walk-based generative time-series model as a non-stationary alternative to ARMA/GARCH, suggesting potential applicability to financial series such as cryptocurrencies.
+- #idea:hybrid-approach — Parameters of the quantum-walk (coin and initial state) are estimated via classical optimization of a time-dependent evaluation function V_n; forecasting uses the QW expectation E[X_{n+1}] under the fitted parameters (quantum model + classical fitting).
+- #quantum-walks — Develops and analyses discrete-time quantum walks (two-state 1D Hadamard-like coin, three-state for 'stay', four-state 2D for multivariate series) and derives closed-form expressions for small n (n=0..3) including E[X_n] formulas.
+- #limitation:no-empirical-validation — The paper contains no empirical experiments, dataset evaluations, simulator runs, or hardware implementations; results are theoretical and illustrative only.
+- #limitation:data-encoding — The manuscript does not address practical issues of encoding real financial time-series data into the QW framework or the computational cost of doing so.
+- #limitation:simulation-only — No QPU or numerical benchmarking on simulated data is provided (analysis is analytic/formal rather than tested with simulations or hardware).
+## Contradictions
+<!-- Step 6 output — where this paper contradicts others -->
+
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

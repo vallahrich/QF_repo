@@ -1,0 +1,221 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Structural cues indicate a preprint: a 'Posted Date', DOI prefix 'rs.3.rs-.../v1' (Research Square preprint), Creative Commons license, no journal/venue named, and typical preprint metadata despite containing full abstract, methods, results and references.",
+  "title": "A Quantum Neural Network for Fraud Detection Using a Data-Driven Priority Entanglement Scheme",
+  "authors": [
+    "Yousaf Khaliq",
+    "Donglin Wang"
+  ],
+  "year": "2025",
+  "journal_or_venue": "Research Square (preprint)",
+  "doi": "https://doi.org/10.21203/rs.3.rs-7991330/v1",
+  "abstract_summary": "The paper investigates whether replacing a single dense layer in a classical fraud-detection neural network with a variational quantum circuit (VQC) improves minority-class sensitivity on the Kaggle credit card fraud dataset. Using data re-uploading to expose all 30 features and a novel correlation-guided 'priority entanglement' scheme, the hybrid model (under matched parameter budgets) yields modest but consistent gains in recall and PR-AUC versus tuned classical baselines, with best performance at moderate entanglement budgets and shallow circuit depth; deeper or overly entangled circuits degraded performance due to trainability limits.",
+  "methodology_description": "The study performs a controlled, parity-matched comparison between a classical neural-network classifier and a hybrid quantum–classical classifier in which a single dense layer is replaced by a variational quantum circuit (VQC). All preprocessing, optimizer, batch size, epochs, and the outer model trunk and head are kept identical between the classical and hybrid models; the only change is the middle block. The hybrid VQC uses data re-uploading to expose all 30 PCA-derived features to a limited qubit budget (Q in {10,15}) by partitioning the features into C = ceil(30/Q) chunks. A data-driven priority-entanglement scheme is used: the Pearson correlation matrix is computed on the training set only, feature pairs with largest absolute correlation that fit within re-uploading chunks are selected as priority two-qubit couplings (num priority pairs varied), and these priority CNOTs are applied before a trainable strongly-entangling block. The VQC measures Pauli-Z expectation values on each wire to produce Q outputs that feed a shared linear head. Training uses weighted binary cross-entropy with logits (positive class weight w+ = N0/N1) optimized by Adam (lr=0.001), batch size 32, for 10 epochs. Experiments ablate qubit count (10 vs 15), quantum depth (1,3,5 layers), and priority-pair budgets (0,10,30,80,135). To limit simulator cost they downsampled the majority class to 10,000 legitimate transactions while retaining all 492 frauds, and used stratified 50/25/25 train/val/test splits. Repeated randomized trials (100 runs for 10-qubit settings, 20 for 15-qubit settings) are used to report mean±std of recall, precision, PR-AUC and other metrics; classical baselines (logistic regression, XGBoost, SVM, and a classical NN with matched parameter count) are included for comparison.",
+  "algorithms_used": [
+    "Variational Quantum Circuit (VQC)",
+    "Data re-uploading",
+    "Correlation-guided priority entanglement (custom CNOT scheduling)",
+    "Logistic Regression",
+    "XGBoost",
+    "Support Vector Machine (SVM)",
+    "Classical Neural Network",
+    "Adam optimizer"
+  ],
+  "frameworks": [
+    "PennyLane (default.qubit simulator)",
+    "PyTorch (Torch interface, PennyLane TorchLayer)",
+    "scikit-learn (StandardScaler, classical baselines)",
+    "XGBoost"
+  ],
+  "experimental_setup": "Simulator-based experiments on a full-state simulator (PennyLane default.qubit) run on a host with an Intel Xeon Gold 6254 CPU and 64 GB RAM. 10-qubit experiments repeated 100 randomized runs per configuration; 15-qubit experiments repeated 20 runs. Wall-clock times reported per configuration; deeper circuits and larger coupling budgets greatly increase runtime (minutes for 10q, hours for 15q).",
+  "dataset_used": "Kaggle Credit Card Fraud dataset (Machine Learning Group, ULB and Worldline, 2019). Original size 284,807 transactions with 492 fraudulent cases (~0.17%). Features are 30 anonymized PCA-like components plus 'Amount' and derived hour-of-day; 'Time' column converted to hour-of-day then dropped.",
+  "experiment_input": {
+    "source": "https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud",
+    "original_size": 284807,
+    "fraud_cases": 492,
+    "preprocessing": "Train-only StandardScaler fitted on training features; added hour-of-day derived from Time and dropped raw Time. Majority-class downsampled to 10,000 legitimate transactions; all 492 frauds retained. Stratified splits: 50% train, 25% validation, 25% test (test contains ~2500 legit + 123 fraud). Pearson correlation matrix computed on training set only for priority entanglement selection. Feature reorder applied consistently to train/val/test so that prioritized feature pairs are within same re-upload chunk."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Data loading and minimal preprocessing (StandardScaler fitted on train; add hour-of-day; drop Time).",
+      "Downsample majority class to 10,000 legit transactions; keep all 492 frauds.",
+      "Stratified split into train/val/test (50/25/25).",
+      "Compute Pearson correlation matrix on training features, sort absolute correlations, greedily select up to num priority pairs subject to chunk membership and per-feature degree cap; export priority-pairs list and feature order.",
+      "Reorder features and partition into C = ceil(30/Q) chunks for data re-uploading.",
+      "Construct hybrid model: shared classical trunk (two linear layers W1/W2 with ReLU/tanh), middle block is either (a) VQC TorchLayer or (b) dense classical layer (for parity baseline), then shared linear output head.",
+      "VQC ansatz per chunk: angle embedding via RY rotations (padding if necessary), apply priority CNOT entanglers for that chunk, apply a trainable strongly entangling layer (three parameterized rotations and a ring of CNOTs) with Lq layers, measure Pauli-Z expectations on each qubit to get a Q-vector.",
+      "Concatenate chunk outputs (re-uploading across chunks) to form the quantum-layer output fed to the classical head.",
+      "Train end-to-end with weighted binary cross-entropy with logits (w+ = N0/N1), Adam optimizer (lr=0.001), batch size=32, epochs=10. Use PyTorch backprop via PennyLane QNode (diff_method='backprop').",
+      "Evaluate test set probabilities to compute precision, recall, PR-AUC, ROC-AUC, F1, accuracy; default decision threshold=0.3 unless ablated.",
+      "Run ablations across Q ∈ {10,15}, Lq ∈ {1,3,5}, num priority pairs ∈ {0,10,30,80,135}; repeat experiments 100 runs for 10-qubit configs and 20 runs for 15-qubit configs; log mean and std."
+    ],
+    "parameters_tuned_or_ablated": [
+      "Qubits: 10, 15",
+      "Quantum layers / depth (Lq): 1, 3, 5",
+      "Priority pair budget: 0, 10, 30, 80, 135",
+      "Batch size: 32 (fixed)",
+      "Epochs: 10 (fixed)",
+      "Learning rate: 0.001 (Adam, fixed)",
+      "Decision threshold: default 0.3 (configurable in ablations)",
+      "Positive class weight: w+ = N0/N1"
+    ],
+    "repetitions": "100 randomized trials per 10-qubit configuration; 20 randomized trials per 15-qubit configuration. Random seeds control initialization and minibatch order; data splits fixed unless explicitly ablated."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Precision (mean ± std)",
+      "Recall (mean ± std)",
+      "PR-AUC (mean ± std)",
+      "ROC-AUC",
+      "F1-score",
+      "Accuracy",
+      "CPU/wall-clock training time"
+    ],
+    "baseline_comparisons": "Classical baselines included logistic regression, XGBoost, SVM, and a classical neural network with matched parameter count. Results reported as mean±std across runs. Key reported comparisons: best classical PR-AUC (logistic regression) 0.9150±0.014; best hybrid PR-AUC reported 0.9229±0.006 (15 qubits, 1 layer, 10 priority pairs); recall improvement of ~+0.047 vs best classical recall.",
+    "output_format": "Per-configuration average ± standard deviation for the metrics listed above; confusion-matrix and classification reports computed from test set probabilities; timing (minutes/hours) reported per configuration."
+  },
+  "experiment_parameters": {
+    "qubits_tested": [
+      10,
+      15
+    ],
+    "quantum_layers_tested": [
+      1,
+      3,
+      5
+    ],
+    "priority_pairs_tested": [
+      0,
+      10,
+      30,
+      80,
+      135
+    ],
+    "reuploading_chunks": {
+      "for_10_qubits": 3,
+      "for_15_qubits": 2
+    },
+    "feature_count": 30,
+    "batch_size": 32,
+    "epochs": 10,
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "loss": "Weighted binary cross-entropy with logits (w+ = N0/N1)",
+    "repetitions": {
+      "10_qubit_configs": 100,
+      "15_qubit_configs": 20
+    },
+    "measurement": "Expectation of Pauli-Z on each wire (E[Z_q])",
+    "simulator_shots": "Full-state analytic simulator (no shot noise; default.qubit analytic expectations)",
+    "threshold_default": 0.3
+  },
+  "hardware_details": {
+    "simulator": "PennyLane default.qubit (analytic full-state simulator)",
+    "qpu_model": null,
+    "cloud_provider": null,
+    "host_cpu": "Intel Xeon Gold 6254",
+    "host_ram": "64 GB",
+    "notes": "All quantum work performed in simulation (no real quantum hardware). Wall-clock times reported: minutes for 10-qubit configs, hours for 15-qubit configs."
+  },
+  "reproducibility_notes": {
+    "code_repository": "https://github.com/ykhaliq2/QNNFraudDetection",
+    "dataset_link": "https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud",
+    "artifacts_saved": "Scaler (scaler.pkl), feature order (feature_order.pkl), priority entanglement pairs CSV, learned weights per run, per-run logs and master CSV of metrics",
+    "notes": "Paper indicates outputs/ directories and config files saved for reproducibility. 15-qubit experiments have fewer repetitions (20) than 10-qubit (100), which should be considered when interpreting statistical significance."
+  },
+  "key_findings": [
+    "[supported] Replacing a single dense layer in a classical neural network with a variational quantum circuit (VQC) using data re-uploading and a correlation-guided priority entanglement scheme produced small but reproducible improvements in recall and PR-AUC in simulation under matched parameter budgets.",
+    "[supported] The hybrid QNN achieved its best reported PR-AUC of 0.9229 ± 0.006 (15 qubits, 1 quantum layer, 10 priority pairs) compared to a logistic regression PR-AUC of 0.9150 ± 0.014 on the same downsampled benchmark.",
+    "[supported] With 10 qubits the hybrid’s best PR-AUC was 0.9192 ± 0.008 (1 quantum layer, 80 priority pairs) and the highest observed recall was 0.9235 ± 0.017 (1 quantum layer, 135 priority pairs).",
+    "[supported] Against the best classical recall (0.8832 ± 0.014 for the classical neural network), the hybrid reported an absolute recall increase of approximately +0.0468 (to ~0.9301 ± 0.011 in the 15q/1-layer/10-pairs setting).",
+    "[supported] Data re-uploading was used to expose all 30 input features with limited qubit budgets (Q ∈ {10, 15}), enabling the VQC to process the full feature set in chunks.",
+    "[supported] A moderate number of correlation-priority entanglement pairs (roughly 10–80 pairs depending on config) tended to maximize PR-AUC; excessively large pairing budgets or excessive circuit depth often reduced performance (precision/PR-AUC) and exacerbated a precision–recall trade-off.",
+    "[supported] Increasing quantum circuit depth (more layers) did not reliably improve PR-AUC under the used training budget and often produced higher recall at the cost of sharply reduced precision (e.g., 15q, 5 layers).",
+    "[supported] Experiments were simulation-only, used downsampling of the majority class (retain all 492 frauds, 10,000 legitimate samples), and averaged results over many randomized runs (100 runs for 10-qubit configs, 20 runs for 15-qubit configs).",
+    "[supported] Wall-clock training time scaled substantially with qubit count, entanglement budget, and depth: 10-qubit runs ranged minutes per config, 15-qubit runs required hours on CPU simulation.",
+    "[speculative] The correlation-guided priority entanglement provides an inductive bias that focuses representational capacity on empirically informative feature relationships and thus narrows the effective search space during optimization (analogy to attention mechanisms).",
+    "[speculative] The observed performance degradation at very high entanglement budgets or depth is attributed to over-parameterization and trainability issues (e.g., barren-plateau like effects), suggesting shallow, structured ansatzes are preferable under limited training budgets.",
+    "[speculative] The proposed approach (data re-uploading + priority entanglement) is a promising candidate for near-term, hardware-constrained deployments provided hardware-aware pairing and further noise/latency optimizations are applied.",
+    "[speculative] Recommended future directions include hardware experiments, bootstrapped/significance testing of PR-AUC/recall lifts, adaptive sparsification of entanglers, and evaluation on additional fraud/anomaly datasets."
+  ],
+  "results_summary": "In simulation on a downsampled version of the Kaggle credit card fraud dataset (all 492 frauds retained, 10,000 legitimate transactions), swapping a single dense layer for a variational quantum circuit with data re-uploading and a Pearson-correlation-driven priority entanglement scheme produced modest, reproducible improvements in minority-class sensitivity. Best reported gains were an absolute PR-AUC increase (e.g., 0.9229 ± 0.006 for a 15-qubit, 1-layer, 10-pair hybrid vs. 0.9150 ± 0.014 for logistic regression) and an absolute recall increase of roughly +0.047 over the best classical baseline. Performance peaked at moderate entanglement budgets and shallow depth; increasing depth or over-entangling often worsened the precision–recall balance. Experiments were simulation-only and run under strict capacity parity between classical and hybrid models.",
+  "performance_claims": [
+    "Hybrid QNN (15 qubits, 1 quantum layer, 10 priority pairs) PR-AUC = 0.9229 ± 0.006 (20 runs).",
+    "Logistic regression PR-AUC (baseline) = 0.9150 ± 0.014 (100 runs).",
+    "Hybrid recall improvement over best classical recall: +0.0468 absolute (classical NN recall 0.8832 ± 0.014 → hybrid 0.9301 ± 0.011 in 15q/1-layer/10-pairs setting).",
+    "Hybrid QNN (10 qubits, 1 layer, 80 pairs) PR-AUC = 0.9192 ± 0.008 (100 runs).",
+    "Hybrid QNN (10 qubits) highest observed recall = 0.9235 ± 0.017 (1 layer, 135 pairs).",
+    "Classical neural network baseline: Recall = 0.88324 ± 0.014, PR-AUC = 0.9036 ± 0.008 (100 runs).",
+    "Logistic regression baseline: Precision = 0.93886 ± 0.074, Recall = 0.85903 ± 0.021, PR-AUC = 0.9150 ± 0.014 (100 runs).",
+    "XGBoost baseline: Precision = 0.93921 ± 0.021, Recall = 0.87283 ± 0.030, PR-AUC = 0.9144 ± 0.017 (100 runs).",
+    "Runtime: 10-qubit configs varied ~9–49 minutes total CPU time per config (100 runs aggregated); 15-qubit configs required ~6–15 hours total CPU time per config (20 runs aggregated) on an Intel Xeon Gold 6254 with 64 GB RAM."
+  ],
+  "quantum_advantage_claim": "demonstrated",
+  "quantum_advantage_detail": "The paper presents empirical simulation results showing modest, reproducible improvements in minority-class sensitivity (recall) and PR-AUC when replacing a single dense layer by a VQC with data re-uploading and correlation-guided entanglement under matched parameter budgets. The advantage is demonstrated in simulation on a downsampled Kaggle fraud benchmark, peaks for shallow/moderate entanglement settings, and is limited by circuit depth, entanglement budget, and simulator runtime.",
+  "limitations": [
+    "Simulation-only study: results are obtained via full-state simulation and do not account for hardware noise, limited connectivity, or realistic runtime constraints.",
+    "Anonymized PCA-like features limit interpretability of which raw attributes drive model behavior.",
+    "Fewer repetitions for 15-qubit experiments (20 runs) than for 10-qubit and classical experiments (100 runs), increasing statistical uncertainty for the 15-qubit results.",
+    "Majority-class downsampling (10,000 legitimate transactions) rather than using the full majority class or synthetic oversampling (e.g., SMOTE) may affect generalizability compared with other sampling strategies.",
+    "Potential trainability issues (barren plateaus, vanishing gradients) for deeper/deeperly entangled circuits under the fixed training budget and hyperparameters.",
+    "High computational cost / long wall-clock runtimes for wider/deeper circuits limited the scope and repetition of some experiments.",
+    "Single-dataset evaluation (Kaggle credit card fraud benchmark) restricts assessment of robustness and generalization to other fraud/anomaly datasets.",
+    "[inferred] The parity-matched experimental design swaps only a single dense layer for the VQC, so conclusions are limited to that architectural substitution and may not generalize to other hybrid architectures or full QNN stacks.",
+    "[inferred] The proposed priority entanglement scheme depends on reordering features so that high-correlation pairs lie in the same re-uploading chunk; this design choice may be dataset-specific and may not transfer well when natural feature locality or hardware connectivity constraints differ.",
+    "[inferred] Fixed optimizer, learning rate, batch size, and number of epochs for all runs could mask configurations where deeper/more entangled circuits become trainable with different optimization schedules or initialization strategies."
+  ],
+  "open_questions": [
+    "How do the observed recall and PR-AUC gains translate to real quantum hardware under realistic noise, limited qubit connectivity, and gate infidelities?",
+    "Are the gains from the correlation-guided priority entanglement scheme statistically significant and robust (e.g., via paired bootstrap or other hypothesis tests) across repetitions and datasets?",
+    "Does the correlation-guided entanglement generalize to other datasets, feature types (non-PCA), and different imbalance regimes, or is it specific to the Kaggle PCA-like features?",
+    "What is the optimal entanglement budget and depth for a given qubit count before trainability and over-mixing degrade performance, and how does this scale with dataset size and feature structure?",
+    "Can hardware-aware (connectivity-constrained) or learned sparse entanglement patterns retain the benefits of the priority scheme while respecting device topology?",
+    "How do different data-encoding schemes, readout observables, and measurement strategies affect the expressive power and trainability of the VQC in this task?",
+    "Would alternative optimization strategies (e.g., layerwise training, identity-preserving initialization, different optimizers or learning-rate schedules) mitigate barren plateaus and enable deeper, more expressive circuits to improve PR-AUC without collapsing precision?",
+    "How does threshold calibration against real-world business cost curves (chargebacks vs review cost) change the practical utility of the hybrid model’s precision–recall trade-offs?",
+    "How sensitive are the results to the preprocessing choices (e.g., downsampling vs oversampling, scaling, inclusion of Time/Amount features) and to different train/validation/test splits?",
+    "What are the latency and inference-throughput implications of deploying such hybrid models in production authorization pipelines, especially when factoring in quantum runtimes or near-term quantum hardware access overhead?"
+  ],
+  "future_work": [
+    "Extend the framework to hardware-efficient entanglement layouts that respect device connectivity.",
+    "Perform bootstrapped / paired significance testing to quantify the statistical significance of PR-AUC and recall lifts against classical baselines.",
+    "Investigate dynamic (adaptive) correlation mapping and learned sparsification of entanglement to avoid over-coupling.",
+    "Evaluate robustness under noisy conditions and on actual quantum hardware.",
+    "Develop hardware-constrained pairing strategies and adaptive sparsification to reduce over-coupling.",
+    "Align decision thresholds with cost-sensitive/business cost curves to calibrate operating points for real-world deployments.",
+    "Replicate experiments on additional fraud and anomaly detection datasets to test generalization beyond the Kaggle benchmark.",
+    "Explore mitigation strategies for trainability issues (e.g., identity-preserving initialization, layerwise growth, locality-based regularization) to enable deeper ansatze.",
+    "Investigate hardware implementations and assess performance/latency trade-offs in production-like environments."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance",
+    "fraud-detection"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Replacing a single dense layer with a VQC (matched parameter budget) yields modest but consistent improvements in recall and PR-AUC on the Kaggle credit-card-fraud dataset versus tuned classical baselines.",
+    "#idea:hybrid-approach — A pragmatic hybrid architecture (classical trunk/head, single quantum middle block) with data re-uploading enables encoding 30 features into Q={10,15} qubits and retains end-to-end training with classical optimizers.",
+    "#idea:near-term-feasibility — Best empirical performance occurs at moderate entanglement budgets and shallow circuit depth, suggesting some NISQ-era usefulness; deeper/over-entangled circuits suffer trainability degradation.",
+    "#limitation:simulation-only — All experiments run on a full-state PennyLane simulator (default.qubit); no runs on real QPUs are reported, limiting claims about hardware feasibility.",
+    "#limitation:qubit-count — Experiments restricted to 10 and 15 qubits and rely on data re-uploading (feature chunking); scaling to larger feature sets or higher-fidelity encodings may be constrained by qubit availability and runtime.",
+    "#limitation:data-encoding — Uses PCA-like features and data re-uploading with custom priority-entanglement; the costs/overheads and fidelity of such encodings on hardware are not evaluated.",
+    "#limitation:no-empirical-validation — Majority-class downsampling (to 10,000) plus simulator-only evaluation and limited epoch counts mean real-world deployment performance remains unvalidated."
+  ],
+  "contradictions": []
+}

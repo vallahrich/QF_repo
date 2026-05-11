@@ -1,0 +1,235 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document header includes an arXiv identifier (arXiv:2503.11983v1) and date, and the structure (abstract, methods, results, citations) matches an academic preprint rather than a journal or conference-published paper. No journal or proceedings venue is indicated.",
+  "title": "Circuit Design based on Feature Similarity for Quantum Generative Modeling",
+  "authors": [
+    "Mathis Makarski",
+    "Jumpei Kato",
+    "Yuki Sato",
+    "Naoki Yamamoto"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (quant-ph)",
+  "doi": "",
+  "abstract_summary": "The paper introduces a metric-based extension heuristic to design problem-informed quantum circuit topologies by measuring feature similarity, used to extend matrix-product-state (MPS) pretrained quantum circuit Born machines. Validated on the bars-and-stripes benchmark and a real-world Japanese government bond interest-rate dataset, the method reduces parameter count compared to all-to-all extensions and improves training performance and generalization over random circuit extensions, emphasizing the value of inductive bias in circuit design for quantum generative modeling.",
+  "methodology_description": "The authors study quantum generative modeling using Quantum Circuit Born Machines (QCBMs) initialized by a tensor-network pretraining pipeline and subsequently extended by a problem-informed, metric-based circuit extension heuristic. First, a matrix product state (MPS) is trained classically with a DMRG-like algorithm to minimize negative log-likelihood (truncation cutoff 5e-5; 10 training iterations; learning rate 0.05). The trained MPS is analytically decomposed into a shallow PQC with linear connectivity. To capture correlations beyond the 1D MPS entanglement, they construct an undirected feature-similarity graph (vertices = features/qubits, edges = pairwise similarity) using either Hamming distance (for binary BAS images) or the standardized variation of information f_VI (for noisy/nonlinear financial data). A threshold (chosen via the elbow rule) determines which edges to add; corresponding SU(4) two-qubit gates (15 parameters, KAK decomposition into U(2) and RXX/RYY/RZZ) are appended to the decomposed circuit. Extension gate parameters are initialized near-identity (random normal mean 0, variance 0.01). The whole extended circuit is then retrained as a QCBM using stochastic gradient descent with ADAM as the optimizer. The objective is the maximum mean discrepancy (MMD) loss estimated with a Gaussian-mixture kernel; gradients are computed via the parameter-shift rule (±π/2). Experiments compare multiple extension topologies (linear baseline, nearest-neighbor, metric-based, random with same parameter count, all-to-all) and report MMD on train and test sets over repeated runs.",
+  "algorithms_used": [
+    "Quantum Circuit Born Machine (QCBM)",
+    "Matrix Product State (MPS) pretraining (DMRG-like optimization)",
+    "MPS-to-PQC analytic decomposition",
+    "Maximum Mean Discrepancy (MMD) loss with Gaussian-mixture kernel",
+    "Parameter-shift gradient method",
+    "ADAM (stochastic gradient optimizer)",
+    "Metric-based extension heuristic (feature similarity graph)",
+    "Hamming distance (similarity metric)",
+    "Variation of Information / standardized f_VI (similarity metric)",
+    "KAK decomposition (SU(4) -> U(2) and RXX/RYY/RZZ)"
+  ],
+  "frameworks": [
+    "Qiskit Aer (statevector simulator)"
+  ],
+  "experimental_setup": "Numerical experiments run on the IBM Qiskit Aer statevector simulator. Two datasets were used: a 3x3 Bars-and-Stripes (BAS) binary image benchmark (9 qubits) and a real-world Japanese Government Bond (JGB) interest-rate dataset (5-, 10-, 20-year rates) preprocessed and quantized to 12 qubits (3 features × 4 bits).",
+  "dataset_used": "Japanese government bond (JGB) daily interest rates for 5-, 10-, and 20-year maturities (source: Ministry of Finance Japan), period 2000-01-04 to 2025-02-28. Also used the 3×3 Bars-and-Stripes (BAS) binary image dataset (14 valid images).",
+  "experiment_input": {
+    "BAS": {
+      "type": "toy binary image dataset",
+      "dimensions": "3x3 (9 bits)",
+      "distinct_images": 14,
+      "train_test_split": "80/20 (train 11, test 3)"
+    },
+    "JGB": {
+      "source": "Ministry of Finance Japan (publicly available)",
+      "period": "2000-01-04 to 2025-02-28",
+      "raw_preprocessing": "first-difference Dt = St - St-1 to represent daily changes and ensure stationarity",
+      "quantization": "uniform quantization to n-bit binary via mapping formula; each of 3 features quantized to 4 bits (total 12 qubits)",
+      "total_samples": 6165,
+      "train_test_split": "80/20 (train 4932, test 1233)"
+    }
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Train MPS classically (DMRG-like) to minimize negative log-likelihood (truncation cutoff 5e-5; 10 iterations; lr=0.05).",
+      "Analytically decompose trained MPS to a shallow PQC with linear connectivity.",
+      "Compute pairwise feature similarity matrix (Hamming for BAS; f_VI for JGB).",
+      "Choose a threshold via elbow rule to build an undirected similarity graph; add edges where similarity indicates connection.",
+      "Extend the decomposed PQC by inserting SU(4) two-qubit gates on edges; decompose SU(4) via KAK into U(2) and RXX/RYY/RZZ components.",
+      "Initialize extension gate parameters near identity (normal(0, 0.01)).",
+      "Retrain the full extended circuit as a QCBM minimizing MMD loss with a Gaussian-mixture kernel; gradients computed via parameter-shift (±π/2); optimizer ADAM (stochastic gradient descent).",
+      "Evaluate MMD on train and test sets per iteration; repeat experiments (5 independent runs) for each circuit topology."
+    ],
+    "training_config_per_experiment": {
+      "BAS": {
+        "qubits": 9,
+        "shots_per_iteration": 1000,
+        "training_iterations": 1000,
+        "kernel_bandwidth_sigma": 1.0,
+        "batching": "full training set used each iteration for loss & gradient",
+        "topologies_compared": [
+          "linear",
+          "nearest-neighbor",
+          "metric-based",
+          "random (same # gates)",
+          "all-to-all"
+        ]
+      },
+      "JGB": {
+        "qubits": 12,
+        "shots_per_iteration": 1000,
+        "training_iterations": 1000,
+        "kernel_bandwidth_sigma": "n/4 = 3",
+        "gradient_mini_batch_size": 1000,
+        "topologies_compared": [
+          "linear",
+          "random (same # gates)",
+          "metric-based"
+        ],
+        "MPS_truncation_result": "max bond dimension realized 25"
+      }
+    }
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Maximum Mean Discrepancy (MMD) loss measured on train and test sets over iterations",
+      "Comparative performance across circuit topologies (linear baseline, nearest-neighbor, metric-based, random, all-to-all)",
+      "Observations of overfitting (increasing test MMD) for large all-to-all extension"
+    ],
+    "output_format": "Training time series of MMD loss plots (mean over 5 runs ±1 stddev, moving average smoothing), qualitative comparisons and discussion",
+    "baselines": [
+      "Linear MPS-decomposed circuit (no extension)",
+      "Nearest-neighbor extension (BAS)",
+      "Random extension with same number of gates",
+      "All-to-all extension"
+    ]
+  },
+  "experiment_parameters": {
+    "common": {
+      "extension_gate_type": "SU(4) (15 parameters)",
+      "extension_init": "normal(mean=0.0, std=0.01)",
+      "parameter_shift": "±π/2",
+      "repetitions": 5
+    },
+    "BAS_specific": {
+      "qubits": 9,
+      "shots": 1000,
+      "iterations": 1000,
+      "MPS_truncation_cutoff": 5e-05,
+      "MPS_realized_max_bond_dim": 5,
+      "MPS_training_iterations": 10,
+      "MPS_learning_rate": 0.05,
+      "kernel_bandwidth_sigma": 1.0,
+      "extension_gates_counts": {
+        "nearest_neighbor": 4,
+        "metric_based": 10,
+        "all_to_all": 28
+      }
+    },
+    "JGB_specific": {
+      "qubits": 12,
+      "shots": 1000,
+      "iterations": 1000,
+      "gradient_mini_batch_size": 1000,
+      "kernel_bandwidth_sigma": 3,
+      "MPS_truncation_cutoff": 5e-05,
+      "MPS_realized_max_bond_dim": 25,
+      "MPS_training_iterations": 10,
+      "MPS_learning_rate": 0.05,
+      "extension_new_connections": 13,
+      "threshold_used_for_extension": 0.95
+    }
+  },
+  "hardware_details": {
+    "simulator": "IBM Qiskit Aer statevector simulator",
+    "qpu_model": null,
+    "cloud_provider": "IBM / Qiskit (simulator environment)"
+  },
+  "reproducibility_notes": "The paper describes dataset sources (Ministry of Finance Japan for JGB rates) and gives detailed preprocessing and hyperparameter values (MPS truncation cutoff, MPS training iterations and lr, extension initialization, shots, iterations, kernel bandwidths). However, no repository or code link is provided in the text. Data sources are public, but reproduction would require reimplementation of the synergistic pretraining framework and the MPS-to-PQC decomposition steps as described; exact random seeds and some optimizer hyperparameters for circuit retraining (ADAM learning rate) are not specified.",
+  "key_findings": [
+    "[supported] A metric-based extension heuristic that connects qubits based on a classical feature-similarity metric (Hamming distance for binary toy data; variation of information for noisy/nonlinear financial data) can be used to extend a classically pretrained linear MPS-derived quantum circuit in a greedy, problem-informed way.",
+    "[supported] In numerical statevector simulations on the 3x3 Bars-and-Stripes (BAS) dataset (9 qubits), the metric-based extension (10 added two-qubit SU(4) gates) outperformed randomly chosen extensions with the same number of extra gates, and achieved better test-set MMD than an all-to-all extension (28 extra gates) which exhibited overfitting.",
+    "[supported] On a real-world financial dataset (Japanese government bond interest-rate changes), using variation-of-information to design the extension produced a circuit (12 qubits, 13 additional gates relative to linear baseline) that showed modestly better training-set MMD than random extensions in simulations.",
+    "[supported] Tensor-network (MPS) pretraining with truncation (cutoff 5e-5) provides a transferable baseline quantum circuit with linear connectivity; the MPS-trained solution was decomposed analytically into a shallow linear PQC that was then extended and retrained.",
+    "[supported] The metric-based extension materially reduces the number of additional parameters (and gates) compared to an all-to-all extension, enabling a tradeoff between inductive bias and circuit size under limited resources.",
+    "[speculative] The metric-based extension heuristic introduces useful inductive bias that may improve generalization in practice, but it is not guaranteed optimal and its effectiveness depends on chosen metric and threshold (no formal optimality guarantees).",
+    "[speculative] The approach may be practical for designing problem-informed circuits on near- and mid-term quantum hardware, but the present work used numerical (statevector) simulations and did not demonstrate results on actual noisy quantum devices.",
+    "[speculative] There is no established mathematical/theoretical connection in this work between classical feature similarity, entanglement capacity, and the circuit inductive bias — that remains an open research question (authors acknowledge limitation).",
+    "[supported] Different similarity metrics and thresholding (elbow rule) permit control over the number of added connections (inductive bias) in a greedy design process; this was used to select circuit extensions in the experiments.",
+    "[supported] Experimental setup details used in simulations: BAS experiment used 9 qubits, 1000 shots per iteration, 1000 iterations, 5 independent runs, training set 11 images / test set 3 images; JGB experiment used 12 qubits, 1000 shots, 1000 iterations, 5 runs, training set 4932 samples / test set 1233 samples."
+  ],
+  "results_summary": "The paper proposes a practical, metric-based heuristic to extend an MPS-pretrained linear quantum circuit for quantum generative modeling by adding two-qubit SU(4) gates between qubits whose classical feature vectors are similar. In statevector simulations on the 3x3 Bars-and-Stripes dataset and on a Japanese government-bond interest-rate dataset, the metric-guided extensions (chosen via Hamming distance or variation-of-information and an elbow-rule threshold) consistently outperformed random extensions with the same number of added gates. The metric-based extension also used far fewer gates than all-to-all extensions and avoided the overfitting observed for the all-to-all case on the BAS test set. The work demonstrates that problem-informed circuit extension can introduce inductive bias while keeping circuit depth and parameter count manageable, but it is a heuristic without optimality guarantees and has not been validated on noisy quantum hardware.",
+  "performance_claims": [
+    "BAS experiment: 9 qubits; metric-based extension added 10 two-qubit SU(4) gates; nearest-neighbor extension added 4 gates; all-to-all extension would add 28 gates. Training: 1000 shots, 1000 iterations, 5 independent runs. Train/test split: 11/3 images.",
+    "JGB experiment: 12 qubits; metric-based extension added 13 new connections (threshold 0.95 produced 21 total connections, 13 more than linear baseline). Training: 1000 shots, 1000 iterations, 5 independent runs. Train/test split: 4932/1233 samples.",
+    "MPS pretraining: truncation cutoff set to 5e-5; realized maximum bond dimension was 5 for BAS and 25 for the financial dataset in the classical MPS training.",
+    "Initialization and optimization details used in simulations: extension gate parameters initialized near identity (normal mean 0, std 0.01); optimizer: stochastic gradient descent with ADAM; MMD kernel bandwidth used: σ = 1.0 for BAS, σ = n/4 = 3 for JGB."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper discusses that quantum generative models may achieve advantages due to efficient sampling and expressive distributions, and argues that extending pretrained MPS circuits could be a route toward exploiting quantum resources. However, no quantum advantage is demonstrated empirically: results are from classical statevector simulations, comparisons are between circuit designs (not classical algorithms), and the authors explicitly frame the potential advantage as a motivation and future direction rather than a proven outcome.",
+  "limitations": [
+    "Used numerical statevector simulations rather than experiments on real quantum hardware; hardware noise and gate errors were not evaluated (author-stated).",
+    "The metric-based extension is a heuristic and does not guarantee an optimal circuit design (author-stated).",
+    "No mathematical/theoretical connection was established between classical feature similarity, entanglement capacity, and the inductive bias introduced by the circuit extension (author-stated).",
+    "Did not investigate the effect of circuit depth or repeating the extension layer for each method (author-stated).",
+    "Limited evaluation: only two datasets were tested (3x3 BAS and a 3-feature JGB dataset), which may limit generalizability (author-stated/implied).",
+    "MPS pretraining is restricted to a linear entanglement structure and limited bond dimension (truncation cutoff used), so classical pretraining may not capture complex non-linear/high-order correlations (author-stated).",
+    "Threshold selection for adding edges relies on an empirical elbow rule and manual tuning; no principled selection method was provided (author-stated/implied).",
+    "All-to-all extension can cause overfitting and becomes infeasible for larger problems because of high parameter count and circuit depth (author-stated).",
+    "The experiments used small qubit counts (9 qubits for BAS, 12 qubits for JGB) and low bit-resolution quantization for financial data (4 bits per feature), limiting representational fidelity and scalability (inferred).",
+    "[inferred] Reliance on specific similarity metrics (Hamming for BAS, variation of information for JGB) may make the method sensitive to metric choice and dataset characteristics.",
+    "[inferred] Initializing extension gates near-identity (small normal perturbation) is a heuristic choice that may affect optimization dynamics; sensitivity to this initialization was not explored.",
+    "[inferred] Use of SU(4) parameterized two-qubit gates (15 parameters each) can be resource intensive on hardware; hardware-mapping and compilation costs were not studied.",
+    "[inferred] Only modest MPS bond dimensions were realized (max 5 for BAS, 25 for JGB); effects of larger bond dimensions or different truncation strategies were not analyzed.",
+    "[inferred] Quantization (uniform) and relatively low bit depth for financial inputs may discard important signal and influence results; alternative preprocessing was not evaluated."
+  ],
+  "open_questions": [
+    "How does the circuit extension affect trainability more generally, especially for larger problem sizes and different types of datasets (explicitly posed earlier in the paper)?",
+    "What is the precise mathematical relationship between classical feature similarity, entanglement capacity, and the inductive bias introduced by circuit topology (author-stated as an open/fundamental question)?",
+    "Do the observed benefits of the metric-based extension persist when scaling to larger qubit counts, higher-dimensional datasets, or different application domains (finance beyond JGB)?",
+    "How do circuit depth and repeating extension layers influence trainability, generalization, and potential barren-plateau phenomena?",
+    "How sensitive are results to the choice of similarity metric and the thresholding rule used to add edges?",
+    "How robust is the metric-based extension approach under realistic hardware noise, gate errors, and limited gate connectivity of quantum processors?",
+    "What are principled criteria for choosing the number of extension gates (tradeoff between inductive bias and overfitting) beyond the empirical elbow rule?",
+    "How does the initialization strategy for extension gates (near-identity vs other schemes) impact convergence and final performance?",
+    "Can the metric-based extension be combined with other mitigation strategies (e.g., symmetry exploiting ansatzes, advanced initialization) to further improve trainability?",
+    "How does quantization resolution (bit depth) and preprocessing of financial time series affect the effectiveness of the proposed method?"
+  ],
+  "future_work": [
+    "Run experiments on real quantum hardware to evaluate the impact of noise, gate errors, and compilation overhead (author-stated).",
+    "Establish a mathematical/theoretical connection between classical feature similarity, entanglement capacity, and inductive bias induced by circuit topology (author-stated as fundamental future research).",
+    "Experimentally study the effect of circuit depth, specifically repeating the extension layer and varying depth, on trainability and generalization (author-stated).",
+    "Explore different thresholds and similarity metrics to identify configurations that provide a good tradeoff between inductive bias and circuit shallow-ness (author-suggested).",
+    "Investigate scalability to larger qubit numbers, higher-resolution quantization, and more complex/varied real-world datasets in finance and other domains (implied/author-suggested).",
+    "Analyze sensitivity to initialization schemes for the extension gates and consider alternative parameterizations or gates more amenable to hardware (inferred/author-suggested).",
+    "Study techniques to prevent overfitting when adding many extension parameters (e.g., regularization, architecture search, pruning) and develop principled methods to choose the number of added connections (inferred).",
+    "Assess alternative preprocessing and quantization strategies for financial time series to determine their effect on model performance and learned dependencies (inferred)."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Use MPS (tensor-network) classical pretraining followed by analytic MPS-to-PQC decomposition to initialize a shallow QCBM, reducing training burden on the variational circuit.",
+    "#idea:hybrid-approach — Introduce a metric-based circuit extension heuristic: build a feature-similarity graph (Hamming for BAS, standardized variation of information for JGB) and add two-qubit SU(4) gates along high-similarity edges to encode problem-informed inductive bias.",
+    "#idea:near-term-feasibility — Metric-based extensions achieve comparable or better generalization (lower test MMD) with fewer parameters than all-to-all extensions and outperform random extensions, suggesting inductive bias can improve training efficiency in NISQ regimes.",
+    "#idea:near-term-feasibility — Near-identity initialization of extension gates plus pretrained MPS leads to stable retraining of the extended QCBM, enabling workable experiments at 9–12 qubits on a statevector simulator.",
+    "#idea:hybrid-approach — KAK decomposition of appended SU(4) gates into U(2) and RXX/RYY/RZZ components enables implementation as parameterised two-qubit blocks compatible with PQC training and parameter-shift gradients."
+  ],
+  "contradictions": [],
+  "limitation:qubit-count": true,
+  "limitation:noise": true,
+  "limitation:simulation-only": true
+}

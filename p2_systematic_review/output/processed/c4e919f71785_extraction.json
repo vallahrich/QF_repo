@@ -1,0 +1,199 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "Contains received/accepted/publication dates and a DOI for IEEE Transactions (indicative of a peer-reviewed journal); includes abstract, methods, experimental results (simulations and runs on IBM hardware) and citations, indicating an empirical study.",
+  "title": "Quantum Algorithms for Mixed Binary Optimization Applied to Transaction Settlement",
+  "authors": [
+    "Lee Braine",
+    "Daniel J. Egger",
+    "Jennifer Glick",
+    "Stefan Woerner"
+  ],
+  "year": "2021",
+  "journal_or_venue": "IEEE Transactions on Quantum Engineering",
+  "doi": "10.1109/TQE.2021.3063635",
+  "abstract_summary": "The paper extends variational quantum optimization methods for quadratic unconstrained binary optimization (QUBO) to mixed binary optimization (MBO) problems that combine binary and continuous variables, enabling modeling of inequality constraints via slack variables. The authors propose two heuristics, introduce the transaction settlement problem as a financial application, and evaluate their approaches using classical simulation and IBM quantum hardware.",
+  "methodology_description": "The authors extend variational quantum optimization heuristics to mixed binary optimization (MBO) by mapping MBO problems to QUBO/Ising Hamiltonians via slack variables for inequality constraints and using hybrid quantum-classical optimization. They consider two quantum trial-state approaches: generic VQE-style parameterized circuits and QAOA-style Hamiltonian-derived circuits. The core algorithmic setup uses a parameterized variational circuit (layers of single-qubit Ry rotations interleaved with controlled-Z entanglers), evaluation of the objective via repeated Z-basis measurements, and classical optimization of circuit parameters with COBYLA. Constraints are handled by adding quadratic penalty terms (penalty factor λ) and by introducing nonnegative slack variables that the classical optimizer handles. For problems with slack variables they propose a three-step heuristic cycle: (1) jointly optimize circuit parameters and slack(s), (2) for each sampled bitstring set slacks deterministically to minimize constraint violation, evaluate objective, and pick the best candidate, and (3) fix slacks and re-optimize circuit parameters. Aggregation of samples uses CVaR (Conditional Value at Risk) instead of the full sample mean (α = 25%) to improve optimization. The methodology is evaluated on synthetic transaction-settlement instances (three DvP transactions with/without a collateral/credit facility and one instance of seven payments among six parties) using both classical simulation (Qiskit) and real hardware (ibmq_valencia 5-qubit), with readout-error mitigation (Qiskit Ignis). Key hyperparameters reported include a quadratic penalty λ = 10^3, sample size 8192 shots per evaluation, variational depths d = 2 (first two problems) and d = 3 (third problem), and COBYLA iterations (e.g., 150 for first two problems; 300 or cycles of 100+100 for the third). Results are reported as sampled bitstring probability distributions, objective-value progression, and frequency/probability of optimal feasible solutions.",
+  "algorithms_used": [
+    "VQE",
+    "QAOA-style variational ansatz",
+    "CVaR aggregation",
+    "COBYLA (classical optimizer)",
+    "Slack-variable handling heuristic (three-step)"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "Qiskit Ignis"
+  ],
+  "experimental_setup": "Classical simulation using Qiskit simulator and experiments on IBM Quantum hardware (ibmq_valencia 5-qubit). Readout-error mitigation applied via Qiskit Ignis. For each trial-state evaluation 8192 measurement shots were used. Variational circuits: Ry single-qubit rotations with controlled-Z entangling blocks; depths: d=2 (3-qubit instances), d=3 (7-qubit instance). Penalty factor λ = 1e3. CVaR aggregation with α = 0.25. COBYLA used as classical optimizer with iterations e.g. 150 for first two instances and multiple strategies (300, or 100+100 cycles) for the third.",
+  "dataset_used": "Synthetic transaction settlement problem instances created by the authors: (1) three delivery-versus-payment (DvP) transactions among three parties (no credit/collateral facility); (2) same three transactions with a simplified shared credit-and-collateral facility (CCF) for one party; (3) seven payments among six parties (single currency). No external/real market data were used.",
+  "experiment_input": {
+    "instances": [
+      {
+        "id": "instance_1",
+        "description": "Three DvP transactions among three parties (currency and security accounts). Binary decision variables x1,x2,x3 indicate settlement. Constraints as in equation (12) of the paper; objective maximize number of settled trades.",
+        "qubits": 3,
+        "problem_size_notes": "3 binary variables; account vectors of dimension 2 (currency, security)."
+      },
+      {
+        "id": "instance_2",
+        "description": "Three DvP transactions among three parties with a simplified credit-and-collateral facility (CCF) shared by two accounts of party P1. Constraints as in equation (13).",
+        "qubits": 3,
+        "problem_size_notes": "3 binary variables plus continuous credit variables (handled classically via slack/constraints)."
+      },
+      {
+        "id": "instance_3",
+        "description": "Seven payments among six parties (single currency). Constraints as in equation (14). Objective maximize number of settled payments.",
+        "qubits": 7,
+        "problem_size_notes": "7 binary variables; some party constraints always satisfied and removable."
+      }
+    ],
+    "preprocessing": "Inequality constraints converted to equalities via nonnegative slack variables. Equality constraints incorporated as quadratic penalty terms scaled by λ. No additional data preprocessing; problem definitions are toy/synthetic and specified in the paper equations."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Formulate transaction-settlement MBO instance; introduce slack variables for inequalities and convert to unconstrained optimization by adding quadratic penalty terms (weight λ).",
+      "Map binary variables to Ising/QUBO form and associate Hamiltonian H(y) per continuous variables (when relevant).",
+      "Choose variational ansatz: Ry rotations layers interleaved with controlled-Z entanglers; set depth d (d=2 for 3-qubit problems, d=3 for 7-qubit problem).",
+      "Initialize classical optimizer (COBYLA) and choose aggregation function CVaR with α=0.25.",
+      "For each classical optimization iteration: prepare parameterized quantum circuit, sample 8192 times in Z-basis, apply readout-error mitigation, compute CVaR of sample energies/objectives, provide objective to COBYLA to update parameters.",
+      "For problems with slack variables, optionally apply the three-step slack heuristic: (1) run preset number of optimizer iterations jointly over parameters and slacks and store samples; (2) for each sampled bitstring set slacks deterministically to minimize constraint violation and select best candidate; (3) fix selected slacks and re-optimize circuit parameters for preset iterations; repeat cycles if configured.",
+      "Track and report sampled bitstring distributions, feasibility classification, and objective-value progression over iterations. Compare simulator and hardware runs where applicable."
+    ],
+    "parameters_and_iterations_description": "Penalty λ=1e3. CVaR α=0.25. Shots per circuit evaluation = 8192. Variational depth d=2 for first two instances, d=3 for third. COBYLA iterations: 150 (first two instances), third instance used either 300 direct COBYLA iterations or a cycle of 100 joint + 100 refine iterations when using slack heuristic. Readout-error mitigation applied for hardware experiments."
+  },
+  "experiment_output": {
+    "output_format": "Probability distributions over measured bitstrings; objective value (number of settled transactions) associated with each bitstring; feasibility labeling (feasible/infeasible) based on constraint satisfaction; objective-value progression during classical optimization iterations.",
+    "metrics_reported": [
+      "Probability of sampling the optimal feasible bitstring",
+      "Distribution of top-k sampled solutions and their feasibility",
+      "Objective value progression (best sampled objective vs. iterations)"
+    ],
+    "baselines": "No quantitative classical baseline reported besides mention that a greedy algorithm could be suboptimal; comparison primarily between classical simulation and IBM hardware runs and between optimization runs with vs without slack-handling heuristic."
+  },
+  "experiment_parameters": {
+    "penalty_lambda": 1000,
+    "CVaR_alpha": 0.25,
+    "shots_per_evaluation": 8192,
+    "variational_ansatz": "Single-qubit Ry layers interleaved with controlled-Z entangling blocks",
+    "depths_used": {
+      "3_qubit_instances": 2,
+      "7_qubit_instance": 3
+    },
+    "qubits": {
+      "instance_1": 3,
+      "instance_2": 3,
+      "instance_3": 7
+    },
+    "classical_optimizer": "COBYLA",
+    "optimizer_iterations": {
+      "instance_1_&_2": 150,
+      "instance_3_direct": 300,
+      "instance_3_with_slack_heuristic": "100 (joint) + 100 (refine) per cycle"
+    },
+    "readout_error_mitigation": true,
+    "aggregation_function": "CVaR"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit simulator (statevector/sampling backend via Qiskit)",
+    "quantum_processor": "ibmq_valencia 5-qubit (superconducting processor, linear connectivity)",
+    "cloud_provider": "IBM Quantum (accessed via Qiskit)",
+    "error_mitigation": "Qiskit Ignis readout-error mitigation",
+    "notes": "When transposing logical gates to Valencia connectivity SWAP gates were introduced for nonadjacent two-qubit gates; circuit-level optimizations (e.g., CNOT cancellations) were noted as possible but not fully detailed."
+  },
+  "reproducibility_notes": "Implementation was done in Qiskit and Qiskit Ignis and the paper provides explicit problem formulations (equations 12-14), variational-circuit structure, and most hyperparameter values (λ, CVaR α, shots, depths, optimizer). Hardware runs require access to IBM Quantum (ibmq_valencia) and the ability to apply readout-error mitigation. The authors did not publish a code or data repository in the paper text; however the described settings and synthetic instance specifications are sufficient to reproduce experiments given access to Qiskit and IBM Quantum backends. Reproducibility is therefore partial: algorithmic details are provided, but the absence of a public codebase or raw measurement dumps means exact replication (including transpilation specifics and exact random seeds) may be nontrivial.",
+  "key_findings": [
+    "[speculative] Variational quantum optimization algorithms for QUBO can be extended in principle to mixed binary optimization (MBO) problems by treating continuous variables explicitly and mapping fixed continuous-variable instances to Ising Hamiltonians.",
+    "[supported] The authors propose concrete hybrid quantum-classical heuristics (VQE/QAOA-based frameworks) to solve MBO instances by alternating quantum parameter optimization and classical handling of continuous variables.",
+    "[supported] Introducing slack (continuous) variables to convert inequality constraints into equality constraints allows modeling of inequality constraints within the proposed MBO quantum-heuristic framework.",
+    "[supported] A simple heuristic that explicitly derives slack-variable values from sampled binary solutions and then re-optimizes quantum parameters helps escape local minima in the joint continuous–quantum parameter landscape.",
+    "[supported] The proposed approach was tested on a transaction settlement application: three DvP (delivery-versus-payment) transaction instances and one seven-payment instance (financial settlement problems) were mapped to the MBO formulation and solved.",
+    "[supported] For the two small 3-transaction DvP instances, classical simulation and runs on IBM's 5-qubit 'ibmq_valencia' device produced similar output distributions with the optimal bitstring (011) sampled with the highest probability.",
+    "[supported] For the seven-payment instance (6 parties, 7 payments), classical optimization without explicit slack-variable handling got stuck in a suboptimal region (objective saturating at 1), while the slack-variable heuristic found a global-optimal solution with objective value 4 and sampled an optimal bitstring with >40% probability in simulation.",
+    "[speculative] The paper emphasizes that any potential practical quantum advantage for combinatorial optimization heuristics is likely problem-size dependent and suggests that advantages, if present, may appear for larger problems (citing other work which suggests >100 variables).",
+    "[speculative] The authors note that current noisy quantum hardware limits circuit depth and therefore algorithmic performance, implying that hardware improvements (coherence, connectivity, gates) will be necessary for larger-scale practical impact."
+  ],
+  "results_summary": "The authors extend variational quantum optimization methods from QUBO to mixed binary optimization by explicitly treating continuous variables (e.g., slack variables for inequalities) and propose hybrid quantum-classical heuristics to optimize over quantum parameters and continuous variables. They apply these methods to transaction-settlement examples: two 3-transaction DvP instances and a 7-payment instance. On the small DvP examples, both simulator and IBM's 5-qubit device sampled the optimal solution most frequently. For the 7-payment case, a slack-variable handling heuristic was critical: without it the classical optimizer remained trapped in a suboptimal solution, whereas with the heuristic the global optimum was found in simulation and sampled with substantial probability. The paper reports method details (penalty scaling, CVaR aggregation, optimizer settings) and emphasizes that while the approach extends modeling capabilities, practical large-scale quantum advantage remains speculative and contingent on future hardware and algorithmic improvements.",
+  "performance_claims": [
+    "[supported] Three-transaction DvP instances: the optimal bitstring (011) was sampled with the highest probability both in classical simulation and on IBM ibmq_valencia (5 qubits).",
+    "[supported] Seven-payment instance: when not using the slack-variable heuristic, COBYLA with 300 iterations got stuck at objective value 1 (suboptimal); with the explicit slack-variable heuristic (one cycle of 100 iterations joint + 100 iterations re-optimizing quantum parameters) the optimizer reached the global optimal objective value 4 and sampled an optimal bitstring with >40% probability in simulation.",
+    "[supported] Experimental and simulation settings reported: CVaR aggregation with alpha = 25%; penalty factor lambda = 10^3 for constraints; 8192 measurement shots per trial wavefunction; variational Ry circuit depths used: d = 2 for the 3-transaction instances, d = 3 for the 7-payment instance; COBYLA used as the classical optimizer (examples: 150 iterations for 3-transaction runs, 300 iterations or cycles totaling 200 iterations for 7-payment).",
+    "[supported] Hardware used: IBM 'ibmq_valencia' 5-qubit processor for two small instances, with readout-error mitigation applied."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper does not demonstrate a quantum computational advantage; it presents methodological extensions (MBO mapping and heuristics) and small-instance empirical tests (simulation and runs on 5-qubit hardware). The authors explicitly state that quantum algorithms are not yet ready for market-scale use and note, citing other literature, that potential advantage for combinatorial heuristics is problem-size dependent and may arise only for substantially larger problem sizes (e.g., >100 variables). Thus claims of advantage are presented as speculative and contingent on future hardware and algorithmic improvements.",
+  "limitations": [
+    "Quantum algorithms are not yet mature enough for large-scale, market-place deployment (author-stated).",
+    "The proposed hybrid quantum-classical algorithms are heuristics and lack O-notation style complexity analysis or formal runtime guarantees (author-stated).",
+    "Empirical quantum advantage is uncertain and expected, if present, only for problem sizes likely above ~100 variables (author-stated).",
+    "Energy landscapes for VQE/QAOA are highly nonconvex with many local minima, making optimization challenging and sensitive to classical optimizer performance (author-stated).",
+    "Increasing algorithm depth improves solution quality but produces deep quantum circuits that may exceed coherence times on noisy hardware (author-stated).",
+    "Mapping problems to hardware qubit connectivity requires SWAP gates, increasing circuit depth and error accumulation (author-stated).",
+    "The methods in the paper exploit very little problem structure; this generality limits algorithmic efficiency and potential performance (author-stated).",
+    "Demonstrations are limited to small problem instances and small (5- to 7-qubit) hardware; scalability to realistic, industrial-scale transaction batches is unproven [inferred].",
+    "The experiments rely on readout-error mitigation and classical simulation; results on noisy hardware may not generalize to larger, noisier devices [inferred].",
+    "Handling of inequality constraints uses slack variables and large quadratic penalty factors (λ); selecting penalty magnitudes can be delicate and may affect performance or solution feasibility [inferred].",
+    "The slack-variable heuristic requires tuning of multiple algorithmic parameters (number of cycles, iterations per cycle) and its robustness across different problem instances is not fully characterized [inferred].",
+    "The formulation assumes that the order in which transactions are settled within a batch can be ignored; this assumption may not hold for all real-world settlement systems and could limit applicability [inferred].",
+    "Only a subset of possible continuous-variable structures (i.e., those fitting the presented MBO framework) are handled; more general constraints or variable interactions may be difficult to model directly [inferred].",
+    "Noise, gate errors, and limited connectivity of current quantum processors constrain empirical validation and may bias reported performance on small instances [inferred]."
+  ],
+  "open_questions": [
+    "Can one empirically demonstrate a quantum advantage for MBO/QUBO-like financial problems, and at what problem sizes or under what conditions would such an advantage materialize (author-stated)?",
+    "Under what structural assumptions (e.g., convexity in continuous variables) can one derive algorithms with provable convergence guarantees that combine quantum components (author-stated)?",
+    "How best to incorporate and exploit problem-specific structure to design more efficient variational forms or hybrid algorithms (author-stated)?",
+    "How should large penalty weights (λ) for constraint enforcement be chosen or adapted to balance constraint satisfaction and numerical stability/performance (inferred)?",
+    "How scalable and robust is the slack-variable heuristic for larger and more complex MBO instances, including many continuous variables and multiple inequality constraints (author-stated/inferred)?",
+    "What are the effects of hardware connectivity, gate fidelities, and noise on the performance of QAOA/VQE for transaction settlement and similar financial applications (author-stated/inferred)?",
+    "How to design classical optimizers, multistart strategies, or reinforcement-learning-based approaches that reliably navigate the nonconvex energy landscapes of variational quantum algorithms (author-stated)?",
+    "How effective are warm-start techniques (e.g., SDP or other relaxations) when combined with quantum heuristics for MBO in finance, and how to best integrate them (author-stated/inferred)?",
+    "How to extend the MBO quantum approach to handle transaction-order-dependent settlement rules and other domain-specific constraints not captured by the current equality/inequality modeling (inferred)?",
+    "What is the best way to scale experimental validation beyond toy instances (e.g., larger batches, realistic market data) and to evaluate end-to-end business impact in settlement systems (author-stated/inferred)?"
+  ],
+  "future_work": [
+    "Study problem subclasses (e.g., convexity in continuous variables) to derive algorithms that exploit structure and may provide convergence guarantees (author-stated).",
+    "Develop and test problem-specific variational forms (e.g., tailored QAOA mixers or ansätze) to improve performance for structured MBO instances (author-stated).",
+    "Empirically investigate the potential quantum advantage on larger problem sizes (noting research suggesting >100 variables may be required) (author-stated).",
+    "Explore reinforcement learning, multistart methods, and other advanced classical strategies to better navigate the nonconvex optimization landscape of variational algorithms (author-stated).",
+    "Leverage novel hardware capabilities—such as tunable couplers and pulse-level optimizations—to improve circuit efficiency and performance of quantum heuristics (author-stated).",
+    "Improve warm-start techniques and hybrid classical-quantum workflows (e.g., using relaxations or SDP initializations) to bootstrap quantum optimization (author-stated/referenced).",
+    "Conduct larger-scale empirical studies and hardware experiments to assess scalability, noise resilience, and real-world applicability for transaction settlement (author-stated/inferred).",
+    "Refine and generalize the slack-variable heuristic (and related methods) for larger MBO problems with multiple continuous variables and complex inequality constraints (author-stated/inferred).",
+    "Investigate selection and adaptation strategies for penalty weights (λ) in penalty-based MBO-to-QUBO reductions to improve robustness (inferred).",
+    "Study integration of domain-specific constraints (e.g., transaction ordering, regulatory rules) into the MBO quantum framework to broaden real-world applicability (inferred)."
+  ],
+  "topic_tags": [
+    "risk-management"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "variational-nisq",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Extend variational QAOA/VQE-style ansatzes to mixed-binary optimization (MBO) by mapping inequalities to equalities with nonnegative slack variables and QUBO/Ising formulations.",
+    "#idea:hybrid-approach — Use a hybrid quantum-classical loop (parameterized Ry+CZ circuits, COBYLA optimizer) with a three-step slack-variable heuristic: joint optimize, deterministic slack assignment per sampled bitstring, then re-optimize fixed slacks.",
+    "#idea:near-term-feasibility — Empirical evaluation on toy transaction-settlement instances (3- and 7-qubit problems) via Qiskit simulation and runs on IBM ibmq_valencia with readout-error mitigation shows the method can produce feasible optimal bitstrings for small cases.",
+    "#idea:hybrid-approach — Use CVaR aggregation (α=0.25) instead of full mean and large shot counts (8192) per circuit evaluation to stabilise optimization and find high-quality candidates.",
+    "#limitation:qubit-count — Experiments limited to 3 and 7 qubits; approach is not demonstrated on larger, practical settlement networks.",
+    "#limitation:noise — Hardware results required readout-error mitigation and show degraded sampled distributions relative to simulator runs, indicating sensitivity to current NISQ noise.",
+    "#limitation:data-encoding — Continuous/inequality variables are handled via slack variables and large quadratic penalty (λ=1e3), increasing classical overhead and problem conditioning; this encoding choice may limit scaling and solution quality."
+  ],
+  "contradictions": [
+    "contradiction:scalability — The paper demonstrates the approach only on very small (3- and 7-qubit) toy settlement instances and explicitly relies on large shot counts, heavy penalty tuning, and slack heuristics; these results contradict any implication that the proposed NISQ variational MBO approach currently scales to realistic transaction-settlement networks.",
+    "contradiction:scalability — Although hardware runs are reported, the need for readout-error mitigation and the gap versus simulator outcomes indicate that current hardware/noise levels prevent direct extrapolation to larger, practically relevant problems."
+  ]
+}

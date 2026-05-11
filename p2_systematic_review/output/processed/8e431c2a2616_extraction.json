@@ -1,0 +1,185 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "The document shows journal metadata (Received/Revised/Accepted/Published dates, Academic Editor, DOI, Hindawi journal volume and Article ID) indicating peer review and publication. It presents an applied software development with implemented algorithms, examples and comparative results (empirical evaluation), and cites literature; therefore it is a peer-reviewed empirical article.",
+  "title": "BQ-Bank: A Quantum Software for Finance and Banking",
+  "authors": [
+    "Hang Li",
+    "Tonghao Xing",
+    "Shijie Wei",
+    "Zhiyuan Liu",
+    "Jiang Zhang",
+    "Gui-Lu Long"
+  ],
+  "year": "2023",
+  "journal_or_venue": "Hindawi (Article ID 7810974)",
+  "doi": "10.1155/2023/7810974",
+  "abstract_summary": "The paper introduces BQ-Bank, a quantum software platform for finance and banking that provides modules for option pricing, option revenues, Value at Risk (VaR), and portfolio optimization. It describes quantum implementations using quantum amplitude estimation and QAOA, supports execution on real quantum hardware or classical emulators, includes classical Monte Carlo baselines for comparison, and reports simulation results indicating improved accuracy or performance of the quantum approaches over classical counterparts.",
+  "methodology_description": "The authors developed BQ-Bank, a web-accessible quantum software platform for finance and banking that implements four modules: option pricing, option revenues, Value-at-Risk (VaR), and portfolio optimization. Methodologically the work integrates known quantum algorithms into finance workflows: quantum amplitude estimation (QAE) / amplitude-amplification-based Monte Carlo for option pricing and VaR, and a variational quantum algorithm (QAOA) for combinatorial portfolio selection combined with classical continuous optimization for final asset weights. For option pricing and revenues they encode discretized expiration-price distributions into quantum amplitudes using parameterized quantum circuits (PQC), encode payoffs via ancilla rotations, and apply amplitude estimation to extract expected payoff which is discounted to present value. For VaR they discretize the loss distribution into basis states, implement an indicator function as a controlled operation, and use amplitude estimation to recover cumulative probabilities to determine the quantile (VaR). For portfolio optimization they map binary asset-selection variables to qubit operators (xi -> (I - σz_i)/2), construct a problem Hamiltonian including penalty terms to enforce budget constraints, run QAOA (p-layer ansatz) with a classical optimizer to obtain a distribution over candidate bitstrings, select high-probability bitstrings as candidate portfolios, and then refine continuous allocations using a classical solver (trust-constr). Each quantum result is compared against classical baselines (Black–Scholes analytic formula, classical Monte Carlo, H-VaR / P-VaR / MC-VaR, and classical optimization). The paper reports example runs (simulated) demonstrating that the quantum-method outputs are closer to analytical or parametric baselines than plain Monte Carlo at comparable sampling levels.",
+  "algorithms_used": [
+    "Quantum Amplitude Estimation (QAE)",
+    "Amplitude-amplification-based Monte Carlo",
+    "Parameterized Quantum Circuits (PQC)",
+    "Quantum Approximate Optimization Algorithm (QAOA)",
+    "Variational Quantum Algorithm (VQA)",
+    "Classical Monte Carlo",
+    "Black–Scholes analytic pricing",
+    "Historical VaR (H-VaR)",
+    "Parametric VaR (P-VaR)",
+    "Classical optimizer COBYLA",
+    "Classical optimizer trust-constr"
+  ],
+  "frameworks": [],
+  "experimental_setup": "",
+  "dataset_used": "Preset / synthetic market data within the BQ-Bank platform. Examples discussed include European-style option parameters (S, K, r, T, σ) under Black–Scholes assumptions and a VaR example combining two assets (China Bao An and Ping An Bank, holding 10 of each) modeled with a normal return distribution, 30-day horizon and 95% confidence. No public market dataset or external data repository is specified.",
+  "experiment_input": {
+    "source": "Internal/preset examples in BQ-Bank (not linked to a public dataset); paper states preset data and illustrative examples.",
+    "assets_example": [
+      {
+        "name": "China Bao An",
+        "quantity": 10
+      },
+      {
+        "name": "Ping An Bank",
+        "quantity": 10
+      }
+    ],
+    "distribution_assumptions": "Normal (lognormal/Black–Scholes) for asset returns; geometric Brownian motion used in Monte Carlo descriptions.",
+    "sampling": "Classical Monte Carlo sample count set to 2^n where n is number of qubits; reported sampling experiments up to at least 512 samples.",
+    "preprocessing": "Discretization of continuous price / loss distributions into M = 2^m grid points and amplitude-encoding into n-qubit states; payoff normalization into [-1,1] prior to ancilla rotation."
+  },
+  "experiment_process": {
+    "option_pricing_pipeline": [
+      "Discretize/ sample expiration-date underlying asset price distribution (Black–Scholes / GBM).",
+      "Prepare amplitude-encoded quantum state |ψ(θ)⟩ over n qubits via parameterized circuit to represent probabilities pi.",
+      "Add indicator qubit(s) and encode payoff f(S) into an ancilla rotation using a normalized mapping (˜f in [-1,1]) and small-angle rotation parameter c.",
+      "Apply Quantum Amplitude Estimation (QAE) to estimate probability P corresponding to expectation E[f(S)], then compute present value e^{-rT} E[f(S)].",
+      "Compare result with Black–Scholes analytic value and classical Monte Carlo (2^n samples)."
+    ],
+    "VaR_pipeline": [
+      "Discretize loss / profit distribution into M = 2^m bins and amplitude-encode into m qubits.",
+      "Define indicator function f(i) that is 1 for bins ≤ k and 0 otherwise via a controlled operation.",
+      "Use QAE to estimate cumulative probability ∑_{i ≤ k} p_i; find smallest k with cumulative ≥ α to produce VaR_{α} with O(1/M) precision.",
+      "Compare with H-VaR, P-VaR and MC-VaR."
+    ],
+    "portfolio_optimization_pipeline": [
+      "Define mean-variance combinatorial objective with budget constraint and penalty term; map binary xi to qubit operators xi → (I - σz_i)/2 to form problem Hamiltonian H_C.",
+      "Partition fixed-must-buy assets (min_x > 0) off, leaving n' qubits for selection; set mixing Hamiltonian H_B = Σ σx.",
+      "Prepare p-layer QAOA ansatz |φ(γ,β)⟩ = U(γ,β)|+⟩^{⊗n'}, with U alternating e^{-iγ H_C} and e^{-iβ H_B}.",
+      "Classically optimize parameters (using COBYLA) to minimize ⟨φ|H_C|φ⟩; sample resulting state to obtain candidate bitstrings (asset subsets).",
+      "Post-process chosen subset(s) classically to determine continuous allocations using a constrained classical optimizer (trust-constr)."
+    ],
+    "common_parameters_notes": "Penalty parameter A chosen large to enforce constraints; rotation scale c in ancilla rotations chosen small to allow linearization sin^2(c ˜f + π/4) ≈ c ˜f + 1/2."
+  },
+  "experiment_output": {
+    "formats": "Numerical estimates and plots/histograms: option price estimates, expected revenues, VaR values across sampling points, portfolio selection lists and historical return curves.",
+    "metrics_and_comparisons": "Compare quantum outputs against analytical Black–Scholes (when available) and classical Monte Carlo estimates; for VaR compare against H-VaR and P-VaR; for portfolio optimization compare objective values and resulting return curves. Reported comparisons emphasize closeness to analytic/parametric baselines and monotonic convergence with sampling/qubit increases.",
+    "example_outputs": "Histograms of option price estimates from Black–Scholes, Monte Carlo, and quantum algorithm; curves of VaR estimates vs sampling points for H-VaR, P-VaR, MC-VaR and quantum method; optimal portfolio composition and historical net-worth/return curve."
+  },
+  "experiment_parameters": {
+    "n_qubits": "user-controllable variable 'n' (examples use values that imply sampling up to 512 points)",
+    "sampling_points": "classical MC uses 2^n samples; quantum discretization uses M = 2^m bins",
+    "QAOA_layers_p": "unspecified (p variable; p-layer ansatz described but concrete p not reported)",
+    "rotation_scale_c": "small (chosen to justify small-angle approximation); no numeric value provided",
+    "penalty_A": "''large'' to enforce budget constraint; numeric value not specified",
+    "VaR_confidence_alpha": 0.95,
+    "VaR_horizon_days": 30,
+    "optimizer_for_QAOA": "COBYLA (classical)",
+    "optimizer_for_proportions": "trust-constr (classical)",
+    "shots": "not specified",
+    "iterations": "not specified"
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "The authors state BQ-Bank is available at a project URL (http://biwonq.baqis.ac.cn/#/pages/fnance) and that data sets generated/used are available from the corresponding author upon reasonable request. The paper does not provide code, explicit circuit parametrizations, numeric values for key parameters (e.g., QAOA depth p, rotation scale c, penalty A), nor details about simulator/QPU backends or shot counts. As a result, while high-level algorithmic steps and example settings (e.g., VaR: 2 assets, 10 units each, 95% confidence, 30 days) are described, reproducing numerical results would require contacting the authors for datasets and implementation details or using the web interface.",
+  "key_findings": [
+    "[speculative] Quantum computing has the potential to bring a revolution to finance and banking and produce disruptive innovations in the financial industry.",
+    "[supported] The authors developed a software platform, BQ-Bank, implementing four finance modules (option pricing, option revenues, Value at Risk, and portfolio optimization) with a web GUI and both quantum and classical backends.",
+    "[supported] In the paper’s example experiments (simulations/emulations) the quantum amplitude estimation (QAE)-based option pricing algorithm produced estimates closer to the Black–Scholes benchmark than a classical Monte Carlo run with the same nominal sampling size.",
+    "[supported] In the paper’s example for expected option revenues, the quantum algorithm result was closer to the Black–Scholes benchmark than the classical Monte Carlo result for the tested instance.",
+    "[supported] The authors implemented a quantum VaR method based on discretizing the loss variable and using amplitude estimation to obtain cumulative probabilities; in their example the quantum VaR approached the parametric VaR (P-VaR) faster than classical Monte Carlo and matched P-VaR at 32 or more sampling points in that instance.",
+    "[speculative] The paper states that QAE provides a quadratic speedup in estimation error (O(1/M) vs classical Monte Carlo O(1/sqrt(M))) when estimating expected values/probabilities, and thus a quadratic speedup for MC-VaR precision.",
+    "[speculative] The authors propose using QAOA (a variational algorithm) to solve the combinatorial mean-variance portfolio selection (binary selection with budget constraint) and claim that combining QAOA for selection with classical continuous optimization for proportions reduces overall classical difficulty.",
+    "[supported] BQ-Bank provides classical Monte Carlo and Black–Scholes implementations alongside quantum routines so users can directly compare results.",
+    "[speculative] The software is claimed to be runnable on real quantum hardware (superconducting systems) as well as on classical emulators via an interface.",
+    "[speculative] The paper implies that their quantum solutions 'usually outperform' conventional algorithms (general claim), based mainly on their small-scale example simulations."
+  ],
+  "results_summary": "The paper presents BQ-Bank, a web-accessible software platform that implements four finance modules (option pricing, option revenues, Value at Risk, and portfolio optimization) with both classical and quantum algorithm backends. Using quantum amplitude estimation (QAE) for option pricing and VaR and QAOA for combinatorial portfolio selection, the authors demonstrate via small-scale simulations/emulations that their quantum routines produce results closer to analytical or parametric benchmarks (Black–Scholes, P-VaR) than a classical Monte Carlo baseline at the tested sampling sizes. The work is primarily an engineering/system demonstration with illustrative numerical examples; broader claims about general superiority or industry disruption are presented but not established at scale or on noisy hardware.",
+  "performance_claims": [
+    "Option pricing example: Black–Scholes = 0.0217, Monte Carlo = 0.0198, Quantum = 0.0209 (quantum closer to Black–Scholes).",
+    "Expected option revenues example: Black–Scholes = 0.0147, Monte Carlo = 0.0133, Quantum = 0.0141 (quantum closer to Black–Scholes).",
+    "VaR example: quantum VaR converges to P-VaR more quickly with sampling and is exactly equal to P-VaR at 32 or larger sampling points in the tested instance.",
+    "Classical Monte Carlo sampling used in comparisons was set to 2^n where n is the number of qubits used in the quantum algorithm (explicit mapping used in experiments)."
+  ],
+  "quantum_advantage_claim": "demonstrated",
+  "quantum_advantage_detail": "The paper demonstrates, via small-scale simulations/emulations on their BQ-Bank platform, that QAE-based estimators and a QAOA-based workflow produced closer results to analytical/parametric benchmarks than the classical Monte Carlo baselines in their tested instances. The demonstration is limited to illustrative numerical examples (emulators/simulations) and does not establish large-scale, hardware-based, or provable practical advantage across broader problem instances.",
+  "limitations": [
+    "Author-stated: Black–Scholes model assumptions (underlying returns follow a normal distribution, constant risk-free rate, unlimited borrowing) which may not hold in real markets",
+    "Author-stated: Monte Carlo and quantum algorithms involve randomness so results vary run-to-run (statistical variance)",
+    "Author-stated: Option-pricing quantum routine uses an approximation sin^2(x+π/4) ≈ x+1/2 that requires the scaling parameter c to be sufficiently small (approximation error depends on c)",
+    "Author-stated: VaR discretization has precision O(M^{-1}) (sampling-qubit-limited precision) and the quantum approach relies on discretization of the random variable",
+    "Author-stated: QAOA is an approximate/variational method; finite circuit depth p may prevent reaching the true global optimum (quality depends on p and optimization of parameters)",
+    "Author-stated: Portfolio-optimization examples use simplifying assumptions (all assets same price = 1; budget is integer multiple and fully invested), which restrict realism",
+    "[inferred] Practical experiments appear to be classical emulations/simulations; the paper does not present extensive results from real quantum hardware, so hardware noise and device constraints are not empirically evaluated",
+    "[inferred] Scalability to realistic problem sizes (large numbers of assets, high-resolution discretizations, more qubits) is not demonstrated and may be limited",
+    "[inferred] Efficient state preparation (encoding arbitrary asset distributions into amplitudes) is assumed via parameterized circuits but the cost, fidelity, and scalability of that step are unresolved",
+    "[inferred] Comparisons are mainly to Black–Scholes and plain Monte Carlo; performance against advanced classical techniques (variance reduction, quasi-Monte Carlo, sophisticated solvers) is not reported",
+    "[inferred] Resource and runtime overheads (quantum circuit depth, number of shots, classical optimization loops, communication between classical and quantum parts) and their impact on end-to-end speedup are not quantified",
+    "[inferred] Sensitivity to hyperparameters (number of qubits n, discretization M, QAOA depth p, penalty A, optimizer choices) and stability of the hybrid optimization are not fully explored",
+    "[inferred] The methods assume simplified market models (e.g., geometric Brownian motion, Gaussian shocks); handling of heavy tails, jumps, or complex dependencies is not addressed",
+    "[inferred] No discussion of regulatory, data-privacy, or operational challenges for deploying quantum software in production banking environments"
+  ],
+  "open_questions": [
+    "How do the presented quantum algorithms perform on real, noisy quantum hardware (NISQ devices) for the same finance tasks?",
+    "What are the empirical effects of device noise and limited qubit counts on accuracy and runtime for option pricing, VaR, and portfolio optimization?",
+    "How can arbitrary and high-dimensional asset price distributions be prepared efficiently and accurately on quantum hardware (state preparation costs and fidelity)?",
+    "How does the quantum approach compare, in accuracy and wall-clock time, to advanced classical methods (e.g., quasi-Monte Carlo, importance sampling, variance-reduction techniques, industrial optimization solvers)?",
+    "What is the practical end-to-end resource trade-off (qubits, circuit depth, number of measurements, classical optimization iterations) required to obtain a useful advantage for real-world problem sizes?",
+    "How sensitive are results to algorithm hyperparameters (number of qubits/discretization M, QAE/QAOA parameters, c in amplitude encoding, QAOA depth p) and what are reliable tuning strategies?",
+    "Can the quantum algorithms be extended to more realistic financial models (stochastic volatility, jumps, non-Gaussian returns, multi-factor dependencies) and how will that affect complexity?",
+    "How to incorporate practical market features and constraints into the quantum portfolio model (varying asset prices, transaction costs, minimum/maximum positions, cardinality constraints) beyond the simplifying assumptions used here?",
+    "What error-mitigation or robustness techniques are required to make the quantum estimations (prices, VaR) reliable for regulatory or production use?",
+    "Does the quadratic speedup in estimation (QAE) translate into a net advantage once all overheads (state preparation, measurement, classical postprocessing) are included in realistic settings?",
+    "How well do variational hybrid methods (QAOA) scale with increasing asset counts and with more complex cost Hamiltonians (higher-order interactions, realistic covariance structure)?",
+    "What are the implications for risk management and model validation when quantum-based estimates are used in place of classical ones?"
+  ],
+  "future_work": [],
+  "topic_tags": [
+    "portfolio-optimization",
+    "derivative-pricing",
+    "risk-management",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "amplitude-estimation",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — QAE-based amplitude-amplification Monte Carlo is implemented for option pricing and VaR and is reported (in simulation) to produce estimates closer to analytic/parametric baselines than plain Monte Carlo at comparable sample counts.",
+    "#idea:quantum-advantage — QAOA is used to solve combinatorial portfolio selection (binary inclusion) and, when combined with classical continuous optimization, yields candidate portfolios whose evaluated returns/objectives are competitive with classical baselines in the reported examples.",
+    "#idea:near-term-feasibility — The platform targets NISQ-style algorithms (QAOA, PQCs) and reports experiments on classical emulators, arguing applicability in near-term settings.",
+    "#idea:hybrid-approach — Workflows explicitly use hybrid schemes: PQC amplitude-encoding + QAE for expectations, QAOA with classical optimizers (COBYLA) for discrete search, and classical post-processing (trust-constr) to refine continuous weights.",
+    "#idea:hybrid-approach — The software is presented as an accessible web platform (BQ-Bank) integrating quantum modules with classical baselines for direct comparison and practitioner use.",
+    "#limitation:simulation-only — All reported empirical results are from simulations/presets (no public market datasets and no presented real-QPU experimental data), limiting claims about real-hardware performance.",
+    "#limitation:data-encoding — Continuous distributions are discretized to M=2^m grid points and amplitude-encoded via PQCs, highlighting potentially large overheads for realistic resolution.",
+    "#limitation:qubit-count — Discretization into 2^m states implies qubit requirements scale with desired resolution; reported experiments use small sample/qubit sizes (e.g., up to 512 samples), indicating limited problem size.",
+    "#limitation:noise — The work does not report real-hardware noisy-device experiments or error-mitigation results, so hardware noise impact is unquantified."
+  ],
+  "contradictions": [
+    "The paper claims improved accuracy/performance of quantum methods over classical Monte Carlo at comparable sampling levels, but the evidence is from small-scale simulated, synthetic examples without real-QPU experiments or real-market data, which undermines generalization to realistic, noisy, large-scale financial problems.",
+    "While the platform presents QAOA for portfolio selection, the approach relies on classical post-selection and continuous refinement; the claimed end-to-end quantum benefit is therefore conflated with hybrid classical steps, leaving open whether the quantum portion alone provides practical advantage at scale."
+  ]
+}

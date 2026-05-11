@@ -1,0 +1,234 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document contains an arXiv identifier (arXiv:2510.01129v1) and typical preprint structure (abstract, methods, results, references) with no journal or conference venue indicated. Affiliations and an industry disclaimer further suggest a publicly posted manuscript rather than a peer-reviewed publication.",
+  "title": "Credit Default Prediction with Projected Quantum Feature Models and Ensembles",
+  "authors": [
+    "Andras Ferenczi",
+    "Dagen Wang",
+    "Mariya Bessonova",
+    "Sutapa Samanta",
+    "Todd Hodges",
+    "John Hancock",
+    "Guillermo Mijares Vilariño",
+    "Amol Deshmukh",
+    "Mariana LaDue",
+    "Girish Pillai",
+    "Hilary Packer"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (quant-ph)",
+  "doi": "",
+  "abstract_summary": "The paper evaluates hybrid quantum-classical machine learning models that use projected quantum feature maps (PQFs) and ensembles for credit card default prediction on a large public dataset. Results show small improvements of ensemble models combining PQF-based quantum features with classical XGBoost baselines as measured by a Composite Default Risk (CDR) metric, and the authors discuss practical applicability, noise robustness, and open questions about classical simulability and scalability.",
+  "methodology_description": "The authors evaluate hybrid quantum-classical machine learning pipelines for credit card default prediction using projected quantum features (PQF) derived from a Heisenberg quantum feature map. They subsample the public American Express Default Prediction dataset to obtain balanced and unbalanced datasets of varying sizes (from hundreds to 10,000 samples) and perform feature selection (Random Forest importance), remove non-modeling/zero-variance features, and split into train/test sets. Each pipeline first scales features with a MinMaxScaler (range [0.3,0.8]), optionally shuffles feature ordering (ShuffleFeatures), encodes examples into quantum states via a Heisenberg feature-map circuit (Hamiltonian-simulation style ansatz with Haar-random single-qubit initial unitaries and parameter α scaling, with repetition count R), performs projective measurements to obtain classical expectation-value feature vectors (e.g., local Pauli expectations / 1-RDMs), and then trains a classical XGBoost classifier on those quantum-derived features. Classical baselines (XGBoost, Dummy classifier) are built using the same downstream classifier. Hyperparameters for both classical and quantum pipelines are tuned using Bayesian optimization (BayesSearchCV / scikit-optimize) with multiple random seeds and 5-fold cross-validation. Ensembles are built by combining classical and quantum model probabilities via simple averaging (means-ensemble) or by training a meta-classifier (logistic regression) on the probability outputs. Experiments are executed on classical simulators (Qiskit Aer statevector, an MPS/tensor-network simulator) and on IBM Quantum hardware (ibm_brisbane, ibm_torino, ibm_marrakesh). Transpilation to hardware uses Qiskit preset pass manager (optimization level 3) and measurement-level error mitigation uses TREX (twirled readout error extinction). Performance is reported with accuracy/AUC on balanced subsets and with a domain-specific Composite Default Risk (CDR) metric (mean of normalized Gini and capture rate@4% with negative-label weighting) on larger/unbalanced samples. The study focuses on projected quantum features (linear in dataset size quantum invocations) rather than pairwise fidelity kernels to keep quantum resource usage linear in N and to enable ensembles with classical models.",
+  "algorithms_used": [
+    "Projected Quantum Features (PQF)",
+    "Heisenberg feature map (Hamiltonian-simulation-based ansatz)",
+    "XGBoost (XGBClassifier)",
+    "Random Forest (for feature importance selection)",
+    "Logistic Regression (meta-classifier in ensembles)",
+    "Bayesian hyperparameter optimization (BayesSearchCV / scikit-optimize)"
+  ],
+  "frameworks": [
+    "Qiskit (transpiler, Qiskit Aer statevector simulator)",
+    "MPS / tensor-network simulator (matrix product state simulator)",
+    "XGBoost (Python library)",
+    "scikit-learn",
+    "scikit-optimize (BayesSearchCV)"
+  ],
+  "experimental_setup": "Simulations used Qiskit Aer statevector simulator and an MPS (matrix product state) simulator to validate circuits and scale to tens–hundreds of qubits under 1D-entanglement assumptions. Hardware experiments ran on IBM Quantum backends (ibm_brisbane, ibm_torino, ibm_marrakesh). Circuits were transpiled using Qiskit preset pass manager (optimization level 3). Readout error mitigation employed TREX. Experiments varied qubit counts (10 up to 101 qubits), feature counts (up to 174 features), circuit repetitions R (commonly R=1, sometimes R=2), α Pauli-rotation scaling, and XGBoost learning-rate and other hyperparameters tuned with Bayesian optimization. Metrics collected included accuracy, precision, recall, F1, AUC on balanced data and the Composite Default Risk (CDR) metric on unbalanced data.",
+  "dataset_used": "The public 'American Express - Default Prediction' dataset (Kaggle). The full dataset contains ~5 million monthly records for ~459,000 customers with delinquency, spending, payment, balance, risk indicators, and time-series behavioral features. The authors create reduced one-month subsets (e.g., 210,876 records), balanced subsamples (e.g., 1,000 samples with 50/50 train/test), and unbalanced subsamples reflecting the original distribution (~80% negatives, ~20% positives) of size up to 10,000 for evaluation with the CDR metric.",
+  "experiment_input": "Source: American Express - Default Prediction (Kaggle). Sizes used in experiments: a reduced one-month dataset of 210,876 records (50% train / 50% test), balanced subsamples of 1,000 samples (various experiments), 500-sample runs, and unbalanced subsamples of 10,000 samples approximating the original class ratio (~80/20). Preprocessing: removal of non-modeling variables and zero-variance features; Random Forest used for feature importance to select top features; MinMaxScaler scaling to [0.3,0.8] to avoid periodic aliasing in quantum rotation angles; optional ShuffleFeatures transformer to randomize assignment of features to qubits. After preprocessing, datasets were encoded into quantum circuits (Heisenberg feature map) then projected by measurement to classical feature vectors for downstream training. Train/test splits used 5-fold cross-validation for hyperparameter tuning and dedicated held-out test sets for final evaluation.",
+  "experiment_process": "Pipeline: 1) Data preprocessing: remove non-modeling and zero-variance features; feature selection via Random Forest; scale features to [0.3,0.8] (MinMaxScaler); optionally shuffle feature order. 2) Quantum encoding: map each data vector x to a quantum state |x> using a Heisenberg feature map circuit built from local Haar-random single-qubit unitaries and two-qubit interactions (X X, Y Y, Z Z) with a Pauli-rotation scaling parameter α and repetition count R (Trotter-like structure; R typically 1 or 2). 3) Measurement / projection: perform projective measurements to estimate expectation values (local Pauli expectations / 1-RDMs) and assemble a classical feature vector per example (Projected Quantum Features). 4) Classical learning: feed the PQF vectors into an XGBoost classifier (XGBClassifier). 5) Hyperparameter tuning: Bayesian optimization (BayesSearchCV, scikit-optimize) over XGBoost hyperparameters (learning_rate, min_child_weight, subsample, colsample_bytree, max_depth, gamma, n_estimators) and quantum α parameter; 5-fold cross-validation; multiple random seeds (15 seeds reported for BayesSearchCV in the 10k experiments). 6) Ensemble construction: combine classical (XGBoost on original features) and quantum pipelines either by averaging predicted probabilities (means-model) or training a meta-classifier (logistic regression using the pair of probabilities as input). 7) Simulation and hardware execution: validate small-to-medium circuits on Qiskit Aer statevector simulator, scale up with MPS simulator, then run selected configurations on IBM hardware after transpilation (Qiskit optimization level 3). 8) Error mitigation: apply TREX for readout error mitigation on hardware runs. Iterations and parameter sweeps: grid searches over α and XGBoost learning rate for some experiments, and BayesSearchCV across hyperparameter spaces with multiple seeds for more extensive experiments.",
+  "experiment_output": "Results were reported in standard classification metrics and a domain-specific Composite Default Risk (CDR) metric. For balanced small-scale experiments the authors report Accuracy, Precision, Recall, F1, and AUC. For larger/unbalanced experiments the primary reported metric is CDR (the mean of normalized Gini coefficient and capture rate at 4%, with negative labels weighted by 20). Comparisons include classical baseline (XGBoost trained on classical features), quantum PQF-based pipeline (XGBoost on PQFs), ensemble means-model (averaging probabilities), and ensemble meta-classifier (logistic regression). Reported outcomes: ensembles slightly outperformed classical baselines on CDR on both MPS simulations and one IBM hardware backend (ibm_marrakesh) by small margins (e.g., Δ≈0.0041 on MPS and smaller gains on hardware). Other outputs include circuit statistics (2-qubit gate counts ~870, depth 86, 2-qubit depth ~20) and train/test accuracies for various qubit/feature configurations.",
+  "experiment_parameters": {
+    "qubits_tried": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      23,
+      30,
+      40,
+      51,
+      60,
+      81,
+      101
+    ],
+    "features_tried": [
+      30,
+      100,
+      160,
+      170,
+      174
+    ],
+    "sample_sizes": [
+      500,
+      1000,
+      10000
+    ],
+    "circuit_repetitions_R": [
+      1,
+      2
+    ],
+    "alpha_values": [
+      0.1,
+      0.25,
+      0.5,
+      0.75,
+      1,
+      2
+    ],
+    "xgboost_learning_rate_examples": [
+      0.01,
+      0.1,
+      0.3,
+      0.5,
+      0.75,
+      1.0
+    ],
+    "transpiled_circuit_stats_example": {
+      "2_qubit_gate_count": 870,
+      "depth": 86,
+      "two_qubit_depth": 20
+    },
+    "cross_validation": "5-fold CV",
+    "bayes_seeds": 15,
+    "ensemble_methods": [
+      "mean averaging of probabilities",
+      "logistic regression meta-classifier"
+    ],
+    "error_mitigation": "TREX (twirled readout error extinction)",
+    "transpilation": "Qiskit preset pass manager (optimization level 3)"
+  },
+  "hardware_details": {
+    "simulators": [
+      "Qiskit Aer statevector simulator",
+      "MPS / matrix product state (tensor-network) simulator"
+    ],
+    "quantum_backends": [
+      {
+        "name": "ibm_brisbane",
+        "provider": "IBM Quantum"
+      },
+      {
+        "name": "ibm_torino",
+        "provider": "IBM Quantum"
+      },
+      {
+        "name": "ibm_marrakesh",
+        "provider": "IBM Quantum"
+      }
+    ],
+    "transpilation_tool": "Qiskit transpiler (preset pass manager, optimization level 3)",
+    "error_mitigation": "TREX readout mitigation"
+  },
+  "reproducibility_notes": "Dataset: public (Kaggle 'American Express - Default Prediction'). Software stacks listed (Qiskit, Qiskit Aer, MPS simulator, XGBoost, scikit-learn, scikit-optimize). The manuscript does not provide a code repository, experiment scripts, nor full parameter search ranges/config files. Specific hyperparameter ranges are not fully enumerated. Circuit construction details (Heisenberg map structure, use of Haar-random single-qubit unitaries, measured observables as 1-RDM / local Pauli expectations), and the use of Qiskit transpiler and TREX are described, which aids reproducibility, but exact seeds, shot counts for hardware measurement, and some low-level execution details are not reported. Overall reproducibility is moderate: data and common libraries are available, but full replication would require reimplementation of pipeline code and exact experiment configurations which are not provided in the preprint.",
+  "key_findings": [
+    "[supported] Hybrid quantum-classical models using projected quantum features (PQF) were implemented and evaluated on subsamples of the Amex Default Prediction Dataset via simulators and IBM quantum hardware.",
+    "[supported] Ensemble models combining PQF-based quantum models with classical XGBoost models achieved small but consistent improvements in the Composite Default Risk (CDR) metric over the purely classical baseline on the restricted datasets studied.",
+    "[supported] On a 10,000-sample unbalanced evaluation (approx. 80% negative / 20% positive), the means-ensemble improved the CDR by +0.0041 over the classical baseline in MPS simulation (0.8013 ± 0.0019 vs. 0.7972 ± 0.0029).",
+    "[supported] On IBM hardware (ibm marrakesh) with the 10,000-sample unbalanced test, the best reported ensemble gains were +0.0018 (LogReg meta-ensemble, C = 0.04) and +0.0009 (means-ensemble) versus the classical baseline, with results showing low standard deviations across seeds.",
+    "[supported] Individual PQF-based quantum models often achieved predictive performance comparable to classical XGBoost models (differences were small and dataset-/hyperparameter-dependent), both in simulators and on hardware.",
+    "[supported] The projected quantum features approach produced prediction distributions that differed from classical model outputs (i.e., model diversity), and this diversity contributed to ensemble gains.",
+    "[supported] The PQF pipeline and Heisenberg feature map circuits were executed up to ~101 qubits / ~174 encoded features on simulators and IBM devices (e.g., ibm torino, ibm marrakesh), demonstrating practical implementability at the scale tested.",
+    "[supported] Error mitigation (TREX) and circuit transpilation/optimization were applied; the authors report that device-level noise did not fully obscure the predictive signal at the scales and depths studied.",
+    "[speculative] The authors argue that PQFs are more resource-efficient for feature extraction than fidelity-based quantum kernels because PQFs produce local classical feature vectors with linear device calls per sample (versus quadratic pairwise fidelity evaluations).",
+    "[speculative] The paper suggests that PQF-derived Projected Quantum Kernels (PQKs) can exhibit distinctive kernel geometries (large g(Kc||Kq)) that are necessary for potential quantum advantage.",
+    "[speculative] The authors posit that PQF-based models may be robust to some levels of hardware noise and thus suitable for near-term devices, but they acknowledge this remains to be tested at larger scales and depths.",
+    "[speculative] The work raises two open, unresolved questions: (1) whether projected quantum features from pre-fault-tolerant devices can be efficiently approximated by classical algorithms (potentially undermining a quantum advantage), and (2) whether signal persistence will hold for expectation values as system size and noise mitigation costs grow.",
+    "[speculative] The authors recommend further experimentation to validate whether observed small ensemble gains generalize and whether they represent a genuine quantum advantage or artifacts of limited scale / class-balanced subsampling."
+  ],
+  "results_summary": "The paper implements projected quantum feature (PQF) pipelines with Heisenberg feature maps and integrates them with classical XGBoost models to predict credit-card default on subsamples of the public Amex dataset. Empirically, PQF-based quantum models achieved performance comparable to classical XGBoost, and heterogeneous ensembles (quantum + classical) yielded small but consistent improvements in the Composite Default Risk (CDR) metric on the restricted datasets studied. Experiments included statevector and MPS simulation up to ~101 qubits and runs on IBM quantum hardware (e.g., ibm torino, ibm marrakesh). The authors applied transpilation and TREX readout error mitigation and observed that device noise did not fully eliminate useful signal at the tested scales. They emphasize that the observed improvements are small, call for caution in interpretation, and highlight open questions about classical simulability of PQFs and scaling/noise tradeoffs that must be resolved before claiming practical quantum advantage.",
+  "performance_claims": [
+    "MPS simulation (10,000-sample unbalanced): classical baseline CDR = 0.7972 ± 0.0029; quantum model CDR = 0.7931 ± 0.0021; means-ensemble CDR = 0.8013 ± 0.0019 (ensemble improvement Δ = +0.0041).",
+    "IBM marrakesh hardware (10,000-sample unbalanced): classical baseline CDR = 0.7982 ± 0.0028; quantum model CDR = 0.7822 ± 0.0043; means-ensemble CDR = 0.7991 ± 0.0027; logistic regression meta-ensemble (C = 0.04) CDR = 0.8000 ± 0.0032 (best reported ensemble improvement Δ = +0.0018 over classical).",
+    "Classical Gradient Boosting on the full one-month dataset (baseline): CV CDR = 0.8141 ± 0.0050; test CDR = 0.8143 (from Table I).",
+    "Statevector simulator (20 qubits, 100 features, 1,000 samples): quantum test accuracy = 86.4%; classical test accuracy = 89.1% (reported in Table II).",
+    "MPS simulator runs report various test accuracies comparable to classical baselines (examples in Table II: e.g., 101 qubits / 174 features gave quantum test Acc = 90.30% vs classical 90.40% for one configuration).",
+    "Hardware runs (examples in Table II): ibm torino (101 qubits, 174 features, 1,000 samples) quantum test Acc = 88.9% vs classical 89.8%; ibm marrakesh (101 qubits, 174 features, 500 samples) quantum test Acc = 88.8% vs classical 89.6%."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper reports small ensemble improvements when combining PQF-based quantum models with classical models on restricted datasets, but does not demonstrate a clear, generalizable quantum advantage. The authors explicitly note open questions about classical approximability of PQFs and noise/scale effects, and they characterize their gains as modest and preliminary rather than conclusive evidence of quantum advantage.",
+  "limitations": [
+    "Results are derived from restricted/subsampled portions of the full industrial dataset (balanced and unbalanced subsamples); conclusions may not generalize to the full dataset or production distribution.",
+    "Observed performance improvements are small (e.g., Δ=0.0041 CDR on MPS, smaller on hardware) and are of the same order as reported evaluation errors; statistical significance and practical relevance are uncertain.",
+    "Practical utility of the proposed quantum–classical ensembles relative to established classical models (run on CPUs/GPUs/TPUs) remains unresolved.",
+    "Experiments were performed on near-term (pre-fault-tolerant) quantum devices and classical simulators; scalability to larger systems or to fault-tolerant devices is not demonstrated.",
+    "Hardware noise and the (potentially increasing) cost of error mitigation may obscure any meaningful signal as system size and circuit depth grow.",
+    "There is an open concern that projected quantum features could be efficiently approximated by classical algorithms (e.g., Pauli-propagation methods), which would negate a genuine quantum advantage.",
+    "Hardware experiments were limited in sample size for some runs (e.g., 500–10,000 samples) and constrained by specific IBM backends; results are affected by device calibration, circuit depth, and two-qubit gate errors.",
+    "[inferred] Use of the Heisenberg feature map and validation via MPS simulators assumes one-dimensional entanglement structure; this may limit representational power or produce simulator results that are optimistic relative to more general circuits.",
+    "[inferred] The end-to-end computational cost (quantum circuit executions, transpilation, error mitigation, and extensive Bayesian hyperparameter searches) is likely high and may impede industrial-scale deployment.",
+    "[inferred] Comparisons were primarily against a baseline XGBoost model; a comprehensive benchmark versus a broader set of state-of-the-art classical pipelines on the full dataset is missing.",
+    "[inferred] Although PQFs reduce quadratic quantum evaluation cost relative to fidelity kernels, generating PQFs for very large datasets (millions of records) may still be infeasible in practice.",
+    "[inferred] The randomness introduced by feature-to-qubit mappings (ShuffleFeatures) and the effect of different mappings on variance/reproducibility are not fully characterized.",
+    "[inferred] Important production considerations for financial services (model interpretability, explainability, auditability, regulatory acceptance, latency/cost of inference) are not addressed."
+  ],
+  "open_questions": [
+    "Can the projected quantum features derived from pre-fault-tolerant quantum devices be efficiently approximated by classical approaches such as Pauli propagation methods (i.e., are PQFs classically simulable)?",
+    "Will the observed gains in predictive performance persist as system size increases, or will noise and the cost of error mitigation dominate and erase the advantage?",
+    "Is any observed improvement due to a true quantum advantage, or is it effectively a quantum-inspired effect that can be reproduced classically?",
+    "What is the practical runtime complexity and end-to-end scalability of the hybrid quantum–classical pipeline on industrial-scale datasets?",
+    "How robust are PQF-based models to realistic hardware noise at larger scales, and how effective are current error mitigation techniques across different devices and circuit depths?",
+    "How well do the inductive biases of the chosen quantum feature maps (e.g., Heisenberg map) align with the structure of financial/time-series credit-risk data, and can better alignment be found?",
+    "What ensemble strategies (averaging, meta-classifiers, heterogeneous combinations) most reliably translate the diversity between quantum and classical models into consistent outperformance?",
+    "[inferred] How should temporally correlated, high-dimensional time-series features commonly found in credit risk datasets be most effectively encoded into quantum circuits to maximize learning performance?",
+    "[inferred] To what extent do simulator assumptions (MPS, limited entanglement, circuit structure) influence conclusions, and how representative are the simulator results of general noisy quantum hardware?"
+  ],
+  "future_work": [
+    "Conduct more extensive experiments (larger sample sizes, more seeds/splits, and runs on additional real quantum backends) to refine and validate the observed gains.",
+    "Investigate whether projected quantum features can be classically approximated and quantify when/if a genuine quantum advantage exists.",
+    "Explore noise-aware training strategies and more advanced error mitigation techniques to improve robustness on NISQ devices.",
+    "Scale experiments toward larger system sizes and deeper circuits while measuring the trade-offs between signal, noise, and mitigation cost.",
+    "Perform comprehensive benchmarking against a wider range of strong classical baselines and ensembles on the full dataset.",
+    "Study the runtime complexity, resource requirements, and practical deployment aspects (transpilation, inference latency, cost) of the hybrid pipeline.",
+    "Analyze and optimize the mapping of features to qubits (including non-random strategies) and study its effect on performance and reproducibility.",
+    "Examine alternative quantum feature maps and PQF measurement strategies to improve representational power and alignment with the problem structure.",
+    "Evaluate the stability and generalizability of ensemble methods combining quantum and classical models across different datasets and financial tasks."
+  ],
+  "topic_tags": [
+    "credit-lending",
+    "quantum-ml-finance",
+    "risk-management"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach",
+    "idea:near-term-feasibility"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Projected Quantum Features (PQF) combined with classical XGBoost ensembles yield small but measurable improvements on a Composite Default Risk (CDR) metric versus classical-only baselines.",
+    "#idea:hybrid-approach — A practical pipeline projects quantum measurement expectations (local Pauli / 1-RDM) to classical feature vectors and feeds them into classical ML (XGBoost), enabling straightforward ensembling with classical models.",
+    "#idea:near-term-feasibility — The authors execute experiments on both simulators and IBM Quantum hardware (up to 101 qubits) and apply readout error mitigation (TREX), arguing partial NISQ-era applicability and noise-robustness.",
+    "#limitation:noise — Hardware runs required readout-error mitigation and results are sensitive to noise; noise robustness is discussed as an open question.",
+    "#limitation:qubit-count — Experiments span 10–101 qubits but the study highlights scalability concerns for larger, production-scale deployments.",
+    "#limitation:data-encoding — The PQF approach intentionally keeps quantum cost linear in dataset size (avoiding quadratic-cost fidelity kernels), but data-encoding choices (scaling, feature-to-qubit mapping) and their costs remain a practical constraint.",
+    "#idea:hybrid-approach — Bayesian hyperparameter tuning and classical feature selection (Random Forest) are used alongside quantum feature extraction, showing an end-to-end hybrid workflow.",
+    "#idea:near-term-feasibility — Use of MPS/tensor-network simulators to validate circuits and scale under 1D-entanglement assumptions highlights practical classical validation routes and assumptions about entanglement structure."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — Although the paper reports small improvements from PQF+ensemble models, the authors themselves raise the open question of classical simulability (MPS simulators) and whether the gains are reproducible by classical methods, undermining a clear claim of quantum superiority.",
+    "contradiction:scalability — The approach is presented as linear-cost in dataset size, but experiments are limited to subsamples (≤10k) and shallow repetitions (R=1–2); reliance on MPS simulation under low-entanglement assumptions and hardware noise mitigation suggests the method may not scale straightforwardly to real-world production datasets without classical fallback."
+  ]
+}

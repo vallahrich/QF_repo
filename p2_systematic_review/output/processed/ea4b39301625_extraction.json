@@ -1,0 +1,203 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes a 'Posted Date', a DOI pointing to rs.3.rs-... (Research Square preprint server), Creative Commons license and 'Additional Declarations' typical of preprints; lacks venue/conference proceedings or journal name indicating peer review.",
+  "title": "Improved Quantum Approximate Optimization Algorithm based on Conditional Value-at-Risk for Portfolio Optimization",
+  "authors": [
+    "Qingqing Yu",
+    "Rong Jin"
+  ],
+  "year": "2024",
+  "journal_or_venue": "Research Square (preprint)",
+  "doi": "https://doi.org/10.21203/rs.3.rs-4582391/v1",
+  "abstract_summary": "This preprint proposes a variant of the Quantum Approximate Optimization Algorithm (QAOA) that uses Conditional Value-at-Risk (CVaR) as the objective and an enhanced ansatz with an additional problem-agnostic ZZ layer to solve discrete portfolio optimization (QUBO/Ising) problems. Experiments on historical Nasdaq data show markedly faster convergence and higher probabilities of finding optimal portfolios compared with standard QAOA (e.g., finding the 16-stock optimum in ~35 iterations vs ~700), with advantages growing as problem size increases.",
+  "methodology_description": "The authors convert a discrete mean-variance portfolio optimization (MVPO) problem into a QUBO / Ising Hamiltonian by binarizing portfolio weights (buy/hold xi ∈ {0,1}), computing expected returns µ and covariance Σ from historical price data, and mapping xi to spins zi for construction of a cost Hamiltonian H_C (sum of single-qubit Z and two-qubit ZZ terms). They apply the Quantum Approximate Optimization Algorithm (QAOA) in a hybrid quantum-classical loop: prepare the uniform superposition state, apply p layers of cost and mixer unitaries, measure, evaluate an objective and update variational parameters via a classical optimizer. Two modifications are used: (1) replace the usual expectation-value objective by a Conditional Value-at-Risk (CVaR) statistic computed over measured sample energies (to emphasize low-energy/tail outcomes and smooth the target function), and (2) introduce an improved ansatz that appends a problem-agnostic layer of nearest-neighbor ZZ gates (with a single shared parameter) and an extra global X-mixer layer (also with a single shared parameter) to the standard p-layer QAOA, yielding 2(p+1) variational parameters. Experiments are performed via exact-state simulation (TensorCircuit) for multiple portfolio sizes (10, 12, 14, 16 qubits), QAOA depths p=1 (p=2 tested but not reported in detail), CVaR confidence levels α in {0.01,0.05,0.1,0.25,0.5,0.75,1}, and classical parameter optimization using COBYLA. Performance is compared between original QAOA (α=1), CVaR-QAOA, and the improved CVaR-QAOA in terms of achieved cost value and probability of measuring the optimal solution; convergence iteration counts are reported.",
+  "algorithms_used": [
+    "Quantum Approximate Optimization Algorithm (QAOA)",
+    "CVaR-QAOA (QAOA objective replaced with Conditional Value-at-Risk)",
+    "Improved QAOA ansatz (standard QAOA + problem-agnostic ZZ layer + extra mixer)"
+  ],
+  "frameworks": [
+    "TensorCircuit"
+  ],
+  "experimental_setup": "All experiments were carried out using exact-state quantum-circuit simulation via TensorCircuit (no physical quantum hardware). Classical optimization of variational parameters used the COBYLA optimizer. Multiple portfolio instances (10, 12, 14, 16 qubits) were simulated; QAOA depth p=1 was primarily reported. CVaR objective used α values from 0.01 to 1.0. Historical stock price data were used to compute µ and Σ for cost/Hamiltonian construction.",
+  "dataset_used": "Historical stock data from Nasdaq over a five-year period (2019-04-22 to 2024-04-18) for a selected set of 16 stocks (tickers and company names listed in the paper). Portfolio instances of sizes 10, 12, 14, and 16 were generated from these stocks.",
+  "experiment_input": {
+    "source": "Nasdaq historical price data (downloaded by authors)",
+    "time_range": "2019-04-22 to 2024-04-18 (5 years)",
+    "assets": 16,
+    "instances": "subsets of size 10, 12, 14, 16 constructed from the 16-stock list",
+    "preprocessing": "Compute expected returns vector µ and covariance matrix Σ from historical prices; binarize weights to xi ∈ {0,1} (buy/hold); map QUBO to Ising Hamiltonian via xi = (1-zi)/2; set budget constraint B (examples reported: 10 stocks B=7, 12 stocks B=8, 14 stocks B=10, 16 stocks B=10). No further preprocessing details (e.g., return calculation method, handling of missing data) are specified."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Construct QUBO cost function from µ and Σ and convert to an Ising Hamiltonian H_C (single-qubit Z and two-qubit ZZ terms).",
+      "Initialize uniform superposition state |s> = |+>^{⊗n}.",
+      "Build QAOA ansatz: apply p layers of cost unitary U_C(γ_k) = exp(-i γ_k H_C) and mixer U_M(β_k) = exp(-i β_k ∑ X_i).",
+      "For the improved ansatz, append an extra problem-agnostic nearest-neighbor ZZ layer with a single shared parameter and an extra global X mixer (resulting in 2(p+1) parameters).",
+      "Choose CVaR level α and perform circuit evaluations via TensorCircuit exact-state simulation to obtain sample energies H_k(γ,β).",
+      "Compute objective as CVaR_α of the sampled energies (average of ⌈αK⌉ lowest measured energies); for α=1 this reduces to the mean.",
+      "Optimize variational parameters (γ, β) using the COBYLA classical optimizer (parameters initialized within γ_k ∈ [0,2π), β_k ∈ [0,π)).",
+      "Iterate until convergence; record cost value and probability of measuring optimal solution; compare original QAOA (α=1), CVaR-QAOA and improved CVaR-QAOA."
+    ],
+    "parameters_tuned": [
+      "Variational angles γ and β (2(p+1) parameters for improved ansatz)",
+      "CVaR confidence α ∈ {0.01,0.05,0.1,0.25,0.5,0.75,1}",
+      "QAOA depth p (tested p=1 and p=2; p=1 reported)"
+    ],
+    "notes": "The number of measurement samples K used to estimate CVaR is referenced conceptually but a concrete K (shots) is not specified; exact-state simulation was used which can provide exact expectation values."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Cost value of the portfolio Hamiltonian (objective value)",
+      "Probability of obtaining the optimal measurement outcome (success probability)",
+      "Number of classical optimization iterations required to reach the reported optimal cost"
+    ],
+    "baselines": [
+      "Original QAOA (α=1)",
+      "CVaR-QAOA (standard ansatz, various α)"
+    ],
+    "format": "Numerical cost values, iteration counts to convergence (table), and convergence plots of cost and success probability versus optimization iterations for different α and ansatz variants."
+  },
+  "experiment_parameters": {
+    "qubits": [
+      10,
+      12,
+      14,
+      16
+    ],
+    "depth_p": {
+      "tested": [
+        1,
+        2
+      ],
+      "reported_primary": 1
+    },
+    "CVaR_alpha_values": [
+      0.01,
+      0.05,
+      0.1,
+      0.25,
+      0.5,
+      0.75,
+      1.0
+    ],
+    "variational_parameter_ranges": {
+      "gamma": "[0, 2π)",
+      "beta": "[0, π)"
+    },
+    "optimizer": "COBYLA",
+    "ansatz_details": "Standard QAOA layers + added problem-agnostic nearest-neighbor ZZ layer (single shared ZZ parameter) and an extra global X mixer (single shared X parameter); total variational parameters 2(p+1) for improved ansatz.",
+    "shots": null,
+    "convergence_iterations_example": {
+      "original_QAOA": {
+        "10": 500,
+        "12": 550,
+        "14": 600,
+        "16": 700
+      },
+      "CVaR_QAOA_alpha_0.1": {
+        "10": 100,
+        "12": 50,
+        "14": 150,
+        "16": 200
+      },
+      "improved_CVaR_QAOA_alpha_0.01": {
+        "10": 30,
+        "12": 30,
+        "14": 25,
+        "16": 35
+      }
+    }
+  },
+  "hardware_details": {
+    "simulator": "TensorCircuit (exact-state simulator)",
+    "qpu_model": null,
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "The paper states the use of TensorCircuit for exact-state simulation and COBYLA as the classical optimizer and provides the list of 16 stocks and the date range used. However, the preprint does not include code, exact data files, random seeds, the number of measurement samples (shots) used to compute CVaR, nor precise preprocessing steps for returns/covariance estimation. There is no repository link or supplementary code provided, so full reproducibility would require reimplementation from the described procedure and re-downloading the same historical data from Nasdaq.",
+  "key_findings": [
+    "[supported] An improved QAOA ansatz that appends a problem-agnostic layer of n-1 ZZ two-qubit gates (all sharing one parameter) and an additional mixer layer of X gates (sharing one parameter) was implemented and evaluated.",
+    "[supported] Using Conditional Value-at-Risk (CVaR) as the classical objective (replacing the sample mean) speeds convergence and increases the probability of obtaining optimal solutions compared to the standard expectation-value objective (α = 1).",
+    "[supported] In simulated experiments (TensorCircuit), the improved CVaR-QAOA converged to lower cost values faster than the standard CVaR-QAOA and the original QAOA across tested portfolio sizes (10, 12, 14, 16 stocks).",
+    "[supported] For the 16-stock instance the paper reports the improved CVaR-QAOA achieved the optimal cost in ~35 iterations while the original QAOA required ~700 iterations (simulation results).",
+    "[supported] CVaR with small α values (α in the range 0.01–0.1, often α = 0.01) typically performed better than larger α or α = 1 in the tested portfolio optimization instances.",
+    "[supported] QAOA depth p = 1 outperformed or matched p = 2 in the authors' experiments for these portfolio instances (they therefore present only p = 1 results).",
+    "[supported] Experiments used historical stock data from Nasdaq spanning 04/22/2019–04/18/2024 and portfolio instances with budgets and buy/hold binary variables (QUBO formulation).",
+    "[supported] Classical optimization of QAOA parameters used the COBYLA optimizer in the hybrid loop and exact-state simulations (no noisy hardware) via TensorCircuit for evaluation.",
+    "[speculative] The improved QAOA with CVaR is a promising approach for portfolio optimization in practical financial-industry applications, particularly as the number of assets increases.",
+    "[speculative] The additional problem-agnostic ZZ/X layer provides a balance between circuit depth and optimization quality (the claim of general balance is presented as an intended design goal and supported in these experiments but suggested as broadly applicable).",
+    "[supported] The authors did not identify a single universally best α; they note that selecting α may require problem-specific tuning and suggest future work on adaptive α selection."
+  ],
+  "results_summary": "The paper proposes an enhanced QAOA ansatz combined with a CVaR-based objective (CVaR-QAOA and an improved CVaR-QAOA) for discrete portfolio optimization (QUBO/Ising formulation). Using exact-state simulations on instances derived from 10–16 stock historical data, the authors report that CVaR objectives with small α (often 0.01) lead to faster convergence and higher success probability than the standard expectation objective. Their improved ansatz (an extra problem-agnostic ZZ layer plus an extra X mixer) further accelerates convergence and increases the probability of finding optimal solutions; e.g., for a 16-stock instance they report reaching the optimal cost in ~35 iterations versus ~700 iterations for the original QAOA. Results are based on simulated (noise-free) experiments using the COBYLA classical optimizer and TensorCircuit.",
+  "performance_claims": [
+    "For 16 stocks: improved CVaR-QAOA achieves optimal cost value in ~35 iterations vs original QAOA requiring ~700 iterations (simulation).",
+    "Optimal cost values reported: 10 stocks: -64.1406; 12 stocks: -82.6233; 14 stocks: -126.593; 16 stocks: -126.9287 (as obtained in experiments).",
+    "Reported iterations to converge to optimal cost (selected examples): original QAOA: [500, 550, 600, 700] for 10, 12, 14, 16 stocks respectively; CVaR-QAOA (α=0.1): [100, 50, 150, 200]; improved method (α=0.1): [100, 30, 100, 100]; CVaR-QAOA (α=0.01): [40, 30, 30, 50]; improved method (α=0.01): [30, 30, 25, 35]."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper reports improved performance of a QAOA variant in exact-state classical simulations compared to standard QAOA variants, but does not demonstrate or claim a quantum advantage over classical (non-quantum) algorithms nor perform experiments on quantum hardware. Therefore no claim of quantum advantage versus classical methods is demonstrated.",
+  "limitations": [
+    "Author-stated: Uncertainty about which definite CVaR confidence level (α) yields the best performance; α selection remains unresolved.",
+    "Author-stated: Sensitivity to parameter settings — performance can be dependent on hyperparameter (e.g., α, γ, β) choices.",
+    "Author-stated: Experiments presented focus on p = 1 QAOA (p = 2 did not outperform in their tests); limited exploration of circuit depth / p-scaling.",
+    "[inferred] Experiments were performed using exact statevector simulation (TensorCircuit) only — no experiments on real, noisy quantum hardware.",
+    "[inferred] Use of exact simulation implies absence of shot-noise and device noise analyses; robustness to sampling noise and hardware noise is untested.",
+    "[inferred] Problem instances are small (up to 16 assets) and drawn from a single 5-year Nasdaq dataset — generalizability to larger portfolios and other markets/timeframes is untested.",
+    "[inferred] Limited benchmarking: no systematic comparison against classical optimization heuristics or quantum annealing in reported experiments (solution quality vs classical baselines and runtime/complexity not shown).",
+    "[inferred] Scalability concerns: exact simulation and the methods used may not scale to much larger qubit counts due to classical simulation cost.",
+    "[inferred] The proposed ansatz (added problem-agnostic ZZ layer) was evaluated on the presented instances but its general applicability across diverse problem structures is not established.",
+    "[inferred] Dependence on the chosen classical optimizer (COBYLA) was not explored; optimizer choice and landscape sensitivity remain unexamined.",
+    "[inferred] Real-world portfolio constraints and market frictions (transaction costs, cardinality, minimum holdings, liquidity) were not modelled in the reported experiments."
+  ],
+  "open_questions": [
+    "Which specific CVaR confidence level (α) is optimal for portfolio optimization across different problem instances and sizes?",
+    "Can a self-adaptive method be developed to choose the best α automatically for different portfolio problems?",
+    "How sensitive is the improved CVaR-QAOA to other variational parameters (γ, β) and to the choice of classical optimizer?",
+    "How does the improved ansatz scale with problem size, and does it generalize to varied QUBO/Ising structures beyond the tested portfolios?",
+    "How does the algorithm perform on real NISQ hardware, including effects of gate noise, limited qubit connectivity, and finite sampling (shots)?",
+    "How does the proposed approach compare quantitatively (solution quality, runtime, resource usage) to state-of-the-art classical heuristics and to quantum annealing on larger instances?",
+    "What is the impact of increasing QAOA depth (p) beyond p = 1 for these portfolio instances, and why did p = 2 not improve results in the reported experiments?",
+    "Can the method incorporate realistic trading constraints (transaction costs, cardinality constraints, market impact) while retaining performance advantages?",
+    "How robust are results across different datasets, markets, time periods, and investor risk preferences (λ)?"
+  ],
+  "future_work": [
+    "Develop a self-adaptive approach to select the best CVaR parameter (α) for different portfolio optimization problems.",
+    "Design models/ansatzes and training procedures that achieve high performance and stability without being overly reliant on or sensitive to parameter adjustments."
+  ],
+  "topic_tags": [
+    "portfolio-optimization",
+    "risk-management"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — CVaR-based objective + an added problem-agnostic ZZ layer in QAOA yields markedly faster convergence and higher probability of finding optimal portfolios in exact-state simulations (e.g., 16-stock optimum found in ~35 iterations vs ~700 for standard QAOA).",
+    "#idea:hybrid-approach — Uses a hybrid variational loop (QAOA circuit evaluations via TensorCircuit + classical COBYLA optimizer) with 2(p+1) parameters for the improved ansatz.",
+    "#idea:near-term-feasibility — Demonstrates promising results at low depth (p=1 primarily) on small instances (10–16 qubits), suggesting potential NISQ-era applicability in small-to-moderate portfolio problems.",
+    "#limitation:simulation-only — All experiments performed with exact-state classical simulation (TensorCircuit); no real-QPU experiments or shot-based noise considered.",
+    "#limitation:no-empirical-validation — Claims about improved practical performance are not validated on noisy hardware and thus lack empirical QPU confirmation.",
+    "#limitation:qubit-count — Experiments limited to up to 16 qubits; scalability to larger, realistic portfolio sizes is untested.",
+    "#limitation:data-encoding — Uses binary weight encoding and QUBO-to-Ising mapping; the paper does not address costs or implications of more complex encodings or budget-constraint scaling.",
+    "#contradiction:scalability — The paper claims advantages grow with problem size, but supporting evidence is limited to small-scale exact simulations (≤16 qubits) without noise or resource-scaling analysis."
+  ],
+  "contradictions": [
+    "The authors claim that advantages of the improved CVaR-QAOA grow as problem size increases, but all supporting results are from exact-state simulations on small instances (10–16 qubits) with p=1; this contradicts confidence in scalability to larger, hardware-constrained problems where qubit counts, gate depth, and noise would likely negate the observed gains.",
+    "The paper reports superiority over standard QAOA variants but does not compare against strong classical heuristics or exact classical solvers for the same instances; thus the claim of practical advantage versus classical methods is not empirically supported and may be overstated."
+  ]
+}

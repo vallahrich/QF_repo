@@ -1,0 +1,136 @@
+{
+  "paper_id": "1d715e0cd1aa",
+  "dimension_1_problem_framing": {
+    "text": "The paper targets an end-to-end financial risk–decision pipeline that links joint forecasting of asset returns and volatility to discrete portfolio optimization and verifiable audit trails in enterprise settings. It frames the core finance problem as constrained mean–variance portfolio allocation driven by learned risk signals that must be tightly coupled to decisions and realistic constraints, addressing instability and slowness in traditional split prediction-then-optimization workflows. The formulation explicitly maps the risk–return objective with constraints into a QUBO suitable for quantum annealing while preserving a coherent flow from forecast to allocation to signed, traceable outputs.",
+    "support_codes": [
+      "C-001",
+      "C-002",
+      "C-003",
+      "C-008",
+      "C-009",
+      "C-011",
+      "C-027"
+    ],
+    "support_type": "direct_quote"
+  },
+  "dimension_2_quantum_method": {
+    "text": "The quantum component comprises a variational quantum circuit (VQC) front-end that embeds preprocessed time-series features as differentiable quantum features trained via the parameter-shift rule, jointly predicting next-step returns and a volatility proxy with a small classical head. Downstream, the portfolio optimization is cast as a QUBO by binary-encoding asset weights into B bits per asset, enforcing budget via normalization, and incorporating constraints through penalty terms in the QUBO objective; this QUBO is designed to run on quantum annealing hardware when available but can also be solved by classical QUBO heuristics without changing the pipeline. The method also integrates a post-quantum signature layer that cryptographically signs each rebalance output, enabling later verification of allocations against the exact model state and time using a public key, while incurring minimal latency and storage overhead.",
+    "support_codes": [
+      "C-002",
+      "C-023",
+      "C-024",
+      "C-025",
+      "C-026",
+      "C-027",
+      "C-028",
+      "C-029",
+      "C-030",
+      "C-031",
+      "C-032",
+      "C-041",
+      "C-042",
+      "C-046",
+      "C-047"
+    ],
+    "support_type": "direct_quote"
+  },
+  "dimension_3_key_results": {
+    "text": "The authors report that HQFS reduces return prediction error by 7.8% and volatility prediction error by 6.1% relative to a tuned classical baseline, achieving the best joint accuracy and return-direction signal among compared models. At the portfolio level, HQFS is claimed to improve out-of-sample Sharpe ratio by 9.4%, lower maximum drawdown by 11.7%, and deliver the best risk-adjusted performance with lower drawdown and turnover than a classical mean–variance projected-gradient approach, while maintaining strong returns. For optimization speed, the QUBO stage reportedly cuts average solve time by 28% compared to a mixed-integer baseline under the same constraints, and the audit layer adds only a small constant per-rebalance latency (under 5 ms) with compact per-rebalance records measured in kilobytes.",
+    "support_codes": [
+      "C-005",
+      "C-006",
+      "C-007",
+      "C-038",
+      "C-040",
+      "C-041",
+      "C-046",
+      "C-047"
+    ],
+    "support_type": "author_claim"
+  },
+  "dimension_4_classical_comparison": {
+    "text": "The paper compares HQFS against several classical forecasting baselines (ARIMA, LSTM, GRU, TCN, and a small Transformer encoder) and reports that HQFS attains the strongest joint return–volatility accuracy and return-direction signal. For allocation, it benchmarks against equal-weight portfolios, classical mean–variance optimization via projected gradient on the same forecasted inputs, and a classical mixed-integer heuristic, where HQFS is said to yield superior risk-adjusted performance with lower drawdown and turnover. An ablation study further contrasts the full hybrid pipeline with variants that replace the VQC with a fully classical encoder or swap the QUBO step for continuous mean–variance projected gradient, finding that removing the VQC worsens volatility correlation and Sharpe ratio, while replacing QUBO with continuous optimization increases turnover and drawdown, highlighting the contribution of both quantum-inspired blocks relative to classical designs.",
+    "support_codes": [
+      "C-035",
+      "C-036",
+      "C-038",
+      "C-040",
+      "C-043",
+      "C-044",
+      "C-045"
+    ],
+    "support_type": "author_claim"
+  },
+  "dimension_5_stated_limitations": {
+    "text": "The authors acknowledge that traditional pipelines where forecasting and optimization are disconnected can yield unstable decisions when markets shift, when discrete constraints like lot sizes and caps are imposed, or when optimization becomes slow as the asset universe and constraint set grow, motivating but also implicitly constraining HQFS’s applicability. They explicitly note that decision optimization becomes expensive as the number of assets, constraints, or discrete choices increases, and that existing approaches often fail to expose how uncertainty propagates into downstream decisions, reflecting a trust and auditability gap. At the data level, they handle long stretches of missing data by dropping those time segments to keep labels well-defined, effectively limiting the usable dataset in such cases.",
+    "support_codes": [
+      "C-009",
+      "C-010",
+      "C-011",
+      "C-022"
+    ],
+    "support_type": "direct_quote"
+  },
+  "dimension_6_future_work": {
+    "text": "Planned extensions include evaluating HQFS under explicit stress regimes, such as high-volatility windows, combined with drift-aware retraining to maintain signal stability under changing market conditions. The authors also intend to strengthen covariance estimation via shrinkage and factor-model updates to keep the QUBO well-conditioned at larger scales, and to introduce more trading-realistic constraints—like sector caps, lot sizes, and slippage—to study their impact on QUBO dimension and solve time. Finally, they propose to explore additional post-quantum signature schemes and to generate a more compact audit report format to enhance the compliance and security layer.",
+    "support_codes": [
+      "C-049",
+      "C-050",
+      "C-051",
+      "C-052"
+    ],
+    "support_type": "direct_quote"
+  },
+  "dimension_7_novelty_claim": {
+    "text": "The paper claims as its main novelty the design of HQFS as an end-to-end risk–decision pipeline that tightly couples joint return–volatility forecasting to a constrained optimization objective, with an explicit mapping of discrete portfolio allocation into a deployable QUBO compatible with both quantum annealing and classical solvers. Additional contributions include a joint predictor that supplies consistent moments to the optimizer rather than mixing sources, an audit layer that cryptographically signs each rebalance and links allocations to precise model states and time windows for compliance, and an evaluation protocol that emphasizes both predictive and decision quality under realistic temporal splits and stress windows so the system is judged by operational outcomes rather than isolated metrics.",
+    "support_codes": [
+      "C-001",
+      "C-013",
+      "C-014",
+      "C-015",
+      "C-016",
+      "C-017"
+    ],
+    "support_type": "author_claim"
+  },
+  "dimension_8_methodological_notes": {
+    "text": "Methodologically, the study enforces a strict chronological train/validation/test split and applies the same time-aware protocol across all experiments to approximate future-time generalization. Data preprocessing includes winsorization of extreme returns based on training quantiles and standardization of features using training statistics, along with explicit sequence target construction and rules for handling missing data by dropping long gaps, which are documented to preserve label definition. The learning setup defines a VQC feature embedding chosen for differentiability via parameter-shift, a joint loss over return and volatility with L2 regularization to stabilize and prevent overfitting, and a clear mean–variance allocation objective formulated as a QUBO with binary encoding, budget normalization, and penalty-based constraints, plus a top-M asset filter to keep problem size predictable. Evaluation covers linked forecasting and allocation outputs, uses a consistent protocol with transaction costs to report net performance, and includes ablations on the VQC and QUBO blocks and measurements of the audit layer’s computational and storage overhead, enhancing transparency and reproducibility claims.",
+    "support_codes": [
+      "C-018",
+      "C-019",
+      "C-020",
+      "C-021",
+      "C-022",
+      "C-023",
+      "C-024",
+      "C-025",
+      "C-026",
+      "C-027",
+      "C-028",
+      "C-029",
+      "C-030",
+      "C-031",
+      "C-033",
+      "C-034",
+      "C-037",
+      "C-039",
+      "C-041",
+      "C-042",
+      "C-043",
+      "C-046",
+      "C-047",
+      "C-048"
+    ],
+    "support_type": "direct_quote"
+  },
+  "dimension_9_miscellaneous": {
+    "text": "The paper emphasizes enterprise and regulatory contexts by highlighting the requirement for traceable outputs that tie each allocation to the specific model version and rationale, and notes that audit signing provides verifiable records without altering forecasting or allocation decisions themselves. It also reiterates the broader trust and auditability gap in existing financial pipelines, where uncertainty propagation into decisions is opaque, further motivating the integrated audit layer.",
+    "support_codes": [
+      "C-010",
+      "C-012",
+      "C-032",
+      "C-048"
+    ],
+    "support_type": "direct_quote"
+  }
+}

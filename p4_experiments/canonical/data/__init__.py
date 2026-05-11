@@ -1,0 +1,1 @@
+"""Canonical data namespace for the staged architecture migration."""

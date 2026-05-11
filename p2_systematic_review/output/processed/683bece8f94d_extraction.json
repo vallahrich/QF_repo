@@ -1,0 +1,229 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier/header (arXiv:2203.15716v1) and date, has structure typical of a working/preprint (abstract, methods, results, references, appendices) and is authored by a central bank researcher but lacks any journal/venue indication—consistent with an arXiv preprint rather than a peer-reviewed publication.",
+  "title": "Application of Quantum Computers in Foreign Exchange Reserves Management",
+  "authors": [
+    "Martin Veselý"
+  ],
+  "year": "2022",
+  "journal_or_venue": "arXiv preprint (arXiv:2203.15716)",
+  "doi": "",
+  "abstract_summary": "This preprint evaluates potential applications of quantum computers in foreign exchange (FX) reserves management, demonstrating quantum Monte Carlo for risk measurement and quantum algorithms (HHL and QAOA) for portfolio optimization. Implementations on IBM Quantum cloud show proof-of-concept results on simulators and limited real-device experiments: QAOA succeeded on a 5-variable toy problem, the quantum Monte Carlo produced partial results, and the HHL implementation failed on current hardware, leading to the conclusion that practical deployment is feasible in principle but awaits further hardware progress.",
+  "methodology_description": "The author studied potential applications of gate-model quantum computers to FX reserves management by implementing and testing three classes of quantum algorithms (quantum Monte Carlo for risk measurement, the Harrow-Hassidim-Lloyd (HHL) linear-system solver for Markowitz-like portfolio optimization, and the quantum approximate optimization algorithm (QAOA) for binary portfolio selection) using IBM Quantum hardware and simulators. The workflow combined classical pre- and post-processing with hybrid quantum-classical loops where appropriate: empirical return/P&L distributions and covariance/return vectors were computed from internal CNB data, distributions were discretized and encoded as quantum amplitude states (Mottonen-style state preparation / uniformly controlled rotations), quantum subroutines were executed (amplitude‑based probability estimation / controlled Ry rotations for expected values and percentiles, phase estimation + inverse QFT + controlled rotations for HHL, and alternating operators for QAOA), measurement statistics were collected (shots) and classical routines were used to finalize estimates (e.g., bisection search for VaR, normalization/postselection for HHL results). Experiments were first validated on Qiskit simulators and then run on free IBM Quantum five‑qubit devices; results were compared to classical baselines (direct calculation / brute-force enumeration) and analyzed for algorithmic correctness and hardware limitations (noise, limited connectivity, decoherence, gate angle resolution). The author provided Qiskit code examples and diagnostic reports (circuit gate counts, quantum volumes, per-device results).",
+  "algorithms_used": [
+    "Quantum Monte Carlo / amplitude-estimation-style risk evaluation (Woerner & Egger method)",
+    "State preparation via uniformly-controlled rotations (Mottonen et al. method)",
+    "HHL (Harrow-Hassidim-Lloyd) linear systems solver",
+    "Quantum phase estimation",
+    "Quantum Fourier Transform (QFT)",
+    "Swap test (inner product estimation)",
+    "QAOA (Quantum Approximate Optimization Algorithm)"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "IBM Quantum cloud (IBMQ)",
+    "Qiskit Aer (simulator)"
+  ],
+  "experimental_setup": "Hybrid quantum-classical experiments implemented in Qiskit. Validation run on Aer qasm_simulator; hardware runs on IBM Quantum free devices (multiple five-qubit Falcon/Canary family backends: ibmq_lima, ibmq_belem, ibmq_bogota, ibmq_yorktown, ibmq_quito, ibmq_manila, ibmq_santiago mentioned). Typical experiments used 3 or 4 qubits to encode discretized distributions plus one ancilla (total 4–5 qubits). Circuit depths and number of native gates were tracked and reported. Noise, decoherence (T1/T2 ~ tens to ~100 µs cited), limited qubit connectivity and quantum volume (reported per-device 8–32) were explicitly considered in analysis.",
+  "dataset_used": "Internal Czech National Bank (CNB) data: daily profit-and-loss (P/L) time series for the USD fixed-income investment portfolio (excluding mortgage-backed securities), and portfolio-level returns for USD equity replication (S&P 500) and the fixed-income tranche. Periods referenced: P/L series from Jan 2, 2018 through Aug/Oct 2021 (927 observations reported for the fixed-income P/L). One-year moving returns were computed for the period Jan 2, 2019 to Aug 4, 2021 for portfolio covariance/return estimation. For the QAOA demonstration a small universe of five semiconductor equities (AMD, Intel, Qualcomm, Analog Devices, Texas Instruments) with one-year moving returns over the same period was used.",
+  "experiment_input": {
+    "source": "Czech National Bank internal reporting (private)",
+    "size": "Risk dataset: 927 daily observations for USD fixed-income portfolio P/L; one-year moving returns time series (used to compute covariances/returns) covering ~2019-2021. QAOA: 5 assets.",
+    "preprocessing": "Continuous P/L distribution discretized into equal-width histograms with N=8 and N=16 bins (powers of two). Relative frequencies converted to probabilities and then to amplitude vectors (square roots of probabilities). For risk calculations, binary indices of bins (n qubits with n = log2(N)) encoded in computational basis; Mottonen-style uniformly controlled rotations used to prepare amplitude-encoded |psi>. For VaR, a hybrid bisection over bin index was executed (classical loop using quantum measurements as oracle). For HHL, Markowitz Lagrangian was converted to an augmented linear system A x = b (4x4 in the two-asset demonstration) and normalized; for QAOA a QUBO was constructed from returns, covariance and penalty terms (lambda coefficients) and converted to an Ising operator."
+  },
+  "experiment_process": {
+    "overall_steps": [
+      "Compute classical statistics (returns, covariances, empirical histograms) from CNB data",
+      "Discretize distributions to N = 2^n bins; form probability vector p and amplitude vector sqrt(p)",
+      "Prepare amplitude-encoded quantum state using Mottonen uniformly-controlled Ry rotations (initialize routine implemented manually; Qiskit initialize alternative noted)",
+      "Risk estimation: append ancilla qubit and apply controlled rotations encoding f(i) so that P(ancilla=1)=E[f(X)]; run circuits for expected value, second moment, bisection for VaR (setting f from indicator), and CVaR via conditional expectation; collect measurement counts and compute metrics",
+      "HHL: prepare |b>, execute phase estimation using controlled e^{iA} powers, inverse QFT, controlled Ry to encode 1/λ factors, uncompute and measure ancilla with postselection to retrieve (normalized) |x>; attempted on simulator and real hardware, observed failures attributed to negative eigenvalues & noise",
+      "QAOA: map QUBO (objective + penalty) to Ising Hamiltonian, prepare H^⊗n initial state, apply p layers of alternating e^{-iγ H_Ising} and e^{-iβ H_0} rotations, use Qiskit's hybrid driver (MinimumEigenOptimizer with QAOA) to run iterations and find lowest-energy bitstrings; compare to classical brute force optimum"
+    ],
+    "parameters_and_notes": [
+      "Risk experiments ran with N=8 (n=3) and N=16 (n=4) bins; circuits therefore used 4 and 5 qubits in total including ancilla",
+      "Rotation-angle transformation M (Mottonen) used to convert desired controlled-rotation angles to uniformly-controlled Ry gate angles",
+      "VaR computed by iterative bisection (classical) using quantum-measured probabilities as oracle",
+      "HHL implementation used Qiskit's HHL (noted limitation: current Qiskit implementation used in study required positive eigenvalues); an r parameter for ancilla rotations was set to 2.65 in code",
+      "QAOA used Qiskit MinimumEigenOptimizer with QAOA backend; problem size limited to 5 binary variables (5 qubits)",
+      "All circuits validated on Qiskit Aer simulator prior to hardware runs"
+    ]
+  },
+  "experiment_output": {
+    "formats": [
+      "Numerical risk measures: expected value, standard deviation, VaR(95%), VaR(99%), CVaR(95%), CVaR(99%) (results reported both as discrete bin indices and continuous-value estimates via bin bounds)",
+      "Portfolio outputs: normalized solution vectors for HHL (weights λ, μ and asset weights) — returned as quantum state amplitudes (normalized) when succesful on simulator; for QAOA returned best bitstring(s) indicating selected assets and objective function values",
+      "Diagnostics: per-device empirical measurement distributions, shot counts, success/failure flags, circuit gate counts, circuit depth, observed deviations from classical baselines, and device metadata (quantum volume, T1/T2 comments)"
+    ],
+    "baselines_and_comparisons": "Classical calculations using direct formulas (Excel or numpy.linalg for linear systems), brute-force enumeration for QUBO, and Qiskit simulator results used as baselines for correctness comparison"
+  },
+  "experiment_parameters": {
+    "risk_encoding": {
+      "bins": [
+        8,
+        16
+      ],
+      "qubits_for_distribution": [
+        3,
+        4
+      ],
+      "total_qubits_in_circuit": [
+        4,
+        5
+      ],
+      "shots": 8192,
+      "state_preparation": "Mottonen uniformly-controlled Ry rotations"
+    },
+    "HHL": {
+      "matrix_size": 4,
+      "ancilla_rotation_r": 2.65,
+      "precision_qubits_for_phase_estimation": "user-dependent (t), increased circuit depth; specific t not consistently documented",
+      "shots": 8192
+    },
+    "QAOA": {
+      "n_binary_variables": 5,
+      "shots": 1024,
+      "optimizer": "Qiskit MinimumEigenOptimizer (QAOA hybrid); classical optimizer not explicitly specified (Qiskit default)",
+      "depth_p": "not explicitly stated (default/small p used); empirical iterations until convergence varied per-backend"
+    },
+    "general": {
+      "gate_set_on_hardware": [
+        "id",
+        "rz",
+        "sx",
+        "x",
+        "cx"
+      ],
+      "connectivity_constraints_accounted": true
+    }
+  },
+  "hardware_details": {
+    "simulator": "Qiskit Aer qasm_simulator (used for validation and debugging)",
+    "cloud_provider": "IBM Quantum (IBMQ)",
+    "QPU_models_used": [
+      "ibmq_yorktown (Canary, 5-qubit, quantum volume ~8) - retired after experiments",
+      "ibmq_lima (Falcon, 5-qubit, quantum volume ~8)",
+      "ibmq_belem (Falcon, 5-qubit, quantum volume ~16)",
+      "ibmq_bogota (Falcon, 5-qubit, quantum volume ~32)",
+      "ibmq_quito, ibmq_manila, ibmq_santiago (other 5-qubit devices mentioned)",
+      "ibmq_almond/armonk (single-qubit mentioned for completeness); ibmq_washington (127-qubit, partnership) referenced"
+    ],
+    "hardware_characteristics_reported": {
+      "typical_T1_T2_order": "tens to ~100 microseconds (approximate)",
+      "quantum_volume_per_device": "8 to 32 reported",
+      "connectivity": "limited planar connectivity (device-specific adjacency); swap gates used when qubits not directly connected"
+    }
+  },
+  "reproducibility_notes": "The paper includes Qiskit source code snippets and full example implementations in the appendix (state preparation, QFT, HHL example, risk-measure routines, QAOA setup). Experiments rely on private CNB internal datasets (USD fixed-income portfolio P/L, portfolio returns), which are not publicly available; surrogate publicly available datasets are not provided. Reproduction requires (1) the CNB data or suitable substitute, (2) Qiskit (versions compatible with code; Qiskit libraries referenced), and (3) access to IBM Quantum (IBMQ) backends or Aer simulator. The author reports implementation details (gate sets, shots, per-backend device names) and documents a Qiskit implementation limitation (current HHL Qiskit implementation at time of study did not support negative eigenvalues), which is relevant for reproducibility. Overall, code is provided but the primary data are proprietary, so full replication is only possible with access to the same data or equivalent public data.",
+  "key_findings": [
+    "[supported] The quantum approximate optimization algorithm (QAOA) successfully solved a 5-variable binary portfolio-selection instance on real IBM Quantum processors.",
+    "[supported] The quantum Monte Carlo approach (quantum amplitude estimation style) can be implemented to compute expected values on simulators and returned correct expected-value estimates on real hardware for small discretizations; other risk metrics (StdDev, VaR, CVaR) were degraded on current hardware.",
+    "[supported] The Harrow-Hassidim-Lloyd (HHL) linear-solver implementation failed on available real hardware for the portfolio optimization task (practical causes: circuit depth, decoherence), and the Qiskit HHL implementation used had an implementation limitation (reported inability to handle matrices with negative eigenvalues).",
+    "[supported] Running on simulators reproduced expected / correct algorithm outputs, indicating the algorithmic implementations are conceptually correct but hardware noise prevents practical results.",
+    "[supported] Current hardware limitations (short decoherence times T1/T2, limited qubit connectivity requiring SWAPs, absence of practical qRAM, gate infidelity) prevent real-world application of the demonstrated quantum algorithms to FX-reserves–scale problems.",
+    "[supported] Measured processor-specific diagnostics and empirical behaviours: quantum volumes and iteration counts correlate with observed performance (example iteration counts for QAOA: Lima 171, Belem 184, Quito 184, Bogota 132, Manila 116, Santiago 116).",
+    "[supported] The quantum Monte Carlo approach in theory has quadratic convergence improvement (classical Monte Carlo O(M^-1/2) vs quantum O(M^-1)), a theoretical statement used in the paper to motivate the approach.",
+    "[supported] The HHL algorithm offers theoretical exponential speed-up in certain regimes (sparse, well-conditioned matrices, appropriate access model), but its complexity depends unfavourably on matrix sparsity s, condition number κ, and required accuracy ϵ.",
+    "[speculative] In principle, quantum computers will become applicable to FX reserves management in the future once hardware matures (more qubits, longer coherence, qRAM, better gate fidelity).",
+    "[speculative] Binary/portfolio optimization (QAOA and related heuristics) is likely to be among the first finance applications to see benefit from NISQ devices.",
+    "[speculative] With future hardware improvements and algorithmic adaptations, quantum linear solvers (HHL) and quantum Monte Carlo could become practical tools for portfolio optimization and risk management.",
+    "[supported] Practical bottlenecks observed include limited resolution of small rotation angles (affecting tail percentile/VaR extraction) and circuit widths/depths that exceed current processor capabilities (examples: simple HHL circuit width 159 gates; portfolio HHL circuit width reported ~13,762 gates)."
+  ],
+  "results_summary": "This preprint evaluates quantum algorithms for FX reserves tasks on IBM Quantum hardware and simulators. The authors implemented quantum Monte Carlo risk estimation, HHL-based Markowitz-style portfolio optimization, and QAOA binary optimization. Simulator runs produced correct outputs, but noisy five-qubit real devices only supported a subset of demonstrations: QAOA (5-bit binary portfolio selection) succeeded across devices, while the quantum risk method yielded correct expected-value estimates but failed for other risk metrics due to limited angle resolution and noise, and the HHL approach failed on hardware (and encountered a Qiskit implementation limitation for negative eigenvalues). The authors conclude quantum algorithms are in principle applicable to FX reserves management but current hardware/noise, limited connectivity, and missing qRAM prevent practical deployment.",
+  "performance_claims": [
+    "Theoretical convergence: classical Monte Carlo O(M^-1/2) vs quantum Monte Carlo O(M^-1) (quadratic speed-up).",
+    "HHL complexity: O[log(N) * s * κ / ϵ] (s = sparsity, κ = condition number, ϵ = accuracy).",
+    "Empirical QAOA iteration counts on IBM devices for the 5-variable problem: Lima 171, Belem 184, Quito 184, Bogota 132, Manila 116, Santiago 116 (shots = 1024).",
+    "Empirical shots used for risk experiments: 8192 shots per run.",
+    "Empirical circuit widths (gates) reported: simple HHL example ~159 gates; portfolio HHL circuit width ~13,762 gates (adapted to hardware gate set/connectivity).",
+    "Processor quantum volumes cited: Yorktown 8, Lima 8, Belem 16, Bogota 32, (IBM Washington 127 qubits with quantum volume 32 mentioned).",
+    "Reported decoherence benchmarks: Falcon-family processors T1/T2 ~100 μs; older Canary-family device ~50 μs.",
+    "Reported empirical success: QAOA produced the correct 3-of-5 asset selection (100% success in tested cases on the real hardware available).",
+    "Empirical limitations: VaR/CVaR calculations on hardware returned degenerate low-percentile outputs (e.g., VaR returned '1' bin) due to insufficient rotation-angle resolution and noise."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper presents and cites theoretical algorithmic speed-ups (quantum amplitude-estimation–based Monte Carlo: quadratic; HHL: exponential under sparsity/conditioning/qRAM assumptions). However, these advantages were not demonstrated experimentally on current IBM hardware: noise, limited connectivity, lack of qRAM, and implementation constraints prevented practical quantum advantage. Thus advantage remains theoretical/speculative for FX reserves use at present.",
+  "limitations": [
+    "Current quantum hardware noise and short decoherence times (T1, T2) limit circuit depth and make many real-world computations infeasible (author-stated).",
+    "Limited qubit connectivity on superconducting devices forces additional SWAPs, increasing circuit depth and error rates (author-stated).",
+    "Absence of practical quantum random access memory (qRAM) prevents efficient state preparation for large datasets and negates expected quantum speedups for some algorithms (author-stated).",
+    "Small numbers of available qubits on commonly accessible devices restrict experiments to toy models (e.g., QAOA demonstrated only for 5 binary variables) (author-stated).",
+    "Gate fidelity and limited precision of rotation angles (e.g., Ry thresholds) reduce achievable accuracy, particularly for tail-probability estimation (VaR at high percentiles) (author-stated).",
+    "Quantum Monte Carlo methods remain probabilistic and require many shots; sampling/reconstruction overhead partially offsets theoretical quantum speedups (author-stated).",
+    "Current implementation limitations in software stacks: the Qiskit HHL implementation used could not handle matrices with negative eigenvalues, blocking some portfolio-optimization use cases (author-stated).",
+    "HHL algorithm constraints: requires sparse, well-conditioned matrices to deliver exponential speedup; dense covariance matrices (typical in finance) increase complexity and reduce advantage (author-stated).",
+    "Swap-test limitations: yields only absolute value of inner product and loses sign or complex-phase information, so it cannot recover full vector relationships in all cases (author-stated).",
+    "QAOA and other QUBO methods lack rigorous proofs of quantum advantage over classical heuristics; empirical superiority is problem-dependent and not guaranteed (author-stated).",
+    "[inferred] Substantial resource overhead is required for quantum error correction (fault tolerance), implying that practical, error-corrected quantum advantage is years away and demands many more qubits than present devices provide.",
+    "[inferred] State preparation cost (when qRAM is unavailable) can be exponential in general; therefore, many theoretically fast quantum algorithms may be impractical without more efficient encoding or qRAM.",
+    "[inferred] Measurement bottlenecks: extracting full classical solutions from quantum states (e.g., all components of |x⟩ from HHL) destroys asymptotic speedups because tomography is exponentially costly.",
+    "[inferred] Limited reproducibility and instability of results across different real devices (even with similar quantum volumes) complicate deployment and benchmarking.",
+    "[inferred] Financial datasets and models (large N portfolios, non-linear constraints, complex instruments) may require algorithmic adaptations not yet proven feasible on near-term quantum hardware."
+  ],
+  "open_questions": [
+    "When will qRAM become practical (robust, low-decoherence) and how will its availability change the feasibility of financial quantum algorithms?",
+    "How long before decoherence times, gate fidelities, and qubit counts reach the thresholds necessary to run HHL, QAOA, and quantum Monte Carlo on real, large-scale financial problems?",
+    "Can HHL and related linear-system quantum solvers be adapted or improved (e.g., via hybrid/iterative methods) to handle dense covariance matrices, poor conditioning, and negative eigenvalues typical of finance?",
+    "How can one reliably prepare complex initial quantum states (discretized market distributions, portfolio vectors) at scale without prohibitive cost when qRAM is absent?",
+    "What are the best practices for application-oriented benchmarking of quantum processors in finance beyond single-number metrics like quantum volume?",
+    "To what extent will measurement and sampling overhead (shots) undermine theoretical quantum speedups in practical financial-risk calculations (VaR/CVaR) and pricing?",
+    "Under which classes of financial optimization problems (structure, sparsity, constraints) can QAOA or other variational algorithms demonstrably outperform classical heuristics?",
+    "How to mitigate the limited precision of rotation gates when estimating extreme quantiles (tail risk) on NISQ devices?",
+    "What are the resource requirements (qubits, gates, error rates) to implement fault-tolerant versions of the demonstrated algorithms for production-grade financial tasks?",
+    "How should regulatory and supervisory authorities adapt to the prospective commercial deployment of quantum algorithms in finance (e.g., model validation, risk controls, cryptographic transitions)?"
+  ],
+  "future_work": [
+    "Enhance quantum hardware: increase qubit counts, extend decoherence times (T1, T2), and improve gate fidelity to enable deeper, larger circuits (author-stated).",
+    "Develop and commercialize practical qRAM implementations to enable efficient state preparation and unlock potential algorithmic speedups (author-stated).",
+    "Expand and harden software implementations: fix limitations in HHL and other library implementations (e.g., support for negative eigenvalues), and implement iterative/optimized variants (author-stated).",
+    "Research and deploy hybrid algorithmic modifications (e.g., iterative phase estimation, hybrid HHL) to reduce qubit requirements and mitigate noise effects (author-stated and cited work).",
+    "Pursue quantum error-correction research and scaling studies to evaluate realistic resource overheads for fault-tolerant financial algorithms (author-stated/inferred).",
+    "Perform application-oriented benchmarking across practical finance tasks (risk measurement, portfolio optimization, pricing) rather than relying solely on aggregate metrics like quantum volume (author-stated).",
+    "Investigate non-adiabatic and alternative quantum optimization approaches and compare empirically to classical heuristics on finance-specific instances (author-stated references and inferred need).",
+    "Explore state-preparation methods and approximations (including variational/state-approximation techniques) to reduce encoding cost for real datasets when qRAM is not available (inferred/author-suggested).",
+    "Further empirical studies of QAOA on larger problem instances as hardware improves, and systematic comparisons with a broad set of classical algorithms and heuristics (author-stated/inferred).",
+    "Study precision and angle-resolution techniques to improve tail-risk estimation (VaR/CVaR) on noisy intermediate-scale quantum (NISQ) devices (author-stated/inferred)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization",
+    "risk-management",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "sa-03",
+    "SA-03",
+    "SA-06",
+    "SA-10",
+    "SA-02",
+    "SA-08",
+    "SA-11"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — The study uses hybrid quantum-classical workflows (classical preprocessing/postprocessing and classical optimizers for QAOA) as the practical execution model for FX reserves tasks.",
+    "#idea:near-term-feasibility — Proof-of-concept experiments on IBM five-qubit devices show small-scale feasibility (QAOA on a 5-asset toy problem; quantum Monte Carlo on 3–4 qubits) but highlight that practical deployment awaits improved hardware.",
+    "#SA-03 — Amplitude-estimation-style quantum Monte Carlo and Mottonen-style state preparation were implemented to estimate moments, VaR and CVaR from discretized P/L histograms.",
+    "#SA-06/#SA-10 — HHL was implemented (with phase estimation and QFT) for a tiny Markowitz-style linear system but failed on current hardware due to noise, eigenvalue sign issues and postselection fragility.",
+    "#SA-02 — QAOA is effective on a 5-variable toy QUBO and matched brute-force optimum in that small instance when run on simulator and partially on hardware; circuit depth and noise constrain scaling.",
+    "#limitation:qubit-count — Experiments were limited to 3–5 operational qubits (N=8,16 bins plus ancilla), showing current qubit counts are insufficient for realistic FX reserve problems.",
+    "#limitation:noise — Device noise, decoherence (T1/T2), limited connectivity, gate resolution and low quantum volumes substantially degraded real-device outcomes (HHL failure, degraded amplitude-estimation results).",
+    "#limitation:data-encoding — State preparation (Mottonen uniformly-controlled rotations) and amplitude encoding of empirical distributions are costly in gates and depth, becoming a bottleneck on NISQ hardware."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — Although the paper implements quantum algorithms (HHL, QAOA, quantum Monte Carlo), comparisons to classical baselines show no practical advantage on current hardware; HHL failed and QMC/QAOA only worked on tiny instances, contradicting any claims that these quantum methods are presently superior to classical approaches.",
+    "contradiction:scalability — The study documents explicit scaling barriers (limited qubit counts, deep state-preparation circuits, noise and connectivity constraints) that contradict optimistic claims that gate-model algorithms like HHL / amplitude estimation are near-term scalable to realistic finance problem sizes."
+  ]
+}

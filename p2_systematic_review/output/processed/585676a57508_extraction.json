@@ -1,0 +1,150 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document begins with an arXiv identifier (arXiv:2009.09662v1) and 'Preprint submitted to Computer Physics Communications' header; full paper structure (abstract, methods, results, references) but no indication of completed peer review or published venue.",
+  "title": "A simple variational quantum Monte Carlo-effective mass approach for excitons and trions in quantum dots",
+  "authors": [
+    "Josep Planelles",
+    "Juan I. Climente"
+  ],
+  "year": "2020",
+  "journal_or_venue": "Preprint submitted to Computer Physics Communications (arXiv:2009.09662v1)",
+  "doi": "",
+  "abstract_summary": "The paper presents a computational model to compute ground-state energies of neutral and charged excitons (trions) in semiconductor quantum dots using a variational Quantum Monte Carlo method combined with effective-mass Hamiltonians. The method employs a Newton–Raphson optimization of variational parameters, optional OpenMP parallelization, and provides Fortran programs with illustrative calculations for CdSe nanoplatelets; results match full variational calculations and outperform configuration interaction approaches in efficiency.",
+  "methodology_description": "The authors develop a computational approach combining variational Quantum Monte Carlo (VQMC) with effective-mass Hamiltonians to compute ground-state energies of excitons and trions in semiconductor quantum dots (specifically cuboidal nanoplatelets). Single-particle states are modelled with particle-in-a-box envelope functions (analytic cosines) and interactions are included via dielectric-aware Coulomb and self-energy potentials. Correlation is introduced through compact Jastrow factors (short-range Slater and Padé forms) with a small set of variational parameters. The VQMC uses Metropolis importance sampling (with trial moves applied preferentially in relative coordinates to handle short-range Coulomb singularities) and a local-energy estimator that includes both accepted and rejected trial moves to reduce variance. Kinetic-energy contributions are evaluated using expressions based on gradients of the log wavefunction to keep variance low. Optimization of variational parameters is performed with an iterative Newton–Raphson solver using analytically-derived estimates of the energy gradient and Hessian (with symmetrization and covariance forms to reduce stochastic variance). Computational implementation is in Fortran 90 (program vqmc-ema) with optional OpenMP parallelization that distributes Monte Carlo walkers across threads. The method is benchmarked on CdSe nanoplatelets, comparing VQMC results to exact variational integration and configuration-interaction (CI) calculations, and reporting energies, binding energies, and computational scaling (time vs threads/walkers).",
+  "algorithms_used": [
+    "Variational Quantum Monte Carlo (VQMC)",
+    "Metropolis-Hastings Monte Carlo (importance sampling)",
+    "Newton–Raphson optimization (for variational parameters)",
+    "Jastrow-correlated trial wavefunctions (Slater and Padé forms)",
+    "Particle-in-a-box single-particle basis (analytic envelope functions)",
+    "Configuration Interaction (CI) — used as baseline/comparison"
+  ],
+  "frameworks": [
+    "vqmc-ema (custom Fortran 90 code)",
+    "Fortran 90",
+    "OpenMP",
+    "Intel Fortran compiler (used in experiments)"
+  ],
+  "experimental_setup": "Computations performed on a workstation with Dual Intel Xeon E5-2660v4 CPUs (2.2 GHz) supporting up to 40 threads. The code was compiled with the Intel Fortran compiler and linked against OpenMP (libomp). Benchmarks varied number of Monte Carlo walkers and threads to measure wall-clock time per Newton–Raphson iteration.",
+  "dataset_used": "",
+  "experiment_input": {
+    "system_descriptions": "CdSe nanoplatelets with cuboidal geometry; user-specified lateral dimensions (Lx, Ly) and thickness (Lz). Material parameters included effective masses (in-plane and z), dielectric constants inside (ǫin) and outside (ǫout), and bulk band gap Egap.",
+    "wavefunction_initialization": "Trial wavefunctions with particle-in-box cosines for single-particle envelopes and Jastrow factors (parameters: α for exciton; ζ, β, α for positive trion). Initial guesses for variational parameters provided by user.",
+    "monte_carlo_settings": "Number of Monte Carlo points per walker m, number of walkers nw (N = m * nw), random-walk step sizes (r0) for center-of-mass and relative coordinates with initial thermalization to target ~50% acceptance.",
+    "other_inputs": "Boundary conditions: infinite hard-wall confinement (Vpot = 0 inside, ∞ outside). Self-energy and dielectric-polarized Coulomb potentials as specified in formulas (image-charge series)."
+  },
+  "experiment_process": {
+    "1": "Formulate effective-mass Hamiltonian for exciton or trion including single-particle confinement potentials, self-energy (image charge) terms, and dielectric-polarized Coulomb interactions.",
+    "2": "Select analytic single-particle envelope functions (cosine particle-in-box) and Jastrow correlator (Slater for e–h, Padé for h–h in trion), specifying variational parameters.",
+    "3": "Initialize multiple Monte Carlo walkers with randomized positions and set random-walk step sizes; thermalize to achieve ~50% acceptance.",
+    "4": "Perform Metropolis importance sampling in relative coordinates (for sensitivity to Coulomb cusp) and center-of-mass/absolute coordinates for confinement; accept/reject moves per Metropolis criterion.",
+    "5": "For each attempted move accumulate local quantities: probability density, local energy (EL computed via analytic log-gradient forms for kinetic energy), derivatives of log wavefunction w.r.t. variational parameters, and Hessian contributions. Use estimator that includes both accepted and rejected moves to reduce variance.",
+    "6": "Average Monte Carlo estimates across walkers (optionally in parallel via OpenMP). Compute stochastic estimates of energy, gradient vector, and Hessian matrix; symmetrize Hessian terms and rewrite cross-terms in covariance form to minimize variance.",
+    "7": "Perform Newton–Raphson update of variational parameters using analytic gradient and Hessian; repeat sampling and optimization iterations until convergence by energy threshold or parameter change.",
+    "8": "Post-process outputs: total energies, binding energies (E(X) − Ee − Eh; E(X+) − E(X) − Eh), optimal variational parameters, and computational timing. Compare to benchmarks (full variational integration and CI calculations)."
+  },
+  "experiment_output": {
+    "primary_outputs": "Optimized variational parameters (α for exciton; ζ, β, α for trion), ground-state total energies (eV), binding energies (meV).",
+    "secondary_outputs": "Performance metrics: wall-clock time per Newton–Raphson iteration vs number of threads and vs number of walkers; convergence histories of energy vs parameter; comparisons (energy differences) against exact variational integration and CI with different basis sizes.",
+    "baselines_and_metrics": "Baselines: exact variational integration (from prior work) and CI with basis of 12 and 24 single-particle spin-orbitals. Metrics: absolute energy differences (meV), relative error (%), runtime scaling, and qualitative trends (e.g., dielectric dependence)."
+  },
+  "experiment_parameters": {
+    "MonteCarlo": {
+      "points_per_walker_m": "user-specified (examples used m = 1e6, 2e6, 1e8, etc.)",
+      "number_of_walkers_nw": "user-specified (examples used nw = 10, 1000, 600)",
+      "total_points_N": "m * nw (examples up to 1e9)",
+      "step_sizes_r0": "separate for relative and center-of-mass moves; tuned to ~50% acceptance via thermalization"
+    },
+    "Variational": {
+      "exciton_parameters": [
+        "α (dimensionless; a = α/rB)"
+      ],
+      "trion_parameters": [
+        "ζ (for e–h Slater), β (hole–hole cusp prefactor), α (e–h length scale)"
+      ]
+    },
+    "Optimization": {
+      "optimizer": "Newton–Raphson with analytic gradient and Hessian",
+      "convergence_criteria": "energy threshold (~1 meV) or parameter change threshold (user-defined)"
+    },
+    "Computational": {
+      "language": "Fortran 90",
+      "parallelization": "OpenMP threads (nt up to 40 tested)",
+      "compiler": "Intel Fortran compiler"
+    }
+  },
+  "hardware_details": {
+    "compute_platform": "Workstation",
+    "CPU": "Dual Intel Xeon E5-2660v4 (2.2 GHz), up to 40 threads",
+    "compiler_and_runtime": "Intel Fortran compiler; OpenMP (libomp)",
+    "notes": "No quantum hardware or quantum simulator used (classical Monte Carlo and numerical optimization only)."
+  },
+  "reproducibility_notes": "Authors provide Fortran 90 programs (vqmc-ema) under GPLv3 and describe implementation details (trial wavefunctions, analytic gradients/Hessians, Monte Carlo estimators, and parallelization with OpenMP). The paper lists equations and algorithmic steps sufficient to reproduce results; however, no public URL for the code archive is provided in the text excerpt. Reproducibility would require access to the vqmc-ema source, material parameter values (some given in the paper), and compilation with an appropriate Fortran compiler supporting OpenMP.",
+  "key_findings": [
+    "[supported] A variational Quantum Monte Carlo (VQMC) method integrated with effective-mass Hamiltonians and a Newton–Raphson optimizer can be used to compute ground-state energies of neutral and charged excitons (trions) in semiconductor quantum dots/nanoplatelets.",
+    "[supported] The authors supply Fortran 90 codes (vqmc-ema) implementing the method, including optional OpenMP parallelization of random walkers.",
+    "[supported] By using short-range Jastrow (Slater/Padé) correlating factors the trial wavefunctions capture both weak- and strong-interaction limits and satisfy Kato-cusp behavior in large-platelet limits.",
+    "[supported] The VQMC results match full variational integration reference calculations to sub-meV accuracy for the studied CdSe nanoplatelet cases (with sufficient Monte Carlo sampling).",
+    "[supported] The VQMC approach yields significantly better accuracy than configuration-interaction (CI) calculations for exciton and trion binding energies in the presented examples; CI with tested basis sizes underestimates binding energies by tens of meV.",
+    "[supported] The VQMC implementation is computationally efficient and parallelizes well with OpenMP: typical runs on the tested workstation take a few minutes per Newton–Raphson optimization (vs. CI runs that took days for analogous problems).",
+    "[supported] Dielectric mismatch (ǫ_out < ǫ_in) increases excitonic energies in the studied nanoplatelets primarily via self-energy (image-charge) repulsion; the effect is more pronounced for trions due to more particles.",
+    "[supported] For the example platelet (Lx, Ly, Lz)=(30,10,1.4) nm, the optimal variational parameter α minimizing exciton energy is ≈0.72; α→1 in the weak-confinement (large lateral size) limit consistent with 2D cusp expectations.",
+    "[speculative] The authors state the model can be easily extended to other QD shapes, confinement potentials and material parameters within the effective-mass/envelope-function framework (extension not demonstrated in this work)."
+  ],
+  "results_summary": "The paper introduces a VQMC method combined with effective-mass Hamiltonians and a Newton–Raphson variational optimizer to compute ground-state energies of excitons and trions in semiconductor nanoplatelets. Using simple analytical single-particle envelopes and short-range Jastrow correlators, the method attains sub-meV agreement with full variational reference results for CdSe nanoplatelets when sufficiently sampled, and captures short-range correlations and cusp behavior. Benchmarks show the approach is substantially more accurate than CI with the tested basis sets and is computationally efficient (minutes on a multi-core workstation with OpenMP), scalable with the number of walkers/threads, and requires minimal memory. The method captures dielectric-confinement effects and can optimize multiple variational parameters for neutral and charged excitonic complexes.",
+  "performance_claims": [
+    "Sub-meV agreement with full variational integration references for exciton energies in studied CdSe nanoplatelets when Monte Carlo sampling is increased (reported convergence when total sample points N increased from 10^7 to 10^9).",
+    "Typical VQMC execution times of a few minutes per Newton–Raphson optimization on a Dual Intel Xeon E5-2660v4 workstation (parallelized with OpenMP).",
+    "Configuration-interaction (CI) calculations for comparable systems required several days and produced binding-energy errors of tens of meV versus the VQMC reference in the presented examples.",
+    "For the example nanoplatelet (30×10×1.4 nm) the optimal exciton variational parameter α ≈ 0.72 (with α→1 in the large-platelet limit).",
+    "Trion VQMC runtimes are about 1.5× longer than exciton runtimes for the same sampling due to additional coordinates and parameters.",
+    "Near-ideal parallel scaling with number of OpenMP threads up to the tested 40 threads; near-linear scaling with number of walkers."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper concerns classical computational physics methods (variational quantum Monte Carlo in effective-mass envelope-function models) for excitons/trions in semiconductor nanostructures; it does not make claims about quantum computing or quantum advantage.",
+  "limitations": [
+    "VQMC provides a description of the lowest state of each symmetry only (it does not directly yield excited states or excited-state spectra).",
+    "The variational energy is fundamentally limited by the choice of the trial wave function; accuracy depends on the chosen Jastrow/envelope parametrization.",
+    "Estimation of the derivatives required by the Newton–Raphson optimization (Eqs. 18–20) is the most demanding step and a primary source of computational cost/variance.",
+    "Trade-off between simplicity and accuracy in the chosen trial functions: the authors intentionally use a small number of variational parameters (e.g., simple Slater and Padé Jastrow forms) which may limit capture of more complex correlations compared to more sophisticated trial functions.",
+    "[inferred] The model relies on single-band effective-mass / envelope-function (k·p) Hamiltonians and neglects atomistic, multiband, non-parabolic, strain or spin–orbit effects, which may be important in some materials or regimes.",
+    "[inferred] The implementation used hard-wall (infinite) confinement and particular simplifications (e.g., Jastrow factors that consider in-plane correlations only) that may reduce accuracy when those approximations are not well justified (e.g., when thickness is not negligible).",
+    "[inferred] Dielectric polarization and self-energy are modeled using quantum-well based approximations; this modeling choice may introduce errors for geometries or dielectric environments that deviate from the assumptions.",
+    "[inferred] The provided parallelization is shared-memory (OpenMP) only, limiting straightforward scaling to large multi-node HPC systems (no MPI implementation provided).",
+    "[inferred] The method is focused on ground-state energies and variational parameters; other properties of interest (e.g., radiative lifetimes, detailed optical spectra, dynamical properties) are not addressed in the present work and would require extensions."
+  ],
+  "open_questions": [
+    "How can excited states (beyond the ground state of a given symmetry) be obtained within this framework or with reasonable extensions?",
+    "How transferable and accurate is the VQMC–effective-mass approach for other materials, shapes, boundary conditions and regimes beyond the CdSe nanoplatelets studied here?",
+    "To what extent would more sophisticated trial wave functions (with more variational parameters or different functional forms) improve accuracy for trions and larger excitonic complexes, and what is the computational trade-off?",
+    "How well do the VQMC predictions (energies, binding energies) compare directly with experimental measurements across a range of dielectric environments and geometries?",
+    "How important are multiband, non-parabolic, strain, spin–orbit and atomistic effects for the excitonic complexes studied, and how can they be incorporated into the present VQMC framework?",
+    "Would moving from variational QMC to diffusion QMC or other QMC variants produce significant accuracy gains for these systems that justify the additional computational cost?",
+    "How does the approximation for self-energy and polarization (quantum-well-style image-charge sums) affect quantitative results for more complex geometries or non-uniform dielectric surroundings?",
+    "What are the practical scaling limits of the approach for larger systems (more particles, larger volumes) and what strategies (algorithmic or parallelization) are required to handle them?"
+  ],
+  "future_work": [
+    "Extend the VQMC–effective-mass codes to other semiconductor quantum dots with different shapes and potentials (the authors state the model can be 'easily extended' to such cases)."
+  ],
+  "topic_tags": [],
+  "methodology_tags": [],
+  "idea_tags": [],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "benchmark-comparison",
+  "related_papers": [],
+  "relevance_phase1": "low",
+  "relevance_phase3": "low",
+  "key_ideas": [
+    "#limitation:simulation-only — Presents a classical Variational Quantum Monte Carlo (VQMC) computational method (vqmc-ema Fortran code) to compute ground-state energies and binding energies of excitons and trions in CdSe nanoplatelets, with numeric energy results (eV/meV) and performance timings.",
+    "#limitation:simulation-only — Uses compact Jastrow-correlated trial wavefunctions and analytic-gradient/Hessian Newton–Raphson optimization to reduce stochastic variance and accelerate convergence compared to brute-force optimization.",
+    "#limitation:simulation-only — Employs Metropolis importance sampling with estimators that include accepted and rejected moves, and demonstrates parallel scaling with OpenMP across multiple walkers/threads; compares accuracy and runtime against exact variational integration and CI baselines.",
+    "#limitation:simulation-only — Provides practical implementation details (Fortran 90, OpenMP) and benchmarks (points/walker, number of walkers, wall-clock per iteration), enabling reproducibility of numerical experiments on classical hardware."
+  ],
+  "contradictions": [
+    "The term 'variational quantum Monte Carlo' in this paper refers to a classical computational quantum many-body method, not quantum computing hardware or algorithms; therefore the paper should not be classified as a quantum-computing-in-finance contribution for the SLR."
+  ]
+}

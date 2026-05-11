@@ -1,0 +1,152 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier and date header and follows a standard preprint structure (abstract, methods, experiments, references) without a journal or conference venue or peer-review indication; declarations and GitHub links further match typical preprint submissions.",
+  "title": "A Quantum Model for Constrained Markowitz Modern Portfolio Using Slack Variables to Process Mixed-Binary Optimization under QAOA",
+  "authors": [
+    "Pablo Thomassin",
+    "Guillaume Guerard",
+    "Sonia Djebali",
+    "Vincent Marc Lambert"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (math.OC)",
+  "doi": "",
+  "abstract_summary": "The paper introduces a quantum formulation of constrained Markowitz portfolio optimization that embeds slack variables as ancilla qubits in the problem Hamiltonian, converting inequality constraints into an internalized QUBO suitable for QAOA. Simulation results on small instances show the slack-ancilla approach reliably finds the true optimal portfolio where standard penalty-based QAOA can fail, and the authors additionally conjecture a quantum lower bound on the joint precision of portfolio risk and return.",
+  "methodology_description": "The paper adapts the classical Markowitz mean–variance portfolio optimization into a quantum-friendly QUBO/Ising formulation by introducing nonnegative slack variables to convert inequality constraints (ω_i ≤ α_i) into equalities (ω_i − α_i + s_i = 0). Each slack variable is encoded as a dedicated ancilla qubit (slack-ancilla scheme) and the resulting penalized objective (including β ∑(ω_i − α_i + s_i)^2) is mapped to an Ising Hamiltonian via ω_i ↦ (1 − Z_i)/2. A QAOA variational ansatz with depth p = 2 is used: alternating phase-separation unitaries U_H(γ) = exp(−i γ H) and mixer unitaries U_M(β) = exp(−i β Σ X_i), with variational angles θ = (γ_1, γ_2, β_1, β_2). The authors run noiseless statevector simulations (Qiskit) of the circuit, compute expectation values ⟨ψ(θ)|H|ψ(θ)⟩, and optimize parameters in a classical outer loop using classical optimizers (Powell’s method and COBYLA are both reported). The penalty weight β is initialized at 1e2 and doubled every 20 Powell iterations until 100% feasibility is observed in a batch of 1000 samples, with a cap of 200 classical optimization steps per instance. Experiments use small synthetic 3-asset instances (n = 3) and compare the slack-ancilla QAOA to a standard penalty-based QAOA baseline and to a classical optimizer / ground-truth exhaustive solution.",
+  "algorithms_used": [
+    "QAOA",
+    "QUBO formulation",
+    "Ising Hamiltonian mapping",
+    "Mixed-Binary Optimization (MBO) approach (modeling)",
+    "Powell optimization (classical)",
+    "COBYLA (classical)"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "Python",
+    "Scikit-learn",
+    "Matplotlib",
+    "IBM Quantum Lab (cloud environment for experiments)"
+  ],
+  "experimental_setup": "Noiseless statevector simulation via Qiskit on IBM Quantum Lab. Small-scale experiments with n = 3 asset qubits plus one ancilla qubit per slack variable; QAOA depth p = 2. Classical optimization loop (Powell and/or COBYLA) run on a classical CPU. Penalty β scheduling: start at 1e2 and double every 20 Powell iterations until feasibility.",
+  "dataset_used": "Synthetic three-asset portfolios. For each instance: µ ∈ R^3 sampled uniformly in [0.01, 0.10]; covariance Σ = L L^T with L lower-triangular and entries i.i.d. N(0, 0.05) (ensures positive-definiteness); α is a one-hot mask with exactly K = 1 active asset chosen uniformly at random.",
+  "experiment_input": "Source: synthetically generated as described above. Size: n = 3 assets per instance; experiments repeated across 3 independent random seeds (distinct draws of µ, Σ, α). Preprocessing: none beyond sampling; slack variables mapped to ancilla qubits and penalty terms implemented via controlled-phase subcircuits.",
+  "experiment_process": "1) Generate synthetic instance (µ, Σ, α) for n=3. 2) Introduce slack variables s_i and form penalized objective with β ∑(ω_i − α_i + s_i)^2. 3) Map binary variables to Ising operators via ω_i ↦ (1−Z_i)/2 to produce Hamiltonian H with ZZ interactions and single-qubit Z fields. 4) Construct QAOA ansatz of depth p=2: apply alternating U_H(γ_k) and U_M(β_k) layers (k=1..2). 5) Simulate noiseless statevector via Qiskit to obtain ⟨ψ(θ)|H|ψ(θ)⟩. 6) Optimize variational angles θ (and tuning penalty β via outer loop) using classical optimizers (Powell’s method and/or COBYLA). 7) Penalty schedule: initialize β=1e2 and double every 20 Powell iterations until 100% feasibility in a batch of 1000 samples or until 200 optimization steps reached. 8) Repeat across 3 random seeds and compare outputs to ground-truth exhaustive search and a penalty-only QAOA baseline.",
+  "experiment_output": "Outputs are bitstring portfolio selections (binary vector indicating chosen assets), associated objective values (portfolio value corresponding to the mean–variance objective with penalties), and feasibility statistics (fraction of samples satisfying constraints). Baselines: exhaustive classical ground truth and standard penalty-based QAOA. Example reported results for one instance: ground-truth optimal [1,0,0] value 0.0468; standard penalty QAOA returned feasible but suboptimal [0,0,1] value 0.0376; slack-ancilla QAOA returned optimal [1,0,0] value 0.0468.",
+  "experiment_parameters": {
+    "num_system_qubits": 3,
+    "num_ancilla_qubits": 3,
+    "qaoa_depth_p": 2,
+    "initial_penalty_beta": 100.0,
+    "penalty_schedule": "double beta every 20 Powell iterations until 1000-sample feasibility",
+    "optimizer": [
+      "Powell",
+      "COBYLA"
+    ],
+    "max_classical_steps": 200,
+    "feasibility_batch_samples": 1000,
+    "random_seeds": 3,
+    "simulator_type": "statevector (noiseless)"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit statevector simulator (noiseless)",
+    "qpu_model": null,
+    "cloud_provider": "IBM Quantum Lab"
+  },
+  "reproducibility_notes": "Authors provide a GitHub repository referenced in the paper (https://github.com/SmartGridandCity/Quantum Markowitz) claiming algorithms, data and results are available. Synthetic data sampling procedure and experimental hyperparameters (n=3, µ sampling range, Σ construction, α one-hot, β schedule, p=2, optimizer caps) are described in the paper, which supports reproducibility; random seeds (three) are reported. Exact circuit implementations (controlled-phase subcircuits for slack penalties) are said to be in the repository.",
+  "key_findings": [
+    "[supported] The paper introduces a slack-ancilla encoding that maps slack variables to dedicated ancilla qubits, internalizing inequality constraints into the problem Hamiltonian so the constrained mean–variance portfolio problem can be represented as a QUBO/Ising Hamiltonian suitable for QAOA.",
+    "[supported] The authors implement the mapping ωi -> (1 − Zi)/2 and derive an Ising-form Hamiltonian composed of ZZ interactions and Z fields for the penalized mean–variance problem.",
+    "[supported] In small-scale noiseless statevector simulations (3 assets, p = 2), the slack-ancilla QAOA recovered the classical ground-truth optimal portfolio while a standard penalty-based QAOA produced a different (suboptimal) feasible solution.",
+    "[supported] The implementation uses one ancilla qubit per slack variable and encodes squared-penalty terms using controlled-phase subcircuits within the QAOA circuit.",
+    "[speculative] The authors claim the slack-ancilla architecture simplifies the energy landscape and reduces sensitivity to large uniform penalty coefficients compared with standard penalty-only approaches (including a claimed order-of-magnitude reduction in required penalty strength).",
+    "[speculative] The paper posits a conjectured quantum variance bound (Conjecture 1) analogous to an uncertainty relation between portfolio risk and returns: σ_risk · σ_returns ≥ ζ(h), where ζ depends on Planck’s constant.",
+    "[speculative] The authors claim broader practical advantages (e.g., dramatic runtime reductions from hours to minutes and improved convergence properties) and scalability to realistic, larger-scale portfolio problems, but provide no hardware-scale empirical validation.",
+    "[speculative] The claim that internalizing constraints via ancillas is a robust and effective pathway for constrained optimization on quantum computers (as a general method beyond the toy instances tested) is asserted but not empirically demonstrated at scale."
+  ],
+  "results_summary": "The paper proposes a slack-ancilla method that embeds slack variables as ancilla qubits in the QAOA Hamiltonian to turn inequality constraints into equality constraints and thus internalize feasibility in the quantum state. The authors derive an Ising Hamiltonian for the penalized mean–variance portfolio problem, implement a one-ancilla-per-slack encoding and controlled-phase penalty subcircuits, and run noiseless statevector simulations on 3-asset instances. In these small simulations the slack-ancilla QAOA recovered the classical optimal portfolio while a standard penalty-based QAOA produced a different, suboptimal feasible portfolio. The paper additionally posits a theoretical conjecture linking quantum uncertainty-type bounds to a trade-off between portfolio risk and return. Claims of large practical speedups, reduced penalty magnitudes, and scalability are made but remain speculative based on the provided evidence.",
+  "performance_claims": [
+    "Ground truth (classical exhaustive search) for one 3-asset instance: optimal portfolio [1, 0, 0] with objective value 0.0468.",
+    "Standard penalty-based QAOA (p = 2) for the same instance returned portfolio [0, 0, 1] with objective value 0.0376 (feasible but suboptimal).",
+    "Proposed slack-ancilla QAOA returned portfolio [1, 0, 0] with objective value 0.0468, matching ground truth on the tested instance.",
+    "Methodological assertion (claimed): required penalty strength β can be reduced by an order of magnitude (from 10^4 to 10^3) when using the slack-ancilla embedding (presented as a methodological benefit, not exhaustively benchmarked).",
+    "Methodological/time claim (claimed): 'Full feasibility is achieved at depth p = 2 on just three system qubits (plus ancillas), with 100% feasible portfolios in under one second of statevector simulation—compared to minutes for comparable classical solvers.'",
+    "Experimental protocol note: penalty weight β initialized at 10^2 and doubled every 20 Powell-optimizer iterations until 100% feasibility observed in a batch of 10^3 samples (used in simulation experiments)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper reports that the slack-ancilla QAOA matched the classical optimum on a 3-asset noiseless simulation and that a penalty-only QAOA produced a suboptimal solution in that toy instance. However, evidence is limited to small, noise-free simulations (n=3) with no hardware demonstrations, restricted benchmarking against classical methods, and no systematic scaling study. Therefore claims of a practical quantum advantage or large runtime improvements are speculative based on the presented results.",
+  "limitations": [
+    "Author-stated: Experiments limited to very small portfolios (n = 3) and one-hot cardinality K = 1, restricting generality to larger, realistic asset universes.",
+    "Author-stated: All results obtained in noiseless statevector simulation (IBM Qiskit simulator); no experiments on real, noisy quantum hardware.",
+    "Author-stated: Use of synthetic data and strong modeling assumptions (idealized setup, constraints-attainability) rather than real market data.",
+    "Author-stated: Increased qubit overhead because each slack variable is mapped to a dedicated ancilla qubit; raises hardware resource requirements.",
+    "Author-stated: Presence of penalty terms and a β-schedule (doubling β) indicating continued reliance on penalty tuning (though reduced), which may be sensitive and problem-dependent.",
+    "Author-stated: Algorithm evaluated at shallow QAOA depth (p = 2) only; depth-related performance and scaling remain untested.",
+    "Author-stated: Technical challenges acknowledged—quantum errors, decoherence, limited qubit counts and coherence times—that constrain near-term deployability.",
+    "Author-stated: Conjecture about a fundamental quantum lower bound on simultaneous precision of risk and return is speculative and unproven in the paper.",
+    "[inferred] Limited benchmarking: comparisons are restricted to small-instance baselines (classical COBYLA, penalty-based QAOA) and exhaustive search for n=3, lacking broader classical or industrial-scale baselines.",
+    "[inferred] Expectation estimation and shot-noise overheads are not addressed (statevector simulator hides sampling costs); practical sampling complexity is unquantified.",
+    "[inferred] Mapping continuous slack variables to qubits implicitly discretizes them; implications for accuracy of representing continuous feasibility slack are not analyzed.",
+    "[inferred] No formal runtime, complexity, or scaling analysis to predict resource needs as number of assets and constraints grow.",
+    "[inferred] The claim of substantial speedups (hours to minutes) is not demonstrated on larger instances or on actual quantum devices and thus remains unvalidated.",
+    "[inferred] The approach focuses on binary asset inclusion (0/1); extension to fractional allocations or mixed-integer formulations is not demonstrated.",
+    "[inferred] The proposed conjecture invoking Planck’s constant for a finance-related variance bound appears physically speculative and lacks theoretical development in the paper.",
+    "[inferred] Practical implementation details for the controlled-phase subcircuits and conditional ancilla operations on real hardware (connectivity, gate error, depth) are not provided and may be nontrivial."
+  ],
+  "open_questions": [
+    "How does the slack-ancilla encoding scale with increasing number of assets and constraints in terms of qubit count, circuit depth, and overall performance on realistic problems?",
+    "Can the slack-ancilla QAOA approach be implemented and validated on noisy, gate-based quantum hardware (accounting for decoherence, gate errors, limited connectivity)?",
+    "Does the slack-ancilla method generalize to non-binary (fractional) allocations or mixed-integer portfolio formulations used in practice?",
+    "What is the practical sampling (shot) complexity for estimating expectation values with the slack-ancilla Hamiltonian, and how does that affect wall-clock runtime on real devices?",
+    "How robust is the method to realistic noise and to imperfect implementation of the controlled-phase subcircuits used to encode penalties?",
+    "To what extent does embedding slack variables into the Hamiltonian reduce required penalty strengths β for larger, more complex instances?",
+    "What are the trade-offs between increased qubit/ancilla overhead and improved energy-landscape navigability—i.e., is the ancilla cost justified in larger problems?",
+    "How does the slack-ancilla QAOA compare to hybrid approaches that treat slack variables classically or to higher-order encodings (HUBO reductions) at scale?",
+    "Can the proposed conjectured quantum lower bound on joint precision of risk and return be formally derived, and does it meaningfully depend on physical constants as claimed?",
+    "How do non-commuting mixers or penalty terms (X-type constraints) change the risk–return trade-offs and the associated Robertson-type bounds in practice?",
+    "What parameter-optimization strategies (classical optimizers, schedules) scale best when jointly tuning QAOA angles and penalty-related parameters like β?",
+    "How should one normalize probability-amplitude-based outputs into practical percentage allocations for real asset weighting, and what are the statistical properties of such normalization?",
+    "Can the method be extended to encode richer real-world constraints (transaction costs, sector rules, minimum lot sizes, 10-5-40 style rules) efficiently without prohibitive resource growth?",
+    "What is the sensitivity of solution quality to the choice of ansatz depth p and to alternative mixer Hamiltonians in the slack-ancilla architecture?"
+  ],
+  "future_work": [
+    "Author-stated: Explore non-commuting risk measures and non-commuting mixers on near-term hardware (investigate stricter Robertson-type trade-offs).",
+    "Author-stated: Further algorithmic enhancements to reduce or eliminate assumptions regarding constraints-attainability.",
+    "Author-stated: Rigorously examine the validity of constraints-attainability hypotheses across realistic datasets and market conditions.",
+    "Author-stated: Develop normalization techniques to convert probability-amplitude outputs into real-asset percentage allocations.",
+    "Author-stated: Scale the approach to real-world scenarios as quantum hardware and algorithms improve (larger n, more constraints).",
+    "Author-stated/inferred: Investigate implementation details and optimization of the controlled-phase ancilla subcircuits on real devices (connectivity, gate counts, error mitigation).",
+    "Author-stated/inferred: Quantify resource and performance trade-offs (ancilla qubits vs penalty-only methods) and validate claimed reduction in required β on larger instances.",
+    "Author-stated/inferred: Broaden empirical evaluation: test across more random seeds, larger instance sizes, real financial datasets, and stronger classical baselines to assess robustness."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach",
+    "idea:near-term-feasibility"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Slack-ancilla QAOA encoding internalizes inequality constraints by mapping slack variables to ancilla qubits; in noiseless statevector simulations (n=3, p=2) this approach recovered the classical ground-truth optimum where a standard penalty-based QAOA produced a suboptimal feasible solution.",
+    "#idea:hybrid-approach — The method is hybrid: a QAOA variational ansatz (p=2) is paired with classical outer-loop optimizers (Powell, COBYLA) and a penalty-scheduling protocol (β doubling) to enforce feasibility.",
+    "#idea:near-term-feasibility — Demonstrated with shallow circuits and small qubit counts (3 system qubits + 3 ancilla) indicating a NISQ-oriented design, though only evaluated in noiseless simulation.",
+    "#limitation:simulation-only — All experiments are noiseless statevector simulations (Qiskit); no noisy simulations or runs on real QPUs are reported.",
+    "#limitation:qubit-count — The slack-ancilla scheme requires one ancilla per slack variable, increasing qubit overhead; experiments are limited to very small instances (n=3).",
+    "#limitation:data-encoding — Converting inequalities into equalities via slack ancilla increases encoding complexity and circuit structure (controlled-phase subcircuits) which may impede scaling.",
+    "#limitation:no-empirical-validation — No empirical validation on hardware or noisy backends; speculative claims (e.g., conjectured quantum lower bound) are not empirically supported."
+  ],
+  "contradictions": []
+}

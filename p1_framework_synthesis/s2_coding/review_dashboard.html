@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P1 Coding Review Dashboard</title>
+<style>
+:root {
+  --bg: #f5f6fa;
+  --surface: #fff;
+  --border: #d1d5db;
+  --primary: #2f5496;
+  --primary-light: #d6e4f0;
+  --accept: #c6efce;
+  --reject: #ffc7ce;
+  --text: #1f2937;
+  --text-muted: #6b7280;
+  --tag-bg: #e0e7ff;
+  --tag-text: #3730a3;
+  --tag-remove: #6366f1;
+  --row-alt: #f9fafb;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+/* Sticky header group */
+.sticky-header{position:sticky;top:0;z-index:100}
+/* Top bar */
+.topbar{background:var(--primary);color:#fff;padding:8px 20px;display:flex;align-items:center;gap:16px}
+.topbar h1{font-size:16px;font-weight:600;margin-right:auto}
+.topbar button{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:6px 14px;border-radius:4px;cursor:pointer;font-size:13px}
+.topbar button:hover{background:rgba(255,255,255,.25)}
+.topbar .stats{font-size:12px;opacity:.8}
+/* Tabs */
+.tabs{display:flex;background:var(--surface);border-bottom:2px solid var(--border);padding:0 16px}
+.tab{padding:10px 18px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:.15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tab .badge{background:var(--primary-light);color:var(--primary);padding:1px 7px;border-radius:10px;font-size:11px;margin-left:6px}
+/* Content */
+.content{padding:12px 16px;overflow-x:auto}
+/* Table */
+table{border-collapse:separate;border-spacing:0;background:var(--surface);border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+thead th{background:var(--primary);color:#fff;padding:8px 10px;text-align:left;font-size:12px;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap;cursor:pointer;user-select:none;overflow:visible;position:relative;border-right:1px solid rgba(255,255,255,.15)}
+thead th:last-child{border-right:none}
+thead th:hover{background:#244a85}
+thead th .resizer{position:absolute;right:-3px;top:0;width:7px;height:100%;cursor:col-resize;background:transparent;z-index:11}
+thead th .resizer:hover,thead th .resizer.active{background:rgba(255,255,255,.5)}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:nth-child(even){background:var(--row-alt)}
+tbody td{padding:6px 10px;font-size:13px;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word;white-space:normal}
+td.quote-cell{font-style:italic;color:var(--text-muted);font-size:12px}
+td.truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.col-hidden{display:none}
+/* Column toggle */
+.col-toggle{position:relative;display:inline-block}
+.col-toggle-btn{background:none;border:1px solid var(--border);color:var(--text-muted);padding:4px 8px;border-radius:4px;font-size:12px;cursor:pointer}
+.col-toggle-btn:hover{border-color:var(--primary);color:var(--primary)}
+.col-menu{display:none;position:absolute;top:100%;left:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:200;min-width:180px;max-height:300px;overflow-y:auto;padding:6px 0}
+.col-menu.open{display:block}
+.col-menu label{display:flex;align-items:center;gap:6px;padding:4px 12px;font-size:12px;cursor:pointer;white-space:nowrap}
+.col-menu label:hover{background:var(--primary-light)}
+.col-menu input[type=checkbox]{accent-color:var(--primary)}
+/* Decision */
+.decision-cell{text-align:center}
+.decision-btn{width:28px;height:28px;border-radius:4px;border:1px solid var(--border);cursor:pointer;font-size:14px;line-height:28px;text-align:center;background:var(--surface)}
+.decision-btn.accept{background:var(--accept);border-color:#6bc17f}
+.decision-btn.reject{background:var(--reject);border-color:#e06c75}
+/* Tags */
+.tag-cell{min-width:120px}
+.tag-list{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px}
+.tag{display:inline-flex;align-items:center;gap:3px;background:var(--tag-bg);color:var(--tag-text);padding:1px 8px;border-radius:10px;font-size:11px;white-space:nowrap}
+.tag .remove{cursor:pointer;font-weight:bold;opacity:.6;font-size:13px}
+.tag .remove:hover{opacity:1}
+.tag-add{position:relative;display:inline-block}
+.tag-add button{background:none;border:1px dashed var(--border);color:var(--text-muted);padding:1px 8px;border-radius:10px;font-size:11px;cursor:pointer}
+.tag-add button:hover{border-color:var(--primary);color:var(--primary)}
+/* Dropdown */
+.dropdown{position:absolute;left:0;top:100%;background:var(--surface);border:1px solid var(--border);border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:200;min-width:160px;max-height:220px;overflow-y:auto}
+.dropdown .dd-item{padding:6px 12px;cursor:pointer;font-size:12px}
+.dropdown .dd-item:hover{background:var(--primary-light)}
+.dropdown .dd-input{width:100%;border:none;border-bottom:1px solid var(--border);padding:6px 12px;font-size:12px;outline:none}
+.dropdown .dd-new{color:var(--primary);font-style:italic}
+/* Settings panel */
+.settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300}
+.settings-overlay.open{display:flex;align-items:center;justify-content:center}
+.settings-panel{background:var(--surface);border-radius:8px;padding:24px;width:560px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.settings-panel h2{font-size:16px;margin-bottom:16px;color:var(--primary)}
+.settings-panel h3{font-size:13px;margin:12px 0 6px;color:var(--text-muted)}
+.settings-panel .tag-group{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.settings-panel .tag-group .tag{font-size:12px;padding:3px 10px}
+.settings-panel input[type=text]{border:1px solid var(--border);padding:5px 10px;border-radius:4px;font-size:12px;width:200px}
+.settings-panel button.add-btn{background:var(--primary);color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:6px}
+.settings-panel .close-btn{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted)}
+/* Filter bar */
+.filter-bar{padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.filter-bar label{font-size:12px;color:var(--text-muted)}
+.filter-bar select,.filter-bar input[type=text]{font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:4px}
+.filter-bar input[type=text]{width:200px}
+/* Summary row */
+.summary{padding:6px 16px;font-size:12px;color:var(--text-muted);display:flex;gap:16px;background:var(--surface);border-bottom:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div class="sticky-header">
+<div class="topbar">
+  <h1>P1 Coding Review</h1>
+  <span class="stats" id="globalStats"></span>
+  <button onclick="openFile()">Open JSON</button>
+  <button onclick="saveFile()">Save JSON</button>
+  <button onclick="toggleSettings()">Settings</button>
+</div>
+
+<div class="tabs" id="tabBar"></div>
+
+<div class="filter-bar">
+  <label>Paper: <select id="filterPaper"><option value="">All</option></select></label>
+  <label>Decision: <select id="filterDecision"><option value="">All</option><option value="accept">Accept</option><option value="reject">Reject</option><option value="pending">Pending</option></select></label>
+  <label>Search: <input type="text" id="filterSearch" placeholder="Search text..."></label>
+  <div class="col-toggle">
+    <button class="col-toggle-btn" onclick="toggleColMenu(event)">Columns</button>
+    <div class="col-menu" id="colMenu"></div>
+  </div>
+</div>
+
+<div class="summary" id="tabSummary"></div>
+</div><!-- end sticky-header -->
+<div class="content" id="tableContainer"></div>
+
+<!-- Settings overlay -->
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-panel">
+    <button class="close-btn" onclick="toggleSettings()">&times;</button>
+    <h2>Tag Definitions</h2>
+    <div id="settingsContent"></div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let DATA = null;
+let fileHandle = null;
+let activeTab = 'problem_domains';
+let sortCol = null;
+let sortAsc = true;
+let openDropdown = null;
+let hiddenCols = new Set();
+
+const TABS = [
+  {key:'problem_domains',     label:'Problems',  fields:['problem','description','quote','location','confidence']},
+  {key:'solution_approaches', label:'Solutions',  fields:['approach','description','quote','location','confidence']},
+  {key:'problem_solution_mappings', label:'Mappings', fields:['problem','approach','quote','location']},
+  {key:'key_claims',          label:'Claims',     fields:['claim','claim_type','quote','location','confidence']},
+  {key:'maturity_indicators', label:'Maturity',   fields:['indicator','quote','location']},
+  {key:'open_questions',      label:'Questions',  fields:['question','quote','location']},
+];
+
+const TAG_CATS = ['paper_section','code_type','classification'];
+const TAG_LABELS = {paper_section:'Section', code_type:'Code Type', classification:'Classification'};
+
+// ── File I/O ──
+async function openFile(){
+  try{
+    if(window.showOpenFilePicker){
+      [fileHandle] = await window.showOpenFilePicker({types:[{description:'JSON',accept:{'application/json':['.json']}}]});
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+      DATA = JSON.parse(text);
+    } else {
+      const input = document.createElement('input');
+      input.type='file'; input.accept='.json';
+      input.onchange = async(e)=>{
+        const file = e.target.files[0];
+        const text = await file.text();
+        DATA = JSON.parse(text);
+        init();
+      };
+      input.click(); return;
+    }
+    init();
+  }catch(e){if(e.name!=='AbortError')alert('Error: '+e.message)}
+}
+
+async function saveFile(){
+  if(!DATA)return alert('No data loaded');
+  const json = JSON.stringify(DATA, null, 2);
+  try{
+    if(fileHandle && window.showSaveFilePicker){
+      const w = await fileHandle.createWritable();
+      await w.write(json); await w.close();
+      showToast('Saved');
+    } else if(window.showSaveFilePicker){
+      fileHandle = await window.showSaveFilePicker({suggestedName:'review_data.json',types:[{description:'JSON',accept:{'application/json':['.json']}}]});
+      const w = await fileHandle.createWritable();
+      await w.write(json); await w.close();
+      showToast('Saved');
+    } else {
+      const blob = new Blob([json],{type:'application/json'});
+      const a = document.createElement('a');
+      a.href=URL.createObjectURL(blob); a.download='review_data.json'; a.click();
+    }
+  }catch(e){if(e.name!=='AbortError')alert('Error: '+e.message)}
+}
+
+function showToast(msg){
+  const d=document.createElement('div');
+  d.textContent=msg;
+  d.style.cssText='position:fixed;bottom:20px;right:20px;background:#22c55e;color:#fff;padding:8px 20px;border-radius:6px;font-size:13px;z-index:999';
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(),2000);
+}
+
+// ── Init ──
+function init(){
+  hiddenCols = new Set();
+  buildTabs();
+  populatePaperFilter();
+  renderTable();
+  updateStats();
+  buildColMenu();
+  document.getElementById('filterPaper').onchange = renderTable;
+  document.getElementById('filterDecision').onchange = renderTable;
+  document.getElementById('filterSearch').oninput = renderTable;
+}
+
+function buildTabs(){
+  const bar = document.getElementById('tabBar');
+  bar.innerHTML = '';
+  TABS.forEach(t=>{
+    const count = DATA.papers.reduce((s,p)=>s+p[t.key].length, 0);
+    const d = document.createElement('div');
+    d.className = 'tab'+(t.key===activeTab?' active':'');
+    d.innerHTML = t.label+'<span class="badge">'+count+'</span>';
+    d.onclick = ()=>{ activeTab=t.key; sortCol=null; buildTabs(); renderTable(); };
+    bar.appendChild(d);
+  });
+}
+
+function populatePaperFilter(){
+  const sel = document.getElementById('filterPaper');
+  sel.innerHTML = '<option value="">All papers</option>';
+  DATA.papers.forEach(p=>{
+    const o = document.createElement('option');
+    o.value = p.id;
+    o.textContent = (p.metadata.title||p.id).substring(0,60);
+    sel.appendChild(o);
+  });
+}
+
+function updateStats(){
+  const total = DATA.papers.reduce((s,p)=>TABS.reduce((s2,t)=>s2+p[t.key].length,s),0);
+  let accepted=0, rejected=0;
+  DATA.papers.forEach(p=>TABS.forEach(t=>p[t.key].forEach(i=>{
+    if(i.review?.decision==='accept')accepted++;
+    if(i.review?.decision==='reject')rejected++;
+  })));
+  document.getElementById('globalStats').textContent =
+    DATA.papers.length+' papers | '+total+' items | '+accepted+' accepted | '+rejected+' rejected | '+(total-accepted-rejected)+' pending';
+}
+
+// ── Rendering ──
+function getRows(){
+  const tabDef = TABS.find(t=>t.key===activeTab);
+  const filterPaper = document.getElementById('filterPaper').value;
+  const filterDecision = document.getElementById('filterDecision').value;
+  const filterSearch = document.getElementById('filterSearch').value.toLowerCase();
+  let rows = [];
+
+  DATA.papers.forEach((paper,pi)=>{
+    if(filterPaper && paper.id !== filterPaper) return;
+    paper[activeTab].forEach((item,ii)=>{
+      if(filterDecision){
+        const d = item.review?.decision;
+        if(filterDecision==='pending' && d) return;
+        if(filterDecision==='accept' && d!=='accept') return;
+        if(filterDecision==='reject' && d!=='reject') return;
+      }
+      const vals = tabDef.fields.map(f=>item[f]||'');
+      if(filterSearch){
+        const all = [paper.metadata.title||'', ...vals].join(' ').toLowerCase();
+        if(!all.includes(filterSearch)) return;
+      }
+      rows.push({paper, pi, item, ii, vals});
+    });
+  });
+
+  if(sortCol!==null){
+    rows.sort((a,b)=>{
+      let va,vb;
+      if(sortCol===0) { va=a.paper.metadata.title||''; vb=b.paper.metadata.title||''; }
+      else if(sortCol===1) { va=(a.paper.metadata.authors||[]).join(', '); vb=(b.paper.metadata.authors||[]).join(', '); }
+      else if(sortCol===2) { va=a.paper.metadata.document_type||''; vb=b.paper.metadata.document_type||''; }
+      else {
+        const fi = sortCol - 3;
+        const fields = TABS.find(t=>t.key===activeTab).fields;
+        if(fi < fields.length){ va=a.vals[fi]||''; vb=b.vals[fi]||''; }
+        else { va=''; vb=''; }
+      }
+      va = String(va).toLowerCase(); vb = String(vb).toLowerCase();
+      return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+  }
+  return rows;
+}
+
+function renderTable(){
+  closeDropdown();
+  const tabDef = TABS.find(t=>t.key===activeTab);
+  const rows = getRows();
+  const container = document.getElementById('tableContainer');
+
+  // Summary
+  let acc=0, rej=0;
+  rows.forEach(r=>{ if(r.item.review?.decision==='accept')acc++; if(r.item.review?.decision==='reject')rej++; });
+  document.getElementById('tabSummary').textContent =
+    rows.length+' rows | '+acc+' accepted | '+rej+' rejected | '+(rows.length-acc-rej)+' pending';
+
+  // Header
+  const metaCols = ['Paper Title','Authors','Doc Type'];
+  const fieldCols = tabDef.fields.map(f=>f.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()));
+  const tagCols = ['Decision','Section','Code Type','Classification'];
+  const allCols = [...metaCols, ...fieldCols, ...tagCols];
+
+  let html = '<table><thead><tr>';
+  allCols.forEach((c,i)=>{
+    const hidden = hiddenCols.has(i) ? ' col-hidden' : '';
+    const arrow = sortCol===i ? (sortAsc?' &#9650;':' &#9660;') : '';
+    html += '<th class="col-'+i+hidden+'" style="min-width:40px" onclick="doSort('+i+')"><span>'+c+arrow+'</span><div class="resizer" onmousedown="startResize(event,'+i+')"></div></th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  rows.forEach((r,ri)=>{
+    html += '<tr>';
+    let ci=0;
+    function td(cls,content,title){
+      const hidden = hiddenCols.has(ci) ? ' col-hidden' : '';
+      const t = title ? ' title="'+esc(title)+'"' : '';
+      html += '<td class="col-'+ci+' '+(cls||'')+hidden+'"'+t+'>'+content+'</td>';
+      ci++;
+    }
+    // Meta
+    td('truncate', esc((r.paper.metadata.title||'').substring(0,50)), r.paper.metadata.title||'');
+    td('truncate', esc((r.paper.metadata.authors||[]).slice(0,3).join(', ')));
+    td('', esc(r.paper.metadata.document_type||''));
+    // Fields
+    tabDef.fields.forEach(f=>{
+      const v = r.item[f]||'';
+      if(f==='quote'){
+        td('quote-cell', esc(v.substring(0,120))+(v.length>120?'...':''), v);
+      } else if(f==='description'){
+        td('', esc(v.substring(0,100))+(v.length>100?'...':''), v);
+      } else {
+        td('', esc(v));
+      }
+    });
+    // Decision
+    const dec = r.item.review?.decision;
+    const decHtml = '<button class="decision-btn'+(dec==='accept'?' accept':dec==='reject'?' reject':'')+'" '+
+      'onclick="cycleDecision('+r.pi+',\''+activeTab+'\','+r.ii+')" '+
+      'title="'+(dec||'pending')+'">'+(dec==='accept'?'&#10003;':dec==='reject'?'&#10007;':'&mdash;')+'</button>';
+    td('decision-cell', decHtml);
+    // Tags
+    TAG_CATS.forEach(cat=>{
+      const tags = r.item.review?.tags?.[cat] || [];
+      let tagHtml = '<div class="tag-list">';
+      tags.forEach(tag=>{
+        tagHtml += '<span class="tag">'+esc(tag)+'<span class="remove" onclick="removeTag('+r.pi+',\''+activeTab+'\','+r.ii+',\''+cat+'\',\''+esc(tag)+'\')">x</span></span>';
+      });
+      tagHtml += '</div>';
+      tagHtml += '<div class="tag-add"><button onclick="showDropdown(event,'+r.pi+',\''+activeTab+'\','+r.ii+',\''+cat+'\')">+ tag</button></div>';
+      td('tag-cell', tagHtml);
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+  applyColWidths();
+  updateStats();
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function doSort(col){
+  if(sortCol===col){sortAsc=!sortAsc}else{sortCol=col;sortAsc=true}
+  renderTable();
+}
+
+// ── Column visibility ──
+function getAllCols(){
+  const tabDef = TABS.find(t=>t.key===activeTab);
+  const metaCols = ['Paper Title','Authors','Doc Type'];
+  const fieldCols = tabDef.fields.map(f=>f.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()));
+  const tagCols = ['Decision','Section','Code Type','Classification'];
+  return [...metaCols, ...fieldCols, ...tagCols];
+}
+
+function buildColMenu(){
+  const menu = document.getElementById('colMenu');
+  const cols = getAllCols();
+  menu.innerHTML = '';
+  cols.forEach((c,i)=>{
+    const lbl = document.createElement('label');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !hiddenCols.has(i);
+    cb.onchange = ()=>{ toggleCol(i, cb.checked); };
+    lbl.appendChild(cb);
+    lbl.appendChild(document.createTextNode(c));
+    menu.appendChild(lbl);
+  });
+}
+
+function toggleColMenu(e){
+  e.stopPropagation();
+  const menu = document.getElementById('colMenu');
+  menu.classList.toggle('open');
+  if(menu.classList.contains('open')) buildColMenu();
+}
+
+function toggleCol(idx, visible){
+  if(visible) hiddenCols.delete(idx); else hiddenCols.add(idx);
+  document.querySelectorAll('.col-'+idx).forEach(el=>{
+    el.classList.toggle('col-hidden', !visible);
+  });
+}
+
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.col-toggle')) document.getElementById('colMenu')?.classList.remove('open');
+});
+
+// ── Column resize ──
+let colWidths = {}; // persisted widths per tab: {tabKey: {colIdx: px}}
+
+function applyColWidths(){
+  const saved = colWidths[activeTab] || {};
+  const table = document.querySelector('table');
+  if(!table) return;
+  const ths = table.querySelectorAll('thead th');
+  ths.forEach((th, i)=>{
+    if(saved[i]){
+      th.style.width = saved[i]+'px';
+      th.style.minWidth = saved[i]+'px';
+    }
+  });
+  if(Object.keys(saved).length > 0){
+    table.style.tableLayout = 'fixed';
+    table.style.width = table.scrollWidth+'px';
+  }
+}
+
+function startResize(e, colIdx){
+  e.stopPropagation();
+  e.preventDefault();
+  const table = document.querySelector('table');
+  const ths = table.querySelectorAll('thead th');
+
+  // Snapshot all column widths and lock the table
+  const widths = [];
+  ths.forEach((th,i)=>{ widths[i] = th.offsetWidth; });
+  const tableW = table.offsetWidth;
+  ths.forEach((th,i)=>{ th.style.width = widths[i]+'px'; th.style.minWidth = widths[i]+'px'; });
+  table.style.tableLayout = 'fixed';
+  table.style.width = tableW+'px';
+
+  const startX = e.pageX;
+  const startW = widths[colIdx];
+  e.target.classList.add('active');
+  document.body.style.cursor = 'col-resize';
+
+  function onMove(ev){
+    const diff = ev.pageX - startX;
+    const newW = Math.max(40, startW + diff);
+    ths[colIdx].style.width = newW+'px';
+    ths[colIdx].style.minWidth = newW+'px';
+    // Adjust total table width
+    table.style.width = (tableW + (newW - startW))+'px';
+  }
+  function onUp(){
+    e.target.classList.remove('active');
+    document.body.style.cursor = '';
+    // Save widths
+    if(!colWidths[activeTab]) colWidths[activeTab] = {};
+    ths.forEach((th,i)=>{ colWidths[activeTab][i] = th.offsetWidth; });
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// ── Decision ──
+function cycleDecision(pi,cat,ii){
+  const item = DATA.papers[pi][cat][ii];
+  if(!item.review) item.review = {decision:null, tags:{paper_section:[],code_type:[],classification:[]}};
+  const states = [null,'accept','reject'];
+  const cur = states.indexOf(item.review.decision);
+  item.review.decision = states[(cur+1)%3];
+  renderTable();
+}
+
+// ── Tags ──
+function removeTag(pi,cat,ii,tagCat,tag){
+  const tags = DATA.papers[pi][cat][ii].review.tags[tagCat];
+  const idx = tags.indexOf(tag);
+  if(idx>=0) tags.splice(idx,1);
+  renderTable();
+}
+
+function showDropdown(event,pi,cat,ii,tagCat){
+  event.stopPropagation();
+  closeDropdown();
+  const btn = event.target;
+  const rect = btn.getBoundingClientRect();
+  const existing = DATA.papers[pi][cat][ii].review?.tags?.[tagCat] || [];
+  const defs = DATA.tag_definitions[tagCat] || [];
+  const available = defs.filter(t=>!existing.includes(t));
+
+  const dd = document.createElement('div');
+  dd.className = 'dropdown';
+  dd.style.position = 'fixed';
+  dd.style.left = rect.left+'px';
+  dd.style.top = rect.bottom+'px';
+
+  // Filter input
+  const inp = document.createElement('input');
+  inp.className = 'dd-input';
+  inp.placeholder = 'Filter or add new...';
+  dd.appendChild(inp);
+
+  function renderItems(filter){
+    dd.querySelectorAll('.dd-item').forEach(e=>e.remove());
+    let shown = available.filter(t=>!filter || t.includes(filter.toLowerCase()));
+    shown.forEach(t=>{
+      const d = document.createElement('div');
+      d.className = 'dd-item';
+      d.textContent = t;
+      d.onclick = ()=>{addTag(pi,cat,ii,tagCat,t); closeDropdown();};
+      dd.appendChild(d);
+    });
+    // Add new option
+    if(filter && !defs.includes(filter.toLowerCase())){
+      const d = document.createElement('div');
+      d.className = 'dd-item dd-new';
+      d.textContent = '+ Add "'+filter+'"';
+      d.onclick = ()=>{
+        const newTag = filter.toLowerCase().replace(/\s+/g,'-');
+        DATA.tag_definitions[tagCat].push(newTag);
+        addTag(pi,cat,ii,tagCat,newTag);
+        closeDropdown();
+      };
+      dd.appendChild(d);
+    }
+  }
+
+  inp.oninput = ()=>renderItems(inp.value);
+  renderItems('');
+
+  document.body.appendChild(dd);
+  openDropdown = dd;
+  inp.focus();
+}
+
+function addTag(pi,cat,ii,tagCat,tag){
+  const item = DATA.papers[pi][cat][ii];
+  if(!item.review) item.review = {decision:null, tags:{paper_section:[],code_type:[],classification:[]}};
+  if(!item.review.tags[tagCat]) item.review.tags[tagCat] = [];
+  if(!item.review.tags[tagCat].includes(tag)) item.review.tags[tagCat].push(tag);
+  renderTable();
+}
+
+function closeDropdown(){
+  if(openDropdown){openDropdown.remove(); openDropdown=null;}
+}
+document.addEventListener('click',closeDropdown);
+
+// ── Settings ──
+function toggleSettings(){
+  const overlay = document.getElementById('settingsOverlay');
+  overlay.classList.toggle('open');
+  if(overlay.classList.contains('open')) renderSettings();
+}
+
+function renderSettings(){
+  if(!DATA) return;
+  const container = document.getElementById('settingsContent');
+  let html = '';
+  TAG_CATS.forEach(cat=>{
+    html += '<h3>'+TAG_LABELS[cat]+'</h3>';
+    html += '<div class="tag-group">';
+    (DATA.tag_definitions[cat]||[]).forEach(t=>{
+      html += '<span class="tag">'+esc(t)+'<span class="remove" onclick="removeTagDef(\''+cat+'\',\''+esc(t)+'\')">x</span></span>';
+    });
+    html += '</div>';
+    html += '<div style="display:flex;gap:6px;margin-bottom:12px">';
+    html += '<input type="text" id="newTag_'+cat+'" placeholder="New tag...">';
+    html += '<button class="add-btn" onclick="addTagDef(\''+cat+'\')">Add</button>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function addTagDef(cat){
+  const inp = document.getElementById('newTag_'+cat);
+  const val = inp.value.trim().toLowerCase().replace(/\s+/g,'-');
+  if(!val) return;
+  if(!DATA.tag_definitions[cat]) DATA.tag_definitions[cat] = [];
+  if(!DATA.tag_definitions[cat].includes(val)){
+    DATA.tag_definitions[cat].push(val);
+  }
+  renderSettings();
+}
+
+function removeTagDef(cat,tag){
+  const arr = DATA.tag_definitions[cat];
+  const idx = arr.indexOf(tag);
+  if(idx>=0) arr.splice(idx,1);
+  // Also remove from all items
+  DATA.papers.forEach(p=>TABS.forEach(t=>p[t.key].forEach(item=>{
+    const tags = item.review?.tags?.[cat];
+    if(tags){const i=tags.indexOf(tag); if(i>=0)tags.splice(i,1);}
+  })));
+  renderSettings();
+  renderTable();
+}
+
+// ── Auto-load ──
+window.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('globalStats').textContent = 'Click "Open JSON" to load review_data.json';
+});
+</script>
+</body>
+</html>

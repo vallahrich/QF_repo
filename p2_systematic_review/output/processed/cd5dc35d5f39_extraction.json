@@ -1,0 +1,228 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier and date (arXiv:2512.17660v1), follows a typical manuscript IMRAD structure with methods/results/refs, and lacks journal or conference publication metadata—indicating an arXiv preprint rather than a peer-reviewed venue or industry report.",
+  "title": "Fraud detection in credit card transactions using Quantum-Assisted Restricted Boltzmann Machines",
+  "authors": [
+    "João M. Neto",
+    "Guilherme P. Temporão",
+    "Gustavo C. Amaral"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv (quant-ph)",
+  "doi": "",
+  "abstract_summary": "The paper evaluates Restricted Boltzmann Machines trained with quantum annealing (and simulated annealing) for credit card fraud detection using a large real dataset (145 million transactions) provided by Stone. It compares classical PCD training with quantum- and simulator-assisted training on D-Wave platforms using QARBoM.jl, reporting that quantum-assisted RBMs achieve superior performance on most metrics despite NISQ hardware limitations, and discusses implications for fault detection in financial systems.",
+  "methodology_description": "The authors evaluate Restricted Boltzmann Machine classifiers (RBMCs), including Gaussian-Bernoulli RBMs (GRBMs) for continuous inputs, trained via Persistent Contrastive Divergence (PCD) and assisted sampling from quantum annealing. They map the RBM energy to a QUBO formulation, convert to an Ising Hamiltonian and use quantum annealing (QA) or simulated annealing (SA) as an alternative sampler to classical Gibbs sampling for the negative phase (quantum sampling, QS). Comparative experiments train three variants: (1) strictly classical PCD with Gibbs/PCD sampling, (2) SA-assisted PCD using D-Wave simulators (Path-Integral-Monte-Carlo-based SA), and (3) QA-assisted PCD using D-Wave quantum annealers accessed via the Leap cloud service. Hyperparameter grid searches optimized number of hidden units and learning-rate schedules; training used 50 epochs and batch-based SGD. Data preprocessing included categorical encodings (one-hot etc.), z-score normalization to make numerical features compatible with GRBM assumptions, feature selection via correlation filtering and CatBoost importance, and manual undersampling to create a balanced 50/50 fraud/non-fraud subset for training/evaluation. Models were evaluated per-epoch on Accuracy, Precision, Recall and F1-score and the best epoch (by F1) selected. Implementation used Julia packages QARBoM.jl, QUBO.jl and DWave.jl to construct QUBOs, perform embeddings and interface with D-Wave simulators/QPUs.",
+  "algorithms_used": [
+    "Restricted Boltzmann Machine (RBM)",
+    "Gaussian-Bernoulli RBM (GRBM)",
+    "Persistent Contrastive Divergence (PCD)",
+    "Gibbs Sampling (classical, discussed)",
+    "Quantum Annealing (QA)",
+    "Quantum Sampling (QS)",
+    "Simulated Annealing (SA) via D-Wave simulator (PIMC approximation)",
+    "QUBO / Ising mapping",
+    "SMOTE (oversampling, tested)",
+    "Tomek Links (undersampling, tested)",
+    "CatBoost (feature importance)"
+  ],
+  "frameworks": [
+    "QARBoM.jl",
+    "QUBO.jl",
+    "DWave.jl",
+    "D-Wave Leap (cloud access)",
+    "Julia (implementation)",
+    "Python (invoked from Julia for some calls)"
+  ],
+  "experimental_setup": "D-Wave ecosystem: experiments used D-Wave simulators (simulated annealing / PIMC-style) and real D-Wave quantum annealers accessed via Leap. Embedding constraints (minor embedding, Chimera/Pegasus/Zephyr topologies) required feature reduction. Training ran for 50 epochs; classical batches used size 512, SA/QA used smaller batch size 32. Models: classical RBM with 55 visible units and 200 hidden units; SA- and QA-assisted RBMs with 55 visible and 65 hidden units. Hyperparameter grid search for hidden units and learning-rate schedules; learning-rate schedules included exponential decay and a controlled exponential LR(η0,λ,ηf).",
+  "dataset_used": "Proprietary credit-card transaction dataset provided by Stone (Brazilian fintech). Original dataset: 145 million transactions spanning three months; 19 thousand labeled fraudulent transactions (high class imbalance). For the experiments the authors applied feature selection and manual undersampling to create a balanced dataset of 39k transactions (50/50 fraud/non-fraud) and split 80/20 for train/test.",
+  "experiment_input": {
+    "source": "Stone (Brazilian fintech, proprietary)",
+    "original_size": "145,000,000 transactions",
+    "fraud_count": 19000,
+    "processed_size": "39,000 transactions (balanced via manual undersampling to 50/50)",
+    "train_test_split": "80% train, 20% test",
+    "feature_count": "reduced to 55 visible features for embedding",
+    "categorical_preprocessing": [
+      "One-Hot Encoding (preferred)",
+      "label encoding (tested)",
+      "binary encoding (tested)",
+      "hashing (tested)"
+    ],
+    "numerical_preprocessing": "Z-score normalization (zero mean, unit variance) to fit GRBM assumptions",
+    "feature_selection": "Removed highly correlated features via correlation matrix and pruned low-importance features via CatBoost importance"
+  },
+  "experiment_process": {
+    "steps": [
+      "Data preprocessing: encode categorical variables (one-hot etc.), z-score normalize numeric features",
+      "Feature selection: drop highly correlated features, use CatBoost importance to remove low-importance features",
+      "Dataset balancing: attempted SMOTE and Tomek Links but final approach was manual undersampling to create balanced 39k sample set (50/50 fraud/non-fraud)",
+      "Construct RBM/GRBM architectures: concatenate visible+label+hidden into QUBO formulation and convert to Ising Hamiltonian for QA",
+      "Hyperparameter grid search: vary number of hidden units and learning-rate schedules to maximize recall and precision",
+      "Train three variants for 50 epochs each: (a) classical PCD (batch size 512, hidden units=200), (b) SA-assisted PCD using D-Wave simulator (batch size 32, hidden units=65), (c) QA-assisted PCD using D-Wave QPU via Leap (batch size 32, hidden units=65)",
+      "For SA: use limited number of sweeps due to runtime constraints (sweep count not specified)",
+      "For QA: perform multiple anneals/samples per batch (N not specified) to estimate model negative-phase statistics (Quantum Sampling)",
+      "Per-epoch evaluation on test set: Accuracy, Precision, Recall, F1-score; select best epoch by F1"
+    ],
+    "iterations": "50 training epochs per experiment; grid search over hidden units and learning-rate parameters; SA sweep counts limited but unspecified",
+    "parameters_tuned": [
+      "number of hidden units (classical: 200, SA/QA: 65 found optimal)",
+      "learning rate schedule (classical: exponentially decreasing to zero; QA: controlled exponential LR(η0,λ,ηf))",
+      "batch size (classical: 512; SA/QA: 32)"
+    ]
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Accuracy",
+      "Precision",
+      "Recall",
+      "F1-Score",
+      "Total training time"
+    ],
+    "results_at_optimal_epoch": {
+      "classical_PCD": {
+        "Accuracy": "84%",
+        "Precision": "86%",
+        "Recall": "81%",
+        "F1-Score": "83%",
+        "TotalTime": "2 minutes"
+      },
+      "SA_assisted_PCD": {
+        "Accuracy": "85%",
+        "Precision": "94%",
+        "Recall": "82%",
+        "F1-Score": "88%",
+        "TotalTime": "4 hours"
+      },
+      "QA_assisted_PCD": {
+        "Accuracy": "85%",
+        "Precision": "91%",
+        "Recall": "79%",
+        "F1-Score": "84%",
+        "TotalTime": "1.8 hours"
+      }
+    },
+    "baselines": "Classical PCD RBM served as the baseline; SA and QA assisted variants compared against it"
+  },
+  "experiment_parameters": {
+    "visible_units": 55,
+    "hidden_units": {
+      "classical_PCD": 200,
+      "SA_assisted": 65,
+      "QA_assisted": 65
+    },
+    "batch_size": {
+      "classical_PCD": 512,
+      "SA_assisted": 32,
+      "QA_assisted": 32
+    },
+    "epochs": 50,
+    "learning_rate_schedule": "exponential decay (classical to zero); controlled exponential LR(η0,λ,ηf) for QA",
+    "SA_sweeps": "limited (unspecified)",
+    "QA_samples_per_call": "N (unspecified)",
+    "QUBO_mapping": "binary expansion for continuous visibles; symmetric Q matrix rules as described",
+    "embedding": "minor-embedding required due to QPU topology (Chimera/Pegasus/Zephyr); chaining logical qubits when needed"
+  },
+  "hardware_details": {
+    "simulator": "D-Wave simulators (simulated annealing with PIMC approximation)",
+    "quantum_processor": "D-Wave quantum annealer family (references to D-Wave 2000Q and Chimera topology; also mentions Pegasus/Zephyr topologies)",
+    "cloud_provider": "D-Wave Leap cloud service (accessed via Leap)",
+    "os_notes": "Some simulated-annealing overheads occurred when Python calls were invoked from Julia on Windows 11"
+  },
+  "reproducibility_notes": "Partial reproducibility: the implementation uses publicly available Julia packages (QARBoM.jl v0.0.1, QUBO.jl, DWave.jl) cited by the authors, but the transaction dataset is proprietary (Stone) and not publicly available. Reproducing QA/SA experiments requires access to D-Wave Leap or equivalent QPU/simulator; specific low-level QA parameters (number of anneals/samples, anneal times, SA sweep counts) are not reported, which limits exact replication. The authors reference the QARBoM.jl package which can assist reproducibility, but no public link to the experiment code or detailed configuration files is provided in the preprint.",
+  "key_findings": [
+    "[supported] The full Stone dataset used contains 145 million transactions with 19 thousand fraudulent cases (highly imbalanced).",
+    "[supported] To enable experiments on quantum hardware the authors manually undersampled to a balanced dataset of 39k transactions (50/50 fraud/non-fraud) and used an 80/20 train/test split.",
+    "[supported] Classical PCD-trained RBM (best found) achieved Accuracy 84%, Precision 86%, Recall 81%, F1-score 83% on the test set, with total training time ≈ 2 minutes.",
+    "[supported] Simulated-annealing-assisted training (D-Wave simulator) achieved Accuracy 85%, Precision 94%, Recall 82%, F1-score 88% on the test set, with total training time ≈ 4 hours.",
+    "[supported] Quantum-sampling-assisted training on D-Wave hardware (real QA) achieved Accuracy 85%, Precision 91%, Recall 79%, F1-score 84% on the test set, with total training time ≈ 1.8 hours.",
+    "[supported] Quantum-assisted methods (SA and QA) used a smaller RBM configuration (55 visible, 65 hidden, batch size 32) vs the classical model (55 visible, 200 hidden, batch size 512) yet achieved comparable or better metrics in these experiments.",
+    "[supported] Embedding limitations and limited qubit connectivity on the D-Wave machines forced feature reduction and were a principal bottleneck in the quantum-hardware experiments.",
+    "[supported] Quantum annealers produce Boltzmann-like samples and were used in place of Gibbs sampling within Persistent Contrastive Divergence (quantum sampling) to estimate model expectations.",
+    "[supported] Quantum-assisted training required different hyperparameter choices (notably smaller learning rates and smaller batch sizes) compared to classical PCD to avoid divergence.",
+    "[supported] The authors observed a trade-off between runtime and performance across methods: classical training was fastest but yielded slightly lower top metrics; simulated annealing was slowest but gave the best numeric metrics in these runs.",
+    "[speculative] The paper claims that quantum-assisted RBMs are 'able to achieve superior performance in most figures of merit in comparison to classical approaches', extrapolating from the reported experiments to a broader advantage.",
+    "[speculative] The statement that these results 'pave the way for implementing quantum-assisted RBMs for general fault detection in financial systems' is a forward-looking extrapolation beyond the performed experiments.",
+    "[speculative] The authors suggest that NISQ-era quantum annealers can provide practical advantages for RBM training; this is suggested by their experiments but remains provisional given the limited scope and preprocessing (feature reduction, undersampling).",
+    "[speculative] Proposed future directions (quantum kernel SVMs, QAOA-based approaches) are theoretical/forward-looking and not empirically validated in this work."
+  ],
+  "results_summary": "The authors trained Restricted Boltzmann Machine classifiers on a balanced subset (39k) drawn from a 145M-transaction Stone dataset and compared three training approaches: classical PCD, simulated-annealing-assisted PCD (D-Wave simulator), and quantum-sampling-assisted PCD on D-Wave hardware. Simulated annealing produced the best numeric metrics (Accuracy 85%, Precision 94%, Recall 82%, F1 88%) but was the slowest; real quantum sampling gave modest improvements over classical PCD in Accuracy and Precision (85% and 91% vs 84% and 86%) but lower Recall (79% vs 81%) and slightly higher F1 (84% vs 83%), while classical training was fastest (≈2 minutes). Quantum-assisted methods used smaller RBM sizes and smaller batch sizes due to embedding and qubit constraints. The authors conclude that quantum-assisted RBMs show promising, albeit preliminary, performance gains on this task, while noting NISQ hardware and embedding limits as major practical constraints.",
+  "performance_claims": [
+    "Full dataset: 145,000,000 transactions; frauds: 19,000.",
+    "Balanced experimental dataset after manual undersampling: 39,000 transactions (50% fraud, 50% non-fraud); 80/20 train/test split.",
+    "Classical PCD (best hyperparameters): Accuracy 84%, Precision 86%, Recall 81%, F1-score 83%; training time ≈ 2 minutes; RBM config: 55 visible, 200 hidden, batch size 512.",
+    "Simulated-annealing-assisted training (D-Wave simulator): Accuracy 85%, Precision 94%, Recall 82%, F1-score 88%; training time ≈ 4 hours; RBM config: 55 visible, 65 hidden, batch size 32.",
+    "Quantum-sampling-assisted training (D-Wave hardware): Accuracy 85%, Precision 91%, Recall 79%, F1-score 84%; training time ≈ 1.8 hours; RBM config: 55 visible, 65 hidden, batch size 32.",
+    "Quantum-assisted approaches required smaller learning rates and different decay schedules compared to classical training to avoid divergence."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper reports modest empirical improvements in some metrics (accuracy, precision, F1) for quantum-assisted sampling on a reduced, manually undersampled dataset and shows simulated annealing outperforming classical training in these runs. However, the advantage is limited in scope (balanced, downsampled data, feature reduction for embedding), not universal across all metrics (recall was lower for real QA), and constrained by NISQ hardware and embedding bottlenecks; thus a general quantum advantage is suggested but not conclusively demonstrated.",
+  "limitations": [
+    "Use of current NISQ-era noisy quantum annealers: non-adiabatic transitions and hardware noise mean the QA process can sample excited states (Boltzmann-like sampling) rather than reliably finding ground states, limiting solution quality and interpretability.",
+    "Minor-embedding and limited qubit connectivity/capacity on D-Wave is a primary bottleneck that forced feature reduction and restricted the size of RBMs that could be embedded on real hardware.",
+    "Gaussian (continuous) visible units require binary expansion to map to QUBO/Ising, increasing the number of binary variables and worsening embedding and scaling challenges.",
+    "Extremely imbalanced real-world dataset (145M transactions with only ~19k frauds) necessitated manual undersampling to create a balanced training set (39k samples), which reduces use of available data and may limit generalizability.",
+    "Limited access to the D-Wave system and constrained experimental resources resulted in few quantum-assisted datapoints and limited statistical robustness of the quantum experiments.",
+    "Simulated-annealing-assisted experiments were constrained by a limited number of sweeps (to keep runtimes practical), producing oscillatory and inconsistent metric evolution.",
+    "Parameter updates derived from quantum-generated samples exhibited different statistical properties, forcing much smaller learning rates (and different hyperparameter regimes) to avoid divergence.",
+    "Runtime trade-offs: classical training was orders of magnitude faster (minutes) while simulated-annealing and quantum-assisted training took hours, impacting practical applicability.",
+    "Uncertainty about generality: authors explicitly note it is unclear whether the observed advantage of quantum-assisted RBMs is universal or dataset/task specific.",
+    "[inferred] Manual undersampling likely discards useful non-fraud patterns and may introduce sampling bias, potentially inflating apparent classifier performance on the reduced dataset.",
+    "[inferred] Runtime comparisons may be confounded by implementation/platform overheads (e.g., Windows 11 and Python calls from Julia) that disproportionately slowed simulated-annealing runs.",
+    "[inferred] Small batch sizes required for quantum-assisted training (to be effective) imply throughput and scalability challenges when moving toward larger datasets.",
+    "[inferred] Reliance on cloud access (Leap) and constrained queue/time windows could introduce variability and reproducibility issues for quantum experiments.",
+    "[inferred] Lack of explicit error-mitigation or noise-modeling strategies for quantum annealing in the study leaves the reliability and repeatability of quantum samples insufficiently characterized.",
+    "[inferred] The binary expansion approximation for continuous variables can introduce discretization errors that degrade model fidelity and complicate fair comparison with classical GRBMs."
+  ],
+  "open_questions": [
+    "Is the observed advantage of quantum-assisted RBMs over classical approaches universal across other datasets, fraud detection tasks, and financial applications, or is it specific to the characteristics of this Stone dataset?",
+    "To what extent will advances in quantum hardware (more qubits, improved connectivity, lower noise) change the embedding bottleneck and make quantum-assisted RBMs scalable and consistently superior?",
+    "How can RBMs (and GRBMs) be encoded more efficiently for QA without a costly binary expansion of continuous features?",
+    "What embedding/minor-embedding strategies and error-mitigation techniques most improve performance and reliability of quantum sampling for RBM training?",
+    "How do the different statistical properties of quantum-generated samples affect training dynamics, and what optimizer/hyperparameter adaptations are needed for stable convergence?",
+    "Can gate-based quantum algorithms (e.g., QAOA) or other quantum ML approaches (e.g., quantum kernel methods for SVMs) outperform QA-assisted RBMs for fraud detection in practice?",
+    "How can quantum-assisted training runtimes be reduced (e.g., via batching, improved workflows, or hardware changes) to be competitive with classical methods in production settings?",
+    "What are best practices for handling extreme class imbalance in financial transaction datasets when evaluating quantum-assisted ML models so that evaluations remain representative and robust?"
+  ],
+  "future_work": [
+    "Explore quantum kernel methods for support vector machine training (quantum SVM / quantum kernel approaches).",
+    "Investigate quantum-assisted training implementations on gate-based platforms, e.g., using the Quantum Approximate Optimization Algorithm (QAOA) framework.",
+    "Perform further studies to determine whether the observed advantages of quantum-assisted RBMs generalize beyond this specific dataset and task to other datasets and financial fault-detection problems.",
+    "Explore additional quantum-assisted machine learning approaches and methods to enhance the current execution (including on more robust, post-NISQ quantum platforms)."
+  ],
+  "topic_tags": [
+    "fraud-detection"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — QA- and SA-assisted RBMs achieved improved classification metrics on the balanced 39k transaction test set (SA F1 88% vs classical PCD F1 83%; QA F1 84%), with especially higher precision reported for SA (94%).",
+    "#idea:hybrid-approach — The authors replace the negative-phase Gibbs sampling in PCD with quantum/simulated annealing sampling by mapping RBM energy to a QUBO/Ising Hamiltonian and sampling via D-Wave simulators/QPU (QARBoM.jl + QUBO.jl + DWave.jl).",
+    "#idea:near-term-feasibility — Experiments on D-Wave QPUs and D-Wave simulators demonstrate NISQ-era applicability for small embedded RBMs, showing quantum-assisted training is experimentally accessible today for reduced-scale problems.",
+    "#limitation:qubit-count — Embedding/topology constraints forced a reduced model capacity (visible features reduced to 55 and hidden units reduced to 65 for SA/QA vs 200 hidden units for classical), limiting representational power.",
+    "#limitation:noise — Authors acknowledge NISQ hardware limitations; QA-assisted training showed only marginal F1 improvements and lower recall compared to SA, consistent with noise/quality limits on current QPUs.",
+    "#limitation:data-encoding — The QUBO/Ising mapping and embedding overhead increased preprocessing and constrained batch sizes (QA/SA batch=32 vs classical=512), indicating nontrivial data-encoding and operational costs.",
+    "#idea:hybrid-approach — SA (PIMC-style) via D-Wave simulator achieved the best F1 but at a large computational cost (SA training ~4 hours vs classical PCD ~2 minutes), highlighting trade-offs between metric gains and runtime."
+  ],
+  "contradictions": [
+    "The paper claims quantum-assisted RBMs provide superior performance, but the SA-assisted variant's F1 improvement (88% vs 83%) came with a massive runtime increase (4 hours vs 2 minutes), and the QA-assisted variant had lower recall and only marginal F1 improvement — calling into question practical superiority when accounting for runtime and operational cost.",
+    "Reported quantum-assisted models required heavy feature reduction and smaller hidden layers (65 vs 200 hidden units) due to embedding/qubit constraints; therefore the claimed advantage may be confounded by architectural/hyperparameter differences rather than an intrinsic quantum benefit, raising scalability concerns."
+  ]
+}

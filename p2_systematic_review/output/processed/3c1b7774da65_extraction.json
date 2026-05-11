@@ -1,0 +1,242 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2312.00892v1) and lacks a journal or conference venue; its structure (abstract, methods, results, references, appendices) matches an academic preprint uploaded to arXiv.",
+  "title": "Black-Litterman Portfolio Optimization with Noisy Intermediate-Scale Quantum Computers",
+  "authors": [
+    "Chi-Chun Chen",
+    "San-Lin Chung",
+    "Hsi-Sheng Goan"
+  ],
+  "year": "2023",
+  "journal_or_venue": "arXiv preprint arXiv:2312.00892",
+  "doi": "",
+  "abstract_summary": "This preprint demonstrates integrating NISQ-era quantum algorithms into the Black–Litterman portfolio optimization workflow, using quantum machine learning (QSVM and QNN) to predict investor views and variational quantum eigensolvers (VQE) and QAOA to solve the resulting QUBO. On 12- and 16-qubit examples (selecting 6 of 12 assets and 8 of 16 assets) they report that VQE achieves high approximation ratios with very few final samplings and that the quantum-enhanced Black–Litterman portfolios outperform several classical baselines in walk-forward backtests, suggesting potential advantage as quantum hardware scales.",
+  "methodology_description": "The authors implement a hybrid quantum-classical pipeline to enhance subroutines of the Black-Litterman (BL) portfolio optimization model. They first compute market-implied returns Π = γ Σ w_mkt and then generate investor \"views\" Q by predicting short-term categorical outcomes for each asset using supervised learning (quantum classifiers and classical baselines). The view uncertainty Ω is set proportional to asset variance (Ω_kk = τ p_k Σ p_k^T) and view magnitudes q_k are built from (PΠ)_k plus a scaled discrete label η_k derived from classifier outputs. These pieces are combined into the BL combined return µ_BL via the standard BL formula. The discrete portfolio optimization (select B assets out of N) is written as a QUBO: γ/2 x^T Σ x − µ_BL^T x + λ(1^T x − B)^2 with penalty λ chosen empirically (λ=1.0). The QUBO is mapped to an Ising Hamiltonian using x = (1−Z)/2. For solving the Ising Hamiltonian the authors employ variational quantum eigensolver (VQE) with a problem-agnostic heuristic ansatz and Quantum Approximate Optimization Algorithm (QAOA). They also study quantum classifiers (quantum kernel SVM / QSVM and quantum neural networks / QNN) and classical SVM/NN baselines for generating the views. Optimization of variational parameters is performed with a classical optimizer (SLSQP); after convergence the optimized circuit is sampled a small number of times (typically 5 final shots) to pick the best bitstring. Evaluation includes approximation ratio (AR) of returned energy relative to the feasible energy range, variance of sampled eigenvalues (via large-shot sampling in simulation), classification accuracy of view predictors, and financial backtesting using certainty-equivalent return (CER) across walk-forward windows.",
+  "algorithms_used": [
+    "Variational Quantum Eigensolver (VQE)",
+    "Quantum Approximate Optimization Algorithm (QAOA)",
+    "Quantum Kernel method / QSVM",
+    "Quantum Neural Network (QNN)",
+    "Classical SVM",
+    "Classical Neural Network (NN)"
+  ],
+  "frameworks": [],
+  "experimental_setup": "Primary experiments run in gate-based quantum computer simulations; selected optimized 12-qubit VQE circuits were executed for final sampling on a 27-qubit IBM superconducting device (IBM Auckland). Walk-forward backtesting across historical weekly data (2008-01-01 to 2021-12-31) with 5-year training (≈260 weeks) and 1-year testing (52 weeks) windows (moving by 52 weeks) was used to evaluate financial performance.",
+  "dataset_used": "Weekly stock price data for a 12-asset pool (random S&P500 constituents) from Yahoo Finance; market capitalization data from companiesmarketcap.com; macro/financial indicators used as features from FRED (Federal Reserve Economic Data). Also an extended 16-asset ETF case in an appendix. Time period 2008-01-01 to 2021-12-31, with walk-forward splits producing 9 testing segments.",
+  "experiment_input": {
+    "sources": {
+      "prices": "Yahoo Finance (weekly)",
+      "market_cap": "companiesmarketcap.com",
+      "financial_indicators": "FRED (Federal Reserve Bank of St. Louis)"
+    },
+    "size": {
+      "assets": "primary experiment: 12 equities (also a 16-asset ETF case in appendix)",
+      "time_range": "2008-01-01 to 2021-12-31",
+      "walk_forward_splits": "9 segments (training 260 weeks, testing 52 weeks, step 52 weeks)"
+    },
+    "preprocessing": [
+      "Compute log returns (r_t = log(p_t / p_{t-1}))",
+      "For classification features: 3-week backward moving average",
+      "Standard normalization",
+      "PCA reduction to 4 dimensions",
+      "Rescale each feature to (0, 2π] for quantum feature map encoding",
+      "Remove feature vectors that are near in feature space but with conflicting labels",
+      "Labeling: Y1 = sign of t-week (t=52) log return, Y2 = magnitude class via |r| / (σ/√t) (binary: <1 or ≥1)"
+    ],
+    "problem_spec": {
+      "budget_B": "select 6 out of 12 in main experiment (B=6); 8 out of 16 in appendix",
+      "risk_aversion": "γ estimated from index as (µ - r_f) / σ^2, effective γ_eff = γ / B",
+      "penalty": "λ empirically chosen = 1.0"
+    }
+  },
+  "experiment_process": {
+    "pipeline": [
+      "Compute covariance Σ and market-cap weights w_mkt; compute Π = γ Σ w_mkt",
+      "Construct feature vectors from macro/financial indicators and train classifiers (QSVM, QNN, classical SVM, NN) to predict Y1 and Y2 for each asset",
+      "Form η_k = s1 * s2 * Y1_k * Y2_k where s1, s2 are classifier accuracies (scale factors); set P = I (direct views), Ω diagonal with Ω_kk = τ p_k Σ p_k^T",
+      "Compute combined BL returns µ_BL using formula µ_BL = ((τΣ)^{-1} + P^T Ω^{-1} P)^{-1} ((τΣ)^{-1} Π + P^T Ω^{-1} Q)",
+      "Form QUBO objective: γ/2 x^T Σ x − µ_BL^T x + λ(1^T x − B)^2",
+      "Map to Ising Hamiltonian H = sum_{i<j} h_ij Z_i Z_j + sum_i h_i Z_i + C using x = (1−Z)/2",
+      "Solve H with variational algorithms: VQE (heuristic ansatz) and QAOA",
+      "VQE specifics: heuristic ansatz with repetitions p (p=4 for 12-qubit case; p=6 in 16-asset case), parameterized single-qubit rotations and entangling layers; number of parameters 3N(p+1)",
+      "QAOA specifics: p=8 (12-qubit case) or p=10 (16-asset case) with full connectivity required by problem Hamiltonian",
+      "Classical optimizer: Sequential Least Squares Programming (SLSQP) to minimize expectation value",
+      "Initial parameter attempts: VQE used ≈10 initial random guesses (20 in 16-asset case), QAOA used many more (e.g., 500)",
+      "After convergence fix optimal parameters and perform a small number of final measurements (typically 5 shots; sometimes 10) to sample candidate bitstrings",
+      "Evaluate sampled bitstrings by computing objective energy; select best feasible sample by energy",
+      "In simulation perform high-shot sampling (e.g., 500,000 shots) to estimate the variance and probability concentration of the optimized ansatz",
+      "Perform walk-forward backtesting using selected portfolios, compute CER and compare to baselines (market-cap index, 1/N portfolio, MPT exact solution)"
+    ],
+    "key_metrics_collected": [
+      "Classifier test accuracy (per asset, averaged across folds/time segments)",
+      "Approximation ratio (AR) of variational solutions relative to feasible worst/optimum",
+      "Variance of eigenvalue distribution of optimized ansatz (via large-shot sampling)",
+      "Backtest financial metrics: mean return, volatility, certainty-equivalent return (CER), capital growth across test segments"
+    ]
+  },
+  "experiment_output": {
+    "formats": [
+      "Classifier accuracy tables (per asset, average over time segments)",
+      "Optimization metrics: AR of optimized ansatz, AR of sampled outputs, variance of sampled energies",
+      "Backtest performance: time series of capital growth per test segment and aggregated mean CERs",
+      "Probability/concentration statistics of final ansatz distributions (counts of bitstrings in final shots)"
+    ],
+    "baselines_compared": [
+      "Market-cap-weighted index",
+      "Naive 1/N portfolio",
+      "Modern Portfolio Theory (MPT) exact solution (continuous mean-variance)",
+      "Exhaustive search (exact discrete optimum) for small problems"
+    ],
+    "primary_outcomes": [
+      "QSVM produced highest classifier accuracy among tested methods and was used for views",
+      "Heuristic VQE produced optimized circuits with concentrated probability distributions that required few final shots to find good solutions (mean AR ≈ 0.96 across 12-qubit tests)",
+      "QAOA sometimes required many initial guesses and produced less concentrated distributions",
+      "BL portfolios (with quantum-predicted views and VQE solutions) outperformed MPT, 1/N, and market-cap baseline in backtests (measured by CER) in the reported experiments"
+    ]
+  },
+  "experiment_parameters": {
+    "qubits": {
+      "primary": 12,
+      "extended_case": 16
+    },
+    "ansatz": {
+      "VQE_type": "heuristic problem-agnostic ansatz (parameterized single-qubit rotations and linear entanglement layers)",
+      "VQE_repetitions_p": 4,
+      "QAOA_p": 8
+    },
+    "shots": {
+      "final_measurements_typical": 5,
+      "final_measurements_other": 10,
+      "large_shot_analysis": 500000
+    },
+    "optimizer": "SLSQP (Sequential Least Squares Programming)",
+    "initial_parameter_guesses": {
+      "VQE": 10,
+      "QAOA": 500
+    },
+    "penalty_lambda": 1.0,
+    "feature_map": {
+      "QSVM": "simple embedding (n=0, no entanglement)",
+      "QNN": "feature map followed by parameterized ansatz (m=2) with fully connected CNOTs"
+    },
+    "labeling_horizon_t": 52,
+    "budget_B": 6,
+    "risk_aversion_gamma": "estimated from index as (µ - r_f)/σ^2 and adjusted γ_eff = γ/B"
+  },
+  "hardware_details": {
+    "simulator": "gate-based quantum computer simulator (unspecified simulator backend)",
+    "quantum_processing_unit": "IBM Auckland (27-qubit superconducting device)",
+    "cloud_provider": "IBM Quantum"
+  },
+  "reproducibility_notes": null,
+  "key_findings": [
+    "[supported] Black-Litterman (BL) portfolio optimization with investor views predicted by a quantum kernel SVM (QSVM) produced better backtest performance than classical MPT, naive 1/N, and market-cap-weighted index on the 12-asset, 9-segment walk-forward experiment reported.",
+    "[supported] QSVM (quantum kernel method) achieved higher testing accuracy than QNN and was comparable or slightly better than classical SVM on the authors' dataset (QSVM ≈ SVM > NN > QNN).",
+    "[supported] Variational heuristic VQE ansatz produced optimized circuits whose output probability mass was highly concentrated on a small set of low-energy eigenstates, enabling good solutions with only a few final measurement shots (they used 5).",
+    "[supported] VQE heuristic ansatz attained high approximation ratios (mean AR ≈ 0.96 across 12-qubit instances) and produced solutions that perform similarly to exhaustive-search exact solutions in backtests.",
+    "[supported] QAOA required more initial parameter guesses, produced broader final-state distributions, and on these instances performed worse (lower AR, less concentrated probability) than the heuristic VQE ansatz.",
+    "[supported] The authors empirically chose penalty λ = 1.0 for the equality budget constraint by analyzing the eigenvalue distribution, and argued this choice balances enforcing the constraint and keeping Hamiltonian scale manageable.",
+    "[supported] Executing optimized 12-qubit VQE heuristic circuits on a 27-qubit IBM device (Auckland) yielded the same solution as simulation within 5 shots for 6 of 9 test cases, indicating the circuits were runnable on current NISQ hardware for these instances.",
+    "[supported] For a 16-asset (B=8) case representing a global portfolio, BL exact solution slightly outperformed MPT exact solution in mean CER; VQE/QAOA approximations were within range but not consistently better than exact BL in that instance.",
+    "[speculative] Quantum kernel methods may offer advantage in more complex prediction tasks because they can extract features in exponentially large Hilbert spaces with only linearly scaling qubit resources.",
+    "[speculative] Real quantum advantage for discrete portfolio optimization is anticipated in the future because qubit requirements scale linearly with problem size whereas classical exhaustive search faces exponentially growing search spaces.",
+    "[supported] Using only a very small number of final samples is justified for their optimized VQE circuits on the studied instances; Appendix A provides a statistical argument bounding when large final sampling is unjustified (e.g., K > 643 for their scenario)."
+  ],
+  "results_summary": "The authors integrated quantum machine learning (QSVM and QNN) with the Black-Litterman model and solved the resulting QUBO portfolio selection with variational quantum algorithms (heuristic VQE and QAOA) on simulated 12- and 16-qubit problems and some runs on a 27-qubit device. QSVM provided the best view predictions in their experiments. Heuristic VQE produced concentrated probability distributions and high approximation ratios (mean AR ≈ 0.96) such that only a few final measurement shots (they used 5) were sufficient to find high-quality portfolios. In 12-asset walk-forward backtests, BL with QSVM views and VQE solutions outperformed MPT, naive 1/N and market-cap-weighted portfolios; results for a 16-asset case were mixed but BL exact still slightly led MPT. The authors emphasize practical NISQ workflows and argue potential future quantum advantage for larger problem sizes.",
+  "performance_claims": [
+    "QSVM mean testing accuracy: Y1 ≈ 0.93, Y2 ≈ 0.90 (authors' Table II averages) [supported].",
+    "Classical SVM testing accuracy comparable to QSVM: SVM mean Y1 ≈ 0.93, Y2 ≈ 0.89 [supported].",
+    "QNN mean testing accuracy: Y1 ≈ 0.78, Y2 ≈ 0.74; NN mean: Y1 ≈ 0.91, Y2 ≈ 0.82 (authors' Table II) [supported].",
+    "Heuristic VQE achieved mean approximation ratio (AR) ≈ 0.96 on 12-qubit instances (Fig. 7) [supported].",
+    "Final sampling: authors used 5 measurement shots to select a solution from optimized VQE circuits; probability of achieving AR ≥ 0.95 by random sampling P5_0.95 ≈ 0.085; they computed an upper bound K ≤ 643 as the max justified random-sampling count for their Pg ≈ 1.71×10^-3 (Appendix A) [supported].",
+    "Backtest mean CERs for 12-asset case (Fig. 8): BL model VQE solution CER = 0.121, QAOA = 0.119, BL exact = 0.112, naive 1/N = 0.111, market-cap index = 0.107, MPT exact = 0.103 [supported].",
+    "Backtest mean CERs for 16-asset case (Fig. 9): BL exact = 0.051, MPT exact = 0.048, market-cap/index/naive = 0.040, BL VQE = 0.046, BL QAOA = 0.040 [supported].",
+    "Real-device execution: optimized 12-qubit VQE circuits run on IBM Auckland returned the same simulated solution within 5 shots for 6 of 9 test segments (Appendix C) [supported]."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper argues that quantum advantage is anticipated for larger discrete portfolio problems because qubit resources scale linearly with problem size while classical search scales exponentially; this is a theoretical/extrapolative claim supported by intuition about complexity but not demonstrated empirically in the paper.",
+  "limitations": [
+    "Demonstration limited to small problem sizes (12 and 16 qubits); no demonstration of quantum advantage beyond classical capability (author-stated).",
+    "Dependence on NISQ-era hardware characteristics (scale and fidelity); current devices insufficient to solve larger instances claimed to be interesting (author-stated).",
+    "QAOA required deep, fully-connected circuits and many initial parameter guesses; found less stable and more hardware demanding than the heuristic VQE (author-stated).",
+    "Heuristic VQE can suffer from local minima and needs multiple initial guesses; optimization stability not guaranteed for larger problems (author-stated).",
+    "Penalty parameter λ chosen empirically by analysis of eigenvalue distribution rather than a principled or automatic method (author-stated).",
+    "Investor views restricted to direct (P taken as identity) views; relative views were not implemented in experiments (author-stated).",
+    "Feature maps used were simple (no entanglement) because of small/data simplicity; limits conclusions about performance of entangled feature maps on complex data (author-stated).",
+    "Backtests do not consider transaction costs, turnover/friction, or other realistic trading constraints (author-stated implicitly via backtest description).",
+    "Market-cap/ index construction approximations: for the 16-asset case equal weights were used and market-cap estimation was approximate (author-stated in appendix).",
+    "Real-device experiments were limited: only final sampling of optimized VQE circuits was executed and results matched simulation in 6/9 cases; QAOA circuits were too deep to run meaningfully on hardware (author-stated).",
+    "[inferred] The small and randomly selected asset pool and limited number of walk-forward segments may not capture broad market regimes or generalize to larger universes.",
+    "[inferred] The assumption that an optimized ansatz concentrates probability on a few good solutions (thus allowing few final samples) may break down for larger N, noisier hardware, or harder instances.",
+    "[inferred] The preprocessing step that removes nearby conflicting feature vectors (to improve 'trainability') could introduce bias or reduce representativeness of real-world noisy labels.",
+    "[inferred] The approach relies on accurate estimation of covariance Σ and the implied return Π; estimation error or nonstationarity of financial data may degrade performance.",
+    "[inferred] The computational resources required for the classical parts (kernel evaluations, SLSQP optimization, many initializations) may scale poorly as problem size grows (e.g., parameter count grows ~3N(p+1) for the heuristic ansatz).",
+    "[inferred] QSVM advantages observed here may be due to small-scale toy data; it remains unclear whether quantum kernels will outperform classical kernels on realistic, high-dimensional financial features.",
+    "[inferred] The method for setting the scalar factors in views (τ, η scaling with classifier accuracy) is heuristic and its financial interpretation/robustness is not fully validated."
+  ],
+  "open_questions": [
+    "How does the approach scale with number of assets (N) in practice, both in terms of qubit counts and classical optimization overhead?",
+    "What are the required qubit counts and fidelities for a practical quantum advantage on discrete portfolio optimization (Black–Litterman + QUBO) tasks?",
+    "How robust are the VQE and QAOA optimization results to realistic device noise and imperfect calibration when solving larger instances?",
+    "Does the assumption that an optimized ansatz concentrates probability on few high-quality solutions hold for larger and harder instances?",
+    "What is the scaling behavior of the number of final measurements needed to reliably extract high-quality solutions as problem size grows?",
+    "Can quantum kernels (QSVM) provide consistent predictive advantages over classical kernels on richer, higher-dimensional financial datasets?",
+    "Which ansatz architectures and classical optimizers scale best for portfolio QUBOs in terms of convergence reliability and resource cost?",
+    "Can a principled method be developed for choosing the penalty λ that enforces constraints without dominating the Hamiltonian or inflating measurement cost?",
+    "How sensitive are results to model choices such as using direct views only (P=I) versus allowing relative views, and to the parameterization of view uncertainty (τ)?",
+    "How does inclusion of realistic trading frictions (transaction costs, turnover constraints), position limits, shorting constraints, and rebalancing impact quantum-optimized portfolios?",
+    "What error-mitigation, measurement-reduction, or hybrid strategies are most effective to make the pipeline practical on NISQ devices?",
+    "How does the proposed pipeline perform across different market regimes (crisis vs. tranquil periods) and larger, diversified asset universes?",
+    "What is the comparative classical runtime and solution quality trade-off versus classical heuristics/metaheuristics for the same QUBO instances?"
+  ],
+  "future_work": [
+    "Anticipated extension to larger-size problems to probe potential quantum advantage once hardware with sufficient size and fidelity exists (author-stated).",
+    "Exploration of more complex, entangled quantum feature maps for QSVM to handle richer and higher-dimensional financial features (author-stated).",
+    "Further real-device experiments beyond final sampling, particularly running and evaluating VQE/QAOA circuits end-to-end on hardware as devices improve (inferred and author-stated via real-device appendix).",
+    "Systematic study of ansatz choices and optimization strategies (including VQE heuristic variants and QAOA depth/initialization strategies) to improve stability and scalability (author-stated preference but open for more work).",
+    "Investigate principled penalty-tuning methods and measurement-cost-aware constraint implementations (author-stated need for better penalty selection).",
+    "Analyze sampling requirements and provide bounds/strategies for the number of final measurements as problem size increases (authors discuss sampling bounds in appendix).",
+    "Extend the framework to more realistic portfolio constraints and trading frictions (transaction costs, turnover limits, short-sale constraints) and evaluate the impact on backtests (inferred and practically relevant).",
+    "Broader backtesting over larger asset pools and longer/more diverse time periods to assess robustness and generalization (inferred and partially realized in appendices).",
+    "Deeper investigation into the practical benefits of quantum kernels versus classical kernels on real financial prediction tasks (author-stated anticipation of potential quantum advantage).",
+    "Develop and incorporate error mitigation and measurement reduction techniques tailored to this portfolio optimization pipeline to improve real-device applicability (inferred)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization",
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Quantum-enhanced Black-Litterman pipeline (QSVM/QNN for views + VQE/QAOA for QUBO) produced portfolios that outperformed classical baselines in walk-forward backtests on 12- and 16-asset experiments, with high approximation ratios reported for VQE.",
+    "#idea:near-term-feasibility — Demonstrates an end-to-end NISQ-era integration: quantum classifiers and variational solvers are incorporated into a financial workflow and selected VQE circuits were sampled on a 27-qubit IBM device.",
+    "#idea:hybrid-approach — Practical hybrid architecture: classical preprocessing (PCA, feature engineering), classical optimizer (SLSQP) for variational parameter tuning, and few-shot final sampling to select portfolios.",
+    "#limitation:qubit-count — Experiments are limited to 12- and 16-qubit instances (selecting 6/8 assets), far smaller than realistic portfolio sizes; scalability to larger N is unproven.",
+    "#limitation:simulation-only — Majority of algorithm evaluation (training, high-shot variance estimation, many optimization runs) performed in gate-model simulation; only selected final samples executed on hardware.",
+    "#limitation:noise — Hardware runs used a noisy 27-qubit device with very few final shots (typically 5), and no detailed error-mitigation strategy is reported, leaving robustness to noise uncertain.",
+    "#limitation:data-encoding — The pipeline relies on PCA reduction to 4 features and angular rescaling for quantum feature maps; the cost and fidelity of encoding richer financial feature sets are not addressed.",
+    "#limitation:simulation-only — VQE and QAOA require deep circuits (reported p values up to 6 for VQE and 8-10 for QAOA) and many optimizer restarts, implying heavy classical/quantum simulation effort for current results."
+  ],
+  "contradictions": [
+    "The paper claims quantum-enhanced portfolios outperform classical baselines, but this claim is supported primarily by small-scale (12/16 asset) experiments and simulation-heavy evaluation with only limited noisy hardware sampling; this raises a contradiction between stated practical advantage and the limited empirical scale and noisy-hardware evidence.",
+    "Reported high approximation ratios and selection from very few final shots (e.g., 5) contrast with the need for concentrated probability mass; simulation shows variance in eigenvalue distributions, suggesting the few-shot selection may not generalize on noisy hardware or larger problems."
+  ]
+}

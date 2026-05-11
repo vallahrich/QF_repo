@@ -1,0 +1,234 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "The document is published in the ICAIF '24 proceedings with an ACM DOI, ACM ISBN, conference venue metadata, and typical paper structure (abstract, methods, results, citations), indicating a peer-reviewed conference paper.",
+  "title": "Quantum Generative Models of Mid-Price Movement in Limit Order Books",
+  "authors": [
+    "Vanio Slavov Markov",
+    "Vladimir Rastunkov",
+    "Juan I Adame"
+  ],
+  "year": "2024",
+  "journal_or_venue": "ICAIF '24: 5th ACM International Conference on AI in Finance (Proceedings)",
+  "doi": "10.1145/3677052.3698679",
+  "abstract_summary": "The paper proposes a quantum-channel based generative model (quantum hidden Markov model / unitary QHMM) for directional mid-price movements in limit order books, modeling observations as measurements of an emission system entangled with a hidden quantum state. It describes parameterization via quantum circuits with mid-circuit measurements, provides analytical expressions for sequence probabilities, presents a learning algorithm including model-order estimation and evolutionary optimization, and demonstrates training and small-scale quantum hardware experiments on real LOB data.",
+  "methodology_description": "The authors modelled directional mid-price movements in limit order books (LOBs) as a stochastic process language and proposed a quantum generative modelling approach based on Quantum Hidden Markov Models (QHMMs). They parameterized QHMMs as unitary quantum circuits with mid-circuit measurement (Unitary QHMMs): a hidden-state Hilbert space (ℋ_S) entangled with an emission qubit (ℋ_E). Empirical sequence distributions were estimated from observed binary directional returns (y_t = 1 if mid-price return > 0 else 0) and represented via finite-length sequence probabilities and Hankel matrices; low-rank Hankel approximations were used to control model complexity. Learning/search over the space of circuit structures and continuous gate parameters was performed by a memetic evolutionary algorithm that combines a global evolutionary (population-based) search over circuit structures with local Metropolis-annealing search and non-linear parametric optimization of gate parameters. The fitness objective was the negative average variational distance between empirical and model sequence distributions up to a fixed length. Models (typically with a 3-qubit hidden register + 1 emission qubit = 4 physical qubits in circuit) were trained on both event-level and 1-second-aggregated LOB data for AMZN and GOOGL. Trained circuits were transpiled and optimized for execution on real hardware; error suppression/mitigation techniques (dynamical decoupling, Pauli twirling) were applied for QPU runs, and hardware outputs were compared to target distributions.",
+  "algorithms_used": [
+    "Quantum Hidden Markov Model (QHMM)",
+    "Unitary QHMM (quantum circuits with mid-circuit measurement)",
+    "Memetic algorithm (evolutionary + local Metropolis annealing)",
+    "Evolutionary algorithm (population-based search)",
+    "Local Metropolis annealing",
+    "Non-linear parametric optimization (per-structure gate parameter optimization)",
+    "Hankel matrix rank estimation and low-rank approximation",
+    "Quantum circuit transpilation and optimization",
+    "Dynamical decoupling (error suppression)",
+    "Pauli Twirling (error mitigation)"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Models were trained in simulation (Qiskit) and selected trained circuits were transpiled and executed on IBM Eagle r3 QPU. Circuits typically used 4 physical qubits (3-qubit hidden state + 1 emission qubit). Learning used a population-based evolutionary process (μ=200 parents, offspring size λ = γ·μ adaptive) for up to 300 generations or until fitness threshold met; sequence distributions up to length 10 were used for training. Transpilation and multi-stage optimization reduced 2-qubit depth (example reductions from 100/110 to 53/86). Error suppression via dynamical decoupling and Pauli twirling was applied for hardware runs.",
+  "dataset_used": "Event-level limit order book data for AMZN (Amazon.com Inc.) on 2022-06-03 (T = 102,418 events) and GOOGL (Alphabet Inc.) on 2022-07-19 (T = 235,928 events). Additionally, 1-second aggregated versions were created by taking the last mid-price in each one-second interval.",
+  "experiment_input": {
+    "data_sources": [
+      {
+        "ticker": "AMZN",
+        "date": "2022-06-03",
+        "events": 102418,
+        "type": "LOB event-level"
+      },
+      {
+        "ticker": "GOOGL",
+        "date": "2022-07-19",
+        "events": 235928,
+        "type": "LOB event-level"
+      }
+    ],
+    "aggregation": "Also produced 1-second aggregated series by taking the last mid-price within each one-second interval.",
+    "preprocessing": [
+      "Compute mid-price p_m_t as average of best bid and ask",
+      "Compute mid-price returns r_t = p_m_t - p_m_{t-1}",
+      "Binarize directional movement y_t = 1 if r_t > 0 else 0",
+      "Construct empirical frequency estimates of all observed finite sequences up to a chosen length (typically up to length 10)",
+      "Build finite Hankel matrices (sequence lengths up to 24 tested) and optionally compute low-rank approximations (ε = 0.01 used in examples)"
+    ]
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Estimate empirical sequence distributions from binarized directional movements (sequences up to length 10 used for fitness evaluation).",
+      "Analyze Hankel matrix ranks by sequence length to guide model order (hidden Hilbert space dimension) selection; optionally perform low-rank approximation to control complexity.",
+      "Parameterize hypothesis space as unitary quantum circuits: choose hidden-state qubits (N = 8 dimension = 3 qubits) and an emission qubit; gate set contained single-qubit gates {p, x, y, z, h, rx, ry, rz} and controlled two-qubit counterparts.",
+      "Initialize a population of circuit hypotheses uniformly (μ = 200).",
+      "Iterate evolutionary optimization for up to 300 generations: select parents, generate offspring via structure-modifying operators (Modify), apply local Metropolis annealing, and perform per-structure continuous gate-parameter optimization (memetic step) to maximize fitness.",
+      "Compute fitness as negative average variational distance between model and empirical sequence distributions up to length n; use convergence criterion (fitness > -1e-4) or max generations.",
+      "Select best-trained circuit; transpile and optimize the circuit (multi-stage transpilation) for target QPU connectivity and native gate set, controlling circuit depth.",
+      "Execute optimized circuits on IBM Eagle r3 QPU with error suppression (dynamical decoupling) and error mitigation (Pauli twirling); collect measurement histograms.",
+      "Compare model/simulator/hardware output distributions to empirical target distributions (histogram comparison, variational distance)."
+    ],
+    "hyperparameters_and_controls": {
+      "population_size_mu": 200,
+      "offspring_ratio_gamma": "adaptive (λ = γ·μ)",
+      "max_generations": 300,
+      "fitness_threshold": -0.0001,
+      "sequence_length_for_training": 10,
+      "hidden_state_dimension": 8,
+      "emission_dim": 2,
+      "low_rank_precision_epsilon": 0.01
+    }
+  },
+  "experiment_output": {
+    "result_types": [
+      "Fitted unitary quantum circuits (Unitary QHMMs) encoding sequence-generative models",
+      "Sequence probability distributions produced by trained models (for sequences up to length 10, and some longer-length Hankel analyses)",
+      "Variational distance (average over lengths up to n) between empirical and model distributions",
+      "Hardware measurement histograms for short sequence lengths (e.g., 3-symbol sequences) showing empirical vs hardware-generated distributions"
+    ],
+    "metrics_reported": {
+      "primary_metric": "Average variational distance Δ≤n( D_target || D_model )",
+      "target_performance": "Empirical variational distance optimized to values < 1e-4 in simulation",
+      "hardware_comparison": "Visual/histogram agreement reported; some degradation due to noise (deeper circuits showed larger variance)"
+    },
+    "baselines": "No classical baselines reported for direct distributional comparison (focus was on fitting empirical distributions and hardware execution fidelity)."
+  },
+  "experiment_parameters": {
+    "hidden_qubits": 3,
+    "emission_qubits": 1,
+    "physical_qubits_in_circuit": 4,
+    "Hilbert_space_dimension_N": 8,
+    "gate_set": [
+      "p",
+      "x",
+      "y",
+      "z",
+      "h",
+      "rx",
+      "ry",
+      "rz",
+      "controlled two-qubit counterparts"
+    ],
+    "population_size_mu": 200,
+    "offspring_size_lambda": "adaptive (λ = γ·μ)",
+    "max_generations": 300,
+    "fitness_threshold": -0.0001,
+    "sequence_length_training": 10,
+    "Hankel_sequence_length_tested": 24,
+    "low_rank_epsilon": 0.01,
+    "circuit_depth_examples": {
+      "initial_2q_depths_for_3_time_steps": [
+        100,
+        110
+      ],
+      "optimized_2q_depths_for_3_time_steps": [
+        53,
+        86
+      ]
+    },
+    "shots": "not specified in paper",
+    "optimizer": "non-linear parametric solvers (unspecified); memetic evolutionary framework with self-adaptive solver choice",
+    "error_mitigation": [
+      "dynamical decoupling",
+      "Pauli twirling"
+    ]
+  },
+  "hardware_details": {
+    "simulator": "Qiskit simulator used during training/experimentation",
+    "QPU_model": "IBM Eagle r3",
+    "cloud_provider": "IBM (via Qiskit/IBM Quantum)"
+  },
+  "reproducibility_notes": {
+    "artifacts_link": "https://doi.org/10.5281/zenodo.13160884",
+    "notes": "Authors provide trained circuits and hardware results on Zenodo (link above). The paper specifies gate set, population sizes, and many hyperparameters (see experiment_parameters), but some implementation details are high-level (exact non-linear solver names, random seeds, shots) are not specified. Reproduction will require the Zenodo artifacts and Qiskit; hardware runs require access to IBM Eagle r3 or simulated noise models."
+  },
+  "key_findings": [
+    "[speculative] Quantum Hidden Markov Models (QHMMs) can provide more parsimonious representations of stochastic process languages than classical HMMs (theoretically quadratic reduction in state count: n -> sqrt(n) as cited).",
+    "[speculative] A unitary-circuit parameterization with mid-circuit measurement implements QHMMs and allows analytical expressions for sequence probabilities.",
+    "[supported] QHMMs were trained on real limit order book mid-price directional movement data (AMZN and GOOGL) and produced generative models of observed sequence distributions.",
+    "[supported] For the datasets used, 3-qubit QHMMs (Hilbert-space dim N=8) trained to model sequence distributions up to length 10 achieved empirical variational distance to the target below 1e-4.",
+    "[supported] Low-rank Hankel approximations permit small quantum models to approximate longer sequence statistics: e.g., 3-qubit models approximate up to length ~14 (1s-aggregated) / ~16 (event-level) at ~1% approximation error; 5-qubit models reach ~20 / ~22 respectively.",
+    "[supported] The learning procedure combining evolutionary/metaheuristic search and local optimization successfully produced circuit ansätze that match empirical finite-sequence distributions for the studied datasets.",
+    "[supported] Trained circuits were transpiled and run on IBM Eagle r3 hardware for short sequences (3 time steps); hardware output distributions showed reasonable agreement with the target distributions with increased variance for deeper circuits/noisier runs.",
+    "[supported] Practical circuit compilation required reducing two-qubit gate depth substantially (examples: unoptimized depths ~100–110 two-qubit layers reduced to ~53–86 through multi-stage transpilation and optimization).",
+    "[speculative] QHMM models capture short-term dependencies via entanglement between hidden and emission systems; they can model non-Markovian-looking observation processes while the underlying state evolution remains Markovian.",
+    "[speculative] The continuity property of the fitness function (fitness changes bounded by operator-norm difference between unitaries) suggests the hypothesis space is amenable to gradient-free search/optimization methods."
+  ],
+  "results_summary": "The authors propose and implement a unitary-circuit parameterized Quantum Hidden Markov Model (QHMM) to generatively model mid-price directional movements in limit order books. They estimate model order via Hankel-rank analysis and use evolutionary/metaheuristic optimization to fit circuit parameters to empirical finite-sequence distributions for AMZN and GOOGL event-level and 1-second-aggregated data. Small quantum models (3 qubits) achieved very low empirical variational distance (<1e-4) for sequence lengths up to 10; with low-rank approximation, 3- and 5-qubit models can approximate longer sequence statistics (up to mid-20s in length under a 1% error threshold). Trained circuits were compiled and executed on IBM hardware for short sequences, showing reasonable agreement with target distributions after error suppression and transpiler optimizations. The work emphasizes theoretical parsimony and analytic tractability of QHMMs but does not present a direct empirical comparison to classical HMMs or other classical generative models.",
+  "performance_claims": [
+    "Variational distance between model and target distributions optimized to values less than 1e-4 for sequences up to length 10 using 3-qubit models.",
+    "Datasets: AMZN (102,418 events), GOOGL (235,928 events) used for training/testing.",
+    "3-qubit models accurately define probabilities of sequences up to length ~10 (direct rank), and under 1% approximation error (low-rank) up to length ~14 (1s-aggregated) and ~16 (event-level).",
+    "5-qubit models (low-rank approx) can approximate sequence probabilities up to lengths ~20 (1s-aggregated) and ~22 (event-level) at 1% error.",
+    "Evolutionary training setup: parent population size mu=200, up to 300 generations, offspring size lambda adaptive (gamma * mu), stopping criterion fitness > -1e-4.",
+    "Circuit compilation: unoptimized two-qubit depths ~100 and ~110 for two circuits reduced to ~53 and ~86 after multi-stage transpilation and optimization.",
+    "Hardware runs produced distribution histograms for 3-symbol sequences showing good agreement with targets, with increased variance for deeper circuits (no quantitative fidelity number reported)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper cites and relies on a theoretical result (from prior work) that QHMMs can offer quadratic state-space parsimony compared to classical HMMs (n -> sqrt(n)). This advantage is presented as a theoretical property; the present work demonstrates feasibility on small empirical datasets but does not provide a direct empirical comparison showing a practical quantum advantage over classical models.",
+  "limitations": [
+    "Inferring the rank of the Hankel matrix from data is undecidable (author-cited).",
+    "The empirical Hankel rank grows approximately exponentially with sequence length, suggesting the underlying process may be non-finite-state and limiting exact finite-dimensional modeling (author-observed).",
+    "Longer sequences occur with low frequency; probabilities for long sequences cannot be reliably estimated from finite samples (author-stated).",
+    "Finite-rank approximations require choosing a cutoff (number of singular values) and induce approximation error that must be traded off against model dimension (author-discussed).",
+    "Hardware noise introduces variance in the modeled distributions; deeper circuits produce larger deviations from the ideal model (author-observed in hardware runs).",
+    "Circuit depth and qubit connectivity requirements are high after transpilation; optimization reduced depth but not enough in some cases, constraining hardware implementation (author-experiment result).",
+    "The study models only the binary directional mid-price movement (up/down) and therefore omits other LOB information such as magnitudes, volumes, multi-level book state, and timestamps (author-specified modeling choice).",
+    "Model training and hypothesis search uses a memetic evolutionary algorithm over a large hybrid (discrete + continuous) search space, implying potentially high computational cost and complexity of the learning procedure [inferred].",
+    "[inferred] Dataset scope is limited (two assets, single trading days); generalizability across assets, longer periods, regimes, and market conditions is untested.",
+    "[inferred] The models assume stationarity (steady-state initialization) but real markets exhibit non-stationarity; applicability under non-stationary conditions is unclear.",
+    "[inferred] Scalability to larger alphabets (multi-class observations), multivariate observations, longer sequence lengths, and higher-dimensional Hilbert spaces is constrained by data requirements, model complexity, and quantum hardware limits.",
+    "[inferred] The practical benefits (predictive accuracy, economic value) of QHMMs vs classical HMMs, deep learning, or other stochastic models are not fully established empirically beyond distributional approximation and parsimony claims.",
+    "[inferred] Sensitivity of learned models to hyperparameter choices (e.g., sequence length used for fitness, evolutionary parameters, gate set) and to finite sample noise is not fully characterized.",
+    "[inferred] Effectiveness and scalability of error mitigation and transpilation/optimization techniques for deeper circuits on real quantum hardware remain an open operational constraint."
+  ],
+  "open_questions": [
+    "How well do QHMMs generalize out-of-sample across different days, market regimes, and assets (authors flagged this as future evaluation)?",
+    "Can QHMMs provide predictive or economic value in trading or market-making tasks beyond matching empirical sequence distributions?",
+    "How robust are QHMMs to non-stationarity in market data, given the steady-state / stationarity assumptions used in model initialization?",
+    "What are principled methods for selecting the model dimension (Hilbert space size) or the singular-value cutoff m from limited noisy data?",
+    "To what extent do quantum models empirically outperform classical HMMs or deep-learning based generative models in terms of accuracy, parsimony, and computational cost?",
+    "How can the approach be extended from binary directional observations to richer alphabets or multivariate LOB features (prices, volumes, cancellations)?",
+    "What are the best practices for designing hardware-efficient ansatz / circuit architectures that balance expressivity with depth/connectivity constraints for QHMMs?",
+    "How effective are current error-mitigation techniques (dynamical decoupling, Pauli twirling, transpilation optimizations) when scaling to longer sequences and more qubits?",
+    "How does the choice of gate set, circuit topology, and mid-circuit measurement strategy affect learning convergence, generalization, and interpretability?",
+    "What are the computational and sample complexity bounds for learning QHMMs (how much data is required to reliably learn a given model order)?"
+  ],
+  "future_work": [
+    "Apply the QHMM approach to larger datasets (more assets, longer time periods) to assess scalability and generalization (author-stated).",
+    "Evaluate model performance on out-of-sample scenarios (author-stated).",
+    "Develop and employ hardware-efficient ansatz / circuit designs to improve performance and reduce circuit depth for real quantum hardware (author-suggested).",
+    "Further investigate error suppression and mitigation strategies tailored to the trained QHMM circuits to improve hardware fidelity (implied by hardware experiments).",
+    "Explore extensions of the model to richer observables (multi-class or multivariate LOB features) and study the resulting implications for model dimension and learnability."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance",
+    "trading-execution"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "variational-nisq",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Introduces a Unitary Quantum Hidden Markov Model (QHMM) parameterized as quantum circuits with mid-circuit measurements to model binary directional mid-price movements in limit order books.",
+    "#idea:hybrid-approach — Uses a memetic evolutionary algorithm (population-based structural search + local Metropolis annealing + continuous gate-parameter optimization) as a classical outer loop to learn circuit structure and parameters.",
+    "#idea:near-term-feasibility — Demonstrates training in simulation and executes selected 4-qubit circuits (3 hidden qubits + 1 emission qubit) on IBM Eagle r3 hardware with error suppression (dynamical decoupling) and mitigation (Pauli twirling).",
+    "#idea:near-term-feasibility — Uses Hankel matrix rank analysis and low-rank approximation to guide model order selection and control model complexity for finite-length sequence distributions.",
+    "#idea:hybrid-approach — Fitness objective is negative average variational distance between empirical and model sequence distributions (sequences up to length 10), enabling direct distributional comparison during learning."
+  ],
+  "contradictions": [],
+  "synthesis_tags_applied": [
+    "limitation:qubit-count",
+    "limitation:noise"
+  ]
+}

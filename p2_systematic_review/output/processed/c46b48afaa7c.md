@@ -1,0 +1,188 @@
+---
+authors:
+- Sascha Wilkens
+- Joe Moorhouse
+auto_detected: true
+classification: ''
+contradiction_flags:
+- contradiction:classical-vs-quantum
+- contradiction:scalability
+doi: 10.1007/s11128-022-03777-2
+evaluation_type: simulator
+evidence_type: ''
+has_quantitative_results: true
+idea_tags:
+- idea:near-term-feasibility
+- idea:hybrid-approach
+journal_or_venue: Quantum Information Processing
+methodology_tags:
+- amplitude-estimation
+- hybrid-quantum-classical
+- error-mitigation
+paper_type: ''
+quantum_advantage_claim: theoretical
+related_papers: []
+relevance_phase1: high
+relevance_phase3: high
+source_type: peer-reviewed-empirical
+source_type_confidence: high
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/risk-management
+- topic/simulation-monte-carlo
+- method/amplitude-estimation
+- method/hybrid-quantum-classical
+- method/error-mitigation
+- idea/near-term-feasibility
+- idea/hybrid-approach
+- contradiction/classical-vs-quantum
+- contradiction/scalability
+title: ''
+topic_tags:
+- risk-management
+- simulation-monte-carlo
+year: '2023'
+zotero_key: ''
+---
+
+## Abstract summary
+The paper evaluates the feasibility of applying quantum computing to risk management in financial institutions, focusing on Value-at-Risk (market risk) and Potential Future Exposure (counterparty credit risk). It finds that while conceptual quantum implementations and small-scale circuits are possible, current hardware limitations (qubit count) and quantum noise prevent practical large-scale deployment, and given mature classical methods the near-term business case for quantum solutions is weak.
+## Methodology
+The authors perform a feasibility study and small-scale implementations of quantum algorithms for two risk-measurement problems in finance: Monte Carlo-based Value-at-Risk (VaR) for market risk and Potential Future Exposure (PFE) for counterparty credit risk (CCR). They (1) calibrate marginal risk-factor distributions and a Gaussian copula dependence structure from historical equity data (MSFT and AAPL), (2) obtain piecewise functional maps G_k from standard normal variates to empirical marginal returns via empirical CDFs and low-order piecewise fits (linear and cubic), (3) implement quantum-state preparation in two ways — direct amplitude/state-preparation from a discretised joint PDF and a scalable piecewise-transformation approach that starts from correlated multivariate normal registers and applies in-place arithmetic transformations to produce empirical marginals — and (4) use (iterative) Quantum Amplitude Estimation (IQAE) to estimate distributional probabilities and obtain quantiles (VaR / PFE) via bisection search on CDF values. Circuits are implemented in Qiskit (using Qiskit StatePreparation and NormalDistribution utilities and custom integer-comparator and multiply-add ripple-adder circuits), executed on a quantum simulator, validated against classical baselines (closed-form solutions and large-sample Monte Carlo), and tested under a simplistic noise model (stochastic bit-flips on one- and two-qubit gates and measurements, nominally 0.1% per gate). Key measured outputs include estimated CDFs, VaR and PFE quantiles, relative errors vs classical references, and resource metrics (qubit counts, circuit depth).
+
+**Algorithms used:** Quantum Amplitude Estimation (QAE), Iterative Quantum Amplitude Estimation (IQAE), Quantum state preparation (direct amplitude/state preparation), Piecewise transformation (in-place integer multiply-add circuits), Gaussian copula (classical calibration)
+**Frameworks:** Qiskit
+
+**Experimental setup:** All quantum experiments were implemented in Python using Qiskit and executed on Qiskit quantum simulators (no physical QPU runs). Quantum circuits used StatePreparation and NormalDistribution utilities plus custom integer comparator and in-place multiply-add (ripple-adder) circuits. IQAE parameters reported: alpha=0.05, epsilon=0.01; iterative IQAE runs used 2^10 = 1,024 shots per estimation step in reported examples. Noise experiments were simulated by applying independent bit-flip errors to all one- and two-qubit gates and to final measurements; baseline nominal gate error used = 0.1% per gate and was varied (factors of 2^i).
+
+**Dataset:** Daily closing prices (USD) for Microsoft (MSFT) and Apple (AAPL) from Yahoo! Finance covering 2017-03-31 through 2021-03-31. Ten-business-day overlapping log-returns were computed and standardized. Classical Monte Carlo baselines used up to 1,000,000 samples in some comparisons.
+## Experiment details
+### Input
+{'data_source': 'Yahoo! Finance', 'assets': ['MSFT', 'AAPL'], 'time_period': '2017-03-31 to 2021-03-31 (daily closes)', 'observations_approx': '≈4 years of daily data (~1000 business days)', 'preprocessing': ['Compute 10-day overlapping log-returns', 'Standardize returns (subtract empirical mean, divide by empirical std)', 'Construct empirical CDFs per asset', 'Fit piecewise cubic and piecewise linear maps G_k from normal quantiles to empirical quantiles', 'Calibrate 10-day covariance and scale to annual for CCR (scale factor 252/10)'], 'discretisation': 'Discretise marginals into n = 2^q points (q chosen as 2 or 3 in experiments); bounds typically ±3σ'}
+
+### Process
+{'pipeline_steps': ['Calibrate marginal empirical CDFs and covariance (Gaussian copula) from historical returns', 'Fit piecewise transformations G_k (piecewise linear/cubic) mapping standard normal variates to empirical marginals', 'Construct quantum registers: either direct state-preparation from discretised joint PDF or load correlated multivariate normal registers and apply piecewise transform circuits to each register', 'Aggregate transformed registers to compute normalized P&L (market risk) or exposure profiles over multiple time steps (CCR) using in-place integer arithmetic', 'Apply integer comparator gate to mark outcomes below a threshold (flip ancilla objective qubit) and use iterative QAE (IQAE) to estimate the amplitude (CDF at threshold)', 'Perform bisection search across threshold values to find desired quantiles (VaR/PFE)', 'Validate quantum simulator outputs against classical references (closed-form or Monte Carlo with up to 1e6 samples)', 'Repeat with different resource allocations (q = 2, 3 qubits per marginal), and evaluate impact of simulated noise by varying per-gate flip probability'], 'IQAE_parameters': {'alpha': 0.05, 'epsilon': 0.01, 'shots_per_iter': 1024}, 'circuit_construction_notes': ['Piecewise transform implemented with integer comparators controlling three conditional in-place multiply-add blocks (classical integer coefficients)', 'Ripple-adder-style integer arithmetic circuits used for in-place integer multiply-add', 'Circuits uncompute ancillas where possible to allow re-use']}
+
+### Output
+{'outputs': ['Estimated cumulative distribution functions (CDFs) for normalized P&L (market risk) and exposure at specified timepoints (CCR)', 'VaR quantiles for market risk (1%, 2.5%, 5%) and PFE quantiles for CCR (90%, 95%, 99%)', 'Relative unsigned errors (%) of quantum estimates versus classical reference', 'Resource metrics: qubit counts, circuit depth, number of ancilla qubits', 'Sensitivity analyses of estimates under simulated quantum noise levels'], 'baselines': ['Classical continuous calculation (closed-form multivariate normal where applicable)', 'Classical Monte Carlo with up to 1,000,000 samples (for distribution comparison)'], 'metrics_reported': ['Quantile values (VaR/PFE)', 'Relative percentage error compared to reference', 'CDF deviation across support', 'Circuit depth and qubit usage', 'Effect of noise on quantile estimation (relative error vs noise probability)']}
+
+### Parameters
+- qubits_per_marginal_q_values_tested: [2, 3]
+- shots_IQAE: 1024
+- IQAE_alpha: 0.05
+- IQAE_epsilon: 0.01
+- nominal_noise_probability_per_gate: 0.001
+- noise_variation: 0.001 * 2^i for i in -3..+3 (tested)
+- circuit_depths_reported_market_risk: {'q=2 (per risk factor)': 9387, 'q=3 (per risk factor)': 22589}
+- circuit_depths_reported_CCR: {'q=2 (per risk factor)': 1015, 'q=3 (per risk factor)': 2237}
+- classical_monte_carlo_sample_size_for_comparison: 1000000
+- VaR_time_horizon: 10 business days (η = 10/252 years)
+- CCR_time_horizon_and_steps: T = 2 years, N = 2 (equidistant) time steps
+- example_portfolio_constants: {'a': 1, 'b': 1}
+
+### Hardware
+{'quantum_backend': 'Qiskit simulator (statevector/shot-based simulator); no physical QPU used', 'framework': 'IBM Qiskit (StatePreparation, NormalDistribution classes used; custom gates implemented in Qiskit)', 'note_on_QPU': 'Authors reference available IBM devices (e.g., 27 qubits) in discussion but experiments reported were run on simulators'}
+
+### Reproducibility
+Implementation is described in detail (components, Qiskit classes used, IQAE parameters, piecewise-transform circuit design and arithmetic primitives) and the market data source (Yahoo! Finance) is public. However, no code repository or direct script files are provided in the paper. Reproducing results should be possible given the described Qiskit implementation details, parameter values (q, shots, IQAE alpha/epsilon), and data preprocessing steps (10-day overlapping log-returns, standardization, piecewise fits), but will require re-implementing the circuits and the piecewise ﬁt logic unless authors release code.
+## Findings
+- [speculative] Quantum computing promises significant speed-ups for particular mathematical problems relevant to finance (e.g., optimization and simulation), with Quantum Amplitude Estimation (QAE) offering a quadratic convergence advantage in theory.
+- [supported] Current gate-based quantum hardware is severely limited in capacity (order of 10^2 qubits) and subject to non-negligible noise, constraining practical large-scale financial applications.
+- [supported] Practical applications of quantum computing in quantitative finance—especially production-grade risk measurement (market VaR, counterparty PFE)—are still in their infancy.
+- [speculative] Improvements to basic QAE (e.g., Iterative QAE) reduce resource requirements and form part of industry-standard implementations.
+- [supported] Loading realistic, possibly non-normal marginal distributions into quantum registers is resource-intensive; direct arbitrary-state preparation needs many gates, while piecewise-transformation approaches scale more favorably (approximately linearly in number of risk factors) and are more practical for larger problems.
+- [supported] The authors implemented small-scale quantum circuits (simulator) for example VaR and PFE calculations and validated that the quantum circuits reproduce the discretised-target distributions absent noise.
+- [supported] Discretisation error is material at low qubit counts: in the market-risk example the continuous (reference) 99% VaR was -5.44; the quantum simulation produced -6.22 with q=3 qubits per factor (≈14% unsigned difference) and -6.56 with q=2 (≈20%).
+- [supported] Counterparty credit risk example: classical 90% PFE at t=1 = 82 and t=2 = 134; quantum simulation with q=3 qubits per factor produced 75 (≈9% error) and 127 (≈5% error), while q=2 produced much larger errors.
+- [supported] Quantum noise at realistic current-device levels strongly degrades estimates: applying a simple noise model (≈0.1% per gate) produced O(10%) errors in quantiles (e.g., ~15% error reported for a 90% quantile) and larger noise levels lead to >25% errors, making results practically unreliable.
+- [supported] Circuit resource requirements (depth and gates) are non-trivial even for toy problems: example circuit depths reported (elementary-gate basis) include ~9,387 (q=2 per risk factor) and ~22,589 (q=3) for the market-risk circuit variant used.
+- [speculative] The authors estimate that hardware capacity (qubits) must increase by several orders of magnitude and that noise-control/mitigation must substantially improve before real-life risk-measurement systems become deployable on quantum hardware.
+- [supported] Given mature and adequate classical methods for risk measurement (speed and accuracy), the business case for migrating market- and counterparty-risk calculations to quantum hardware is weak at present.
+- [supported] Hybrid approaches (off-loading suitable subroutines to QPUs while retaining most work on CPUs/GPUs) are a pragmatic near-term strategy discussed in the literature and mentioned as promising.
+
+**Results summary:** The paper reviews the literature and implements small-scale, simulator-based quantum circuits for two canonical risk tasks (Monte Carlo-style VaR for market risk and multi-period PFE for counterparty credit risk). It demonstrates that (a) current-qubit-count discretisation causes material estimation errors unless modest numbers of qubits per factor are used, (b) realistic levels of quantum gate noise (modeled at ~0.1% per gate) further degrade results substantially (O(10%->25%) errors in quantiles), and (c) loading realistic marginal distributions and multi-period dependence structures is possible in principle (via piecewise transformations and copula approaches) but would require many more qubits and much lower noise to be practical. The authors conclude that quantum advantage for these risk-measurement use cases remains theoretical at present and not yet commercially compelling.
+
+**Performance claims:**
+- QAE theoretical convergence rate: O(M^{-1}) (quantum) vs classical Monte Carlo O(M^{-1/2}) [theoretical].
+- Current state-of-the-art quantum devices: order of 10^{2} qubits (≈100 qubits) [empirical].
+- IBM/industry roadmap cited claims: >1,000 qubits achievable by 2023 and targets of up to 1,000,000 qubits by 2029 (cited as claims in literature) [speculative].
+- Market-risk example (continuous reference): 99% VaR = -5.44; quantum simulator q=3 per factor: -6.22 (≈14% unsigned error); q=2: -6.56 (≈20% unsigned error) [empirical simulation].
+- Counterparty credit risk example (classical reference): 90% PFE t=1 = 82, t=2 = 134; quantum q=3 per factor: 75 (≈9% error) and 127 (≈5% error) respectively; q=2 gave much worse errors [empirical simulation].
+- Circuit depth examples (elementary rotation + CNOT basis): market-risk circuit depth ≈ 9,387 (q=2 per factor) and ≈ 22,589 (q=3) [empirical implementation].
+- Typical gate error used in noise model ≈ 0.1% per gate; this noise level yielded ≈15% error in a 90% exposure quantile in the authors' simulation and larger errors for higher noise levels [empirical simulation].
+## Quantum advantage claim
+**Classification:** theoretical
+
+The paper acknowledges the theoretical quadratic speed-up of Quantum Amplitude Estimation (QAE) relative to classical Monte Carlo (O(M^{-1}) vs O(M^{-1/2})), but demonstrates via simulator experiments and resource/noise analysis that current hardware limitations (qubit counts, circuit depth) and realistic noise levels prevent a practical, demonstrable quantum advantage for large-scale market VaR and multi-period PFE at present.
+## Limitations
+- Current quantum hardware capacity (number of qubits) is far too limited for realistic, large-scale risk applications (authors state ~10^2 qubits insufficient; needed increase by several magnitudes).
+- Quantum noise (gate errors, decoherence) significantly degrades estimation accuracy; current noise levels make results unusable for non-trivial examples.
+- Loading realistic, non-trivial probability distributions into quantum states is expensive in gates/qubits and does not scale well with dimensionality.
+- Original Quantum Amplitude Estimation (QAE) and many circuit constructions require large/deep circuits that are computationally expensive and noise-vulnerable.
+- Requiring many correlated risk factors and multi-horizon projections (especially for CCR) sharply increases resource requirements beyond current capabilities.
+- Simulators and emulators are limited: classical simulation of quantum circuits becomes computationally prohibitive past modest sizes, constraining development/testing.
+- Trade-offs between model complexity, circuit complexity (depth, qubits), and acceptable measurement error are not operationalised; no clear guidance for practitioners.
+- It is not obvious how to create a single quantum circuit that outputs multi-horizon (multi-timepoint) risk measures; separate circuits per horizon are currently pragmatic but inefficient.
+- Re-using qubits (uncompute) increases circuit complexity and exposure to noise, reducing practical gains.
+- Even with algorithmic speedups (quadratic vs Monte Carlo), classical methods are mature and already fast/accurate enough for many risk tasks, weakening near-term business case for migration to quantum.
+- Regulatory and institutional adoption barriers: applying quantum methods to regulatory capital or other supervised processes will face scepticism and require supervisory approval.
+- [inferred] Access, cost and availability constraints: reliance on rented/experimental quantum hardware (with varying topologies and restrictions) limits practical experimentation and deployment.
+- [inferred] Increased circuit depth and more ancillary qubits needed for arithmetic/transformations likely amplify cumulative noise and error rates beyond current error-correction capabilities.
+- [inferred] Calibration data limitations (finite historical samples) create estimation uncertainty for marginal/distributional fits that was not fully integrated into quantum error analyses.
+## Open questions
+- How and when will quantum hardware scale to the qubit counts and quality (low error rates, connectivity) required for real-world risk measurement (e.g., millions of fault-tolerant qubits)?
+- How much quantum noise can be tolerated for risk measurement applications before results become unusable, and what noise-reduction/mitigation techniques are effective in practice?
+- Which algorithms and state-preparation methods allow efficient high-dimensional distribution loading (including non-normal marginals and copula dependence) with acceptable resource use?
+- How should the trade-off between model fidelity (e.g., non-normal marginals, tail dependence), circuit complexity, and measurement error be formalised and operationalised for practitioners?
+- What is the optimal hybrid architecture and workflow (CPU/GPU/QPU orchestration) for financial risk workloads to balance latency, accuracy and noise exposure?
+- How to design holistic, application-relevant benchmarks (capturing quality, speed, scale) for near-term quantum devices in finance?
+- Can multi-period, multi-horizon CCR calculations be implemented efficiently in a single quantum circuit (or otherwise optimised) rather than generating separate circuits per horizon?
+- Which financial applications (e.g., portfolio optimisation vs Monte Carlo risk estimation) will reach practical quantum advantage first, given hardware and noise limitations?
+- How to incorporate calibration uncertainty and model risk (from limited historical data) into quantum-based estimators and confidence assessments?
+- What error-correction and fault-tolerance thresholds are necessary to realize the theoretical quadratic speed-ups in realistic financial settings?
+
+**Future work:**
+- Research into control and mitigation of quantum noise and error-mitigation techniques applicable to financial risk circuits.
+- Develop and evaluate more efficient distribution-loading algorithms and state-preparation methods for arbitrary and high-dimensional PDFs.
+- Design hybrid CPU/GPU/QPU workflows and study optimal partitioning of tasks to minimise noise exposure and runtime.
+- Operationalise the trade-off between model/circuit complexity and measurement error for practitioner guidance (establish decision frameworks).
+- Explore circuit and algorithmic optimisations (e.g., in-place arithmetic, improved QAE variants, variance reduction) to reduce qubit and gate counts.
+- Investigate scalable implementations for multi-horizon CCR (multi-period processes) and whether single-circuit formulations are feasible.
+- Define and validate holistic, real-world benchmarks for quantum computing performance in finance (quality, speed, scale).
+- Conduct in-depth sensitivity analyses on how realistic noise models affect P&L, VaR and PFE estimates across a range of circuit sizes and topologies.
+- Focus research on high-impact, likely-first-use cases in finance (e.g., hard combinatorial problems like large-scale portfolio optimisation) where quantum advantage is more plausible.
+- Continue to monitor and evaluate hardware roadmaps (qubit counts, error rates, fault-tolerance timelines) and adapt algorithm development accordingly.
+## Key ideas
+- #idea:near-term-feasibility — Empirical simulator experiments for VaR and PFE show current hardware (qubit counts, circuit depth, noise) prevents practical large-scale deployment; near-term business case is weak compared to mature classical methods.
+- #idea:hybrid-approach — Practical pipeline relies on classical calibration (empirical CDFs, Gaussian copula) plus quantum subroutines (IQAE) and piecewise in-place arithmetic transforms to load empirical marginals.
+- #idea:near-term-feasibility — Implemented two state-preparation strategies (direct amplitude loading of discretised joint PDF and scalable piecewise transform from correlated normal registers) and evaluated resource trade-offs (qubits, ancillas, depth).
+- #idea:near-term-feasibility — Iterative QAE (IQAE) with bisection on thresholds can recover VaR/PFE quantiles on small discretisations (q=2,3) with reported statistical parameters (alpha=0.05, epsilon=0.01, 1024 shots per iter).
+- #idea:hybrid-approach — Classical pre/post-processing (copula calibration, piecewise fit, bisection search) is essential to make the quantum subroutine tractable and to validate against Monte Carlo baselines.
+- #idea:near-term-feasibility — Noise sensitivity analysis (bit-flip noise model varied across orders of magnitude) demonstrates rapid degradation of quantile estimates as per-gate error increases, highlighting need for error rates far below current devices.
+- #idea:hybrid-approach — Resource estimates (very large circuit depths and nontrivial ancilla overhead even for tiny discretisations) imply significant encoding and arithmetic costs that dominate runtime and qubit requirements.
+## Contradictions
+- The paper finds that for VaR and PFE the near-term quantum business case is weak and that quantum estimators do not outperform classical Monte Carlo in practical settings, contradicting optimistic claims that QAE-based approaches will soon provide clear advantages over classical methods.
+- Authors demonstrate that resource and noise limitations prevent scaling to realistic problem sizes (even with simple two-asset tests), contradicting assertions that current algorithmic proposals readily scale to industrial risk-management workloads without significant hardware advances.
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

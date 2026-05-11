@@ -1,0 +1,171 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document has the structure of a research manuscript (abstract/introduction, methods, results, figures, acknowledgements, extensive references) but lacks a clear journal or conference venue and contains formatting/OCR artifacts; author affiliations include industry but presentation matches an academic preprint format.",
+  "title": "Data is often loadable in short depth: Quantum circuits from tensor networks for finance, images, fluids, and proteins",
+  "authors": [
+    "Raghav Jumadel",
+    "Nicolas PD Sawaya"
+  ],
+  "year": "",
+  "journal_or_venue": "preprint",
+  "doi": "",
+  "abstract_summary": "The authors introduce AMLET (Automatic Multi-layer Loader Exploiting Tensor Networks), a tensor-network-based compilation method to produce ancilla-free, depth-tunable quantum circuits for amplitude encoding of classical data. They evaluate AMLET on real-world datasets from finance, images, turbulent fluids, and protein atomic coordinates, showing that many practical data vectors can be loaded with circuit depths orders of magnitude lower than general amplitude-encoding constructions require.",
+  "methodology_description": "The authors introduce AMLET (Automatic Multi-layer Loader Exploiting Tensor Networks), a tensor-network-based algorithm to compile classical length-M vectors into amplitude-encoded quantum circuits on n = log2(M) qubits. AMLET builds a specific tensor-network topology and proceeds via repeated linear-algebra operations (SVDs, index splitting/fusing, tensor expansions and contractions) to produce a depth-tunable, ancilla-free quantum circuit. Key features: splitting each new bond into two size-2 bonds to delay truncation, populating gauge degrees of freedom using null-space procedures, expanding lower-rank tensors into rank-4 two-qubit tensors while enforcing SO(4) structure, and decomposing two-qubit gates into CNOTs plus single-qubit rotations. AMLET is compared to a layer-by-layer MPS SVD-and-truncation approach; both allow a monotonic accuracy-depth tradeoff and avoid variational optimization. The authors perform classical numerical experiments (no quantum hardware runs) across four real-world datasets (images, turbulent fluid velocity, protein atomic positions, and financial time series) to determine the number of AMLET layers D (i.e., circuit depth) required to meet application-specific accuracy criteria. Implementations used in-house code built on SciPy and quimb. Metrics include L2-type fidelity errors for images/finance, conservation/momentum error bounds for fluids, and RMSD for proteins. Experiments explore qubit counts up to 16 and compare required depths against a general amplitude-encoding baseline (exponentially large depth).",
+  "algorithms_used": [
+    "AMLET (Automatic Multi-layer Loader Exploiting Tensor Networks)",
+    "Layer-by-layer MPS SVD-and-truncation loading algorithm",
+    "Matrix Product State (MPS) decomposition",
+    "SVD truncation",
+    "Gram–Schmidt/null-space population for gauge freedom",
+    "Tensor index splitting/fusing and tensor contraction"
+  ],
+  "frameworks": [
+    "SciPy (referred to as Seipy in text)",
+    "quimb"
+  ],
+  "experimental_setup": "Classical numerical experiments using in-house code built on SciPy and quimb. No quantum hardware or shots/quantum simulators are reported. Experiments compress/format classical datasets into length-2^n vectors, build tensor-network-based circuits with varying numbers of AMLET layers D, and measure application-specific error metrics to determine minimal D meeting thresholds. Gate model assumed: CNOTs + arbitrary single-qubit rotations.",
+  "dataset_used": "Financial dataset: minute-by-minute intraday data for indices S&P 500, NIKKEI 225, DAX 30, and EUROSTOXX drawn from the Kaggle 'Huge stock price data: Intraday minute bar' (2020) dataset.",
+  "experiment_input": {
+    "source": "Kaggle: 'Huge stock price data: Intraday minute bar' (2020)",
+    "data_type": "Minute-by-minute intraday time series for stock indices (S&P 500, NIKKEI 225, DAX 30, EUROSTOXX)",
+    "vector_format": "Encoded as length-2^n vectors for amplitude encoding (row-major ordering for images; finance uses the raw time-series values assembled into 2^n-length vectors).",
+    "preprocessing": "Data segmented/padded to length 2^n as needed; metrics and error tests are applied to the unnormalized vectors (authors note they measure errors on unnormalized vectors). The authors note the presence of discontinuities at trading-day boundaries which adds roughness to the financial series. No publicly provided script or additional preprocessing pipeline is reported in the text."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "1) Prepare a classical length-M vector and normalize (amplitude encoding target).",
+      "2) For layer-by-layer baseline: build an MPS approximation via repeated SVDs with truncation at intermediate bonds (SVD-and-truncation), expand tensors to two-qubit gates, populate gauge degrees via null-space procedures, and convert to quantum gates; repeat for desired D layers.",
+      "3) For AMLET: construct a tailored tensor-network topology, perform SVDs but split each new bond into two bonds of size 2 to delay truncation, perform index splitting/fusing and careful reshaping/reordering, expand tensors into rank-4 two-qubit tensors populating gauge freedom via null-space/Gram–Schmidt, enforce SO(4) on expanded tensors, decompose two-qubit tensors into CNOT + single-qubit rotations, contract disentangling circuits with the state vector to produce a reduced-length vector, and repeat to form concatenated layers.",
+      "4) Vary number of AMLET layers D and truncation choices to achieve the desired application-specific error threshold.",
+      "5) Measure application-specific metrics (L2-style fidelity for finance/images, momentum conservation error for fluids, RMSD for proteins) and record minimal D required."
+    ],
+    "parameters_tuned": [
+      "Number of AMLET layers D (controls circuit depth/accuracy tradeoff)",
+      "SVD truncation choices/bond dimensions (e.g., K=2 when mapping to two-qubit tensors)",
+      "Tensor expansion/gauge population choices (null-space rounding via Gram–Schmidt)"
+    ],
+    "optimization": "No variational optimization of gate parameters is performed; circuits are produced deterministically from linear algebra steps."
+  },
+  "experiment_output": {
+    "result_format": "Numerical tables/plots of required number of layers D (circuit depth proxy) versus qubit count for each dataset, and error (metric) versus number of layers. Comparative plots show AMLET vs layer-by-layer and vs the theoretical general amplitude-encoding depth (exponential) baseline.",
+    "metrics_reported": [
+      "For finance/images: L2-style error on unnormalized vectors (equation 5 in text); for images an example threshold ε < 1e-3 is used",
+      "For finance: quality metric uses C_I = 1 currency unit in the L2 metric",
+      "For fluids: total momentum conservation error bound ε_M (authors mention ε_M < 100 as an example to bound relative error in momentum)",
+      "For proteins: RMSD (root-mean-square deviation) threshold (authors state a precision threshold used that is stricter than typical X-ray crystallography; reported as <~1 Å)"
+    ],
+    "baselines": [
+      "Layer-by-layer MPS SVD-and-truncation algorithm (implemented by authors)",
+      "General amplitude-encoding circuit depth (theoretical exponential-depth baseline)"
+    ],
+    "key_findings": "AMLET consistently requires fewer layers (shallower circuits) than the layer-by-layer approach for equivalent error; for many real-world datasets (including financial time series) required depths up to 16 qubits are orders of magnitude smaller than the exponential general-amplitude-encoding baseline."
+  },
+  "experiment_parameters": {
+    "max_qubits_tested": 16,
+    "layer_depths_D": "Varied (reported results for D from 1 up to application-dependent caps; authors report e.g. D up to ~90 for turbulent fluid 16-qubit vectors in worst cases and extrapolate larger D for proteins)",
+    "truncation_bond_dimension": "Often K=2 when mapping to two-qubit tensors (examples in text); other truncations set to meet accuracy constraints",
+    "gate_set_assumed": "CNOTs + arbitrary single-qubit rotations (two-qubit tensors enforced in SO(4) and then decomposed)",
+    "classical_complexity": "For bounded D, classical circuit-construction complexity reported as O(M) (with naive matrix routines)",
+    "accuracy_thresholds_reported": {
+      "images": "ε < 1e-3 (example threshold in text)",
+      "finance": "C_I = 1 currency unit (used in L2 metric)",
+      "fluid": "ε_M example: ε_M < 100 (used to bound relative momentum error)",
+      "proteins": "RMSD threshold stated as more precise than typical X-ray crystallography (interpreted in text as ≲1 Å)"
+    },
+    "shots": null,
+    "optimizer": null
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "Authors implemented methods in in-house code built on SciPy and quimb and cite the exact datasets (Kaggle intraday minute bar stock dataset and other public datasets like the RCSB PDB and a curated turbulence dataset). No public code repository, scripts, or explicit runnable release are provided in the text. Dataset sources and referenced libraries are cited, which aids reproducibility, but reimplementation would require the authors' in-house code or re-derivation of implementation details from the description.",
+  "key_findings": [
+    "[supported] The authors introduce AMLET, a tensor-network-based algorithm to compile amplitude-encoded quantum state preparation circuits that is ancilla-free, deterministic (no parameter optimization), and depth-tunable.",
+    "[supported] Numerical experiments on four real-world domains (images, turbulent fluid velocity, financial time series, and protein atomic coordinates) show that many classical vectors can be loaded with circuit depths far shallower than general exponential-loading algorithms would imply.",
+    "[supported] AMLET yields shorter circuit depths than a layer-by-layer tensor-network loading algorithm in the authors' experiments; at 16 qubits the reported depth reduction is between 8% and 25%.",
+    "[supported] For the image dataset, 14-qubit AMLET circuits with four layers produced visually clear reconstructions (virtually all features present by D=4).",
+    "[supported] For turbulent fluid velocity data the authors report 16-qubit vectors loadable within application-specific error bounds with depths up to about D ≲ 90 in the worst cases examined.",
+    "[supported] For protein atomic coordinate data many large vectors (e.g., ≈20,000 atoms mapped to ~16 qubits) required D < 40 layers to meet the chosen RMSD thresholds.",
+    "[speculative] The classical cost to construct AMLET circuits scales at most O(M) when the number of layers is bounded by a constant (argument based on naive SVD/matrix routines).",
+    "[speculative] AMLET's improved performance relative to the layer-by-layer method is likely because AMLET delays SVD truncations (fewer approximations overall).",
+    "[speculative] The authors suggest this result indicates the state-preparation \"input problem\" will likely not be an obstacle to quantum advantage for many practically relevant classical workloads (interpretive/extrapolative claim).",
+    "[speculative] The paper claims to be the broadest numerical analysis to date of loading classical data into quantum computers (assertion about coverage/comparative breadth)."
+  ],
+  "results_summary": "The preprint introduces AMLET, a tensor-network compilation algorithm for amplitude encoding of classical vectors into quantum states. Through deterministic SVD-based tensor-network construction (ancilla-free and without parameter optimization) and numerical experiments across images, turbulent fluid data, financial time series, and protein coordinates, the authors show that many real-world datasets can be loaded into log2(M) qubits with circuit depths that are substantially lower than would be required by worst-case exponential amplitude-loading constructions. AMLET consistently outperforms a layer-by-layer MPS-based loading method in their benchmarks and enables a tunable accuracy–depth tradeoff.",
+  "performance_claims": [
+    "[supported] At 16 qubits AMLET reduced required layers D by approximately 8%–25% relative to the layer-by-layer tensor-network method (empirical).",
+    "[supported] Images: 14-qubit AMLET circuits with D = 4 layers produced reconstructions where \"virtually all features are present\" (empirical).",
+    "[supported] Turbulent fluid data: 16-qubit vectors were loadable within the authors' error thresholds with worst-case depths up to roughly D ≲ 90 (empirical).",
+    "[supported] Protein coordinates: many samples corresponding to ~16 qubits (≈20,000 atoms) were loadable with D < 40 layers to meet an RMSD threshold of the authors' choice (empirical).",
+    "[speculative] Extrapolation: the authors estimate that very large proteins (e.g., titin, ~345,000 atoms) would require only ~20 qubits and might be loadable in D < 200 layers based on observed trends (extrapolative).",
+    "[speculative] The classical construction runtime of AMLET is claimed to be at most O(M) when layer count is constant (theoretical argument).",
+    "[supported] The method is ancilla-free, requires no circuit-parameter optimization (hence avoids training/barren-plateau concerns tied to variational circuits), and supports monotonic depth–accuracy tunability (empirical/design)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors claim their results have positive implications for reducing the state-preparation bottleneck and thereby easing a barrier to quantum advantage for classical workloads, but they do not demonstrate an end-to-end quantum speedup or runtime advantage on quantum hardware; the claim is based on numerical circuit-depth reductions and extrapolations rather than a demonstrated advantage.",
+  "limitations": [
+    "Numerical (simulation) study only — no experiments on noisy or real quantum hardware were reported.",
+    "AMLET was evaluated primarily against a layer-by-layer TN method and the general amplitude-encoding algorithm; it was not directly compared to other approaches such as ancilla-assisted state preparation, QRAM, or neural-network-based circuit generation.",
+    "Some data classes (notably turbulent fluid data) required substantial circuit depth in worst cases — AMLET does not eliminate high depths for all datasets.",
+    "The algorithm relies on SVD truncations and tensor approximations; accuracy depends on truncation decisions and the number of layers (depth-accuracy trade-off).",
+    "Image experiments were studied more intensively at a single compression level (14 qubits) which may not reflect performance across a wider range of realistic image encodings or preprocessing pipelines.",
+    "The study encodes only amplitude encoding (ancilla-free); results may not carry over to other encoding schemes.",
+    "The tensor expansion/gauge-filling step (populating nullspace to enforce SO(4)) introduces non-uniqueness and implicit assumptions about gate realizations; practical gate counts (e.g., CNOT counts) and mapping to hardware-native gates were not reported.",
+    "Classical precomputation cost claims are asymptotic (O(M) for bounded depth) but practical runtimes and prefactors (memory/CPU) for large M were not quantified.",
+    "Quality measures and thresholds used (e.g., specific epsilon choices, using unnormalized vectors) are application-dependent and partly arbitrary, which affects reported depths and fidelity comparisons.",
+    "[inferred] The approach as presented is not adapted to specific hardware connectivity/topology constraints (authors themselves note this as a possible modification), so circuit depths and gate counts may increase when compiled to realistic devices.",
+    "[inferred] The effect of realistic device noise on the ability to load data with AMLET (and resulting end-to-end application performance) was not evaluated.",
+    "[inferred] Resource metrics important for financial services (total gate count, two-qubit gate depth, runtime, and error budgets) were not reported, limiting assessment of practical deployability in finance workloads.",
+    "[inferred] The tested datasets and preprocessing choices (single velocity component for fluids, non-overlapping atom sequence windows for proteins, minute-bar stock indices) may not reflect the full diversity of real-world financial or engineering data encountered in production."
+  ],
+  "open_questions": [
+    "How well does AMLET perform on noisy, near-term quantum hardware (including effects of decoherence and gate errors)?",
+    "How does AMLET compare, in practice, to ancilla-based state preparation, QRAM-assisted approaches, and neural-network circuit synthesis in terms of depth, gate counts, classical precomputation, and end-to-end utility?",
+    "Can AMLET be adapted to respect specific hardware constraints (connectivity, native gate sets) while retaining its depth advantages?",
+    "How do truncation strategies (choice of K, where to truncate, how many layers) affect final application-level metrics for different data types, and can these be selected automatically?",
+    "What are the total gate counts (single- and two-qubit), and how do these scale with problem size and number of AMLET layers for real datasets?",
+    "How does performance scale beyond the qubit counts tested (up to 16 qubits here), e.g., for 20+ qubits and very large classical vectors?",
+    "Does AMLET generalize beyond amplitude encoding to other quantum data encodings, and can it provide similar depth reductions there?",
+    "Can AMLET be combined with other techniques (e.g., QRAM, low-depth ancilla-assisted methods, or tensor compression strategies) to further reduce depth or classical cost?",
+    "How sensitive are the reported depth reductions to data normalization choices and other preprocessing steps (e.g., compression, dimensionality reduction)?",
+    "What are the practical classical computational resource requirements (time, memory) for building AMLET circuits for very large datasets used in finance?"
+  ],
+  "future_work": [
+    "Apply AMLET to encodings more complex than the standard amplitude encoding.",
+    "Develop a modified version of AMLET that adheres to arbitrary circuit patterns or hardware topologies (hardware-aware AMLET).",
+    "Explore advanced classical subroutines (e.g., faster matrix-matrix multiplication algorithms) to reduce the classical precomputation overhead of AMLET.",
+    "Benchmark AMLET against other state preparation approaches (QRAM, ancilla-based methods, neural-network-generated circuits) across resource metrics including gate counts and real-device performance.",
+    "Evaluate AMLET on noisy quantum hardware and study noise resilience and error mitigation strategies in the loading pipeline.",
+    "Investigate automatic or principled selection of truncation thresholds and layer counts to balance accuracy and depth per application domain.",
+    "Extend empirical evaluations to a broader set of datasets and preprocessing schemes (including less-compressed images, full fluid velocity fields, diverse financial instruments) to test generality."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — AMLET (tensor-network-based loader) can produce ancilla-free, depth-tunable circuits that load many real-world data vectors (including financial intraday time series) with circuit depths much smaller than the exponential general amplitude-encoding baseline, suggesting potential NISQ-era applicability.",
+    "#idea:hybrid-approach — The approach is a classical compilation pipeline (SVDs, tensor contractions, gauge filling) that outputs quantum gate sequences (CNOT + single-qubit rotations), i.e., classical preprocessing to produce quantum circuits without variational optimization.",
+    "#idea:near-term-feasibility — Experiments (classical numerical simulation) up to 16 qubits show AMLET requires fewer layers than a layer-by-layer MPS SVD-and-truncation baseline for comparable L2/RMSD/physics-error thresholds.",
+    "#idea:hybrid-approach — The method enforces structure (SO(4) on expanded tensors) and uses null-space/G-S procedures to populate gauges deterministically, avoiding iterative quantum-classical parameter tuning."
+  ],
+  "contradictions": [],
+  "synthesis_tags": [
+    "limitation:simulation-only",
+    "limitation:no-empirical-validation",
+    "limitation:qubit-count",
+    "limitation:data-encoding"
+  ]
+}

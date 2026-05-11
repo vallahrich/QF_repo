@@ -1,0 +1,1568 @@
+## Instructions
+
+You are an **independent grounding verifier** for a thematic-synthesis pipeline in a systematic literature review on quantum computing in financial services. You belong to a different LLM family than the model that produced the themes — your job is to act as a cross-family check against single-model bias.
+
+For each analytical theme, you will be given:
+1. The theme's interpretation claim.
+2. A1 memos (structured notes, one per supporting paper) that the theme claims to be grounded in.
+
+Your task is to determine, for each theme, whether the interpretation is **actually supported** by the memos. You are NOT re-coding or re-theming. You are ONLY verifying that the claim the theme makes is traceable to what the supporting papers report.
+
+## Inputs
+
+### Silo
+simulation_monte_carlo (SMC)
+
+### Analytical themes to verify
+[
+  {
+    "theme_id": "AT-SMC-001",
+    "theme_label": "Oracle-complexity advantage collapses under end-to-end cost accounting",
+    "interpretation": "While QAE provides a genuine quadratic reduction in oracle calls, the end-to-end cost of quantum Monte Carlo is dominated by non-oracle overheads—state preparation, quantum arithmetic, and error correction—that can absorb or exceed the theoretical speedup. Papers benchmarking against classical MC consistently compare oracle counts but omit constant factors, physical clock rates, and compilation overhead, producing advantage claims that do not survive translation to wall-clock time. The resource-estimation literature makes this explicit: thousands of logical qubits and tens of millions of T-gates are required even for moderately complex pricing tasks.",
+    "supporting_papers_sampled": [
+      "075a4a34de90",
+      "1760158c7e1b",
+      "49dc03e35036",
+      "5beb1712456c",
+      "75a7b04fa681",
+      "a9fb068595f2",
+      "c46b48afaa7c",
+      "e366a47d08de"
+    ],
+    "supporting_paper_total": 24,
+    "counter_evidence": [
+      {
+        "paper_id": "49aaab8109ac",
+        "reason": "Fourier-series QAE achieves full quadratic advantage with minimal circuit depth per harmonic component, demonstrating that for structured payoff functions the end-to-end overhead can be substantially mitigated by avoiding quantum arithmetic entirely.",
+        "evidence_type": "boundary_condition"
+      }
+    ]
+  },
+  {
+    "theme_id": "AT-SMC-002",
+    "theme_label": "Distribution loading transforms quantum advantage into a hardware-software co-design problem",
+    "interpretation": "The exponential cost of generic state preparation has spawned a rich ecosystem of structured workarounds—tensor networks, MPS decompositions, qGANs, and pseudo-random generators—each trading exactness for tractability. This reveals that quantum advantage in financial simulation is as much a problem of clever encoding as of raw quantum speedup: the QAE kernel is well understood, but practical viability hinges on matching the mathematical structure of financial distributions to efficient quantum representations. The co-design challenge is that each loading technique imposes constraints on the class of distributions and payoffs it can handle, fragmenting the field into problem-specific pipelines.",
+    "supporting_papers_sampled": [
+      "075a4a34de90",
+      "14ceb7e36df7",
+      "48cd8220e3b2",
+      "49dc03e35036",
+      "50989fdc9ad1",
+      "59cca9744140",
+      "c57f6422ed7b",
+      "c945ded90aa0"
+    ],
+    "supporting_paper_total": 16,
+    "counter_evidence": [
+      {
+        "paper_id": "16d418f1da92",
+        "reason": "Hardware noise degrades QAE outputs to uninformative levels regardless of state-preparation quality, suggesting that solving the loading problem alone is insufficient for practical advantage and that noise mitigation is an equally critical co-design dimension.",
+        "evidence_type": "boundary_condition"
+      }
+    ]
+  },
+  {
+    "theme_id": "AT-SMC-003",
+    "theme_label": "Computational cost structure of financial risk drives rational quantum target selection",
+    "interpretation": "The concentration of quantum simulation research on VaR/CVaR estimation, credit portfolio models, and path-dependent derivatives reflects a rational cost-benefit calculus: these are computationally expensive classical MC problems where precision requirements are high and regulatory deadlines are tight, maximizing the potential return on quantum speedup. VaR and credit risk share a common QAE pipeline structure (uncertainty model → loss aggregation → threshold comparison), enabling methodological reuse across applications. Path-dependent products add dimensionality that further favors quantum approaches. This convergence is not accidental but reveals the field’s implicit identification of financial problems where the classical MC cost-to-precision ratio is worst.",
+    "supporting_papers_sampled": [
+      "16d418f1da92",
+      "173cd12aee6b",
+      "1760158c7e1b",
+      "270d264b98f3",
+      "288305d31b7d",
+      "631717352091",
+      "c434305b37fb",
+      "ed111831958f"
+    ],
+    "supporting_paper_total": 19,
+    "counter_evidence": [
+      {
+        "paper_id": "da7ecd113b59",
+        "reason": "Resource estimates for autocallable pricing show 8k+ logical qubits and T-depths exceeding 10⁷, indicating that even the highest-value path-dependent targets require fault-tolerant hardware far from availability, undermining the ‘near-term target’ framing.",
+        "evidence_type": "boundary_condition"
+      }
+    ]
+  },
+  {
+    "theme_id": "AT-SMC-004",
+    "theme_label": "NISQ and fault-tolerant paradigms offer irreconcilable advantage pathways",
+    "interpretation": "The literature reveals two fundamentally different strategies for quantum MC advantage that lack a credible interpolation path. NISQ approaches—shallow variational circuits, iterative QAE, maximum-likelihood estimation—sacrifice theoretical guarantees for hardware compatibility but produce results that hardware noise degrades below classical baselines. Fault-tolerant approaches deliver rigorous quadratic speedups but require resources (thousands of logical qubits, tens of millions in T-depth) that are orders of magnitude beyond current devices. The gap between these paradigms is not merely quantitative but structural: NISQ methods optimize for gate count while FT methods optimize for oracle complexity, and the intermediate regime lacks both the depth for exact QAE and the error tolerance for variational heuristics.",
+    "supporting_papers_sampled": [
+      "5308fd4d7e17",
+      "674c681a57d0",
+      "a9fb068595f2",
+      "bf1f4204b1e6",
+      "ce2db00aac7a",
+      "da7ecd113b59",
+      "dfca7435a13e",
+      "e366a47d08de"
+    ],
+    "supporting_paper_total": 21,
+    "counter_evidence": [
+      {
+        "paper_id": "b28e4aff9e6f",
+        "reason": "Iterative QAE achieves near-quadratic convergence with NISQ-compatible circuit depths, suggesting a partial bridge between the two paradigms for small-to-medium problem instances where circuit depth remains manageable.",
+        "evidence_type": "boundary_condition"
+      }
+    ]
+  },
+  {
+    "theme_id": "AT-SMC-005",
+    "theme_label": "Classical Monte Carlo’s parallel scalability silently raises the quantum crossover threshold",
+    "interpretation": "The literature’s universal adoption of single-processor classical MC as the baseline obscures a critical competitive reality: classical Monte Carlo is embarrassingly parallel and can be distributed across thousands of CPUs or GPUs with near-linear speedup, a capability quantum computers cannot match due to their fundamentally sequential oracle-call structure. The quadratic quantum speedup must therefore compete not against one classical processor but against massively parallel classical infrastructure, raising the crossover problem size from theoretically modest to practically unreachable levels. This asymmetry in parallelism is rarely acknowledged in quantum advantage analyses, creating a systematic bias toward optimistic crossover estimates.",
+    "supporting_papers_sampled": [
+      "0b549647c8e5",
+      "342ce43a11d1",
+      "a64e9d084306",
+      "c46b48afaa7c",
+      "ce2db00aac7a",
+      "dcc9f218d7a2",
+      "ef99551dab0f",
+      "f792c5e92b0c"
+    ],
+    "supporting_paper_total": 22,
+    "counter_evidence": [
+      {
+        "paper_id": "8f553bfb1077",
+        "reason": "Quantum SDE simulation frameworks claim O(poly(d)·polylog(1/ε)) complexity scaling that could outpace even massively parallel classical MC for sufficiently high-dimensional problems where classical cost grows exponentially in dimension.",
+        "evidence_type": "boundary_condition"
+      }
+    ]
+  },
+  {
+    "theme_id": "AT-SMC-006",
+    "theme_label": "Methodological proliferation signals exploratory-phase maturity without paradigm convergence",
+    "interpretation": "The diversity of quantum approaches to financial simulation—Fourier payoff encoding, parameterized circuit approximators, pseudo-random generators, PDE solvers, SDE frameworks, multilevel Monte Carlo, sign-corrected amplitude encoding, and NISQ QAE variants—reveals a field in vigorous exploration but without a dominant paradigm. Each method addresses a specific bottleneck (depth, qubit count, sign handling, loading cost) but introduces its own trade-offs and assumptions. Unlike classical MC, which serves as a well-understood universal default, no single quantum approach has emerged as clearly superior across problem types. This fragmentation, while scientifically productive, delays the standardization needed for industrial adoption.",
+    "supporting_papers_sampled": [
+      "0608ad48d5b8",
+      "29cfef5a271e",
+      "2b4dc3c2ba75",
+      "49aaab8109ac",
+      "4de005c12725",
+      "82475e54c193",
+      "8908fea924fc",
+      "afa84e1d94cf"
+    ],
+    "supporting_paper_total": 29,
+    "counter_evidence": [
+      {
+        "paper_id": "5308fd4d7e17",
+        "reason": "Surveys argue that the proliferation of approaches without standardized benchmarks or reproducible comparisons makes it impossible to determine which methods genuinely advance toward practical advantage, suggesting diversification may mask lack of cumulative progress.",
+        "evidence_type": "methodological_critique"
+      }
+    ]
+  },
+  {
+    "theme_id": "AT-SMC-007",
+    "theme_label": "Finite-register discretization imposes a precision ceiling that redefines advantage thresholds",
+    "interpretation": "At feasible qubit counts, discretization error from encoding continuous distributions and payoffs into finite quantum registers dominates QAE estimation error, creating a precision ceiling that no amount of quantum speedup can breach without adding more qubits. This fundamentally redefines the advantage question: the relevant comparison is not ‘quantum vs. classical at equal precision’ but ‘quantum at achievable precision vs. classical at arbitrary precision.’ Since classical MC can refine precision simply by drawing more samples at negligible per-sample cost, the quantum approach must simultaneously solve the qubit-count problem and the oracle-complexity problem—a compound challenge that is harder than either alone.",
+    "supporting_papers_sampled": [
+      "0b549647c8e5",
+      "12a26364b038",
+      "1760158c7e1b",
+      "413125f4264b",
+      "674c681a57d0",
+      "c46b48afaa7c",
+      "ce2db00aac7a",
+      "ef99551dab0f"
+    ],
+    "supporting_paper_total": 24,
+    "counter_evidence": [
+      {
+        "paper_id": "75a7b04fa681",
+        "reason": "MPS-based state preparation achieves KL divergences as low as 10⁻⁵ for smooth univariate distributions, demonstrating that for well-structured problems the discretization floor can be pushed far below practically relevant error thresholds with modest qubit counts.",
+        "evidence_type": "boundary_condition"
+      }
+    ]
+  }
+]
+
+### A1 memos for the supporting papers (paper_id -> memo)
+{
+  "0608ad48d5b8": {
+    "paper_id": "0608ad48d5b8",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo mainly because it contrasts its PDE/Hamiltonian approach with Monte Carlo integration and includes a measurement/sampling discussion via post-selection and amplitude estimation. It is not a Monte Carlo algorithm itself, but it provides a finance simulation benchmark and a quantum sampling interface that are directly adjacent to Monte Carlo-style estimation workflows.",
+    "silo_relevance_score": "medium",
+    "key_points": [
+      {
+        "point": "Explicitly distinguishes the method from Monte Carlo integration while discussing sampling-based pricing workflows.",
+        "silo_note": "This is the clearest Monte Carlo-relevant statement: the paper positions its approach against classical sampling-based integration and notes that amplitude estimation can quadratically improve measurement sampling, which is directly relevant to quantum Monte Carlo-style estimation.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Amplitude estimation is proposed to improve sampling of option-price amplitudes.",
+        "silo_note": "For simulation_monte_carlo, the key relevance is the explicit mention that amplitude estimation can reduce the number of measurements needed to estimate amplitudes, aligning with Monte Carlo estimation goals.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Post-selection on the ancilla is the mechanism used to recover the desired dynamics and obtain the target quantity.",
+        "silo_note": "Monte Carlo-style methods care about how observables are extracted from repeated runs; the paper’s post-selection success probability and its lower bound above 0.6 matter because they affect sampling efficiency and feasibility.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper frames its result as a benchmark against classical numerical algorithms rather than a direct Monte Carlo speedup claim.",
+        "silo_note": "This matters for simulation_monte_carlo because it indicates the paper is more of a comparison point for simulation accuracy than a direct Monte Carlo replacement, helping situate where sampling-based methods remain relevant.",
+        "dimension": "dimension_3"
+      }
+    ]
+  },
+  "075a4a34de90": {
+    "paper_id": "075a4a34de90",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it targets the core bottleneck in quantum Monte Carlo: preparing the multivariate distribution and payoff states needed before amplitude estimation can be applied. Its main contribution is a state-preparation pipeline with linear-in-D scaling, which directly affects the feasibility of quantum Monte Carlo for high-dimensional simulation tasks.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Linear-in-D multivariate state preparation for Monte Carlo inputs and payoffs",
+        "silo_note": "For simulation_monte_carlo, the key issue is whether the input distribution and payoff can be loaded efficiently; these codes show the proposed M-QSP construction scales linearly in the number of variables D, which is the main bottleneck in high-dimensional Monte Carlo.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Quantum Monte Carlo estimation guarantee built on prepared Ap and Wθ oracles",
+        "silo_note": "This is the direct simulation_monte_carlo link: once the distribution and payoff states are prepared, the standard quantum Monte Carlo routine estimates E[θ(X)] with O((1/ε) log(1/δ)) oracle queries, so the paper’s value is in enabling those oracles.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Risk-measure simulation as a concrete Monte Carlo use case",
+        "silo_note": "VaR/TVaR are specific Monte Carlo outputs derived from a normalized aggregate loss variable S; the paper shows how the same simulation framework can estimate threshold and tail quantities via step-function and tail-function approximations.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Approximation and constructibility constraints on Monte Carlo applicability",
+        "silo_note": "For simulation_monte_carlo, practical usefulness depends on whether the target joint PDF and payoff are M-QSP constructible and whether the success amplitude is known; the step-function approximation also adds O(Δ) error, which affects simulation accuracy-cost tradeoffs.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "The paper’s main scalability claim is about qubits and gates, not empirical Monte Carlo benchmarking",
+        "silo_note": "This matters to simulation_monte_carlo because the paper is a theoretical algorithmic contribution: it provides complexity and trace-distance guarantees for state preparation, but no numerical experiments or hardware validation of Monte Carlo performance.",
+        "dimension": "dimension_8"
+      }
+    ]
+  },
+  "0b549647c8e5": {
+    "paper_id": "0b549647c8e5",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo because it directly compares amplitude-estimation-based pricing against classical Monte Carlo baselines and frames the main question as whether QAE can deliver the expected quadratic reduction in sampling cost. It is especially useful as a scaling-and-bottleneck case study for quantum Monte Carlo in finance, showing that idealized O(1/ε) behavior can appear in simulation while discretization and state-preparation overhead dominate practical performance.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Empirical validation of QAE’s O(1/ε) scaling under idealized simulation conditions",
+        "silo_note": "For simulation_monte_carlo, the key issue is whether amplitude estimation actually realizes the promised sampling-complexity improvement in a Monte Carlo-style pricing workflow; this paper reports that it does in noise-free simulation.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Classical Monte Carlo baseline is explicitly used as the comparison target",
+        "silo_note": "This matters because the silo is about Monte Carlo simulation: the paper benchmarks QAE against standard MC with 100k samples and reports much lower uncertainty for classical MC, making the comparison directly relevant to quantum-vs-classical simulation cost.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Discretization error is the dominant accuracy bottleneck in the simulation pipeline",
+        "silo_note": "In Monte Carlo-style simulation, accuracy is not just about sampling error; this paper shows that discretizing the terminal distribution can dominate the total error, limiting the practical benefit of quantum sampling gains.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "State preparation and circuit overhead can negate asymptotic Monte Carlo advantages",
+        "silo_note": "For simulation_monte_carlo, the practical question is whether the full end-to-end simulation cost is better than classical MC; the paper flags state preparation, gate count, and error mitigation as major overheads that can erase theoretical speedups.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "The paper identifies the broader simulation use-case for QAE beyond this single option example",
+        "silo_note": "This is relevant to the silo because it points to other simulation-heavy settings where quantum Monte Carlo might matter sooner, such as path-dependent options, multi-asset portfolios, and latency-sensitive pricing tasks.",
+        "dimension": "dimension_6"
+      }
+    ]
+  },
+  "12a26364b038": {
+    "paper_id": "12a26364b038",
+    "silo_relevance": "This paper is directly relevant to simulation_monte_carlo because it benchmarks QAE against classical Monte Carlo on the same discretized lognormal basket model and reports when QAE matches, exceeds, or falls short of Monte Carlo estimates. It also isolates the simulation trade-off that matters for Monte Carlo-style financial simulation: accuracy versus sample/discretization cost, especially as dimensionality grows.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "The study uses classical Monte Carlo as a direct benchmark for QAE, making the comparison central to simulation_monte_carlo evaluation.",
+        "silo_note": "For simulation_monte_carlo, the key issue is not just pricing accuracy but whether QAE can reproduce Monte Carlo-style expectation estimates on the same stochastic model and discretization.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The paper shows that coarse discretization from only 1–2 uncertainty qubits causes large errors, while 3–4 qubits substantially improve agreement with Monte Carlo.",
+        "silo_note": "This maps directly onto simulation_monte_carlo concerns about how discretization resolution affects estimator quality and whether more refined state sampling improves convergence to the Monte Carlo reference.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The Monte Carlo benchmark itself is explicitly sample-based, using a large number of lognormal samples per asset, which frames the classical cost side of the comparison.",
+        "silo_note": "This matters for simulation_monte_carlo because it highlights the classical sampling burden that QAE is intended to reduce, while still serving as the reference estimator.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "As basket dimensionality increases, accuracy deteriorates at fixed qubit counts and gains plateau, with larger baskets remaining above Monte Carlo even after convergence.",
+        "silo_note": "For simulation_monte_carlo, this is a scaling result: higher-dimensional simulation becomes harder to approximate accurately, and the paper shows where the quantum estimator stops tracking the Monte Carlo baseline well.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The paper’s practical takeaway is a 3–4 qubit-per-asset sweet spot, where QAE often aligns more closely with the final basket price than Monte Carlo or Black-Scholes.",
+        "silo_note": "In simulation_monte_carlo terms, this identifies the regime where the quantum simulation is most competitive with classical Monte Carlo in accuracy-resource trade-off.",
+        "dimension": "dimension_7"
+      }
+    ]
+  },
+  "14ceb7e36df7": {
+    "paper_id": "14ceb7e36df7",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo because it frames option pricing as Monte Carlo integration over simulated price paths and proposes a state-preparation method intended to support quantum amplitude estimation. The main silo value is the path-sampling workflow, the classical-to-quantum Monte Carlo comparison, and the reported simulation results on synthetic Heston paths.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "The paper’s core Monte Carlo target is estimating path-dependent payoffs from simulated price trajectories, with classical sample complexity O(1/ε²) and a quantum QAE target of O(1/ε).",
+        "silo_note": "This is directly about Monte Carlo simulation cost and why quantum amplitude estimation is being used as a variance-reduction/speedup mechanism in the simulation workflow.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "The proposed simulation pipeline prepares a probability distribution over price paths as a quantum oracle before payoff evaluation and QAE.",
+        "silo_note": "For simulation_monte_carlo, the key issue is how sampled trajectories are represented and fed into the estimator; this paper’s oracle-based path loading is the central simulation component.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The MPS model is trained classically on simulated Heston paths and then used to generate samples directly, avoiding Gibbs sampling.",
+        "silo_note": "This matters because Monte Carlo simulation depends on efficient sample generation; the paper’s contribution is a tractable generative sampler for path data that can replace or accelerate repeated path draws.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "The numerical experiments validate the simulation approach on synthetic Heston data and show that higher physical dimension and bond dimension improve the match to the target path distribution and pricing outputs.",
+        "silo_note": "For simulation_monte_carlo, this is the evidence that the proposed sampler can reproduce the distribution needed for Monte Carlo estimation, not just fit a static dataset.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The paper also highlights simulation-specific limitations: low discretization causes localized artifacts, and barrier-option discrepancies can persist or worsen with larger bond dimension.",
+        "silo_note": "These are important for Monte Carlo simulation quality because they show where the generated path distribution may distort estimator accuracy, especially for path-sensitive payoffs.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "16d418f1da92": {
+    "paper_id": "16d418f1da92",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it directly frames quantum amplitude estimation as a Monte Carlo alternative for estimating loss, VaR, and economic capital, with an explicit quadratic sample-complexity claim over classical Monte Carlo. It also reports the practical simulation behavior of IQAE on noiseless, noisy, and hardware runs, which is central to evaluating whether quantum Monte Carlo-style methods are viable in practice.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Quantum amplitude estimation is presented as the Monte Carlo replacement with quadratic sample-complexity speedup for loss estimation.",
+        "silo_note": "This is the core simulation_monte_carlo connection: the paper’s main claim is that QAE/IQAE can estimate rare-event credit losses more efficiently than classical Monte Carlo.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The paper defines the simulation targets as expected loss, VaR, and economic capital, and uses bisection over the loss CDF to extract VaR.",
+        "silo_note": "These are the exact quantities a Monte Carlo simulator would estimate, so the paper is directly about quantum methods for financial simulation outputs rather than only abstract algorithmics.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "The implementation is built around the standard U-S-C operator structure and iterative QAE, which is the simulation workflow used to turn a probabilistic model into amplitude estimates.",
+        "silo_note": "For simulation_monte_carlo, the important part is how the uncertainty model is loaded and sampled; the paper’s circuit decomposition is the quantum analogue of a Monte Carlo sampling pipeline.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The empirical results show that noisy hardware can collapse the estimator toward an uninformative 50% default regime, highlighting a major practical obstacle for quantum Monte Carlo-style simulation.",
+        "silo_note": "This matters because simulation_monte_carlo is not just about asymptotic speedups; it also depends on whether the estimator remains stable under realistic noise and depth limits.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The paper’s scalability discussion shows that resource costs grow sharply with more assets and factors, and that the LGD-supporting comparator adds depth and qubit overhead.",
+        "silo_note": "For Monte Carlo-style simulation, scalability is decisive: the paper shows that the quantum encoding and estimation machinery may become too costly as the simulated portfolio grows.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "173cd12aee6b": {
+    "paper_id": "173cd12aee6b",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo because it explicitly frames quantum amplitude estimation as a replacement for classical Monte Carlo sampling, with the same pricing expectation cast as a probability-estimation problem. The main silo value is the comparison of convergence rates, the simulation-oriented circuit construction, and the practical error/bias tradeoffs that affect whether a Monte Carlo-style estimator is usable on near-term or future hardware.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Amplitude estimation is positioned as the Monte Carlo analogue, with quadratic sample-complexity improvement.",
+        "silo_note": "This is the core simulation_monte_carlo connection: the paper directly compares quantum amplitude estimation against classical Monte Carlo convergence, making it relevant as a potential faster estimator for simulation-based pricing.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The pricing problem is reformulated as estimating a success probability from simulated paths.",
+        "silo_note": "For Monte Carlo-style simulation, the important point is that the option value becomes an expectation over path probabilities and payoffs, which is exactly the kind of quantity Monte Carlo estimators target.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Path encoding and qubit scaling determine how feasible a simulation-based estimator is.",
+        "silo_note": "Simulation_monte_carlo cares about how many samples/paths can be represented and processed; the paper’s linear qubit scaling and path-register construction are the resource constraints that govern practical estimator size.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "The paper reports approximation error and bias tradeoffs that affect estimator quality.",
+        "silo_note": "In simulation settings, estimator accuracy is as important as asymptotic speed; these results show that the positive-part approximation introduces bias/error that would directly impact Monte Carlo-style pricing estimates.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The work is explicitly simulator-based because current hardware cannot run the full circuit.",
+        "silo_note": "This matters for simulation_monte_carlo because the paper’s claims are validated in simulation rather than on hardware, so the practical relevance is currently as a simulated estimator benchmark rather than a deployed Monte Carlo replacement.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "1760158c7e1b": {
+    "paper_id": "1760158c7e1b",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it directly contrasts classical Monte Carlo convergence with amplitude estimation, the quantum analogue that promises quadratic sample-complexity improvement for expectation estimation. It also provides implementation details for loading distributions, encoding payoffs, and handling path-dependent payoffs—core ingredients of Monte Carlo-style simulation workflows.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Amplitude estimation is the central Monte Carlo replacement and is claimed to give quadratic speedup over classical sampling.",
+        "silo_note": "This is the core simulation_monte_carlo connection: the paper frames pricing as expectation estimation and compares AE directly against Monte Carlo convergence rates.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The paper emphasizes reduced-qubit AE without phase estimation for practical simulation workflows.",
+        "silo_note": "For simulation_monte_carlo, the key issue is whether the quantum estimator can be run with fewer resources than standard AE while preserving the sampling advantage.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Distribution loading is treated as a major bottleneck, with log-normal/log-concave loading and qGANs proposed as ways to make Monte Carlo-like state preparation feasible.",
+        "silo_note": "Monte Carlo simulation depends on sampling from a target distribution; the paper’s discussion of efficient loading is directly relevant to whether quantum simulation can represent the underlying random variables at all.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "The payoff-encoding machinery shows how expectation estimation is turned into a circuit problem for piecewise-linear payoffs.",
+        "silo_note": "Simulation_monte_carlo methods need a way to map sampled outcomes to payoffs; these circuits implement that mapping in the quantum setting.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "The paper extends the simulation framework to multi-asset and path-dependent cases, which are especially relevant where classical Monte Carlo becomes expensive.",
+        "silo_note": "This matters for simulation_monte_carlo because the hardest Monte Carlo workloads are path-dependent and multi-dimensional, and the paper explicitly targets those cases.",
+        "dimension": "dimension_1"
+      }
+    ]
+  },
+  "270d264b98f3": {
+    "paper_id": "270d264b98f3",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo because it directly compares classical Monte Carlo-style risk estimation with a quantum amplitude-estimation workflow, including complexity, accuracy, and resource-use claims. Its main simulation value is as a case study in replacing repeated sampling with quantum state preparation, threshold estimation, and binary search for VaR-like outputs.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Classical Monte Carlo is explicitly framed as O(N) and computationally cumbersome, motivating a simulation acceleration target.",
+        "silo_note": "This is the baseline simulation cost model that the paper positions its quantum method against, making it directly relevant to Monte Carlo simulation efficiency.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The proposed workflow uses amplitude estimation with an exponentially increasing amplification sequence and binary search to estimate a cumulative threshold probability, which is the core Monte Carlo replacement mechanism.",
+        "silo_note": "For simulation_monte_carlo, this is the key algorithmic shift: repeated random sampling is replaced by quantum probability estimation plus search over thresholds.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper reports near-classical agreement for simulation output, with relative error within 1% at seven sampling qubits and accuracy up to 99%.",
+        "silo_note": "These results matter because they indicate whether the quantum simulation can reproduce Monte Carlo estimates closely enough to be a viable substitute.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Resource-efficiency claims include at least 15% fewer ancillary qubits and three times fewer controlled amplification operations under the MLE-based estimator.",
+        "silo_note": "Simulation_monte_carlo cares not only about accuracy but also about the cost of generating samples/estimates; these claims speak directly to simulation overhead reduction.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The implementation loads a lognormal distribution with polynomial complexity and improves approximation as sampling qubits increase, which is central to Monte Carlo-style distribution sampling.",
+        "silo_note": "This is the simulation substrate: the quality of the loaded distribution determines how well the quantum method can emulate Monte Carlo sampling of terminal prices.",
+        "dimension": "dimension_8"
+      }
+    ]
+  },
+  "288305d31b7d": {
+    "paper_id": "288305d31b7d",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it directly targets Monte Carlo-style estimation of loss distributions and VaR, then replaces the classical sampling bottleneck with iterative amplitude estimation and bisection. It also studies how model realism changes the simulation workload through multi-factor uncertainty and non-integer loss inputs, which are central concerns when designing financial simulation workflows.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Replaces classical Monte Carlo VaR estimation with QAE-based sampling and bisection",
+        "silo_note": "This is the core simulation_monte_carlo contribution: the paper frames QAE as a quadratic-speedup alternative to Monte Carlo for estimating tail probabilities and VaR, using iterative amplitude estimation plus bisection instead of brute-force sampling.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Explicitly addresses Monte Carlo limitations that motivate quantum simulation",
+        "silo_note": "The paper’s simulation focus is driven by classical Monte Carlo convergence and pseudo-random duplication issues, making it directly relevant to anyone comparing quantum simulation methods against standard Monte Carlo workflows.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Extends the simulation model from single-factor to multi-factor uncertainty",
+        "silo_note": "For Monte Carlo simulation, the important issue is how to sample more realistic correlated risk drivers; the paper shows two ways to encode multiple factors, which changes the structure and cost of the simulation circuit.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Improves input flexibility for loss simulation by removing integer-only LGD constraints",
+        "silo_note": "This matters for simulation_monte_carlo because realistic simulation inputs often require non-integer loss severities; the paper’s revised comparator lets the simulator handle richer loss values without the original sum-register design.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Quantifies simulation resource costs and scalability tradeoffs",
+        "silo_note": "The paper is useful for Monte Carlo practitioners because it reports concrete sample counts, qubit counts, and scaling behavior, showing where quantum simulation may or may not outperform classical sampling in practice.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "29cfef5a271e": {
+    "paper_id": "29cfef5a271e",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo because it targets the payoff-encoding stage inside amplitude-estimation pricing circuits, which is a key bottleneck in quantum Monte Carlo-style financial simulation. Its main value for this silo is showing how QSP can replace arithmetic-heavy payoff evaluation after probability/path loading, reducing the resource cost of the simulation-to-estimation pipeline.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "QSP reduces the resource cost of the payoff-encoding step used after path distribution loading in amplitude-estimation pricing circuits.",
+        "silo_note": "In simulation_monte_carlo, the expensive part is often turning sampled paths into payoff amplitudes; this paper directly addresses that subroutine rather than the sampling stage itself.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The method is designed around the common payoff structure (A e^x - B)/C, which fits the kind of payoff functions encountered after Monte Carlo path simulation.",
+        "silo_note": "For Monte Carlo pricing, the payoff map from simulated terminal values to amplitudes is central; the paper focuses on a reusable payoff form that can be embedded into that workflow.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "The paper reports large end-to-end resource reductions versus arithmetic-based payoff evaluation, including about 16x fewer T-gates and about 4x fewer logical qubits.",
+        "silo_note": "These savings matter for simulation_monte_carlo because they lower the overhead of the estimation stage that follows repeated path preparation, which is often the dominant cost in quantum Monte Carlo pipelines.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The pricing circuit is explicitly split into probability loading over discretized stochastic paths and ancilla-based payoff encoding, matching the structure of quantum Monte Carlo simulation workflows.",
+        "silo_note": "This decomposition is directly aligned with simulation_monte_carlo: first prepare a distribution over paths, then estimate the expected payoff from the ancilla amplitude.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "The current construction is limited to single-variable approximation, which constrains how broadly it can be applied to more complex Monte Carlo simulations.",
+        "silo_note": "For simulation_monte_carlo, this limitation matters because many realistic simulation targets involve multiple stochastic variables; the paper flags multivariable QSP as the route to broader applicability.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "2b4dc3c2ba75": {
+    "paper_id": "2b4dc3c2ba75",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it centers on quantum amplitude estimation as a replacement for classical Monte Carlo sampling, with explicit claims of quadratic or better accuracy scaling for estimating expectations of SDE functionals. Its most silo-relevant content is the end-to-end simulation workflow: encoding distributions, generating noise, and estimating payoffs/expectations for finance SDEs such as Black-Scholes and Heston.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Quantum amplitude estimation is the core Monte Carlo replacement for expectation estimation.",
+        "silo_note": "This directly targets the Monte Carlo task of estimating E[f(X_T)] and is the main algorithmic primitive for simulation_monte_carlo.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper explicitly contrasts quantum expectation estimation with classical Monte Carlo sample complexity O(1/ε^2).",
+        "silo_note": "This is the key benchmark for simulation_monte_carlo because the silo is about improving sampling-based accuracy scaling.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "For linear and semilinear SDEs, the paper claims polylog(1/ε) quantum scaling for estimating payoffs, moments, and hitting times.",
+        "silo_note": "These are the strongest Monte Carlo-style results, since they promise faster estimation of SDE-derived quantities than repeated classical sampling.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The finance case studies instantiate the Monte Carlo workflow for multi-asset Black-Scholes and Heston models.",
+        "silo_note": "These examples show how the simulation_monte_carlo ideas are applied to concrete pricing/simulation problems rather than only abstract SDEs.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "The paper’s noise-generation and distribution-encoding steps are necessary to make Monte Carlo sampling quantum-native.",
+        "silo_note": "For simulation_monte_carlo, these are the infrastructure pieces that turn a stochastic process into a quantum sampling procedure.",
+        "dimension": "dimension_2"
+      }
+    ]
+  },
+  "342ce43a11d1": {
+    "paper_id": "342ce43a11d1",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it directly studies Quantum Monte Carlo and amplitude estimation as a way to accelerate expectation estimation, which is the core computational task in Monte Carlo simulation. It also benchmarks how the claimed quadratic speedup behaves under discretization, circuit overhead, and hardware constraints, all of which are central to whether QMC is practical for simulation workloads.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "The paper’s core contribution is a QMC/amplitude-estimation formulation for expectation estimation, with quadratic query-complexity improvement over classical Monte Carlo.",
+        "silo_note": "This is the central simulation_monte_carlo result: it targets the same expectation-estimation problem that classical Monte Carlo solves, but with fewer oracle calls.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The authors explicitly compare QMC against classical Monte Carlo scaling and report better observed error exponents in simulation.",
+        "silo_note": "For simulation_monte_carlo, the key issue is convergence rate; these results show the quantum method outperforming the classical 1/sqrt(N) baseline in the simulated benchmarks.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The paper shows that QMC can be implemented in PennyLane and benchmarked via circuit depth and estimated runtime, enabling simulation-oriented performance analysis.",
+        "silo_note": "This matters because simulation_monte_carlo is not just about theory; it needs practical tooling to estimate whether a Monte Carlo workload can be simulated faster in a quantum setting.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "The paper identifies key simulation-specific limitations: discretization error, costly quantum arithmetic, and the need for amplitude estimation to obtain any speedup.",
+        "silo_note": "These are directly relevant to Monte Carlo simulation because they determine whether the quantum encoding preserves accuracy and whether overhead cancels the theoretical advantage.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "The paper’s financial stress-testing and macro examples are useful as Monte Carlo simulation case studies, including a stress-test loss expectation and a multivariate stochastic model.",
+        "silo_note": "These examples show how real simulation problems can be reduced to expectation estimation and how QMC behaves when the simulated random inputs become more complex.",
+        "dimension": "dimension_1"
+      }
+    ]
+  },
+  "413125f4264b": {
+    "paper_id": "413125f4264b",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it frames quantum amplitude estimation as a replacement for classical Monte Carlo in financial simulation tasks, while also showing the practical circuit and hardware constraints that determine whether such speedups are usable. The most silo-relevant content is the QAE/MLAE comparison, the state-preparation burden for sampling discrete Markov regimes, and the empirical error behavior on real devices.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "QAE is explicitly positioned as a quadratic-speedup alternative to classical Monte Carlo for estimating simulation outputs.",
+        "silo_note": "This is the core Monte Carlo connection: the paper’s simulation target is not generic finance, but Monte Carlo-style estimation accelerated by amplitude estimation.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Accurate state preparation is the main bottleneck for Monte Carlo-style quantum simulation, especially for discrete Markov chains.",
+        "silo_note": "For simulation_monte_carlo, the key issue is not just the estimator but preparing the probability distribution that the sampler must represent; the paper shows this dominates error growth and implementation effort.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "The paper compares encoding choices that trade qubit count against circuit complexity, which directly affects feasibility of quantum simulation runs.",
+        "silo_note": "Monte Carlo acceleration only matters if the sampling circuit fits on hardware; the one-hot vs binary tradeoff is therefore central to practical simulation workloads.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "MLAE is used as a near-term substitute for canonical QAE when full Monte Carlo acceleration circuits are too large.",
+        "silo_note": "This is important for simulation_monte_carlo because it shows how the paper adapts the ideal Monte Carlo speedup idea to current hardware limits, with a reported estimate within 2.5% of exact value.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "The empirical results show that hardware fidelity and circuit size strongly shape simulation accuracy, with MSE increasing as bins and shots become unfavorable.",
+        "silo_note": "For Monte Carlo simulation, these results indicate that practical performance depends on sampling resolution and device quality, not just asymptotic speedup claims.",
+        "dimension": "dimension_3"
+      }
+    ]
+  },
+  "48cd8220e3b2": {
+    "paper_id": "48cd8220e3b2",
+    "silo_relevance": null,
+    "silo_relevance_score": null,
+    "dimension_texts": {
+      "problem_framing": "The paper tackles the foundational task of preparing quantum states that encode classical data, focusing on amplitude-encoding smooth real functions and, as a key special case, probability distributions relevant to finance (including α‑stable/Lévy distributions) on a binary grid of N qubits. The problem is framed as understanding and exploiting entanglement structure in the matrix product state (MPS) representation of these discretized functions to design shallow, accurate encoding circuits for Monte Carlo–style financial simulations.",
+      "quantum_method": "The authors use an MPS-based state-preparation approach: discretize the target function on a binary grid, represent it as an MPS, analyze and truncate bond dimensions based on entanglement measures (purity and entropy), and then synthesize shallow \"double-staircase\"/V-layer circuits from these MPS isometries. They further optimize the method via a greedy disentangling procedure whose origin can be shifted, introduce a truncation threshold ε_trunc to decide which two-qubit gates to include, make a central gate variational in subsequent layers, and exploit a two-CNOT synthesis for generic isometries. For scalability, Tensor Cross Interpolation (TCI) is used to build the MPS directly from a computable PDF without storing the full state vector, with black-box access to the function and complexity O(Nχ²).",
+      "key_results": "The main theoretical results are rigorous asymptotic expansions for entanglement in the MPS representation of smooth functions: purities and entanglement entropies across bonds decay exponentially with bond index k, with leading corrections controlled by derivative-based functionals g₁(f) and eigenvalues of reduced density matrices scaling as O(1/4^{k n}), and a 2^{-k} scaling for the first subleading spectrum component. These analyses yield universal scaling relations for smooth functions and show how localization and support affect entanglement—for example, delta-peaked distributions are unentangled while power-law (heavy-tailed) distributions are more entangled than exponentially decaying ones—and improve previous bounds by showing the first nonvanishing term in purity scales as 1/4^k. From these spectra, the authors derive analytical functionals to predict fidelity of single-layer circuits, including corrections for localization, and report that even one-layer circuits can achieve infidelity ≤10⁻³ on smooth distributions, with analytic fidelity estimates from truncated singular values agreeing well with numerics. Empirically, they validate the method on heavy-tailed α‑stable/Lévy and other finance-relevant distributions, including on IBM devices up to 64 qubits, where distributions often pass Kolmogorov–Smirnov tests or at least qualitatively match the target at utility scale, while TCI-based preprocessing achieves very small classical relative errors with O(Nχ²) function evaluations.",
+      "classical_comparison": "Classical comparison is implicit rather than explicit: the authors note that generic functions can require exponentially large MPS bond dimension, whereas for polynomials and smooth functions the entanglement-based analysis shows much more favorable scaling, enabling shallow quantum circuits; and via TCI they contrast O(Nχ²) black-box function evaluations with the 2^N cost of naively constructing full state vectors. However, they do not report direct empirical performance comparisons against concrete classical baselines for financial simulation or distribution sampling.",
+      "stated_limitations": "The authors acknowledge several limitations and conditions: generically, functions may require exponentially large MPS bond dimensions, so their favorable entanglement scaling is restricted to smooth (or sufficiently regular) functions. Their asymptotic expansions hold only beyond a scale set by the function’s characteristic length (k > log₂(1/2σ)), and for functions with only finitely many absolutely continuous derivatives, the universal entanglement results apply only up to order r+1 in the spectrum. They further show that large-scale, coarse qubit regimes exhibit non-universal entanglement behavior that depends on concentration/localization, meaning performance is function-class dependent. On real hardware, noise creates a depth–accuracy trade-off where theoretically better but deeper circuits can perform worse than shallower ones, and at the very largest circuit sizes the prepared distributions no longer pass quantitative statistical tests, even though they retain qualitative features.",
+      "future_work": "The paper suggests extending the density-matrix and entanglement analysis from univariate to multivariate functions, which would be necessary for higher-dimensional financial models, and calls for a more detailed study of hardware noise effects on function preparation, beyond the preliminary depth–noise trade-off observations presented.",
+      "novelty_claim": "The main claimed novelties are the derivation of rigorous, universal entanglement scaling laws for smooth functions in their MPS representation, including explicit asymptotic formulas for purities, entanglement entropies, and reduced density eigenvalues that improve exponentially over prior bounds; the identification of how smoothness, localization, and support shape these spectra (e.g., unentangled delta peaks versus more entangled heavy tails); and the construction of an improved MPS-based algorithm for shallow, accurate encoding circuits, including V-layer architecture, fidelity functionals, and TCI-based scalable MPS construction that together enable utility-scale circuits for heavy-tailed financial distributions. They emphasize that their analytic expansions lead directly to functionals controlling the fidelity of approximate encoding circuits and to a more efficient, compute- and memory‑efficient pipeline.",
+      "methodological_notes": "Methodologically, the study is grounded in a formal density-matrix and entanglement framework, using purity and entropy as quantitative measures to guide bond truncation and circuit synthesis. The authors analytically connect truncated singular values to fidelity for single-layer circuits and validate these predictions against numerical simulations, including corrections for localization that match numerics across all tested supports. They perform both ideal and noisy simulations and run circuits on IBM hardware up to 64 qubits, validating distributions using standard statistics like Kolmogorov–Smirnov tests; for cases where the tests fail at very large scales, they still assess qualitative agreement. The use of TCI is presented with clear complexity scaling and without requiring explicit storage of 2^N amplitudes, and the circuit synthesis details (V-layer shape, truncation hyperparameter, variational gate, two‑CNOT isometry decomposition) are described enough to suggest reproducibility, though full implementation details or open-source code are not explicitly mentioned in the coded excerpts.",
+      "miscellaneous": "The code noting that exponentially decaying functions are less entangled than power-law–tailed ones further illustrates how entanglement reflects function class and aligns with the financial motivation to handle heavy-tailed distributions, but it does not introduce additional methodological or limitation content beyond what is already captured in other dimensions."
+    },
+    "_schema": "raw_8_dimension_fallback"
+  },
+  "49aaab8109ac": {
+    "paper_id": "49aaab8109ac",
+    "silo_relevance": null,
+    "silo_relevance_score": null,
+    "dimension_texts": {
+      "problem_framing": "The paper addresses Monte Carlo integration (MCI) for estimating expectations of functions of random variables, focusing on problems where a probability distribution is encoded in a quantum state and one wants the mean of a (possibly multivariate) function of the samples, including products and correlations. The authors emphasise that, in principle, the mean of any function applied to the samples can be estimated and explicitly consider expectations of products of functions of two correlated random variables as a target quantity.",
+      "quantum_method": "The method is a variant of quantum Monte Carlo integration based on encoding a (possibly multivariate) discrete probability distribution into a quantum state |p⟩ and then using a Fourier series decomposition of the function applied to samples, with each Fourier component estimated by a quantum amplitude estimation (QAE) subroutine. The approach employs a periodic, piecewise extension of the target function to enable this Fourier expansion, uses a single bank of rotation gates to build the amplitude-encoding circuit with minimal depth, and estimates cosine and sine expectations via specially parameterised QAE calls; the authors also extend this to products of functions of two variables via a double Fourier expansion and trigonometric identities that reduce products of sines and cosines to single terms.",
+      "key_results": "The main theoretical result is that the expectation of a suitably smooth function (and of products of functions of two correlated random variables) can be estimated with mean-squared error in Θ(q^−λ) using q calls to the state-preparation circuit, thereby preserving the full quadratic quantum advantage in query complexity while keeping circuit depth minimal. The analysis shows that, under the Fourier-based scheme, the total number of queries remains proportional to the target query budget, and numerical simulations indicate that the Fourier QMCI method outperforms both classical MCI and a rescaled QMCI approach at sufficiently small desired RMSE, with an observed RMSE slope of about −1.02 that matches the predicted scaling, albeit with a larger constant factor than conventional QMCI.",
+      "classical_comparison": "The authors position their algorithm as retaining the full quadratic speedup in query complexity over classical Monte Carlo integration, and report simulations where Fourier QMCI surpasses classical MCI at low target error levels. They also compare against a rescaled QMCI scheme and conventional QMCI with quantum arithmetic, finding that although Fourier QMCI has a larger constant factor than conventional QMCI, it maintains the asymptotic quadratic advantage while avoiding deep quantum arithmetic circuits.",
+      "stated_limitations": "The paper stresses that the quantum speedup is an advantage in query complexity, so any overhead in preparing the probability-encoding state or computing required quantities classically must be accounted for. A key practical obstacle for NISQ devices is that quantum arithmetic (e.g., implementing arcsine) is depth- and qubit-intensive, motivating the authors to avoid it. The rescaled QMCI benchmark they compare against is acknowledged to have a reduced convergence rate and can perform artificially well when the mean lies at the median of the distribution support, so they avoid such cases in their experiments. The method’s theoretical guarantees require smoothness conditions on the target function (continuity, continuous first derivative, and bounded piecewise-continuous second and third derivatives), and the analysis assumes that the convergence behaviour of the chosen QAE subroutine as a function of the number of oracle uses is known. Additionally, they note that if the Fourier coefficients of the extended function cannot be computed symbolically and must instead be obtained by numerical integration, the algorithm may merely shift rather than reduce the overall computational burden.",
+      "future_work": "The authors argue that their low-depth Fourier-based QMCI techniques should have ongoing utility, suggesting they will remain relevant and adaptable as quantum hardware progresses beyond the NISQ era.",
+      "novelty_claim": "The paper claims a QMCI method that simultaneously achieves full quadratic quantum advantage in query complexity, minimal circuit depth by avoiding quantum arithmetic and phase estimation, and applicability to expectations of functions and products of functions of random variables—something the authors state no previous proposal has accomplished in combination. They further emphasise the flexibility of their Fourier-based construction, arguing it can be readily adapted to various real-world settings of interest.",
+      "methodological_notes": "For numerical validation, the authors choose a synthetic discrete distribution whose encoding can be prepared by a very shallow circuit, to avoid simulation slowdowns and to align with the low-depth goals of their scheme; they also deliberately avoid distributions whose mean equals the median of the support, because this would make the rescaled QMCI baseline look artificially strong. They show that the fitted RMSE scaling of Fourier QMCI closely matches their theoretical prediction, and they quantify constant-factor differences versus conventional QMCI, while highlighting explicit resource estimates for quantum arithmetic to motivate their design choices. The method’s flexibility and adaptability to various application settings are claimed, though the experiments themselves are confined to a carefully chosen toy distribution.",
+      "miscellaneous": "Fourier analysis plays a central technical role: the authors rely on the rapid decay (as 1/n³ or faster) of Fourier coefficients under their smoothness assumptions to justify truncation and to distribute the error budget across finitely many Fourier modes when estimating the target expectation. This truncation strategy underpins their query-complexity accounting and connects the analytic properties of the extended function with the quantum resource scaling."
+    },
+    "_schema": "raw_8_dimension_fallback"
+  },
+  "49dc03e35036": {
+    "paper_id": "49dc03e35036",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it is explicitly about quantum Monte Carlo pricing and the quadratic sampling advantage from amplitude estimation [C-007], then works through the resource and error constraints needed to make that advantage practical [C-001, C-005]. Its main methodological contribution is a loading strategy that targets the simulation bottleneck—preparing distributions efficiently for repeated sampling—while quantifying when the approach is or is not viable [C-003, C-015, C-016].",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Uses amplitude-estimation-style quantum Monte Carlo to target the classical sampling bottleneck",
+        "silo_note": "This is the core simulation_monte_carlo connection: the paper is about replacing large classical Monte Carlo sample counts with a quadratic quantum sampling improvement.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Introduces a re-parameterization loading method that prepares independent Gaussians in return space and then transforms them to the needed distributions",
+        "silo_note": "For simulation_monte_carlo, the key issue is efficient state preparation for repeated path simulation; this method is presented as a way to reduce loading overhead in the simulation pipeline.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Provides explicit error budgeting for the Monte Carlo-style workflow, including loader, arithmetic, and payoff errors",
+        "silo_note": "Simulation_monte_carlo methods are only useful if total sampling error is controlled; the paper’s decomposition and empirical loader behavior are directly about managing simulation accuracy.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "Shows the practical limits of existing loading approaches for Monte Carlo simulation",
+        "silo_note": "This matters because the simulation_monte_carlo domain depends on state-loading schemes that scale well; the paper argues Grover-Rudolph is insufficient and Riemann-sum loading has normalization overhead, with only partial mitigation suggested.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "Connects Monte Carlo advantage to concrete resource thresholds and runtime requirements",
+        "silo_note": "For simulation_monte_carlo, the value of the quadratic speedup depends on whether the full algorithm can run fast enough; the paper quantifies qubits, T-depth, and the second-scale execution target needed for advantage.",
+        "dimension": "dimension_3"
+      }
+    ]
+  },
+  "4de005c12725": {
+    "paper_id": "4de005c12725",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it targets the core Monte Carlo bottleneck: estimating expectations with amplitude estimation and reducing the cost of repeatedly applying the state-dependent function inside quantum Monte Carlo integration. Its main contribution is a more resource-efficient way to implement the payoff operator needed for simulation workflows, which directly affects the practicality of quantum Monte Carlo speedups.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Frames the problem as quantum Monte Carlo integration with amplitude estimation to accelerate expectation estimation.",
+        "silo_note": "This is the central simulation_monte_carlo setup: replacing classical Monte Carlo convergence with AE-based estimation is the algorithmic reason the paper matters to this domain.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Identifies efficient implementation of the state-dependent function as the key bottleneck in Monte Carlo-style quantum simulation.",
+        "silo_note": "For simulation_monte_carlo, the main cost is not just sampling but repeatedly evaluating the integrand/payoff operator; the paper focuses exactly on that bottleneck.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Shows that conditional parameterized quantum circuits can implement the needed function with only linear overhead in discretization qubits.",
+        "silo_note": "This matters because Monte Carlo simulation workflows need repeated, scalable function evaluation; linear overhead is what makes the quantum subroutine more plausible inside AE/QMCI.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Benchmarks the CPQC approach against arithmetic-based quantum implementations and reports lower circuit cost for the simulation subroutine.",
+        "silo_note": "For simulation_monte_carlo, the relevant comparison is between alternative quantum implementations of the integrand/payoff, since that determines whether the quantum simulation pipeline is resource-feasible.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Highlights the tradeoff between reduced quantum resources and classical pretraining/approximation error.",
+        "silo_note": "This is important for simulation_monte_carlo because any AE/QMCI speedup depends on whether the function-approximation overhead and added error still preserve the benefit of the Monte Carlo acceleration.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "50989fdc9ad1": {
+    "paper_id": "50989fdc9ad1",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo because it targets the state-preparation bottleneck that often dominates quantum Monte Carlo workflows, and it provides a distribution-loading circuit designed to feed amplitude-estimation-style simulation pipelines more efficiently (C-001, C-012, C-035). Its most silo-specific value is the claim that static, parameter-efficient loading can reduce repeated preprocessing and support empirical distribution approximation for risk quantities derived from simulated data (C-009, C-023, C-040).",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Addresses the input/state-preparation bottleneck that limits quantum Monte Carlo pipelines.",
+        "silo_note": "Simulation Monte Carlo methods need efficient loading of probability distributions into quantum states before estimation; this paper is directly about that bottleneck.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Provides a maximum-entropy distribution loader that prepares probability distributions in a form suitable for downstream estimation.",
+        "silo_note": "For Monte Carlo-style simulation, the key issue is preparing the target distribution efficiently enough to make repeated sampling/estimation practical.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Claims reduced end-to-end resource cost by keeping the circuit static and updating only O(M) parameters.",
+        "silo_note": "Monte Carlo workflows often require repeated re-evaluation as model parameters change; a static, reusable loader is especially relevant when many simulation runs are needed.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Connects directly to quantum Monte Carlo / amplitude-estimation-style finance workflows and sensitivity estimation.",
+        "silo_note": "This is the closest match to simulation_monte_carlo because it frames the loader as part of QMCI and supports derivative/sensitivity calculations that commonly accompany Monte Carlo simulation.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Shows empirical distribution approximation and VaR recovery from simulated data using slowly varying observables as constraints.",
+        "silo_note": "This is especially relevant to Monte Carlo simulation because it demonstrates fitting an empirical distribution from simulated samples and extracting a risk statistic from that approximation.",
+        "dimension": "dimension_8"
+      }
+    ]
+  },
+  "5308fd4d7e17": {
+    "paper_id": "5308fd4d7e17",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it centers Monte Carlo methods as one of the three main application areas and specifically discusses quantum amplitude estimation as the key algorithmic route to speed up pricing and risk estimation. It also highlights the main practical caveat for this silo: classical Monte Carlo is massively parallelizable, so quantum advantage depends on strong theoretical scaling and hardware progress.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Monte Carlo simulation is a core application area in the survey, not a peripheral example.",
+        "silo_note": "This directly places simulation/Monte Carlo inside the paper’s main taxonomy and shows that gate-based implementations already cover this use case.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Amplitude estimation is the central quantum method for Monte Carlo-style pricing and risk estimation.",
+        "silo_note": "For this silo, the key technical takeaway is that quantum AE is the proposed mechanism for reducing sampling cost in financial simulation tasks such as derivative pricing and VaR/CVaR estimation.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The paper reports a quadratic theoretical speed-up over classical Monte Carlo for pricing and risk estimation.",
+        "silo_note": "This is the main performance claim relevant to simulation_monte_carlo, because it frames the potential value of quantum simulation as fewer estimation steps for the same financial quantity.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Classical Monte Carlo parallelization is a major benchmark that raises the bar for quantum advantage.",
+        "silo_note": "This matters specifically for simulation_monte_carlo because it tempers the quantum advantage claim: any quantum method must beat a highly parallel classical baseline, not just a serial Monte Carlo implementation.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Current demonstrations are limited by hardware and problem complexity, so practical Monte Carlo advantage remains early-stage.",
+        "silo_note": "For simulation_monte_carlo, the paper shows that even when AE works experimentally, error mitigation and larger hardware are still needed before realistic financial simulation workloads can be handled.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "59cca9744140": {
+    "paper_id": "59cca9744140",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo because it focuses on efficient amplitude encoding of classical data, which is a key subroutine for preparing probability distributions and benchmark functions used in quantum Monte Carlo-style simulation workflows. Its main value for this silo is the claimed log-depth preparation, topology-aware scheduling, and low-rank function handling, all of which can reduce state-preparation overhead before amplitude estimation or sampling-based simulation.",
+    "silo_relevance_score": "medium",
+    "key_points": [
+      {
+        "point": "Efficient amplitude encoding with log-depth preparation can reduce the state-preparation bottleneck before Monte Carlo-style quantum simulation.",
+        "silo_note": "Simulation_monte_carlo workflows often depend on preparing classical data as amplitudes; the paper’s O(log n) claim is directly relevant because it targets the setup cost that can dominate such routines.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The bounded-MPS-rank analysis identifies a class of functions and distributions that can be prepared efficiently, including low-rank examples and benchmark distributions.",
+        "silo_note": "For Monte Carlo simulation, the practical question is whether target probability profiles are easy to encode; the paper’s low-rank function/distribution results indicate when preparation may be tractable.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The numerical experiments explicitly use Gaussian, Log-Normal, and Cauchy benchmarks and evaluate fidelity of prepared amplitudes.",
+        "silo_note": "These benchmark distributions are directly relevant to simulation_monte_carlo because they show how the method behaves on representative probability shapes rather than only abstract states.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "Topology-aware HTN/graph-contraction scheduling matters for simulation_monte_carlo because it can lower depth on realistic hardware while preserving amplitude-preparation fidelity.",
+        "silo_note": "Monte Carlo-style simulation is often limited by hardware execution cost; the paper’s chip-aware construction is relevant because it adapts preparation to connectivity constraints without changing the target amplitudes.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The two-qubit gate reduction is important because two-qubit gates are identified as the primary bottleneck, and the paper claims a two-CNOT decomposition instead of three.",
+        "silo_note": "For simulation_monte_carlo, reducing entangling-gate overhead can make repeated state preparation more feasible, which is especially important when many samples or repeated runs are needed.",
+        "dimension": "dimension_7"
+      }
+    ]
+  },
+  "5beb1712456c": {
+    "paper_id": "5beb1712456c",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it directly compares classical Monte Carlo path simulation with a Quantum Monte Carlo workflow built around amplitude estimation. The main value for this silo is the concrete simulation pipeline, the stated quadratic convergence advantage, and the empirical comparison of estimate precision via confidence intervals.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Classical Monte Carlo is explicitly framed as costly path-based simulation, making it the baseline this paper seeks to improve.",
+        "silo_note": "These codes describe the standard Monte Carlo workflow and its computational burden, which is the core reference point for any simulation_monte_carlo study.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The quantum method is a Monte Carlo-style estimator that discretizes outcomes into qubit amplitudes and then uses QAE to extract the target expectation.",
+        "silo_note": "This is the central simulation_monte_carlo contribution: it shows how a Monte Carlo expectation is encoded, processed, and read out in a quantum simulation pipeline.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper claims quadratic convergence improvement for QAE over classical Monte Carlo.",
+        "silo_note": "For simulation_monte_carlo, the key issue is estimator efficiency; these codes provide the paper's main algorithmic speedup claim.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The empirical results show tighter uncertainty intervals for the quantum estimates than for classical Monte Carlo in both examples.",
+        "silo_note": "This matters to simulation_monte_carlo because it compares estimator precision directly, not just point estimates, using confidence/credit intervals.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The paper highlights a practical limitation of direct amplitude readout, motivating QAE as the necessary simulation subroutine.",
+        "silo_note": "This is important for simulation_monte_carlo because it explains why naive quantum sampling is insufficient and why amplitude estimation is required for usable simulation output.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "631717352091": {
+    "paper_id": "631717352091",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it proposes a quantum Monte Carlo-style path simulation framework, then evaluates how path count, time discretization, and precision affect pricing error. It also directly addresses amplitude-estimation-style readout and nested simulation extensions, which are central concerns for quantum-enhanced Monte Carlo workflows.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Quantum parallel path simulation is the core Monte Carlo contribution.",
+        "silo_note": "This is directly about simulating many stochastic paths in parallel, which is the central object of simulation_monte_carlo.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The method encodes the mean payoff into an ancilla amplitude for amplitude-estimation-style readout.",
+        "silo_note": "This matters because simulation_monte_carlo often aims to estimate expectations; the paper’s readout mechanism is explicitly expectation-estimation oriented.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper studies Monte Carlo error behavior versus path count, time steps, and precision bits.",
+        "silo_note": "These are the most simulation-specific results: they characterize how discretization and sample size affect estimator error in the Monte Carlo setting.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The framework is extended to nested risk analysis via a secondary index register.",
+        "silo_note": "Nested Monte Carlo is a major simulation_monte_carlo use case, so the added index register is relevant as a structural extension for two-level estimation.",
+        "dimension": "dimension_7"
+      },
+      {
+        "point": "The paper’s random-number generation and rejection-sampling mechanism is a key unresolved component of the simulation pipeline.",
+        "silo_note": "For Monte Carlo simulation, the quality and efficiency of randomness generation directly affect whether the proposed simulator is practical and statistically reliable.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "674c681a57d0": {
+    "paper_id": "674c681a57d0",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it centers on quantum-accelerated Monte Carlo and amplitude estimation as the main route to reducing sampling cost for pricing and VaR. It also gives a detailed, evidence-based account of when those Monte Carlo speedups survive or fail under NISQ noise and depth constraints.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "QAMC is the core simulation-Monte-Carlo target: it replaces classical sampling with an oracle-based path loader and payoff encoding, aiming for fewer oracle calls via amplitude estimation.",
+        "silo_note": "This is the direct algorithmic match to simulation_monte_carlo, since the silo is specifically about quantum Monte Carlo and AE-based sampling reduction.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Classical Monte Carlo remains the baseline because it is general, easy to implement, and scales well in high dimensions, which is exactly why the review frames quantum Monte Carlo as a potential accelerator rather than a replacement.",
+        "silo_note": "For this silo, the key issue is not finance broadly but the comparison against the standard Monte Carlo workload that quantum methods try to speed up.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The review shows that practical AE performance is highly schedule- and noise-dependent: parallel AE helps with depth control, but low-strength noise can erase the quadratic speedup, and linear schedules often perform best.",
+        "silo_note": "This matters because simulation_monte_carlo methods are only useful if the sampling advantage survives realistic circuit noise and limited depth.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Initialization/loading is a major bottleneck for Monte Carlo simulation on quantum hardware: approximate state loading can outperform exact loading, while unitary-synthesis and variational loading are constrained by phase preservation and limited applicability.",
+        "silo_note": "For simulation_monte_carlo, the cost and fidelity of loading the path distribution directly affect whether the Monte Carlo pipeline is viable at all.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "The review’s bottom line is that most recent Monte Carlo-related gains are incremental and noise-limited, with no major breakthroughs and with error correction potentially pushing any quadratic speedup out of practical reach.",
+        "silo_note": "This is important to the silo because it tempers expectations about near-term quantum Monte Carlo speedups and highlights the practical ceiling on simulation gains.",
+        "dimension": "dimension_7"
+      }
+    ]
+  },
+  "75a7b04fa681": {
+    "paper_id": "75a7b04fa681",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it targets the state-preparation bottleneck in quantum Monte Carlo and amplitude-estimation workflows, which directly affects whether theoretical speedups are practical. Its main contribution is a simulation-based method for loading probability distributions into quantum states with improved scaling and accuracy, making it directly applicable to quantum simulation pipelines.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Addresses the probability-loading bottleneck that limits practical QMC speedups.",
+        "silo_note": "For simulation_monte_carlo, the key issue is not just estimating expectations but preparing the input distribution state efficiently; the paper explicitly frames this as the main obstacle to realizing QMC advantage.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Uses TT-cross to build amplitude-encoded states for QMC-style simulation.",
+        "silo_note": "This matters because amplitude estimation and quantum simulation workflows need a compact circuit that prepares the target probability amplitudes; the TT-cross-to-circuit pipeline is the core enabling mechanism.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Reports scalable circuit construction and training behavior relevant to simulation workloads.",
+        "silo_note": "Simulation_monte_carlo methods are only useful if state preparation does not dominate runtime; the reported logarithmic training-time scaling and linear circuit-depth scaling speak directly to that requirement.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Shows that the proposed loading method outperforms standard QMC state-preparation baselines.",
+        "silo_note": "For simulation_monte_carlo, baseline loading methods that scale poorly can erase any advantage from quantum sampling; the paper positions TT-cross as a more practical alternative to Grover-Rudolph and related approaches.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Simulation-based evaluation isolates algorithmic performance and exposes hardware limitations.",
+        "silo_note": "This is important for simulation_monte_carlo because it shows the method’s behavior in noiseless simulation, while also clarifying that current hardware noise can distort the prepared distribution and limit near-term deployment.",
+        "dimension": "dimension_8"
+      }
+    ]
+  },
+  "82475e54c193": {
+    "paper_id": "82475e54c193",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it extends quantum Monte Carlo from discrete settings to continuous-time stochastic processes, with an explicit quadratic speedup claim for the extraction/estimation stage and a path-compression scheme that reduces the cost of simulating sample paths. Its main value for this silo is the combination of state preparation for stochastic trajectories and Monte Carlo-style information extraction for weighted integrals and history-sensitive quantities.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Extends quantum Monte Carlo to continuous-time stochastic processes with a two-stage prepare-and-estimate workflow.",
+        "silo_note": "For simulation_monte_carlo, the key issue is not just modeling CTSPs but making Monte Carlo-style estimation feasible on quantum hardware; the paper’s explicit data-preparation plus information-extraction pipeline is the core simulation workflow.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Claims quadratic acceleration in decoding/processing compressed information relative to classical Monte Carlo.",
+        "silo_note": "This is the most direct simulation_monte_carlo result: it targets the estimation step that Monte Carlo uses to compute expectations, suggesting a quantum speedup for simulation output processing.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Supports Monte Carlo estimation of path-dependent quantities such as weighted integrals and first-hitting-time-type information.",
+        "silo_note": "Simulation_monte_carlo often needs path functionals rather than terminal values; these codes show the paper addresses exactly the kind of history-sensitive estimands that standard Monte Carlo must sample repeatedly.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Reduces the storage burden of sample-path simulation by compressing paths and lowering the number of state-space copies.",
+        "silo_note": "For Monte Carlo simulation, memory and path storage are major bottlenecks; the paper’s compression claims matter because they reduce the cost of representing many simulated trajectories.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Positions the method as a Monte Carlo alternative that avoids qRAM/oracle assumptions while remaining usable as a submodule in other quantum algorithms.",
+        "silo_note": "For simulation_monte_carlo, implementation assumptions are crucial: the paper’s no-qRAM/no-oracle framing makes the Monte Carlo-style routine more directly relevant as a practical simulation primitive.",
+        "dimension": "dimension_4"
+      }
+    ]
+  },
+  "8908fea924fc": {
+    "paper_id": "8908fea924fc",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it targets the core Monte Carlo expectation-estimation setting and shows how QAE can preserve quadratic sampling advantages when state preparation is made efficient. Its main value for this silo is the combination of amplitude-level state construction, quadrature-based discretization, and circuit-depth reduction for simulation workloads.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "QAE is positioned as a quadratic-speedup replacement for classical Monte Carlo in expectation estimation.",
+        "silo_note": "This is the central simulation_monte_carlo motivation: estimating expectations with O(1/M) quantum scaling instead of O(1/sqrt(M)) classical sampling.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Amplitude-level multiplication and addition let the method encode integrands/payoffs without explicit quantum arithmetic.",
+        "silo_note": "For Monte Carlo simulation, the bottleneck is often preparing the payoff/integrand state; these constructions directly address that bottleneck for structured simulation problems.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The spin-echo optimization cuts QAE state-preparation calls from 2k+1 to k+1 and reduces circuit depth/CNOTs.",
+        "silo_note": "Simulation workloads are depth-sensitive, so reducing repeated applications of the state-preparation operator is important for making Monte Carlo-style quantum estimation more practical.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Quadrature discretization is integrated into the Monte Carlo pipeline, with midpoint and Simpson rules improving approximation error.",
+        "silo_note": "This matters because simulation_monte_carlo methods must balance sampling error against discretization/model error; the paper explicitly separates these and shows when refinement stops helping.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The Heston-model option-pricing example demonstrates stochastic-process loading for a simulation task.",
+        "silo_note": "This is the most direct simulation example: a stochastic-volatility process is loaded into a quantum circuit and used to estimate a payoff via ancilla measurement, matching the Monte Carlo-style target.",
+        "dimension": "dimension_1"
+      }
+    ]
+  },
+  "a64e9d084306": {
+    "paper_id": "a64e9d084306",
+    "silo_relevance": "This paper is directly relevant to simulation_monte_carlo because it contrasts a standard path-based Monte Carlo estimator with a quantum Monte Carlo/amplitude-estimation pipeline for the same pricing task. The most silo-relevant content is the simulation workflow, discretization/loading choices, and the runtime-vs-accuracy tradeoff between classical sampling and quantum amplitude estimation.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "The classical baseline is a standard path-based Monte Carlo simulation that discretizes time and repeats many stochastic runs to estimate discounted payoff.",
+        "silo_note": "This is the core reference point for simulation_monte_carlo: it shows the conventional sampling loop, time discretization, and the high run count needed for accuracy.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The quantum side is still a simulation workflow, but it replaces repeated sampling with amplitude estimation to target a quadratic speedup over classical Monte Carlo.",
+        "silo_note": "For simulation_monte_carlo, the key issue is not finance per se but the algorithmic substitution of many Monte Carlo samples with amplitude estimation to reduce simulation cost.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The quantum Monte Carlo implementation depends on discretizing and truncating the underlying distribution, then loading it into qubits via an affine map and payoff circuit.",
+        "silo_note": "These are the concrete simulation construction steps that matter for Monte Carlo-style modeling: how the probability distribution is represented, discretized, and converted into an estimable payoff.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper highlights practical simulation constraints: the approximation scaling affects the number of evaluation qubits, and the algorithm has only been tested on a simulator rather than hardware.",
+        "silo_note": "This matters for simulation_monte_carlo because it limits how directly the reported speedup and accuracy can be transferred to real implementations.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "The reported comparison is a proof-of-concept benchmark: classical Monte Carlo gives 0.070510 in about 10.38 s, while the quantum simulation reports a comparable value and more than 60% runtime reduction.",
+        "silo_note": "For the silo, this is the main empirical takeaway: the paper benchmarks simulation cost and output agreement between classical Monte Carlo and quantum Monte Carlo on one test instance.",
+        "dimension": "dimension_3"
+      }
+    ]
+  },
+  "a9fb068595f2": {
+    "paper_id": "a9fb068595f2",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo because it directly benchmarks Monte Carlo against iterative amplitude estimation for expectation estimation, which is the core computational pattern behind simulation-based pricing. It also highlights where classical Monte Carlo remains strong today—tight error, stability, and reproducibility—while framing the quantum method as a potential future accelerator for simulation workloads.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Direct Monte Carlo baseline for expectation estimation in option pricing",
+        "silo_note": "This is the most directly relevant part for simulation_monte_carlo because it treats Monte Carlo as the classical estimator being compared against a quantum simulation-based alternative, with explicit trial count, convergence rate, and error/CI reporting.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Monte Carlo remains more stable than QAE under current conditions",
+        "silo_note": "For simulation_monte_carlo, the paper’s main practical takeaway is that classical Monte Carlo still has an advantage in stability and narrower confidence intervals, which matters when judging whether a new simulation method is actually better in practice.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The paper quantifies the classical-vs-quantum tradeoff using error and confidence intervals",
+        "silo_note": "This is important for simulation_monte_carlo because it uses the same evaluation language as simulation studies—absolute error, relative error, and 95% confidence intervals—making the comparison directly interpretable in Monte Carlo terms.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "Monte Carlo’s slow O(1/ε²) scaling is the motivation for alternative simulation methods",
+        "silo_note": "This matters to simulation_monte_carlo because the paper frames the classical bottleneck as convergence cost, which is exactly the pain point in large-scale simulation and the reason amplitude-estimation methods are being explored.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "The study is a concrete simulation benchmark with reproducible Monte Carlo settings",
+        "silo_note": "For simulation_monte_carlo, the explicit 100,000-trial setup, fixed seed, and reproducibility details make the paper useful as a benchmark template for comparing simulation methods under controlled conditions.",
+        "dimension": "dimension_8"
+      }
+    ]
+  },
+  "afa84e1d94cf": {
+    "paper_id": "afa84e1d94cf",
+    "silo_relevance": "This paper is directly relevant to quantum Monte Carlo simulation because it targets amplitude-estimation-based quantum Monte Carlo integration, the core mechanism for turning classical Monte Carlo into a potentially quadratically faster quantum procedure. Its main contribution is reducing the cost of repeatedly applying the payoff/function operator inside the simulation loop, which is a central bottleneck for practical Monte Carlo acceleration.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Frames the problem as AE-based quantum Monte Carlo integration for simulation speedup.",
+        "silo_note": "For simulation_monte_carlo, the key issue is not just pricing finance products but enabling repeated expectation estimation via AE/QMCI; these codes identify the Monte Carlo-to-quantum simulation framing and why function evaluation cost dominates.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Reduces the function-application bottleneck in repeated Monte Carlo estimation by using pretraining plus CPQCs.",
+        "silo_note": "Monte Carlo simulation repeatedly evaluates the integrand/payoff, so the CPQC idea matters because it shifts expensive function structure into a reusable circuit with expectation-preserving control substitution.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Claims linear-overhead payoff operators, which is important for keeping AE-based simulation practical.",
+        "silo_note": "In simulation_monte_carlo, the asymptotic cost of the payoff operator directly affects whether AE’s quadratic convergence advantage can be realized; linear scaling is the key resource result here.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Benchmarks against quantum arithmetic baselines that are too costly for repeated simulation loops.",
+        "silo_note": "The relevant comparison for Monte Carlo simulation is not finance-specific arithmetic per se, but whether the integrand/payoff implementation is cheaper than comparator/weighted-sum circuits that would be invoked many times inside AE.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Highlights the main practical tradeoff for simulation: lower quantum cost versus classical pretraining and approximation error.",
+        "silo_note": "For simulation_monte_carlo, the central feasibility question is whether the reduced quantum gate count justifies classical training cost and approximation error when the operator is used repeatedly in a Monte Carlo estimator.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "bf1f4204b1e6": {
+    "paper_id": "bf1f4204b1e6",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it studies quantum amplitude estimation as a Monte Carlo accelerator, with explicit comparisons to classical Monte Carlo variance and sample complexity. It also analyzes the practical bottlenecks that matter for simulation workflows: state preparation, payoff evaluation, statistical error, and noise sensitivity under realistic gate-error models.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Quantum amplitude estimation is framed as a Monte Carlo speedup mechanism with direct sample-complexity comparison to classical Monte Carlo.",
+        "silo_note": "For simulation_monte_carlo, the key issue is not the finance application itself but the Monte Carlo acceleration claim and the way efficiency is measured against classical sampling.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "The paper identifies state preparation and payoff evaluation as the main computational bottlenecks in QAMC.",
+        "silo_note": "These are the core subroutines that determine whether a Monte Carlo simulation can be implemented efficiently on quantum hardware.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "Statistical error is treated explicitly through Cramér–Rao-based analysis and finite-sample simulation, which is central to Monte Carlo performance assessment.",
+        "silo_note": "Monte Carlo methods are fundamentally about estimator variance and sample efficiency, so this error analysis is directly relevant to simulation quality.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "The Fourier-based payoff construction improves over rescaling by reducing variance and the systematic-to-statistical error ratio.",
+        "silo_note": "For simulation_monte_carlo, this matters because better function-application circuits can materially improve estimator accuracy and reduce the number of samples needed.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The study shows that realistic noise can erase advantage unless two-qubit error rates are extremely low, making hardware noise a central constraint on quantum Monte Carlo simulation.",
+        "silo_note": "This is crucial for simulation_monte_carlo because practical speedup depends not just on asymptotic scaling but on whether noisy circuits still beat classical Monte Carlo in practice.",
+        "dimension": "dimension_3"
+      }
+    ]
+  },
+  "c434305b37fb": {
+    "paper_id": "c434305b37fb",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo because it studies a quantum circuit for loading Gaussian distributions and using them inside a credit-risk subroutine, which is the kind of distribution-preparation step that underlies Monte Carlo-style simulation workflows. Its main value for this silo is the hardware-aware implementation and tuning of small Gaussian samplers, rather than a full Monte Carlo speedup result.",
+    "silo_relevance_score": "medium",
+    "key_points": [
+      {
+        "point": "Gaussian distribution loading is the core primitive, with discrete Gaussians synthesized on 2- and 3-qubit circuits.",
+        "silo_note": "For simulation_monte_carlo, the key issue is whether a quantum circuit can prepare the sampling distribution needed before any Monte Carlo-style estimation step; this paper directly targets that distribution-preparation subproblem.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper’s GCI sub-circuit encodes conditional default probability via a latent-factor register and an asset qubit, making the sampling step structurally similar to a simulation pipeline.",
+        "silo_note": "This matters because Monte Carlo financial simulation depends on mapping sampled latent variables into outcome probabilities; the paper shows exactly that mapping in circuit form.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Hardware-aware transpilation and pulse-level retuning are treated as necessary to make the sampler run on real devices.",
+        "silo_note": "For simulation_monte_carlo, practical usefulness depends on whether the sampling circuit can be executed reliably on hardware; the paper emphasizes device-specific compilation rather than idealized simulation.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The authors derive analytic angle conditions for symmetric bell-like histograms and report periodic angle dependence, which is directly relevant to tuning a quantum sampler’s output distribution.",
+        "silo_note": "Monte Carlo methods are only as good as the sampled distribution, so the paper’s angle-sweep results and symmetry conditions are useful for controlling the quality of the generated samples.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The work highlights that noiseless simulators and standard transpilation do not reproduce hardware behavior, and that no readout mitigation was applied.",
+        "silo_note": "For simulation_monte_carlo, this is important because any claimed sampling advantage must survive hardware noise; the paper shows that realistic device effects materially change the output distribution.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "c46b48afaa7c": {
+    "paper_id": "c46b48afaa7c",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it frames financial risk measurement as Monte Carlo-style expectation and quantile estimation and then maps that task to quantum amplitude estimation (QAE). It also provides concrete evidence on the practical tradeoff central to quantum Monte Carlo: theoretical quadratic speed-up versus large circuit depth, qubit, and noise costs.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Risk measurement is explicitly cast as a Monte Carlo simulation problem over future states of the world.",
+        "silo_note": "This is the core simulation_monte_carlo framing: the target workload is scenario generation and repricing, exactly the kind of repeated sampling task Monte Carlo methods address.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "QAE is the paper’s main Monte Carlo acceleration mechanism, with quantiles obtained via interval search.",
+        "silo_note": "For simulation_monte_carlo, this is the key algorithmic idea: replacing classical sampling convergence with QAE-based expectation/quantile estimation.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper shows that the quantum circuits can reproduce the intended simulated distributions, but accuracy is still limited at realistic sizes.",
+        "silo_note": "This matters because Monte Carlo simulation quality depends on faithfully generating the target distribution; the reported VaR/PFE errors show the current fidelity gap.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The main Monte Carlo-style advantage is theoretical, but the practical cost is high circuit depth and limited hardware scale.",
+        "silo_note": "For simulation_monte_carlo, the relevant question is whether quantum sampling beats classical sampling in practice; these depth and qubit requirements show the overhead is currently substantial.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Noise strongly degrades quantile estimates, which is especially damaging for Monte Carlo risk estimation.",
+        "silo_note": "Monte Carlo methods are only useful if repeated sampling remains statistically reliable; the reported noise sensitivity indicates that quantum Monte Carlo outputs can become unusable on NISQ hardware.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "c57f6422ed7b": {
+    "paper_id": "c57f6422ed7b",
+    "silo_relevance": "This paper matters for simulation_monte_carlo because it provides the approximate state-loading step needed before Quantum Amplitude Estimation can replace classical Monte Carlo in simulation-based pricing. Its main silo value is the claimed quadratic error-scaling improvement over Monte Carlo, together with the practical caveat that the advantage depends on approximate distribution learning and hardware-ready loading.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Approximate distribution loading is the enabling step for quantum Monte Carlo-style simulation workflows.",
+        "silo_note": "For simulation_monte_carlo, the key issue is not generic data loading but preparing probability distributions efficiently enough to feed downstream sampling/estimation routines; the paper’s polynomial-vs-exponential loading comparison is directly relevant.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "The finance example explicitly connects learned loading to Quantum Amplitude Estimation, which is the Monte Carlo replacement mechanism.",
+        "silo_note": "This is the core simulation_monte_carlo link: the paper argues that approximate loading can be paired with QAE to obtain Grover-type error scaling instead of classical Monte Carlo scaling.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The paper’s comparison to classical Monte Carlo is the main performance claim for the silo.",
+        "silo_note": "The relevant takeaway is the claimed quadratic improvement in error scaling over Monte Carlo, which is the central benchmark for quantum simulation methods in this domain.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Approximation error limits the Monte Carlo advantage in practice.",
+        "silo_note": "For simulation_monte_carlo, the important caveat is that the loaded distribution is only approximate, so the resulting estimates are close to but not exactly the true value; hardware noise and recalibration further affect reliability.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "The method is positioned as a future path to direct quantum simulation once hardware improves.",
+        "silo_note": "This matters because practical quantum Monte Carlo depends on running QAE directly on hardware; the paper identifies coherence, gate fidelity, and broader data-handling issues as remaining blockers.",
+        "dimension": "dimension_6"
+      }
+    ]
+  },
+  "c945ded90aa0": {
+    "paper_id": "c945ded90aa0",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it directly reframes option pricing as a Monte Carlo-style simulation problem and then replaces ordinary sampling with amplitude estimation to reduce the number of operator calls. It also includes the discretization/binning and distribution-loading machinery needed to turn simulated asset-price paths into a quantum state, which is central to quantum Monte Carlo workflows.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Recasts option pricing as a Monte Carlo simulation task with asset-price binning into a unary state and payoff extraction via measurement",
+        "silo_note": "This is the core simulation_monte_carlo mapping: sampled asset-price outcomes are discretized into bins, then converted into a payoff estimate from measurement probabilities.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Uses amplitude estimation to accelerate Monte Carlo-style payoff estimation relative to ordinary sampling",
+        "silo_note": "For simulation_monte_carlo, the main value is the claimed reduction in sampling cost and faster convergence of the estimated payoff compared with standard Monte Carlo.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Positions classical Monte Carlo as the baseline bottleneck and the target for quadratic improvement",
+        "silo_note": "This directly frames the paper as a quantum Monte Carlo acceleration result, with the classical sampling loop being the computational bottleneck the method aims to improve.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Provides the distribution-loading machinery needed to simulate arbitrary asset-price distributions before payoff evaluation",
+        "silo_note": "Quantum Monte Carlo depends on preparing the simulated distribution correctly; these codes describe the loading module and its GAN-based implementation for that purpose.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Highlights the main simulation limits: discretization accuracy and small proof-of-principle scale",
+        "silo_note": "For simulation_monte_carlo, these limitations matter because they constrain how finely the simulated distribution can be represented and how far the approach is from large-scale Monte Carlo workloads.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "ce2db00aac7a": {
+    "paper_id": "ce2db00aac7a",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it directly frames CVA as a stochastic simulation problem currently handled by Monte Carlo path sampling, then studies whether quantum amplitude estimation can reduce the sampling cost. The most silo-relevant content is the explicit classical Monte Carlo baseline, the O(1/ε^2) to O(1/ε) scaling comparison, and the runtime/error analysis that determines when a quantum Monte Carlo-style approach could or could not beat classical simulation.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "CVA is posed as a stochastic path-simulation task normally handled by Monte Carlo.",
+        "silo_note": "This is the core simulation_monte_carlo framing: the target quantity is defined through simulated exposure paths and benchmarked against classical Monte Carlo output.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "The paper explicitly compares classical Monte Carlo sampling cost with quantum amplitude estimation scaling.",
+        "silo_note": "For simulation_monte_carlo, this is the central algorithmic question: whether quadratic sample-complexity improvement can replace standard Monte Carlo estimation.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "A concrete runtime comparison shows the quantum method can be faster only at very tight error targets, while classical Monte Carlo wins at coarser accuracy.",
+        "silo_note": "This matters because Monte Carlo practitioners care about practical crossover points, not just asymptotic speedup; the paper quantifies when the quantum estimator is actually competitive.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The estimator is validated against a Monte Carlo benchmark and a discretized benchmark that converges with increased resolution.",
+        "silo_note": "This is directly relevant to simulation_monte_carlo because it shows how discretization and sampling interact in a benchmarked simulation workflow.",
+        "dimension": "dimension_8"
+      },
+      {
+        "point": "The paper decomposes total error into discretization and quantum-circuit components, highlighting that reducing simulation error requires more qubits and better circuit generation.",
+        "silo_note": "For Monte Carlo-style simulation, this identifies the main non-sampling bottleneck: discretization error and its resource cost, which affects whether a quantum simulation scheme is scalable.",
+        "dimension": "dimension_5"
+      }
+    ]
+  },
+  "da7ecd113b59": {
+    "paper_id": "da7ecd113b59",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo because it directly contrasts QAE-based pricing with Monte Carlo-style sampling, reports a quadratic query-complexity advantage, and validates the quantum estimates against constrained classical and Monte Carlo benchmarks. It also provides a simulation-heavy experimental workflow that is useful as a reference point for comparing Monte Carlo discretization, precision, and convergence behavior.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "QAE is positioned as the sampling alternative to Monte Carlo, with O(1/ε) query complexity.",
+        "silo_note": "This is the core simulation_monte_carlo connection: it frames amplitude estimation as a replacement for repeated Monte Carlo sampling when estimating expected payoffs.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The paper validates the quantum result against a classical benchmark built under the same discretization and precision constraints.",
+        "silo_note": "For simulation_monte_carlo, matching the discretization and precision budget is crucial because it makes the comparison with Monte Carlo-style simulation fair and directly interpretable.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "A Monte Carlo run using the same Gaussian discretization is reported to overlap with the discretized closed-form calculation.",
+        "silo_note": "This is especially relevant to Monte Carlo simulation practice because it shows how discretization choices affect agreement between sampled estimates and reference values.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The implementation is simulation-based and uses IQAE on HPC backends up to 33 qubits, making it a practical benchmark for simulator-driven financial experiments.",
+        "silo_note": "The paper is not a hardware deployment study; it is a simulator-centric workflow that aligns with Monte Carlo experimentation environments and resource constraints.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The error budget explicitly links payoff error to probability error and includes truncation/discretization effects from Gaussian loading.",
+        "silo_note": "Monte Carlo simulation quality is governed by sampling and discretization error, so this decomposition is useful for understanding how the quantum estimator’s accuracy is controlled relative to classical simulation error sources.",
+        "dimension": "dimension_8"
+      }
+    ]
+  },
+  "dcc9f218d7a2": {
+    "paper_id": "dcc9f218d7a2",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it centers on Quantum Accelerated Monte Carlo (QAMC) and Quantum Amplitude Estimation (QAE) as a direct replacement for classical Monte Carlo in estimating expectations under a simulated joint distribution. Its main simulation value is the explicit comparison of query/sample complexity, the amplitude-encoding formulation of integrals, and the reported quadratic convergence advantage over classical Monte Carlo.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "QAMC is built directly on QAE to estimate expectations/integrals under the target distribution.",
+        "silo_note": "This is the core simulation_monte_carlo contribution: it shows how Monte Carlo-style expectation estimation is reformulated as amplitude estimation, which is the central algorithmic idea for quantum simulation speedups.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper formalizes probabilistic error and query-complexity bounds for both marginal recovery and joint pricing.",
+        "silo_note": "For simulation_monte_carlo, the important part is not the finance application but the explicit ε-dependent complexity guarantees that characterize how many oracle queries are needed to simulate/estimate quantities to a target accuracy.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The experiments compare QAMC against classical Monte Carlo and report a consistent quadratic advantage.",
+        "silo_note": "This directly addresses the simulation_monte_carlo benchmark question: whether quantum Monte Carlo reduces sampling effort relative to classical Monte Carlo, especially at high accuracy.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The paper notes that classical Monte Carlo simulation of the NIG process is inefficient in high dimensions, motivating the quantum approach.",
+        "silo_note": "This limitation is important for simulation_monte_carlo because it identifies the regime where standard sampling becomes costly and where a quantum simulation method is intended to help.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "The implementation uses amplitude encoding and a simulator stack, but does not include hardware noise or device-level constraints.",
+        "silo_note": "For simulation_monte_carlo, this means the reported gains are algorithmic/simulator-based rather than demonstrated on noisy hardware, which matters when assessing practical Monte Carlo acceleration.",
+        "dimension": "dimension_8"
+      }
+    ]
+  },
+  "dfca7435a13e": {
+    "paper_id": "dfca7435a13e",
+    "silo_relevance": null,
+    "silo_relevance_score": null,
+    "dimension_texts": {
+      "problem_framing": "The paper focuses on improving Quantum Amplitude Estimation (QAE), a core subroutine for Monte Carlo–style estimation tasks relevant to applications such as financial risk analysis and option pricing, by viewing it explicitly as a statistical inference problem. Within this framing, the authors aim to obtain rigorous interval estimates for an unknown amplitude at all iterations of Iterative QAE and to understand how statistical inference choices control sample complexity and precision.",
+      "quantum_method": "The authors work within the QAE family and build a statistical framework covering Classical QAE, Amplified QAE (AAE), and Iterative QAE (IQAE), then modify IQAE in a controlled way to inject Bayesian statistics without altering the rest of the algorithmic structure. They design hybrid K-schedules for IQAE—first a base‑3 exponential schedule with per‑stage confidence allocation via the union bound, then a base‑3/base‑5 fallback schedule to address boundary cases—before extending IQAE to BIQAE by replacing confidence intervals with Bayesian credible intervals and propagating posteriors between stages. Two concrete BIQAE variants are instantiated: Normal‑BIQAE, which uses a normal prior over the transformed probability, and Beta‑BIQAE, which uses a beta prior with conjugate posterior updates and a sampling-based “PreparePrior” procedure to approximate the exact prior at each stage.",
+      "key_results": "The paper claims that Bayesian statistics is the source of a performance advantage in QAE, with BIQAE reported to outperform all other QAE approaches considered. Within the unified framework, AAE is shown to reduce quantum sample complexity by a factor 1/(2k+1) under its small-angle assumption, while IQAE achieves a quadratic advantage (up to log log(1/ε)) without this restriction. For the new Bayesian variants, Normal‑BIQAE theoretically reduces stage-wise complexity by a factor of ε_t²/ε_{t−1}² relative to Normal‑IQAE, and Beta‑BIQAE is reported to require lower quantum sample complexity than a broad set of competing QAE methods, exhibiting regression-based evidence of the expected quadratic scaling and roughly constant-factor improvements of about 12–15% over IQAE‑CP across amplitudes and target accuracies. Applied to molecular energy estimation, Beta‑BIQAE yields significantly more accurate ground-state energy estimates than Classical QAE across all tested molecules and bond lengths.",
+      "classical_comparison": "Cast in a unified statistical framework, the authors contrast Classical QAE with amplified and iterative quantum variants, emphasizing that IQAE-type algorithms (including BIQAE) retain quadratic scaling advantages over classical sampling. Within this family, BIQAE—particularly the beta-prior implementation—is reported to outperform other QAE-style methods (including Canonical QAE and MLQAE variants) in quantum sample complexity, and regression analysis confirms that Beta‑BIQAE’s scaling offers the expected quadratic improvement compared to Classical QAE’s scaling. In application benchmarks such as molecular ground-state energy estimation, Beta‑BIQAE achieves significantly greater accuracy than Classical QAE for all molecules and bond lengths examined.",
+      "stated_limitations": "The paper highlights several limitations. For AAE, its quadratic improvement relies on a restrictive small-angle assumption that constrains the true amplitude, whereas IQAE removes this requirement but still inherits practical trade-offs tied to amplified operators. In analyzing the hybrid schedules, the authors introduce an assumption on interval widths across stages (involving a constant γ) to derive their complexity bounds, noting this as a simplifying analytical condition rather than a guaranteed property. For the Bayesian variants, they caution that the normal approximation—and the associated variance estimation—underlying Normal‑BIQAE may be inaccurate in small-sample regimes, and that the beta family used in Beta‑BIQAE may not be expressive enough to closely represent the exact prior distribution in all cases. More broadly, they point to a fundamental tradeoff when adding Grover operators between reducing stochastic (shot) noise and amplifying biased hardware noise, which may limit performance on near-term noisy devices.",
+      "future_work": "The authors suggest extending the Bayesian-inference perspective beyond QAE, arguing it would be fruitful to explore how Bayesian methods could accelerate the frequentist inference tasks that are ubiquitous across quantum algorithms for mathematical and scientific applications.",
+      "novelty_claim": "The paper claims two main contributions: first, the establishment of a unified statistical framework for several key QAE algorithms, which positions statistical inference—both frequentist and Bayesian—as central to understanding their performance; and second, the introduction of BIQAE, which incorporates Bayesian inference modules into IQAE to yield improved measurement efficiency and rigorous interval (credible) estimates at all iterations. Within this framework, the authors reinterpret IQAE itself as a special case of BIQAE with a noninformative prior, and empirically argue that Beta‑BIQAE offers the best scaling and consistent constant-factor quantum sample-complexity improvements over strong IQAE baselines.",
+      "methodological_notes": "Methodologically, the authors emphasize a controlled experimental design: they retain IQAE’s structure unchanged except for the injection of Bayesian statistics, enabling a clear attribution of performance differences to the statistical layer. They construct a statistical framework that treats three QAE baselines in a unified way, then design and analyze specific hybrid (K, N)-schedules—including base‑3 and base‑3/base‑5 variants—with explicit confidence allocation via the union bound and derived stage-count and sample-complexity bounds under stated assumptions on interval widths. For BIQAE, they detail how credible intervals replace confidence intervals and how posteriors are transformed into priors between stages; they instantiate both normal-prior and beta-prior variants, with the latter using conjugate beta updates and a sampling-based prior-fitting routine intended to be asymptotically optimal. Finally, they position IQAE as a BIQAE instance with a noninformative prior, underscoring the coherence of their statistical reinterpretation.",
+      "miscellaneous": "None; all verified codes were incorporated into dimensions 1–8."
+    },
+    "_schema": "raw_8_dimension_fallback"
+  },
+  "e366a47d08de": {
+    "paper_id": "e366a47d08de",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it directly reformulates Monte Carlo-style path simulation as in-circuit scenario generation plus amplitude estimation, targeting the core bottleneck of repeated sampling. Its main value for this silo is the explicit comparison of classical 1/sqrt(N) convergence with QAE-style 1/N scaling, along with concrete circuit constructions for generating and querying stochastic paths.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Moves scenario generation inside the quantum circuit instead of precomputing distributions classically.",
+        "silo_note": "For simulation_monte_carlo, the key issue is how sample paths are produced; this work addresses that directly by embedding path generation in the quantum workflow and reducing classical sampling/data-transfer overhead.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Frames the Monte Carlo bottleneck as a precision-vs-sample-count problem and contrasts classical 1/sqrt(N) convergence with QAE's 1/N scaling.",
+        "silo_note": "This is the central simulation_monte_carlo takeaway: the paper targets the number of experiments needed for a given estimation error, which is exactly the performance metric for Monte Carlo simulation.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "Provides concrete stochastic-path encodings for equity and interest-rate simulation using binomial and trinomial trees.",
+        "silo_note": "These are directly relevant because simulation_monte_carlo depends on discretized path generation; the paper shows how standard stochastic processes can be mapped into reversible circuit-based simulators.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Shows how Monte Carlo-style payoff/event queries are extracted with risk-measure qubits and QAE, using examples like max/min events, mean-reversion level, and default/survival probabilities.",
+        "silo_note": "For simulation_monte_carlo, the important part is not just generating paths but estimating event probabilities over those paths; these gates implement the query/indicator step that Monte Carlo would normally evaluate by repeated sampling.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "Highlights the practical simulation cost of precision: large qubit counts and very deep circuits, especially as output precision increases.",
+        "silo_note": "This matters to simulation_monte_carlo because it shows the resource trade-off of replacing classical sampling with quantum simulation; the method may reduce sample complexity but introduces substantial circuit-depth requirements.",
+        "dimension": "dimension_3"
+      }
+    ]
+  },
+  "ed111831958f": {
+    "paper_id": "ed111831958f",
+    "silo_relevance": "This paper is relevant to simulation_monte_carlo because it directly benchmarks a quantum estimation approach against classical Monte Carlo for tail-conditioned expectation estimation. Its main value for this silo is the explicit comparison of sample/query complexity and the use of amplitude amplification and multivariate expectation estimation as Monte Carlo-style subroutines.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "The paper’s core task is estimating tail-conditioned group expectations, which is structurally a Monte Carlo simulation problem.",
+        "silo_note": "For simulation_monte_carlo, the key issue is not the credit setting itself but that the target quantity is a conditional expectation under a rare-event tail event, exactly the kind of quantity Monte Carlo methods are used to estimate.",
+        "dimension": "dimension_1"
+      },
+      {
+        "point": "The proposed quantum method is built on simultaneous estimation of multiple expected values rather than repeated single-output sampling.",
+        "silo_note": "This matters because Monte Carlo workflows often need many related estimates; the paper’s multivariate estimator is a direct alternative to running separate simulations for each output.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper explicitly compares against classical Monte Carlo and states that contribution estimation is more costly than whole-portfolio risk estimation.",
+        "silo_note": "This is the most directly relevant Monte Carlo result: it identifies the classical baseline, explains why conditioning on a tail event increases cost, and gives the benchmark complexity used to judge any simulation speedup.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Fixed-point amplitude amplification and standard-normal state preparation are the simulation primitives that make the quantum Monte Carlo-style procedure work.",
+        "silo_note": "For simulation_monte_carlo, these are the algorithmic building blocks that replace or accelerate sampling from a normal distribution and conditioning on marked outcomes.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper’s advantage claim is explicitly framed in query/sample-complexity terms and depends on accuracy and tail probability parameters.",
+        "silo_note": "This is central to Monte Carlo analysis because the paper evaluates whether the quantum method improves the scaling of estimation error versus number of samples/queries, which is the core metric in simulation.",
+        "dimension": "dimension_3"
+      }
+    ]
+  },
+  "ef99551dab0f": {
+    "paper_id": "ef99551dab0f",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it frames classical Monte Carlo as the baseline simulation method for pricing and VaR, then analyzes quantum amplitude-estimation variants as potential quadratic-speedup replacements. It also highlights the practical bottlenecks that matter most for simulation workflows: state loading, tail estimation, and resource overheads.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Classical Monte Carlo is the baseline simulation method, but it converges slowly.",
+        "silo_note": "This directly defines the simulation_monte_carlo baseline the paper is trying to improve, and the slow O(1/√M) convergence is the key motivation for looking beyond standard sampling.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "Quantum amplitude estimation is presented as a Monte Carlo analogue with quadratic precision improvement.",
+        "silo_note": "For simulation_monte_carlo, this is the central algorithmic claim: replace repeated sampling with amplitude-estimation-style estimation to improve precision scaling from O(1/√M) to O(1/M).",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "Tail-risk simulation is especially hard with Monte Carlo, motivating quantum methods for VaR/CVaR estimation.",
+        "silo_note": "This matters because simulation_monte_carlo is often used for risk estimation, and the paper emphasizes that empirical quantile estimation is inefficient in the tail region where VaR lives.",
+        "dimension": "dimension_4"
+      },
+      {
+        "point": "The main obstacle for quantum Monte Carlo-style simulation is state loading, not just estimation.",
+        "silo_note": "For simulation_monte_carlo, the bottleneck is preparing the probability distribution or stochastic process state before any quantum speedup can be realized, so initialization cost is central to feasibility.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "The paper’s resource estimates show that even benchmark quantum simulation schemes are currently very expensive.",
+        "silo_note": "This is important for simulation_monte_carlo because it tempers the practical value of quantum speedups: the paper argues that quadratic improvement alone may not offset thousands of logical qubits and tens of millions of T-gates.",
+        "dimension": "dimension_3"
+      }
+    ]
+  },
+  "f792c5e92b0c": {
+    "paper_id": "f792c5e92b0c",
+    "silo_relevance": "This paper is highly relevant to simulation_monte_carlo because it centers on quantum Monte Carlo for estimating expectations in derivatives pricing and risk management, with amplitude estimation as the core speedup primitive. It also goes beyond the idealized algorithm to quantify the depth, qubit, and hardware-error requirements that determine whether quantum simulation can outperform classical sampling in practice.",
+    "silo_relevance_score": "high",
+    "key_points": [
+      {
+        "point": "Quantum Monte Carlo is the paper’s main simulation result, with a quadratic reduction in sample complexity versus classical Monte Carlo.",
+        "silo_note": "This is the core result for simulation_monte_carlo: expectation estimation is the central computational task, and the paper’s main claim is the O(1/ε²) to Õ(σ/ε) improvement.",
+        "dimension": "dimension_3"
+      },
+      {
+        "point": "The algorithmic primitive is amplitude estimation, which underlies the quantum speedup for Monte Carlo simulation.",
+        "silo_note": "For simulation_monte_carlo, this identifies the specific quantum subroutine that replaces classical sampling and determines the achievable speedup.",
+        "dimension": "dimension_2"
+      },
+      {
+        "point": "The paper emphasizes that standard quantum Monte Carlo is circuit-intensive because the market model and payoff must be run coherently many times in series.",
+        "silo_note": "This matters for simulation_monte_carlo because it explains why the ideal speedup is hard to realize on noisy hardware, especially for realistic pricing/risk models.",
+        "dimension": "dimension_5"
+      },
+      {
+        "point": "A major contribution is the low-depth Kerenidis–Prakash-style redesign, which removes QFT overhead and interpolates between classical and quantum regimes via a tunable parameter β.",
+        "silo_note": "For simulation_monte_carlo, this is important because it offers a practical path to partial speedup when full fault-tolerant amplitude estimation is too expensive.",
+        "dimension": "dimension_7"
+      },
+      {
+        "point": "Feasibility depends strongly on hardware clock speed and error rate, and the paper maps out when Monte Carlo speedups may become practical.",
+        "silo_note": "This is directly relevant to simulation_monte_carlo because it turns the abstract speedup into a hardware-dependent deployment question, showing current devices are not yet in the practical regime.",
+        "dimension": "dimension_8"
+      }
+    ]
+  }
+}
+
+## Output Format
+
+Return a JSON object. ONLY the JSON object — no markdown, no prose.
+
+```json
+{
+  "silo": "SMC",
+  "grounding_checks": [
+    {
+      "theme_id": "AT-SMC-001",
+      "verdict": "grounded" | "partially_grounded" | "unsupported",
+      "grounded_paper_count": 8,
+      "partially_grounded_paper_count": 1,
+      "unsupported_paper_count": 0,
+      "confidence": "high" | "medium" | "low",
+      "reason": "<2-4 sentences: cite SPECIFIC paper_ids and SPECIFIC memo key_points that either support or fail to support the theme's interpretation claim. Name at least one memo key_point verbatim (short quote) that anchors your verdict.>",
+      "flagged_papers": [
+        {
+          "paper_id": "<paper_id>",
+          "issue": "unsupported" | "partially_grounded" | "misaligned_claim",
+          "note": "<1-2 sentences explaining the specific mismatch between the theme claim and this memo's content>"
+        }
+      ]
+    }
+  ],
+  "silo_summary": {
+    "themes_checked": <int>,
+    "grounded": <int>,
+    "partially_grounded": <int>,
+    "unsupported": <int>,
+    "overall_note": "<2-3 sentences: is the silo's analytical layer well-grounded as a whole? Any systematic concerns across themes?>"
+  }
+}
+```
+
+## Verdict definitions
+
+- **grounded**: the theme's interpretation is a fair abstraction of what the supporting papers report. At least 80% of the provided memos clearly support the theme's interpretive claim. Specific evidence (key_points, primary_codes, silo_note) anchors the claim.
+- **partially_grounded**: the theme's interpretation captures a real pattern in the memos, but extends beyond what the memos strictly say — i.e., the analytical move is partly speculative or applies to only some of the supporting papers. Between 50% and 80% of memos clearly support the claim.
+- **unsupported**: the theme's interpretation cannot be recovered from the memos — the memos describe something materially different, or the memos are silent on the key interpretive claim. Less than 50% of memos support the claim.
+
+## Hard rules
+
+1. You must verify every analytical theme in the input. Do not skip themes.
+2. The `reason` field MUST cite specific paper_ids and key_points (short verbatim quotes allowed, max 30 words per quote). A reason without specific evidence is unacceptable.
+3. `flagged_papers` must list every paper whose memo does not clearly support the theme's interpretation. Empty list is acceptable only for `grounded` verdicts with high confidence.
+4. Do not invent content that is not in the memos. If a memo is sparse, say so — do not fabricate support.
+5. Be critical, not generous. This check exists to catch over-interpretation. If the theme's `interpretation` makes a causal claim ("X because Y") that the memos only describe observationally, that is `partially_grounded`, not `grounded`.
+6. Do not reference papers that are not in the provided memo set. If a theme cites a supporting_paper for which no memo is provided, mark it flagged with issue `unsupported` and note "no memo provided".
+7. Output JSON only — no markdown fences, no commentary, no reasoning traces.
+
+## Example reason (for calibration)
+
+**Good**:
+> "Grounded. AT-RM-001 claims 'quadratic speedup collapses under I/O overhead'. Memos for 0a824fa99e38 (key_point: 'state preparation costs reported as dominating term at n>15'), 80690e1e30a0 ('pipeline time grows linearly in qubits for loading'), and c46b48afaa7c ('amplitude estimation benefits erased by amplitude encoding') all support this interpretation. Flagged 16d418f1da92: memo reports speedup at small n but does not discuss I/O; this theme's interpretation is plausible but not directly evidenced by this memo."
+
+**Bad** (too vague):
+> "The theme seems well-supported by most papers."

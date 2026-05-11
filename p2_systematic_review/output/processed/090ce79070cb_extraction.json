@@ -1,0 +1,198 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier and v1 timestamp, lacks journal or conference venue information, and follows a full-paper structure typical of an author-uploaded preprint (abstract, methods, experiments, references) rather than a published peer-reviewed venue.",
+  "title": "Higher-Order Portfolio Optimization with Quantum Approximate Optimization Algorithm",
+  "authors": [
+    "Valter Uotila",
+    "Julia Ripatti",
+    "Bo Zhao"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (quant-ph)",
+  "doi": "",
+  "abstract_summary": "The paper introduces a quantum formulation of portfolio optimization that incorporates higher-order moments (skewness and kurtosis), producing a higher-order unconstrained binary optimization (HUBO) model rather than the common QUBO. Using realistic integer encodings and a capital-based budget constraint, the authors implement the HUBO as a parametrized QAOA circuit and benchmark it on 100 instances, reporting that HUBO solutions often outperform a classical continuous-variable baseline with integer-programming discretization while highlighting challenges in applying QAOA to such higher-order problems.",
+  "methodology_description": "The authors formulate a higher-order (up to 4th-degree) integer portfolio optimization problem including mean (µ), covariance (c), coskewness (S) and cokurtosis (K) terms and a capital-based budget constraint. They convert the constrained integer program into an unconstrained higher-order unconstrained binary optimization (HUBO) by adding a quadratic penalty on the budget violation (λ(z^T p_tau - C)^2). Integer asset-quantity variables are encoded into binary variables with a logarithmic (power-of-two) binary encoding. The HUBO is mapped to a spin-Hamiltonian via xi = (1 - Zi)/2 and implemented as a QAOA parametrized circuit with standard x-mixer and higher-order phase blocks (Rz/CNOT patterns) to implement multi-body Z-terms. The authors evaluate performance using a classical QAOA simulator (exact eigensolver for small qubit counts, sparse eigenvalue solver for larger counts) and compare it to classical baselines: continuous-variable higher-order optimization solved with SLSQP and discretized via an integer program (CVXPY), and exact-spectrum solutions where available. A set of six classical optimizers is benchmarked in the QAOA classical loop (Powell, SLSQP, COBYLA, CMA-ES, Nelder-Mead, L-BFGS-B) and CMA-ES (σ=0.1) is selected for in-depth experiments. The evaluation uses normalized objective values, budget utilization, and a QAOA enhancement factor (peak measurement probability divided by uniform 1/2^n) to compare methods across 100 randomly generated portfolio instances (2–10 assets sampled from the DJIA) constrained to produce circuits of ≤15 qubits. Penalty weight λ is swept over {0.001,0.01,0.1,0.9,1.0,10,100,1000} to assess its effect. Key modeling choices (e.g., q0,q1,q2 weights) are set using a risk-aversion parameter (risk_av = 3) motivated by Edgeworth expansion scalings.",
+  "algorithms_used": [
+    "Quantum Approximate Optimization Algorithm (QAOA)",
+    "Sequential Least Squares Programming (SLSQP)",
+    "CMA-ES",
+    "Powell",
+    "COBYLA",
+    "Nelder-Mead",
+    "L-BFGS-B",
+    "Exact eigenvalue solver",
+    "Sparse eigenvalue solver",
+    "Integer programming (CVXPY) discretization"
+  ],
+  "frameworks": [
+    "SciPy (SLSQP)",
+    "CVXPY",
+    "yfinance",
+    "pytickersymbols",
+    "pycma (CMA-ES)",
+    "Qiskit (mentioned)",
+    "Pennylane (mentioned)"
+  ],
+  "experimental_setup": "All experiments are classical simulations of QAOA circuits (no QPU). 100 random portfolio instances were generated from the 30 DJIA tickers with daily data from 2015-01-01 to 2025-01-01. Problems were limited to those requiring ≤15 qubits. Exact eigensolver was used for instances with ≤13 qubits; a sparse eigenvalue solver was used for 14–15 qubit instances. QAOA circuits use standard gates (Hadamard, CNOT, Rz, Rx) and standard x-mixer; the HUBO higher-order terms are implemented as multi-qubit Rz-based blocks. Classical optimization of QAOA parameters used several optimizers (CMA-ES chosen for main experiments, σ=0.1). The budget penalty λ was swept over specified values and q0,q1,q2 set via risk_av=3. Continuous baselines solved higher-order continuous programs with SLSQP and discretized with an integer program (CVXPY).",
+  "dataset_used": "Dow Jones Industrial Average (DJIA) 30 component stocks. Daily closing prices from 2015-01-01 to 2025-01-01 (10 years). Tickers obtained via pytickersymbols and price data via yfinance.",
+  "experiment_input": {
+    "source": "yfinance (prices) ; pytickersymbols (tickers)",
+    "universe": "30 DJIA companies",
+    "time_range": "2015-01-01 to 2025-01-01 (daily)",
+    "instances": "100 randomized portfolio instances; each selects 2–10 companies and a random budget (≤6000); instances requiring >15 qubits were excluded; target: 10 instances per qubit count from 6 to 15",
+    "preprocessing": "Compute returns rt+1 = (pt+1 - pt) / pt; annualize frequency f=252; compute geometric mean return µ (Eq. 4), covariance matrix c (Eq. 5), coskewness tensor S (Eq. 11), cokurtosis tensor K (Eq. 12); compute integer upper bounds for asset quantities from latest prices and budget to determine binary encoding length; normalize objective values by min-max across methods for each instance"
+  },
+  "experiment_process": [
+    "For each random instance: select assets and budget",
+    "Compute returns and moments: µ (geometric), covariance c, coskewness S, cokurtosis K",
+    "Set risk-weighting parameters q0 = risk_av/2, q1 = risk_av/6, q2 = risk_av/24 with risk_av = 3 (numeric: q0=1.5, q1=0.5, q2=0.125)",
+    "Form integer constrained higher-order optimization (Eq. 13) and convert to unconstrained HUBO by adding λ(z^T p_tau - C)^2 (Eq. 15); λ swept over specified set",
+    "Encode integer variables to binary using logarithmic (power-of-two) encoding (Eq. 17)",
+    "Map binary variables to spins via xi = (1 - Zi)/2 and build corresponding Hamiltonian with terms up to 4-body",
+    "Construct QAOA circuit: initial layer (Hadamards), alternating phase-separators implementing e^{-iHt} for HUBO Hamiltonian (multi-qubit Rz blocks) and x-mixer layers (Rx)",
+    "Optimize QAOA circuit parameters classically; benchmarked optimizers (Powell, SLSQP, COBYLA, CMA-ES, Nelder-Mead, L-BFGS-B) and selected CMA-ES (σ=0.1) for main experiments",
+    "Simulate QAOA circuit to obtain output state distribution; measure highest-probability bitstring(s) and compute discrete allocation z from binary-to-integer decoding",
+    "Compute evaluation metrics: budget utilization (z^T p_tau / C), objective value f(z) (Eq. 20), min-max normalize f(z) across methods per instance, QAOA enhancement factor (peak prob / 1/2^n)",
+    "Baselines: (a) continuous-variable higher-order problem solved with SLSQP and discretized via integer program (CVXPY) per Eq. (8), (b) unconstrained continuous formulation close to HUBO formulation (Eq. 19), (c) exact eigenvalue solver for HUBO when feasible",
+    "Aggregate results across 100 instances and compare budget utilization, normalized objective, and counts meeting thresholds (e.g., budget within 95–105%, normalized objective ≥0.95)"
+  ],
+  "experiment_output": "For each instance and method produce: discrete allocation vector z, leftover budget (C - z^T p_tau), budget utilization percentage, objective value f(z) (without penalty term) and its min-max normalized value across methods, QAOA output distribution and enhancement factor (max probability / 1/2^n). Aggregated outputs include counts of instances meeting budget-util thresholds and objective thresholds, scatterplots comparing budget utilization vs normalized objective, comparisons of circuit depth/gate counts for QUBO vs HUBO, KL divergence of allocation distributions relative to uniform, and eigenvalue spectra comparisons.",
+  "experiment_parameters": {
+    "qubit_counts": "6 to 15 (instances constrained to ≤15 qubits); 10 instances per qubit count",
+    "num_instances": 100,
+    "lambda_values": [
+      0.001,
+      0.01,
+      0.1,
+      0.9,
+      1.0,
+      10,
+      100,
+      1000
+    ],
+    "risk_aversion": 3,
+    "q_values": {
+      "q0": 1.5,
+      "q1": 0.5,
+      "q2": 0.125
+    },
+    "binary_encoding": "logarithmic/power-of-two encoding per integer variable (Eq. 17)",
+    "optimizers_benchmarked": [
+      "Powell",
+      "SLSQP",
+      "COBYLA",
+      "CMA-ES",
+      "Nelder-Mead",
+      "L-BFGS-B"
+    ],
+    "optimizer_selected_for_QAOA": "CMA-ES (σ=0.1, other hyperparameters default; iteration limit enforced but not fully specified)",
+    "eigensolvers": "Exact eigenvalue solver for ≤13 qubits; sparse eigenvalue solver for 14–15 qubits",
+    "circuit_gates": [
+      "Hadamard",
+      "CNOT",
+      "Rz",
+      "Rx"
+    ],
+    "shots": "not specified",
+    "qaoa_depth_p": "not specified (standard QAOA used)"
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "The authors provide an implementation repository: https://github.com/valterUo/quantum-portfolio (as cited). Data sources are standard (yfinance for price data, pytickersymbols for tickers). Key experiment hyperparameters are documented in the paper (risk_av, lambda sweep, optimizers tested, CMA-ES σ), but some important details for exact reproduction are not fully specified: number of QAOA layers (p) and exact classical-optimizer iteration limits, simulator backend/library used for QAOA circuit simulation (no specific simulator name given), and shot counts are not stated. The paper references common libraries (SciPy, CVXPY, pycma) that were used in the workflow. Provided code repository should enable reproduction but reviewers should expect to need to confirm/choose unspecified hyperparameters (QAOA depth, number of optimizer iterations, simulator backend and random seeds).",
+  "key_findings": [
+    "[speculative] This work presents what the authors claim is the first quantum formulation of portfolio optimization that explicitly includes higher-order moments (skewness and kurtosis).",
+    "[supported] The higher-order portfolio optimization problem maps to a higher-order unconstrained binary optimization (HUBO) Hamiltonian (terms up to 4th order) that can be encoded into a parametrized QAOA circuit.",
+    "[supported] The authors implemented realistic integer-variable encodings and a capital-based budget constraint in their HUBO formulation (logarithmic binary encoding for integers and budget-penalty terms).",
+    "[supported] The authors ran an experimental evaluation on 100 randomly generated portfolio instances (2–10 assets, qubit counts 6–15) and compared HUBO/QAOA results against classical continuous-variable baselines with integer-programming discretization and exact eigensolvers where feasible.",
+    "[supported] In these experiments, HUBO formulations (solved classically or via exact diagonalization) often encode portfolio allocations that outperform the classical continuous-variable-plus-discretization baseline (authors report HUBO solutions frequently having better objective/budget metrics).",
+    "[supported] QAOA was able to increase the measurement probability of (near-)optimal states relative to random sampling (authors report an average QAOA 'enhancement factor' of 14.43, range ≈3.79–108.94 across instances).",
+    "[supported] QAOA struggled as a practical solver for many instances: only a subset of problems matched exact or classical-quality solutions; the optimization landscape is rugged and performance degraded with qubit count.",
+    "[supported] The authors found the stochastic optimizer CMA-ES performed best among the classical optimizers they tested for tuning QAOA parameters in this application.",
+    "[supported] Circuit resource metrics (gate counts and depths) are larger for HUBO (higher-order) encodings than for QUBO (mean-variance) encodings, and spectra differences between HUBO and QUBO are small at low qubit counts but grow with problem size.",
+    "[supported] HUBO solutions tended to be closer to uniform allocations (greater portfolio diversification) than the corresponding QUBO (mean-variance) solutions in the tested instances.",
+    "[speculative] The authors suggest HUBO problems are a promising class for future quantum optimization research because classical solvers do not natively support higher-order terms.",
+    "[speculative] The paper argues QAOA will require improved optimization pipelines and possibly algorithmic modifications to efficiently solve practical HUBO instances at larger scales (future work suggestion)."
+  ],
+  "results_summary": "The paper formulates integer, capital-constrained portfolio optimization including skewness and kurtosis as a higher-order unconstrained binary optimization (HUBO) problem, maps it to a Pauli-Z Hamiltonian, and implements QAOA circuits for it. The authors evaluate 100 randomly generated portfolio instances (6–15 qubits) on simulators, compare HUBO solutions and QAOA outputs to classical continuous-variable baselines with integer-programming discretization and exact diagonalization where feasible, and report that HUBO encodings can represent allocations that outperform the classical baseline in many instances. However, while QAOA increases the sampling probability of good solutions (average enhancement ≈14.4x), it often fails to match exact/classical-quality solutions across the dataset, and performance degrades with problem size. The study also notes larger circuit resources for HUBO vs. QUBO and observes HUBO solutions produce more diversified allocations. CMA-ES was the most effective classical optimizer for QAOA parameter tuning in their experiments.",
+  "performance_claims": [
+    "100 portfolio optimization problem instances were generated and evaluated (random 2–10 asset subsets from DJIA, budgets ≤6000, qubit counts limited to ≤15).",
+    "Average QAOA 'enhancement factor' (highest single-state probability after QAOA divided by uniform 1/2^n) = 14.43; observed range ≈ 3.79 to 108.94.",
+    "Table II (counts over 100 instances): number of instances with budget utilization between 95% and 105% — QAOA/HUBO: 74, classical constrained baseline: 70, classical unconstrained baseline: 19, exact solver: 100.",
+    "Table II (counts over 100 instances): number of instances with min-max normalized objective ≥ 0.95 — QAOA/HUBO: 70, classical constrained baseline: 68, classical unconstrained baseline: 23, exact solver: 53.",
+    "Table II (counts over 100 instances): intersection of both criteria (budget utilization in [95%,105%] and objective ≥0.95) — QAOA/HUBO: 50, classical constrained baseline: 46, classical unconstrained baseline: 3, exact solver: 53.",
+    "Optimizer benchmarking for QAOA parameter tuning showed CMA-ES often achieved the lowest average objective among tested optimizers (Powell, SLSQP, COBYLA, CMA-ES, Nelder–Mead, L-BFGS-B) in these experiments.",
+    "Spectral differences between HUBO and QUBO formulations were negligible (≈1e-9 to 1e-11) at small qubit counts but became more significant as qubit count increased.",
+    "HUBO encodings require larger QAOA circuit gate counts and depths compared to corresponding QUBO encodings (reported and visualized in the paper)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper does not demonstrate a practical quantum advantage on hardware. It shows that HUBO encodings can represent portfolios that outperform a specific classical continuous-plus-discretization baseline and that QAOA can amplify good states (simulator results), but QAOA often fails to match exact or classical-quality solutions across instances and scaling remains challenging. Thus any claim of quantum advantage is speculative and not established by the presented empirical results.",
+  "limitations": [
+    "QAOA often failed to match the solution quality of exact methods or classical algorithms; only a small subset of problems achieved comparable quality.",
+    "Resource requirements for solving HUBO problems with QAOA are likely too demanding for current quantum hardware; experiments were limited to instances that fit a 15-qubit simulator.",
+    "The budget-penalty encoding used (λ(z^T p_τ − C)^2) is symmetric and does not distinguish investing over the budget from investing under the budget, so it does not fully prevent over-budget solutions.",
+    "The binary/logarithmic integer encoding increases qubit requirements (logarithmic overhead), which can make practical instances large in qubit count.",
+    "The choice of the penalty weight λ strongly affects performance and requires tuning; the paper explored a finite set but did not provide a per-instance automated selection.",
+    "The optimization landscape is rugged with many near-optimal eigenvalues, making the classical parameter optimization subroutine difficult and prone to local minima—this worsens with increasing qubit count.",
+    "For small qubit counts the higher-order (skewness/kurtosis) terms produced only very small spectral differences compared to QUBO (mean-variance) formulations, questioning practical impact at these scales.",
+    "The classical continuous-variable baseline with integer-program discretization is computationally efficient, so the quantum approach was not yet clearly superior in practical performance.",
+    "Optimizer benchmarking for QAOA lacked inclusion of noise and extensive hyperparameter searches; the chosen optimizer (CMA-ES) was not exhaustively validated under noisy or hardware conditions.",
+    "No circuit-level optimization was performed; gate counts and depths reported are for standard QAOA constructions and may be large for hardware.",
+    "All experiments were simulator-based; the study did not include experiments on noisy intermediate-scale quantum (NISQ) devices, so resilience to device noise is untested.",
+    "The dataset was restricted to DJIA constituents and a fixed historical window (2015–2025); generalizability to other asset universes or time windows is untested.",
+    "Risk-aversion scaling parameters q0, q1, q2 were chosen heuristically (Edgeworth-motivated with risk aversion = 3); sensitivity to these choices was not fully explored.",
+    "Exact eigensolvers were only feasible up to 13 qubits; for 14–15 qubits only sparse approximations were used, limiting exact-solution comparisons for larger instances.",
+    "[inferred] The penalty-based unconstrained formulation does not guarantee feasibility (exact budget satisfaction), so post-hoc feasibility corrections or re-optimization may be required in practice.",
+    "[inferred] Instance-wise tuning of λ and other hyperparameters likely necessary; the paper does not provide an automated tuning or selection strategy.",
+    "[inferred] Scalability to realistic, large-scale portfolio sizes (many assets) is unclear due to qubit and circuit-depth growth.",
+    "[inferred] The study did not compare HUBO quantum approaches extensively against a wider set of advanced classical HUBO solvers or heuristics (beyond the continuous baseline plus discretization)."
+  ],
+  "open_questions": [
+    "How can QAOA (ansatz, mixer, circuit design) and its classical parameter optimization be improved or adapted to reliably solve HUBO portfolio optimization instances?",
+    "What is the best way to encode the capital-based budget constraint so that over-budget solutions are prevented, qubit overhead is minimized, and the encoding remains compatible with quantum solvers?",
+    "How should the penalty weight λ and the scaling parameters q0, q1, q2 be chosen or tuned systematically for different instances to balance risk, skewness, kurtosis, and budget adherence?",
+    "Do bias-field digitized counterdiabatic methods or other advanced quantum optimization techniques materially improve solving HUBO finance problems compared to standard QAOA?",
+    "How do the higher-order moment terms (skewness and kurtosis) influence the spectrum and optimal allocations as problem size grows, and at what scale do they become consequential?",
+    "Can tensor-network methods, Bayesian optimizers, or other classical/quantum-classical hybrid techniques materially improve parameter optimization for QAOA on HUBO instances?",
+    "How does the HUBO formulation compare in realized financial performance (e.g., returns, risk-adjusted metrics) with classical continuous-variable optimizations followed by discretization in larger, realistic markets?",
+    "What circuit optimization strategies (gate synthesis, compilation, depth reduction) are most effective at reducing gate count/depth for HUBO QAOA implementations?",
+    "How robust are the HUBO QAOA approaches to realistic device noise, and how does noise affect the probability enhancement for measuring minimizing states?",
+    "How does the choice of integer-to-binary variable encoding affect solution quality, qubit requirements, and performance of the quantum optimization?"
+  ],
+  "future_work": [
+    "Improve QAOA so that it can more effectively tackle HUBO portfolio optimization problems.",
+    "Develop better optimization strategies (classical subroutines) for parameter tuning in QAOA applied to HUBO.",
+    "Enhance classical subroutines used together with quantum methods to work more efficiently for HUBO problems.",
+    "Explore tensor-network techniques as part of the optimization pipeline for HUBO problems.",
+    "Investigate Bayesian optimizers for the classical parameter optimization in QAOA on HUBO instances."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Implementing a higher-order (up to 4th-degree) HUBO portfolio objective with QAOA yields discrete allocations that often outperform a continuous-variable baseline discretized via integer programming across a 100-instance benchmark.",
+    "#idea:hybrid-approach — QAOA parameters are optimized in a classical loop (several optimizers benchmarked; CMA-ES selected), demonstrating a hybrid QPU-CPU workflow for higher-order portfolio problems.",
+    "#idea:near-term-feasibility — The HUBO-to-QAOA mapping and multi-qubit Rz-phase blocks show the approach is implementable for small instances (6–15 qubits) but the study explicitly limits problems to ≤15 qubits and highlights practical challenges in scaling.",
+    "#limitation:data-encoding — Integer asset-quantity variables use logarithmic (power-of-two) binary encoding, creating multi-body (up to 4-body) terms that increase circuit complexity and implementation overhead.",
+    "#limitation:qubit-count — Experiments are restricted to instances requiring ≤15 qubits; larger, more realistic portfolios are excluded and would need substantially more qubits.",
+    "#limitation:simulation-only — All experiments are classical simulations (exact and sparse eigensolvers); no quantum hardware experiments are reported.",
+    "#limitation:no-empirical-validation — The paper lacks QPU-based validation and therefore doesn't demonstrate hardware performance or noise impacts on proposed HUBO-QAOA circuits.",
+    "#idea:quantum-advantage — Uses a QAOA enhancement factor (peak probability / 1/2^n) to quantify state concentration and compare performance to uniform sampling and classical baselines.",
+    "#idea:near-term-feasibility — Penalty-weight (λ) sweeping and choice of integer encoding/risk-weights are critical modeling knobs; tuning these is necessary for obtaining feasible budget-constrained solutions."
+  ],
+  "contradictions": []
+}

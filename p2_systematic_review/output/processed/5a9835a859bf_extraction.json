@@ -1,0 +1,220 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier and version line (arXiv:2112.08998v1) with a date, and no journal or conference venue is indicated; structure and citations are consistent with an arXiv preprint.",
+  "title": "Portfolio Optimization on Classical and Quantum Computers Using PortFawn",
+  "authors": [
+    "Moein Owhadi-Kareshk",
+    "Pierre Boulanger"
+  ],
+  "year": "2021",
+  "journal_or_venue": "arXiv preprint (arXiv:2112.08998)",
+  "doi": "",
+  "abstract_summary": "This paper introduces PortFawn, an open-source Python library for building and backtesting mean-variance portfolios with support for classical (real-valued weights) and quantum annealing (binary weights) optimization. The tool provides configurable APIs, data collection, optimization, and backtesting pipelines, and the authors demonstrate its use on a multi-window backtest of nine ETFs (2015–2020) to compare minimum-volatility, maximum-return, Sharpe-maximizing and binary-optimized portfolios.",
+  "methodology_description": "The authors developed PortFawn, an open-source Python library to build and backtest mean-variance portfolios using both classical solvers (real-valued weights) and a quantum-annealing approach (binary weights). The pipeline collects historical daily price data via yfinance, computes asset returns, and estimates expected returns and covariance using one of three methods (full-window mean/covariance, random sub-sampling with median aggregation, or weighted recent-return schemes). PortFawn formulates multiple portfolio objectives (minimum volatility, maximum return, maximum Sharpe ratio, multi-objective mean-variance, equal-weighted and market-cap) under long-only and full-investment (sum-to-one) constraints and optional per-asset bounds. For quantum processing the multi-objective cost is mapped into a QUBO (linear terms from returns, quadratic terms from covariance) to create a binary selection portfolio (BMOP) run via quantum annealing. Performance is evaluated with rolling overlapping backtests (train/test windows), calculating metrics such as cumulative returns, daily return distributions, annualized return/volatility and Sharpe ratio, and comparing classical portfolios (MVP, MRP, MSRP, EWP) against the binary QUBO portfolio. The illustrative experiment uses 9 iShares ETFs over 2015-01-01 to 2020-12-31 and backtests with 40-day training and 5-day testing windows.",
+  "algorithms_used": [
+    "Mean-Variance Optimization (Markowitz)",
+    "Quadratic Programming / Quadratic Objective Minimization",
+    "Multi-objective mean-variance (risk-return tradeoff with lambda)",
+    "QUBO formulation",
+    "Quantum Annealing (D-Wave)"
+  ],
+  "frameworks": [
+    "yfinance",
+    "D-Wave Ocean",
+    "PortFawn (custom Python package)"
+  ],
+  "experimental_setup": "Backtesting with overlapping rolling windows: 40 days training, 5 days testing. Classical mean-variance optimization solved on classical hardware. Quantum approach implemented by mapping the multi-objective mean-variance cost into a QUBO and submitting to a D-Wave quantum annealer via the Ocean SDK (developer account).",
+  "dataset_used": "Historical daily price data for nine iShares ETFs (IVV, IJR, ACWX, IEMG, REET, IYR, HYG, AGG, IAU) covering 2015-01-01 to 2020-12-31, retrieved via yfinance.",
+  "experiment_input": {
+    "source": "yfinance",
+    "tickers": [
+      "IVV",
+      "IJR",
+      "ACWX",
+      "IEMG",
+      "REET",
+      "IYR",
+      "HYG",
+      "AGG",
+      "IAU"
+    ],
+    "date_range": "2015-01-01 to 2020-12-31",
+    "frequency": "daily",
+    "num_assets": 9,
+    "preprocessing": {
+      "returns_calculation": "ri = (p_t - p_{t-1})/p_{t-1} (daily)",
+      "expected_stats_methods": [
+        "full (mean/cov over whole window)",
+        "random sub-sampling with median aggregation",
+        "weighted (more weight to recent returns)"
+      ],
+      "normalization": "weights constrained to be >=0 and sum to 1; binary portfolios normalized after QUBO selection",
+      "other": "dividends not explicitly considered"
+    }
+  },
+  "experiment_process": {
+    "steps": [
+      "Collect historical daily prices via yfinance for specified tickers and date range",
+      "Compute daily returns and estimate expected returns and covariance using chosen method (full/random/weighted) on the training window",
+      "Formulate portfolio optimization according to chosen objective: MVP, MRP, MSRP, MOP, EWP, MCP",
+      "For classical continuous portfolios: solve quadratic optimization under constraints (non-negative weights, sum-to-one, optional per-asset bounds)",
+      "For quantum approach: map multi-objective cost (−λ r^T w + w^T Σ w) to QUBO with binary variables xi representing asset selection; set Qii = −λ ri, Qij = σij and normalize selections to satisfy investment constraint",
+      "Submit QUBO to D-Wave quantum annealer via Ocean SDK and retrieve solutions",
+      "Construct portfolio weights from solver outputs and evaluate on the subsequent testing window",
+      "Repeat with overlapping rolling windows across the full backtest period and aggregate performance metrics"
+    ],
+    "key_parameters_used_during_runs": {
+      "training_window_days": 40,
+      "testing_window_days": 5,
+      "risk_free_rate_example": "0.0%",
+      "target_return_R_example": "20.0% (for MVP runs where applicable)",
+      "target_volatility_V_example": "5.0% (for MRP runs where applicable)",
+      "per_asset_weight_bounds_example": {
+        "lower": "2.0%",
+        "upper": "98.0%"
+      },
+      "lambda_in_MOP": "1.0 (binary QUBO illustration uses λ=1 for simplicity)"
+    },
+    "iterations": "Rolling windows applied across the entire backtest period; number of windows not explicitly enumerated in text"
+  },
+  "experiment_output": {
+    "metrics": [
+      "Cumulative returns (time series)",
+      "Distribution of daily returns (histograms/boxplots)",
+      "Annualized return (mean)",
+      "Annualized volatility (standard deviation)",
+      "Sharpe ratio",
+      "Correlation matrices (asset and portfolio correlations)",
+      "Efficient frontier visualization (expected return vs volatility)"
+    ],
+    "baselines": [
+      "Equal-Weighted Portfolio (EWP)",
+      "Market-Capitalization Portfolio (MCP)"
+    ],
+    "formats": [
+      "Plots (cumulative returns, box plots, correlation heatmaps, expected return vs volatility)",
+      "Numerical summaries per backtest window and aggregated"
+    ],
+    "comparisons_reported": "Classical portfolios (MVP, MRP, MSRP, EWP) compared against binary QUBO portfolio (BMOP) on returns, volatility and distributions"
+  },
+  "experiment_parameters": {
+    "classical_solver_parameters": {
+      "constraints": [
+        "weights >= 0 (long-only)",
+        "sum(weights) = 1 (full investment)",
+        "optional per-asset lower/upper bounds"
+      ],
+      "objectives": [
+        "minimize w^T Σ w subject to target return R (MVP)",
+        "maximize w^T r subject to variance V (MRP)",
+        "maximize Sharpe ratio",
+        "minimize w^T Σ w − λ w^T r (MOP)"
+      ]
+    },
+    "quantum_parameters": {
+      "qubo_mapping": {
+        "linear_terms_Qii": "−λ * expected_return_i",
+        "quadratic_terms_Qij": "covariance_ij"
+      },
+      "annealer": "D-Wave (specific anneal schedule/parameters not specified in paper)",
+      "qubits": null,
+      "anneal_time": null,
+      "num_reads/shots": null
+    },
+    "backtest_parameters": {
+      "start_date": "2015-01-01",
+      "end_date": "2020-12-31",
+      "training_days": 40,
+      "testing_days": 5,
+      "risk_free_rate": "0.0%",
+      "target_return_R": "20.0%",
+      "target_volatility_V": "5.0%",
+      "lower_weight_bound": "2.0%",
+      "upper_weight_bound": "98.0%"
+    }
+  },
+  "hardware_details": {
+    "qpu_model": null,
+    "qpu_provider": "D-Wave (accessed with developer account)",
+    "software_stack": "D-Wave Ocean SDK",
+    "classical_hardware": "Not specified (classical solvers run in Python environment via PortFawn)"
+  },
+  "reproducibility_notes": {
+    "code_availability": "PortFawn is released as open-source under the MIT license at https://github.com/mkareshk/PortFawn",
+    "data_availability": "Price data derived from yfinance (publicly accessible via API), tickers and date ranges specified in paper",
+    "instructions": "Paper notes online documentation for PortFawn; exact quantum annealer parameters (QPU model, anneal schedule, num_reads) are not specified which may affect exact reproducibility of quantum results"
+  },
+  "key_findings": [
+    "[supported] PortFawn is an open-source Python library (MIT) that implements the mean-variance portfolio optimization pipeline (data collection, expected-return and covariance estimation, optimization, backtesting, visualization) and supports both classical (real-valued weights) and quantum-annealing (binary-weight QUBO) workflows.",
+    "[supported] PortFawn collects market data via yfinance, caches price data, computes returns, cumulative returns, correlations, covariance matrices, and provides visualization and logging; it also includes unit and integration tests.",
+    "[supported] The tool implements three methods for estimating expected returns and risks: full (use all data), random (median of repeated random windows), and weighted (more weight to recent returns) to increase robustness of inputs to optimization.",
+    "[supported] PortFawn supports various portfolio objectives/constraints: equal-weighted (EWP), minimum volatility portfolio (MVP), maximum return portfolio (MRP), maximum Sharpe ratio portfolio (MSRP), and a multi-objective quadratic formulation; it also supports market-cap and equal-weight baselines.",
+    "[supported] The authors performed an empirical backtest (Jan 1, 2015 – Dec 31, 2020) on nine iShares ETFs using 40-day training and 5-day testing rolling windows and observed expected behaviors: MRP produced the highest returns, MVP the lowest volatility, and MSRP an intermediate tradeoff.",
+    "[supported] A Binary Multi-Objective Portfolio (BMOP) was implemented via a QUBO mapping and run on a D-Wave quantum annealer (developer account); in the illustrative backtest BMOP produced reasonable performance and was described as working well compared to classical portfolios.",
+    "[supported] The paper documents and re-emphasizes standard limitations of the classical mean-variance approach: unrealistic liquidity assumptions, omission of transaction/management costs, statistical assumptions (i.i.d. normal returns; mean and covariance suffice), ignoring dividends, and tendency to produce concentrated portfolios.",
+    "[speculative] The authors state that quantum annealing can have a greater chance of finding global minima than classical solvers by exploiting quantum tunneling (i.e., potential advantage in escaping local minima).",
+    "[speculative] The paper formalizes a QUBO mapping of the multi-objective mean-variance scalar objective (−λ r^T w + w^T Σ w) to a QUBO energy (identifying Qii and Qij with linear and quadratic terms) and uses normalization to enforce long-only and full-investment constraints; this mapping is presented as a practical route to run binary-weight portfolio optimization on quantum annealers.",
+    "[speculative] The authors claim PortFawn demonstrates the 'potential' of quantum computers for portfolio optimization but do not claim or provide quantitative evidence of superior performance or speedup over classical methods."
+  ],
+  "results_summary": "The paper introduces PortFawn, an open-source Python library implementing mean-variance portfolio construction, evaluation and backtesting with flexible input estimators and constraints. It supports classical continuous-weight mean-variance optimization and a binary-weight QUBO formulation solvable on a quantum annealer. An illustrative empirical backtest on nine ETFs (2015–2020) using rolling 40-day training / 5-day testing windows shows expected results: maximum-return portfolios have the highest returns, minimum-volatility portfolios the lowest volatility, and the multi-objective (Sharpe-like) portfolios trade off between them. A binary QUBO portfolio (BMOP) solved on a D-Wave system yielded reasonable outcomes in the example, which the authors interpret as indicating potential for quantum annealing in portfolio optimization. The paper also reiterates known limitations of mean-variance models and provides implementation details and APIs for reproducible experiments.",
+  "performance_claims": [],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors report that BMOP run on a D-Wave quantum annealer produced reasonable performance in their illustrative backtest and assert that quantum annealing may better escape local minima via tunneling; however they provide no quantitative metrics, no demonstrated speedup, nor clear superiority over classical solvers, so any advantage is presented only as potential/theoretical rather than empirically demonstrated.",
+  "limitations": [
+    "Asset liquidity assumption: mean-variance model assumes all assets are fully liquid and tradable at any time (author-stated).",
+    "Costs ignored: turn-over, transaction, and management costs are not considered in the mean-variance formulation (author-stated).",
+    "Statistical assumptions: returns are assumed i.i.d. and (implicitly) normal; portfolios are summarized only by expected returns and covariance, and expected returns are assumed to be reliable predictors of future returns (author-stated).",
+    "Dividends excluded: calculations only consider price changes and ignore dividends (author-stated).",
+    "Asset concentration: mean-variance optimization tends to produce highly concentrated portfolios in a few assets (author-stated).",
+    "PortFawn is intended solely for education and research and is not an investment analysis/advice tool (author-stated/disclaimer).",
+    "Binary-weight quantum formulation (BMOP) restricts allocations to binary selection (no fractional weights) which is a modeling limitation of QUBO-based quantum annealing approach (author-stated).",
+    "Literature gap on practical implications: prior work often focuses on internal/abstract performance of quantum computers rather than their practical implications for portfolio optimization (author-stated observation).",
+    "[inferred] Sensitivity to estimation error: mean-variance outputs (and PortFawn results) are sensitive to estimation errors in expected returns and covariance matrices; robustness is a concern.",
+    "[inferred] Backtest overfitting and generalizability: backtesting on historical rolling windows may not generalize to future market regimes; risk of overfitting to historical data.",
+    "[inferred] Normalization workaround for binary portfolios may not fully or naturally enforce investment constraints (e.g., exact budget, cardinality, min/max weights) within the QUBO formulation.",
+    "[inferred] Scalability and hardware constraints for quantum annealing: mapping realistic-size portfolio problems to current quantum annealers may be limited by qubit counts, connectivity, embedding overhead, and noise.",
+    "[inferred] Lack of transaction-costs, liquidity, and market-impact modelling in the quantum (QUBO) formulation used.",
+    "[inferred] Small illustrative evaluation: the empirical demonstration used a small universe (nine ETFs) and a particular backtest setup, which limits conclusions about general applicability and performance."
+  ],
+  "open_questions": [
+    "Can quantum annealing provide practical, economic advantages over classical optimization methods for real-world portfolio optimization problems (solution quality, speed, robustness) given current hardware?",
+    "How should one incorporate transaction costs, turnover constraints, market impact, and liquidity considerations into QUBO/quantum formulations for portfolio optimization?",
+    "What are effective ways to represent fractional (continuous) asset weights or fine-grained allocation granularity in quantum annealing frameworks without losing practical feasibility?",
+    "How robust are portfolios produced by mean-variance and QUBO-based quantum approaches to estimation errors in expected returns and covariance, and how can robustness be improved?",
+    "How does the normalization strategy used to satisfy long-only and budget constraints in binary QUBO portfolios affect feasibility, optimality, and risk characteristics in practice?",
+    "How do embedding overhead, limited connectivity, noise, and finite qubit counts of current quantum annealers affect the end-to-end performance and scalability of quantum portfolio optimization?",
+    "Does quantum tunnelling (in practical hardware) meaningfully increase the probability of finding global minima for financial QUBO instances compared with classical heuristics?",
+    "How should one benchmark and compare quantum annealers against modern classical solvers (including heuristic and exact methods) on realistic financial datasets, accounting for all classical/quantum overheads?",
+    "How can the mean-variance framework be extended (within PortFawn or similar tooling) to include dividends, multi-period rebalancing, non-Gaussian return distributions, and alternative risk measures?",
+    "What is the effect of binary (selection) vs continuous-weight formulations on portfolio diversification, turnover, and real-world implementability?"
+  ],
+  "future_work": [],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — PortFawn provides an end-to-end hybrid pipeline: classical data collection/statistics, QUBO formulation of mean-variance objectives, submission to a D-Wave quantum annealer, and classical post-processing to normalize binary selections into portfolio weights.",
+    "#idea:near-term-feasibility — The authors demonstrate an empirical backtest on 9 ETFs (2015–2020) using rolling 40-day training / 5-day testing windows and a D-Wave annealer, showing that NISQ-era quantum annealing can be applied to small, practical portfolio problems.",
+    "#idea:hybrid-approach — The multi-objective mean-variance cost (−λ r^T w + w^T Σ w) is mapped to a QUBO with linear terms from expected returns and quadratic terms from covariances to produce a binary selection portfolio (BMOP).",
+    "#idea:near-term-feasibility — The paper reports quantitative backtest metrics (cumulative returns, annualized return/volatility, Sharpe ratios, return distributions) enabling direct comparison between classical continuous-solvers (MVP, MRP, MSRP) and the binary QUBO approach.",
+    "#limitation:qubit-count — Hardware/embedding details (number of physical/logical qubits, chain lengths, embedding, anneal schedule, num_reads) are not reported, preventing assessment of scalability to larger asset universes.",
+    "#limitation:data-encoding — The binary QUBO encoding restricts expressiveness relative to continuous-weight portfolios (selection-based vs real-valued weights) and requires normalization/post-processing to satisfy sum-to-one constraints.",
+    "#limitation:noise — The paper does not discuss annealer noise, parameter tuning, or error mitigation; the impact of QPU noise on portfolio solutions and robustness is not evaluated."
+  ],
+  "contradictions": []
+}

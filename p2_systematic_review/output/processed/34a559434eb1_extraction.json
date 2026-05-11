@@ -1,0 +1,272 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document carries a Research Square DOI (rs.3.rs-7045880/v1) and a posted date, CC-BY license and 'Article' metadata consistent with a preprint; it includes abstract/methods/results but no journal or peer-review venue is named.",
+  "title": "Quantum Stochastic Walks for Portfolio Optimization: Theory and Implementation on Financial Networks",
+  "authors": [
+    "Yen Jui Chang",
+    "Wei-Ting Wang",
+    "Yun-Yuan Wang",
+    "Chen-Yu Liu",
+    "Kuan-Cheng Chen",
+    "Ching-Ray Chang"
+  ],
+  "year": "2025",
+  "journal_or_venue": "Research Square (preprint)",
+  "doi": "https://doi.org/10.21203/rs.3.rs-7045880/v1",
+  "abstract_summary": "The paper introduces a portfolio optimization method based on quantum stochastic walks (QSWs) that maps assets to a weighted financial graph and derives portfolio weights from the QSW stationary distribution. Extensive backtests on S&P universes and a 625-parameter grid search show that QSW-based portfolios can improve out-of-sample Sharpe ratios while massively reducing turnover and concentration versus classical mean–variance optimization, suggesting a practical hybrid quantum–classical engine for cost-efficient, well-diversified systematic mandates.",
+  "methodology_description": "The authors develop and evaluate a graph-based Quantum Stochastic Walk (QSW) optimizer for portfolio construction. Financial assets are embedded as nodes in a fully connected weighted directed graph where off-diagonal edge weights are Wij = exp(α·SR_j − β·Σ_ij) (penalizing covariance and favoring high Sharpe destinations) and diagonal self-loops are Wii = exp(λ·SR_i). A coherent quantum channel is encoded via a Hermitian Hamiltonian H with diagonal terms proportional to −γ1·SR_i and off-diagonal terms proportional to γ2·normalized(Σ_ij); Lindblad jump operators L_ij = |i><j| are used for the stochastic channel whose transition rates cij are taken from a Google matrix G (damped PageRank-like transition matrix with damping α_damp=0.9). The hybrid evolution follows the GKLS (Lindblad) master equation with mixing parameter ω in [0,1], and is implemented via a discrete Kraus-operator approximation to avoid O(n^2) density-matrix unraveling. The evolution starts from the maximally mixed state ρ0 = I/n and iterates (Δt = 0.1) until convergence (tolerance ϵ = 1e-8, max iterations 5000). The stationary state diagonal defines portfolio weights wi ∝ ρ∞,ii. The implementation is GPU-accelerated using cuPyNumeric and evaluated in backtests: training windows of 1 and 2 years, quarterly rebalancing, and a comprehensive hyper-parameter study (six hand-tuned scenarios and a full 625-point grid over α, β, λ, ω). Benchmarks include maximum-Sharpe mean–variance optimization (via PyPortfolioOpt) and the S&P 500 index. Performance metrics include annualized Sharpe, volatility, maximum drawdown, annualized turnover, Herfindahl–Hirschman Index (HHI), effective number of stocks and a Sharpe/Turnover efficiency ratio. Extensive robustness testing was carried out by repeating the full grid on 50 random 100-stock subsets of the S&P 500.",
+  "algorithms_used": [
+    "Quantum Stochastic Walk (QSW)",
+    "GKLS Lindblad master equation",
+    "Kraus operator decomposition (discrete quantum channel approximation)",
+    "Google matrix / PageRank teleportation",
+    "Continuous-time quantum walk (CTQW) (conceptual/coherent channel)",
+    "Classical Mean-Variance Optimization (Maximum Sharpe) via PyPortfolioOpt"
+  ],
+  "frameworks": [
+    "cuPyNumeric (GPU-accelerated NumPy-compatible)",
+    "PyPortfolioOpt"
+  ],
+  "experimental_setup": "GPU-accelerated implementation using cuPyNumeric on NVIDIA GPUs. A single NVIDIA A100 GPU executed the 625-parameter grid in ~3 hours wall-clock. Backtests use daily adjusted close prices; training windows of 1 or 2 years; quarterly rebalancing; backtest period 2018-01-02 to 2024-12-31. Conservative transaction-cost assumption used for analysis: 20 basis points per 100% annual turnover.",
+  "dataset_used": "Daily adjusted closing prices from Yahoo Finance covering 2016-01-01 to 2024-12-31. Primary universes: Top-100 S&P 500 constituents by market-cap and 50 random draws of 100-stock subsets from the S&P 500.",
+  "experiment_input": {
+    "source": "Yahoo Finance (adjusted close prices)",
+    "time_range": "2016-01-01 to 2024-12-31",
+    "universes": [
+      "Top 100 S&P constituents (by market cap)",
+      "50 random 100-stock subsets of the S&P 500 (each sampled uniformly)"
+    ],
+    "sample_sizes": {
+      "universe_size": 100,
+      "random_draws": 50
+    },
+    "preprocessing": [
+      "Compute daily log-returns from adjusted close prices",
+      "Estimate sample mean returns µ_i and volatilities σ_i",
+      "Compute sample covariance matrix Σ (pairwise covariances)",
+      "Compute daily Sharpe ratio proxy SR_i = µ_i / σ_i",
+      "Construct weight matrix W and normalize rows to build stochastic P, then Google matrix G with damping α_damp=0.9"
+    ]
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "1) Data ingestion: daily adjusted close prices → compute log-returns, µ, σ, Σ, SR for training window (1 or 2 years).",
+      "2) Graph construction: build Wij = exp(α·SR_j − β·Σ_ij) for i≠j and Wii = exp(λ·SR_i); row-normalize to P; form Google matrix G = α_damp·P + (1−α_damp)·(11^T)/n.",
+      "3) Coherent channel: construct Hermitian Hamiltonian H with Hij = γ2·normalized(Σ_ij) for i≠j and Hii = −γ1·SR_i; γ1 = γ2 = 100 (scaling).",
+      "4) Stochastic channel: set Lindblad rates cij = Gij and Lindblad operators L_ij = |i><j|.",
+      "5) Initialize density matrix ρ(0) = I/n. Set Δt = 0.1, tolerance ϵ = 1e-8, max iterations = 5000.",
+      "6) Iterate quantum channel via Kraus-operator approximation: compute Ki,j ≈ sqrt(1 − exp(−ω·cij·Δt))·Lij and K0 ≈ sqrt(I − Σ K†K)·exp(−i(1−ω)HΔt). Use optimized simplification that the stochastic jumps act only on diagonals so ρ′ = K0 ρ K0† + Γ·diag(K0 ρ K0†), reconstruct and normalize ρ′.",
+      "7) Converge to stationary ρ∞; extract portfolio weights wi = ρ∞,ii / Σ_j ρ∞,jj.",
+      "8) Backtest: quarterly rebalancing; generate portfolio returns and compute performance metrics.",
+      "9) Hyper-parameter search: (a) six hand-designed scenarios evaluated at ω ∈ {0.2,0.4,0.6,0.8,1.0} with 1- and 2-year training windows; (b) full grid α,β,λ ∈ {0.1,5,50,100,500} and ω ∈ {0.2,0.4,0.6,0.8,1.0} (625 configurations); (c) repeat full grid on 50 random 100-stock universes for robustness.",
+      "10) Benchmarks: maximum-Sharpe mean–variance portfolios computed with PyPortfolioOpt (long-only, fully invested) and the market-cap-weighted S&P 500 index."
+    ],
+    "iterations": {
+      "convergence_criterion": "L1 norm ∥ρ(t+1) − ρ(t)∥1 < 1e-8 or t >= 5000",
+      "time_step": 0.1,
+      "max_iters": 5000
+    },
+    "parameters_searched": {
+      "alpha_return_preference": [
+        0.1,
+        5,
+        50,
+        100,
+        500
+      ],
+      "beta_covariance_penalty": [
+        0.1,
+        5,
+        50,
+        100,
+        500
+      ],
+      "lambda_self_loop": [
+        0.1,
+        5,
+        50,
+        100,
+        500
+      ],
+      "omega_quantum_mix": [
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        1.0
+      ],
+      "damping_alpha_damp": 0.9,
+      "gamma_scaling": 100
+    }
+  },
+  "experiment_output": {
+    "per_run_outputs": [
+      "Annualized Sharpe ratio (daily returns annualized)",
+      "Annualized volatility",
+      "CAGR / final portfolio value",
+      "Maximum drawdown",
+      "Annualized turnover (%)",
+      "Herfindahl–Hirschman Index (HHI)",
+      "Effective number of stocks (1/HHI)",
+      "Top-k concentration (e.g., top-5 weights)",
+      "Sharpe/Turnover efficiency ratio"
+    ],
+    "aggregation_outputs": [
+      "Boxplots and distributions across the 625-parameter grid",
+      "Top-10 parameter configurations ranked by Sharpe",
+      "Heatmaps of metrics across parameter pairs",
+      "Win-rate statistics vs. MPT and S&P 500 across 50 random universes",
+      "CSV files with full per-configuration metrics (metrics recorded for each grid point and each rebalancing period)"
+    ],
+    "baselines": [
+      "Mean–variance maximum-Sharpe portfolio (PyPortfolioOpt, long-only)",
+      "S&P 500 market-cap-weighted index (assumed 5% turnover for index)"
+    ]
+  },
+  "experiment_parameters": {
+    "graph_weights": "Wij = exp(α·SR_j − β·Σ_ij) for i≠j; Wii = exp(λ·SR_i)",
+    "lindblad_operators": "L_ij = |i><j|",
+    "lindblad_rates": "cij = Gij (Google matrix entries)",
+    "google_damping": 0.9,
+    "gamma1_gamma2": 100,
+    "time_step_delta_t": 0.1,
+    "convergence_tolerance": 1e-08,
+    "max_iterations": 5000,
+    "initial_state": "ρ0 = I/n",
+    "parameter_grid": {
+      "alpha": [
+        0.1,
+        5,
+        50,
+        100,
+        500
+      ],
+      "beta": [
+        0.1,
+        5,
+        50,
+        100,
+        500
+      ],
+      "lambda": [
+        0.1,
+        5,
+        50,
+        100,
+        500
+      ],
+      "omega": [
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        1.0
+      ]
+    },
+    "training_windows": {
+      "1_year_days": 252,
+      "2_years_days": 504
+    },
+    "rebalancing_frequency": "quarterly",
+    "backtest_period": "2018-01-02 to 2024-12-31",
+    "transaction_cost_assumption": "20 basis points per 100% annual turnover (used for implementation-drag analyses)"
+  },
+  "hardware_details": {
+    "gpu_model": "NVIDIA A100 (single GPU reported for full-grid runs)",
+    "acceleration_library": "cuPyNumeric (GPU-accelerated NumPy-compatible)",
+    "runtime_per_grid": "~3 hours wall-clock for 625 configurations on a single A100",
+    "cloud_provider_or_grant": "NVIDIA Academic Grant resources and NVIDIA A100 hardware (acknowledged); exact cloud provider unspecified"
+  },
+  "reproducibility_notes": "The paper provides a detailed algorithmic description (Algorithm 1), explicit formulas for graph weights, Hamiltonian, Lindblad rates, Kraus approximation, and all relevant hyper-parameter ranges used in the grid search. Implementation uses cuPyNumeric for GPU acceleration and PyPortfolioOpt for classical benchmarks. Data source is public (Yahoo Finance). No public code repository or direct link to code is provided in the manuscript. Reproducing results requires implementing the Kraus-based QSW update, access to daily adjusted-price data from Yahoo Finance, and a GPU environment with cuPyNumeric; the paper lists all key numerical parameters (Δt, tol, γ, α_damp, parameter grids, training windows, backtest period) necessary for replication.",
+  "key_findings": [
+    "[supported] A quantum-stochastic-walk (QSW) optimizer that embeds assets in a weighted directed graph (self-loops encode Sharpe, edges encode covariance penalties) can be implemented and used to derive portfolio weights from the stationary diagonal of the evolved density matrix.",
+    "[speculative] For any ω > 0 the GKLS (Lindblad) generator with Google-matrix-derived Lindblad rates is relaxing and admits a unique full-rank stationary state; using that stationary state as weights yields a well-defined portfolio (theoretical convergence claim).",
+    "[supported] In backtests on Top-100 S&P constituents (2016–2024) with 1-year training windows, QSW scenario portfolios improved out-of-sample Sharpe by up to +27% versus a re-optimized mean–variance (MPT) benchmark while drastically reducing annual turnover (reported ranges 2%–90% versus ~480% for MPT).",
+    "[supported] A 625-point grid search identified a robust parameter region (α, λ ≲ 0.5 and ω in [0.2, 0.4]) that yields high Sharpe (~0.97), very low turnover (≤5%), and low concentration (HHI ≈ 0.01) in the experiments.",
+    "[supported] In a robustness study repeating full grid searches across 50 random 100-stock subsets of the S&P 500 (31,350 additional backtests), the best-per-draw QSW beat re-optimized mean–variance on Sharpe in 54% of samples and always outperformed on trading efficiency; median turnover reported 36% (QSW) versus 351% (MPT).",
+    "[supported] Aggregated claim from experiments: QSW raised annualized Sharpe by ~15% and cut average turnover by ~90% relative to classical maximum-Sharpe mean–variance optimization in the reported testbeds.",
+    "[speculative] The paper argues QSW's coherent channel (Hamiltonian) captures non-linear dependencies and higher-order interactions via quantum superposition and interference that quadratic mean–variance misses (theoretical justification rather than direct proof of unique causal mechanism).",
+    "[supported] QSW portfolios produced broad automatic diversification in experiments: HHI values around ~0.01 (implying many effective holdings) and remained comfortably within UCITS-style concentration limits in the reported tests.",
+    "[supported] The QSW solver was implemented with GPU acceleration (cuPyNumeric) and the authors report practical runtimes (the 625-parameter grid on 100 assets ran in ~3 hours on an NVIDIA A100), supporting feasibility for universes of ~100 assets.",
+    "[speculative] The authors recommend QSW as a low-cost weighting engine for themed ETFs and other systematic mandates based on the empirical advantages; this is an application suggestion rather than a deployed product-level validation.",
+    "[supported] Sensitivity and correlation analysis in the experiments show the quantum-classical mixing parameter ω is the dominant lever affecting Sharpe, turnover and concentration: lower ω (more coherence) improved Sharpe and reduced turnover in the reported backtests.",
+    "[supported] The reported implementation uses an operator-sum (Kraus) formulation and algebraic simplifications (sparse structure) to reduce computational cost; this implementation detail was used in the empirical study.",
+    "[supported] The authors explicitly note limitations: tests confined to U.S. large-caps, use of historical backtests (not live trading), simplified transaction-cost modeling at portfolio level, and long-only, non-leveraged implementations.",
+    "[speculative] The paper claims the approach is scalable 'like PageRank' and can be extended to 10^3–10^4 assets with GPU/distributed implementations; empirical experiments are shown for up to 100 assets and this scaling statement is extrapolative."
+  ],
+  "results_summary": "The paper introduces a quantum-stochastic-walk (QSW) approach to portfolio construction by mapping assets to a weighted directed graph (self-loops encode Sharpe, edges penalize covariance) and evolving a density matrix under a hybrid quantum–classical GKLS dynamics. Using a GPU-accelerated classical simulation of the QSW, the authors performed extensive backtests (Top-100 S&P series, a 625-parameter grid search, and 50 random 100-stock universes totaling >31k backtests). Empirically, QSW configurations with modest coherence (ω≈0.2–0.4) and low turnover priors produced portfolios with comparable or improved risk-adjusted returns and dramatically lower turnover and concentration versus a re-optimized mean–variance benchmark. The work reports practical runtimes for the solver on modern GPUs and highlights a parameter region robust across universes. The authors also discuss theoretical convergence (GKLS with Google rates when ω>0) and practical limitations (universe scope, transaction-cost modeling, long-only setup).",
+  "performance_claims": [
+    "[supported] Up to +27% out-of-sample Sharpe improvement vs re-optimized mean–variance on Top-100 S&P constituents for 1-year training scenarios.",
+    "[supported] Annual turnover reduced from ~480% (mean–variance) to ranges of 2%–90% for various QSW scenarios in experiments (median figures reported elsewhere).",
+    "[supported] Grid-search sweet spot (α, λ ≲ 0.5; ω ∈ [0.2,0.4]) reported to deliver Sharpe ≈ 0.97 at ≤5% turnover and HHI ≈ 0.01 in the Top-100 tests.",
+    "[supported] In the 50-random-universe robustness study, the best-per-draw QSW beat re-optimized mean–variance on Sharpe in 54% of samples and always outperformed on trading efficiency; median turnover 36% (QSW) vs 351% (MPT).",
+    "[supported] Reported aggregate claim: QSW raises annualized Sharpe by 15% and cuts average turnover by 90% relative to classical optimization across their experiments.",
+    "[supported] The 625-parameter grid (625 configurations) evaluated over rolling windows was executable in ~3 hours wall-clock on a single NVIDIA A100 for the Top-100 universe (reported runtime).",
+    "[supported] HHI values for QSW portfolios are reported around ~0.01 (effective breadth ~40–100 names), versus MPT HHI ~0.27 (very concentrated) in the presented experiments.",
+    "[supported] Turnover-to-cost example: assuming a 20 bp round-trip cost, the paper reports typical implementation drag of ~7.6 bp for QSW (mean presets) vs ~65 bp for MPT in a 2-year calibration example."
+  ],
+  "quantum_advantage_claim": "demonstrated",
+  "quantum_advantage_detail": "The authors demonstrate, via extensive classical simulations of quantum-stochastic-walk dynamics, empirical advantages over a re-optimized mean–variance benchmark in many backtests: higher or comparable risk-adjusted returns in several settings and substantially lower turnover and concentration (leading to superior after-cost efficiency). This is a demonstrated quantum-inspired advantage in historical simulations rather than evidence from quantum hardware; claims that true quantum hardware would add further benefits remain speculative.",
+  "limitations": [
+    "Universe scope: experiments only use U.S. large-cap equities (Top-100 and S&P 500 subsets), so results may not generalize to small caps or emerging markets.",
+    "Static factor model: the study fixes the stock-return factors and does not jointly optimize factor selection with the QSW parameters.",
+    "Single-period execution cost modeling: turnover costs are applied at the portfolio level using a simple per‑turnover basis-point assumption (e.g., 20 bp per 100% turnover), ignoring intraday slippage and nonlinear market impact.",
+    "No shorting or leverage: all back-tests are long-only and fully invested; results do not cover short positions, leverage, or factor-neutral constraints.",
+    "[inferred] Reliance on grid search/manual tuning: the method depends on extensive hyper-parameter grid search (625 combinations); practical deployments may require more efficient or adaptive calibration.",
+    "[inferred] Simplified graph-encoding choices: the specific mappings (e.g., exponential weight Wij, Hamiltonian construction, normalization constants) are design choices whose sensitivity and optimality are not fully characterized.",
+    "[inferred] Computational scaling and costs: while GPU-accelerated, QSW simulation uses dense linear-algebra operations (e.g., matrix exponentials) with computational complexity that may limit scalability to much larger universes without further algorithmic improvements.",
+    "[inferred] Emulation on classical hardware: the implementation simulates QSWs on GPUs rather than running on quantum hardware; implications of real quantum execution (noise, limited qubit counts) are unexplored.",
+    "[inferred] Fixed rebalancing cadence: the experiments use quarterly rebalancing; effects of different frequencies (monthly, monthly with intraday execution) are not studied.",
+    "[inferred] Simplified transaction cost assumptions across stocks: per-trade cost was modeled as a flat assumption for large caps, but heterogeneous spreads, liquidity, and market-impact per asset were not incorporated.",
+    "[inferred] Regulatory and explainability considerations: practical deployment (e.g., for ETFs) may face disclosure/regulatory requirements and explainability needs not addressed in the study."
+  ],
+  "open_questions": [
+    "How should QSW hyper-parameters (ω, α, β, λ) be adapted dynamically in real time to changing market regimes (volatility spikes, correlation shifts)?",
+    "What is the systematic mapping between observable market indicators (volatility, correlation structure, liquidity metrics) and the optimal QSW parameter settings?",
+    "Do QSW advantages persist in other asset classes (fixed income, FX, commodities) and in less liquid universes (mid-/small-cap, emerging markets)?",
+    "How does including realistic, nonlinear transaction-cost models and intraday market impact affect the net performance and optimal parameter selection of QSW portfolios?",
+    "What are the effects of allowing short positions, leverage, cardinality constraints, or other realistic operational constraints on QSW outcomes and stability?",
+    "Can QSW implementations be efficiently scaled to much larger universes (n >> 100) without sacrificing convergence speed or numerical stability, and what algorithmic approximations are acceptable?",
+    "How robust are QSW portfolios to regime changes or structural breaks not reflected in historical training windows?",
+    "How interpretable are the quantum-model outputs for risk managers and regulators — e.g., can one provide economically intuitive explanations for allocations produced by QSW?",
+    "What would be the practical implications, limitations, and potential benefits of running QSWs on near-term quantum hardware versus classical emulation?",
+    "To what extent do the specific graph encodings and Hamiltonian constructions determine results, and are there theoretically motivated alternatives that improve robustness?"
+  ],
+  "future_work": [
+    "Dynamic parameter adaptation: develop adaptive algorithms that adjust QSW parameters in real time in response to market conditions and regime indicators.",
+    "Parameter–market relationship modeling: establish systematic mappings between QSW parameters (α, β, λ, ω) and observable market characteristics such as volatility regimes, correlation structures, and liquidity conditions.",
+    "Multi-asset-class extension: extend the QSW framework to other asset classes (fixed income, commodities, currencies, alternatives) and study differences due to liquidity and return distributions.",
+    "Risk management integration: incorporate tail-risk measures, scenario analysis, stress testing, and portfolio risk-budgeting into the QSW optimization framework.",
+    "Transaction cost modeling: integrate realistic transaction costs, market impact functions, and liquidity constraints into the QSW optimization and rebalancing process.",
+    "Computational optimization and hardware acceleration: pursue GPU-based parallelism, algorithmic approximations, and quantum-hardware interfaces to enable real-time optimization at larger scales (n > 1000) and reduce computational complexity."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-walks",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach",
+    "idea:near-term-feasibility"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Quantum Stochastic Walk (QSW) stationary distributions used as portfolio weights produce improved out-of-sample Sharpe ratios and substantially lower turnover and concentration versus classical maximum-Sharpe mean–variance benchmarks.",
+    "#idea:hybrid-approach — The method mixes coherent (Hamiltonian) and stochastic (Lindblad) channels with a tunable mixing parameter ω, and the authors frame the approach as a practical hybrid quantum–classical engine for systematic mandates.",
+    "#idea:near-term-feasibility — The QSW optimizer is implemented as a GPU-accelerated classical simulator (cuPy) with a discrete Kraus-operator approximation to avoid O(n^2) unraveling; a 625-parameter grid executed in ~3 hours on an NVIDIA A100, showing practical tractability for research and backtesting.",
+    "#idea:quantum-advantage — Graph construction encodes returns (via Sharpe proxies) and covariance penalties into edge/self-loop weights, yielding a PageRank-like Google transition matrix used as Lindblad rates to bias the stationary state toward higher-Sharpe, lower-covariance assets.",
+    "#idea:hybrid-approach — Practical implementation details include Kraus decomposition simplifications (stochastic jumps acting on diagonals) to reconstruct and normalize density matrices efficiently for n≈100 universes; suggests classical preprocessing and GPU simulation as part of workflow.",
+    "#limitation:simulation-only — Results are obtained from classical GPU simulation of the quantum channel (no experiments on quantum hardware).",
+    "#limitation:no-empirical-validation — There is no execution on QPUs or noisy hardware; claims about a hybrid quantum–classical engine remain conceptual and are not validated on quantum processors."
+  ],
+  "contradictions": []
+}

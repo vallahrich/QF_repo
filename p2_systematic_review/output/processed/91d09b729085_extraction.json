@@ -1,0 +1,273 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "The document bears an IEEE journal header with DOI, submission/revision/acceptance/publication dates, structured abstract, methods and results (10,000 experiments, hardware runs), and a full reference list — indicating a peer-reviewed empirical research article.",
+  "title": "Backtesting Quantum Computing Algorithms for Portfolio Optimization",
+  "authors": [
+    "Ginés Carrascal",
+    "Paula Hernamperez",
+    "Guillermo Botella",
+    "Alberto del Barrio"
+  ],
+  "year": "2024",
+  "journal_or_venue": "IEEE Transactions on Quantum Engineering",
+  "doi": "10.1109/TQE.2023.3337328",
+  "abstract_summary": "The paper defines a reusable methodology for backtesting quantum and classical portfolio optimization algorithms under equivalent conditions and uses it to compare four quantum and three classical methods. Based on 10,000 experiments with IBEX35 data, the authors find quantum algorithms can match or slightly outperform classical ones and show better scalability trends; they also analyze VQE (including a CVaR variant) on simulators and IBM hardware and discuss practical challenges of running such algorithms on current >100 qubit devices.",
+  "methodology_description": "The authors define a reusable backtesting methodology to compare classical and quantum algorithms for portfolio optimization under equivalent conditions. They implemented three classical (SMA, Markowitz mean-variance optimization (MVO), Sharpe-ratio optimization (SRO)) and four quantum algorithms (VQE, CVaR-VQE, QAOA, Grover Adaptive Search (GAS)) in Python using Qiskit and standard Python finance libraries. For each experiment they (1) select a random subset of assets from an IBEX35 universe, (2) obtain adjusted closing prices (Yahoo! Finance via bt), (3) compute expected returns and covariance matrix, (4) formulate a combinatorial optimization problem (binary selection x with budget constraint 1^T x = B) and transform it to a QUBO/Ising Hamiltonian, (5) run each algorithm (quantum methods use variational ansatz circuits or Grover-based search; classical methods use standard solvers), (6) obtain a candidate portfolio (equal-weight on chosen assets) and (7) backtest monthly rebalanced returns over the historical period. They execute large-scale statistical comparison: 10,000 independent backtesting runs with random subsets (five-asset experiments emphasized) to collect distributional performance metrics, and also run scalability experiments (2–100 assets) to compare per-iteration execution times. Quantum large-scale backtests were executed on simulators; selected illustrative VQE/CVaR-VQE runs were executed on IBM real devices (5-, 27-, 127-qubit machines) with careful qubit mapping and low-depth ansatz design to fit device connectivity and coherence limits. Performance metrics collected include realized total return distributions, mean/std, frequency of best-performing algorithm, and execution-time scaling per iteration.",
+  "algorithms_used": [
+    "SMA",
+    "MVO",
+    "SRO",
+    "VQE",
+    "CVaR-VQE",
+    "QAOA",
+    "GAS (Grover Adaptive Search)",
+    "NumPyMinimumEigensolver (classical exact reference)"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "bt (Python library)",
+    "ffn (Python)",
+    "cvxopt"
+  ],
+  "experimental_setup": "Backtesting pipeline implemented in Python/Qiskit. Large-scale backtesting (10,000 runs) performed using a quantum simulator (ibmq_qasm_simulator) for quantum algorithms and classical CPUs for classical algorithms. Selected validation runs executed on IBM Quantum real backends (ibmq_athens 5-qubit, ibm_cairo 27-qubit Falcon r5.11, ibm_washington 127-qubit Eagle r1 and other 127-qubit backends such as ibm_brisbane, ibm_cusco, ibm_nazca). Sessions were used to reduce queuing overhead where possible; reported execution times exclude queue wait. Ansätze were designed to fit device connectivity (linear entanglement path for 19 qubits on 27-qubit device, circular entanglement for 28 qubits on 127-qubit device).",
+  "dataset_used": "Historical adjusted closing prices for IBEX35 constituents obtained from Yahoo! Finance via the bt Python library. Backtesting period: price history from 2016 through 2020 used for monthly-rebalanced backtests (2016 used for historical calculations; investing from 2017). Example short-run tests used other windows (e.g., 2022-10-01 to 2022-12-01) for small-device demonstrations. Random subsets of the IBEX35 universe (typically 5 assets per experiment for the 10,000-run suite; other experiments used 2–100 random assets to measure runtime scaling).",
+  "experiment_input": {
+    "source": "Yahoo! Finance (via bt Python library)",
+    "universe": "IBEX35 constituents",
+    "time_period_backtest": "2016-2020 (2016 used for history; investments from 2017)",
+    "example_short_run_period": "2022-10-01 to 2022-12-01 (illustrative device runs)",
+    "selection": "Random subsets drawn from IBEX35 (main suite: 5 assets per run; other tests: 2–100 assets)",
+    "preprocessing": "Compute adjusted closing returns; estimate expected return vector μ and covariance matrix Σ; formulate binary selection problem with budget B (choose B assets); transform budget constraint 1^T x = B into penalty term and convert quadratic objective q x^T Σ x - μ^T x + penalty into QUBO then to Ising (z in {±1}) and decompose into Pauli-Z operators for Hamiltonian construction.",
+    "notes": "Final portfolios are equal-weighted across selected assets. Transaction costs and integer lot sizes were not modeled in the main experiments."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "For each experiment: sample random subset of assets from IBEX35",
+      "Fetch adjusted close prices and compute expected returns μ and covariance Σ over the historical window",
+      "Set budget B (number of assets to select) and risk-aversion parameter q",
+      "Formulate objective: minimize q x^T Σ x - μ^T x subject to 1^T x = B; convert constraint via penalty to quadratic binary form x^T A x + b^T x",
+      "Change variables to Ising formulation z in {±1} and construct Hamiltonian H as sum of Pauli-Z and Z⊗Z terms",
+      "Decompose H into Pauli terms and build variational quantum circuits (Ansatz) for VQE/CVaR-VQE or QAOA layers for QAOA; for GAS build oracle and Grover subroutines (simulators only)",
+      "For variational methods: use COBYLA classical optimizer to update circuit parameters iteratively; measure expectation values on simulator or QPU, compute objective (mean or CVaR depending on algorithm) and repeat",
+      "For classical baselines: compute SMAS selection, solve quadratic programs for MVO (cvxopt) and maximize Sharpe ratio (ffn)",
+      "Postprocess measurement outcomes to select the chosen asset subset (equal-weight portfolio) and simulate monthly rebalanced returns over backtest period",
+      "Collect performance metrics (total returns, mean, std, counts of best-performing algorithm) and per-iteration execution times"
+    ],
+    "quantum_parameters_and_variants": [
+      "VQE: parametrized low-depth ansatz with entanglement matched to device topology (linear entanglement for mapped linear path; circular entanglement for mapped circular path)",
+      "CVaR-VQE: same circuit but objective uses Conditional Value at Risk aggregation of measured outcomes (parameter α used in CVaR computation)",
+      "QAOA: p-layer QAOA used (p unspecified; circuits noted as deeper than VQE and more noise-sensitive)",
+      "GAS: Grover-based adaptive search implemented on simulators for small instances"
+    ],
+    "classical_optimizers": "COBYLA used as classical optimizer for all variational algorithms (noise-robust, one objective evaluation per iteration); cvxopt used for MVO; ffn utilities used for Sharpe optimization",
+    "iterations_and_shots": "Illustrative device runs used 20 optimizer iterations on hardware (too few sometimes); simulator VQE runs allowed 100 iterations and reached optima. Example measurement shots: 100,000 shots used in presented device measurements. Per-iteration runtimes measured and reported (queue time excluded)."
+  },
+  "experiment_output": {
+    "formats": "Collected per-run outputs include chosen asset subset, equal-weight portfolio returns time series, and summary scalar metrics.",
+    "metrics": [
+      "Total return over backtest horizon (primary performance metric reported)",
+      "Distributional statistics across experiments: mean and standard deviation of total returns",
+      "Frequency counts: number of times each algorithm was best among compared methods",
+      "Execution-time metrics: mean per-iteration runtime as a function of number of assets (scalability)",
+      "Convergence diagnostics: number of optimizer iterations to convergence in sample runs"
+    ],
+    "baselines": [
+      "SMA (simple moving average strategy)",
+      "MVO (Markowitz mean-variance optimization via cvxopt)",
+      "SRO (Sharpe ratio maximization via ffn utilities)",
+      "NumPyMinimumEigensolver as classical exact reference for small instances"
+    ],
+    "postprocessing": "Filtered analysis kept records with intra-record variance above the average variance across records to focus on cases where algorithms diverged; comparative tables and boxplots produced."
+  },
+  "experiment_parameters": {
+    "qubits_examples": {
+      "small": 5,
+      "mapped_linear_path": 19,
+      "mapped_circular_path": 28,
+      "devices_reported": [
+        5,
+        27,
+        127
+      ]
+    },
+    "circuit_depth_examples": {
+      "19_qubit_transpiled_depth_layers": 27,
+      "28_qubit_transpiled_depth_layers": 37,
+      "estimated_execution_time_per_shot_19q_us": 1125,
+      "estimated_execution_time_per_shot_28q_us": 4352
+    },
+    "shots": 100000,
+    "optimizer": "COBYLA",
+    "iterations": {
+      "real_device_runs": 20,
+      "simulator_runs": 100
+    },
+    "risk_aversion_q": "used in objective q * x^T Σ x - μ^T x (value not explicitly specified in paper)",
+    "budget_B": "set per-experiment (examples: choose 5 out of 19 or 5 out of 28; 5 assets per run in main 10k suite)",
+    "CVaR_alpha": "used in CVaR-VQE but exact alpha value not specified"
+  },
+  "hardware_details": {
+    "cloud_provider": "IBM Quantum",
+    "simulator": "ibmq_qasm_simulator (Qiskit)",
+    "real_backends": [
+      {
+        "name": "ibmq_athens",
+        "qubits": 5,
+        "use": "illustrative small VQE runs"
+      },
+      {
+        "name": "ibm_cairo",
+        "qubits": 27,
+        "processor_type": "Falcon r5.11",
+        "quantum_volume": 64,
+        "CLOPS": 2400,
+        "basis_gates": [
+          "CX",
+          "ID",
+          "IF_ELSE",
+          "RZ",
+          "SX",
+          "X"
+        ],
+        "median_errors": {
+          "median_cnot_error": 0.01049,
+          "median_readout_error": 0.0118,
+          "median_T1_us": 106.81,
+          "median_T2_us": 102.88
+        },
+        "notes": "Used mapped 19-qubit linear path; per-shot time and total-shot execution times reported."
+      },
+      {
+        "name": "ibm_washington",
+        "qubits": 127,
+        "processor_type": "Eagle r1",
+        "quantum_volume": 64,
+        "CLOPS": 850,
+        "basis_gates": [
+          "CX",
+          "ID",
+          "IF_ELSE",
+          "RZ",
+          "SX",
+          "X"
+        ],
+        "median_errors": {
+          "median_cnot_error": 0.01378,
+          "median_readout_error": 0.0108,
+          "median_T1_us": 99.55,
+          "median_T2_us": 93.66
+        },
+        "notes": "Used mapped 28-qubit circular path for an example ansatz."
+      },
+      {
+        "name": "ibm_brisbane / ibm_cusco / ibm_nazca",
+        "qubits": 127,
+        "use": "used for per-iteration runtime scaling experiments"
+      }
+    ]
+  },
+  "reproducibility_notes": "Implementation details and dependencies are described (Qiskit, bt, ffn, cvxopt) and the data source (Yahoo! Finance) is public; however the paper does not provide a public code repository or explicit parameter files. Device-specific transpilation and qubit-mapping choices are described (linear and circular entanglement paths, selected high-quality qubits/links), and the experimental random sampling procedure (10,000 random subsets from IBEX35) is reported. For reproducibility one would need to reimplement the QUBO/Hamiltonian construction, ansatz circuits and optimizer settings (COBYLA), and use the same seeds/random draws; because exact numeric hyperparameters (risk-aversion q, CVaR α, solver tolerances, random seeds) are not fully listed, full bitwise reproducibility is not directly possible from the paper alone.",
+  "key_findings": [
+    "[supported] The authors developed and published a reusable methodology to backtest and compare classical and quantum portfolio optimization algorithms and executed a large-scale experimental campaign (10,000 backtesting runs) under equivalent conditions.",
+    "[supported] In the 10,000-experiment backtesting suite (five-random-asset experiments from IBEX35), quantum algorithms (notably VQE variants and QAOA) matched or slightly outperformed classical algorithms on average; after filtering for runs with higher inter-algorithm variance, QAOA and CVaR-VQE achieved the best strategy more often than classical baselines.",
+    "[supported] Measured per-iteration execution times on IBM real quantum devices showed a milder growth with the number of qubits (smaller slope for newer devices) compared to classical methods, whose per-step time exhibited an exponential growth with problem size in their experiments.",
+    "[supported] VQE with CVaR objective (CVaR-VQE) converged quickly in the hardware example reported (convergence reported after ~10 iterations) and produced a portfolio close to the classical exact (NumPyMinimumEigensolver) solution in the small-case example.",
+    "[supported] Practical use on current IBM hardware requires careful mapping and Ansätze design: choosing higher-quality qubits and low-depth linear/circular entanglement paths (examples: 19-qubit linear path on a 27-qubit Falcon device and a 28-qubit circular path on a 127-qubit Eagle device) to avoid extra SWAPs and to keep execution within qubit coherence times.",
+    "[supported] QAOA circuits are deeper than VQE circuits for equivalent problem encodings, making QAOA more vulnerable to noise on current NISQ hardware.",
+    "[supported] Measurement/shot overhead and queueing dominate end-to-end quantum job time; reported examples include per-shot circuit durations and full measurement times (e.g., ~1125 μs per shot estimate for a transpiled 19-qubit VQE layer, ~35.3 s for 100,000 shots on one 27-qubit mapping; ~4352 μs per shot estimate and ~48.6 s for 100,000 shots on a 28-qubit mapping).",
+    "[supported] Classical mean-variance optimization (MVO) and Sharpe-ratio optimization (SRO) implementations showed rapidly increasing runtime with asset count; SRO encountered feasibility problems above ~90 assets in their experiments.",
+    "[speculative] The authors claim that quantum algorithms can handle very large numbers of assets in reasonable time on future larger (less noisy / fault-tolerant) quantum hardware.",
+    "[speculative] Grover Adaptive Search (GAS) inherits a theoretical quadratic speedup but is impractical on current NISQ devices due to circuit depth and is therefore considered a candidate for future fault-tolerant quantum computers.",
+    "[speculative] The paper asserts ('to the best of our knowledge') that this is the first systematic backtesting comparison of classical and quantum portfolio optimization algorithms; this is presented as an original-contribution claim by the authors.",
+    "[speculative] The authors indicate that with improved models, error mitigation, and larger hardware, quantum algorithms could provide a practical advantage for realistic portfolio problems (including transaction costs and integer constraints)."
+  ],
+  "results_summary": "The paper presents a reproducible backtesting methodology and an extensive empirical comparison (10,000 simulations) of three classical and four quantum portfolio optimization algorithms using IBEX35 historical data. Empirically, quantum variational approaches (VQE and its CVaR variant) and QAOA performed competitively with classical methods and, after filtering for high-variance problem instances, were more often the best-performing strategy. The authors measured execution-time scaling on IBM hardware and observed that per-iteration quantum execution times displayed a gentler growth with problem size than the classical algorithms' per-step times (which grew exponentially). Practical experiments on 27- and 127-qubit IBM devices highlighted hardware constraints (noise, connectivity, mapping, circuit depth) and showed that low-depth VQE-CVaR can converge rapidly in small instances and produce results close to exact classical solvers. The paper concludes the observed quantum competitiveness is promising but emphasizes that a true, general quantum advantage remains conditional on future improvements in quantum hardware and error mitigation.",
+  "performance_claims": [
+    "10,000 backtesting simulations were performed comparing seven algorithms (three classical: SMA, MVO, SRO; four quantum: VQE, CVaR-VQE, QAOA, GAS).",
+    "Example convergence: CVaR-VQE converged in ~10 iterations in a reported 19-qubit real-device experiment.",
+    "NumPyMinimumEigensolver (classical exact reference) took 126.57 seconds on one reported instance.",
+    "Transpiled 19-qubit VQE layer estimated at ~1125 μs per shot; executing 100,000 shots took ~35.3 s on the IBM 27-qubit mapping (queue time excluded).",
+    "Transpiled 28-qubit VQE layer estimated at ~4352 μs per shot; executing 100,000 shots took ~48.6 s on the IBM 127-qubit mapping (queue time excluded).",
+    "Device characteristics cited: example IBM Falcon 27-qubit (ibm_cairo) median CNOT error ~1.049e-2, median readout error ~1.180e-2, T1 ~106.81 μs, T2 ~102.88 μs; example IBM Eagle 127-qubit (ibm_washington) median CNOT error ~1.378e-2, median readout error ~1.080e-2, T1 ~99.55 μs, T2 ~93.66 μs; Quantum Volume reported as 64 for examples given.",
+    "Classical SRO experienced feasibility issues above ~90 assets in the experiments reported."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper reports empirical evidence that quantum algorithms (VQE variants and QAOA) can be competitive with classical algorithms on small-to-moderate instances and that per-iteration quantum execution times scale more favorably in their hardware measurements. However, they do not demonstrate a clear, general quantum advantage on realistic problem sizes; instead they argue potential for advantage on future larger, less noisy (or fault-tolerant) quantum hardware. Thus the claim of practical quantum advantage is presented as conditional and speculative rather than demonstrated.",
+  "limitations": [
+    "Quantum hardware limitations: noise, decoherence, limited coherence times, and nonuniform qubit/link error rates that constrain circuit depth and fidelity (author-stated).",
+    "Queueing and execution overheads on cloud-access quantum devices (long queue times, communication/validation overhead) that make iterative hybrid algorithms (e.g., VQE) impractical to run at scale on real backends; therefore most backtests were performed on simulators (author-stated).",
+    "Use of simulators for the bulk of backtesting; real-device experiments were limited to illustrative/validation runs and small instances (author-stated).",
+    "Simplified problem modelling: equal-weight portfolios and a binary selection formulation with a penalty relaxation for the budget constraint; transaction costs, market impact, and integer lot constraints were not modelled (author-stated).",
+    "Heuristic nature and stochasticity of the algorithms (both classical and quantum) produce high variance in outcomes across instances; therefore results are noisy and it is hard to declare a definitive winner (author-stated).",
+    "Limited conclusions about practical quantum advantage: observed slight or occasional outperformance by quantum methods, but results are not uniformly conclusive and depend on filtering and instance choice (author-stated).",
+    "Ansatz and mapping constraints imposed by specific hardware topologies (finding low-depth Ansätze and good linear/circular qubit paths) limit experiment sizes on real devices (author-stated).",
+    "Penalty-term formulation for the 1Tx = B constraint can yield solutions violating the budget unless penalty is tuned — the chosen approach may affect comparability (author-stated).",
+    "[inferred] Dependence on a single cloud provider/hardware family (IBM Falcon/Eagle) may limit generalizability to other gate-based platforms or to quantum annealers.",
+    "[inferred] Use of a single classical optimizer (COBYLA) without exhaustive comparison of optimizer/hyperparameter choices on noisy hardware limits understanding of optimizer–noise interaction effects.",
+    "[inferred] Backtesting limited to one market index (IBEX35) and a particular historical period limits external validity across other markets, asset classes, and market regimes.",
+    "[inferred] The need to filter the 10,000 experiments by intrarecord variance to reach stronger conclusions suggests the selection/analysis methodology may be sensitive and might introduce selection bias.",
+    "[inferred] Scalability claims rest on extrapolation (expectation that future larger quantum computers will handle many assets); empirical demonstration of advantage at large n is still missing.",
+    "[inferred] The transformation from QP to QUBO (binary encoding/precision tradeoffs) can introduce discretization error and blow up problem size; the practical effects on portfolio quality were not exhaustively quantified."
+  ],
+  "open_questions": [
+    "Can quantum algorithms (VQE, CVaR-VQE, QAOA, GAS) consistently outperform classical portfolio optimization methods in real-world backtests across multiple markets and conditions?",
+    "What are the convergence and iteration-scaling properties of hybrid variational algorithms (VQE/CVaR-VQE/QAOA) as the number of assets (qubits) grows, particularly on noisy hardware?",
+    "How to design low-depth, hardware-aware Ansätze that scale to >100 qubits while preserving solution quality for portfolio problems?",
+    "What effective error mitigation and noise-aware optimization strategies are required to make QAOA/GAS/VQE competitive on NISQ devices?",
+    "How much dedicated quantum hardware access (reduced queueing, low-latency classical–quantum communication) is required for practical hybrid optimization in production workflows?",
+    "How should constraints that are hard in practice (integer lot sizes, strict cardinality B, transaction costs, market impact) be encoded for quantum algorithms without prohibitive overhead or loss of solution quality?",
+    "What is the best way to encode continuous portfolio optimization (e.g., Markowitz mean–variance) into quantum-friendly formulations without excessive discretization error?",
+    "How sensitive are the quantum-classical comparisons to choice of classical optimizer, number of shots, and sampling strategy (e.g., CVaR threshold α)?",
+    "What benchmarks and metrics (beyond occasional wins in filtered instances) should be used to robustly evaluate quantum algorithm superiority for portfolio optimization?",
+    "To what extent do the observed scalability advantages (per-iteration time scaling) of quantum devices translate into end-to-end advantage when including the number of optimizer iterations and total wall-clock time?",
+    "How generalizable are the results beyond the IBEX35 dataset and the specific historical time window used?",
+    "What are practical thresholds (problem sizes, noise levels, connectivity) where quantum approaches become preferable to classical heuristics in finance?"
+  ],
+  "future_work": [
+    "Develop more realistic models that capture the complexity and uncertainty of real stock market conditions (author-stated).",
+    "Incorporate transaction costs and integer constraints (lot sizes), and study their impact on portfolio selection formulations for quantum algorithms (author-stated).",
+    "Implement and evaluate error mitigation techniques to reduce noise and improve quantum algorithm performance on real hardware (author-stated).",
+    "Test models and algorithms on larger and more diverse datasets to validate scalability and robustness (author-stated).",
+    "Explore dedicated resource/communication arrangements or session management to reduce queueing overheads and make iterative hybrid algorithms practical on real devices (inferred from discussion; authors note current limitation and applicability if dedicated resources available).",
+    "Investigate hardware-aware Ansatz construction and optimal qubit-mapping strategies to minimize transpilation overhead and circuit depth for given devices (author-stated/inferred).",
+    "Study optimizer choice and hyperparameter tuning (beyond COBYLA) in noisy settings to understand optimizer–noise interactions and improve convergence (inferred).",
+    "Empirically evaluate scaling behavior (number of iterations, shot counts, total runtime) across increasing asset sizes to establish concrete thresholds for quantum advantage (inferred)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "grover-search",
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — In a large empirical backtest suite (10,000 randomized runs on IBEX35 data) quantum algorithms (VQE, CVaR-VQE, QAOA, GAS on simulators) can match or slightly outperform classical baselines (SMA, MVO, SRO) and show favorable per-iteration scaling trends in simulator experiments.",
+    "#idea:hybrid-approach — Practical implementations use hybrid workflows: variational circuits evaluated on QPU/simulator with classical COBYLA optimizer and classical pre/postprocessing (return/covariance estimation, penalty conversion to QUBO).",
+    "#idea:near-term-feasibility — The authors demonstrate selected runs on IBM real devices (5-, 27-, 127-qubit backends) using low-depth ansatz and topology-aware mapping, arguing NISQ-era feasibility for illustrative instances.",
+    "#limitation:simulation-only — Large-scale statistical comparisons (10,000 runs, scalability sweeps up to 100 assets) were performed on simulators; only illustrative subset runs were executed on real hardware.",
+    "#limitation:noise — Deeper circuits (e.g., QAOA) are noted as more noise-sensitive; hardware runs required low-depth ansatz and careful qubit mapping, indicating noise-limited performance on current devices.",
+    "#limitation:qubit-count — Practical constraints (connectivity, coherence) forced low-depth/topology-matched ansatz and limited the size of device-based experiments despite access to >100 qubit backends.",
+    "#limitation:data-encoding — The approach relies on QUBO/Ising formulations and Pauli-term decompositions of portfolio objectives (risk/return), which incurs overhead in Hamiltonian construction and measurement aggregation (e.g., CVaR evaluation).",
+    "#idea:quantum-advantage — The paper introduces a reusable backtesting methodology that enforces equivalent conditions between classical and quantum methods, providing a fair empirical basis to claim modest advantage in some settings.",
+    "#idea:hybrid-approach — CVaR-VQE variant: replacing mean-aggregation with CVaR in the variational objective to target tail-risk-aware portfolios; classical computation is used for return/covariance estimation and postselection of measured bitstrings."
+  ],
+  "contradictions": [
+    "The paper claims better scalability trends for quantum algorithms (based on simulator timing sweeps) but most large-scale results are simulator-only and real-device experiments are limited by qubit connectivity, coherence and noise — a tension between simulated scalability and practical hardware limitations (contradiction:scalability)."
+  ]
+}

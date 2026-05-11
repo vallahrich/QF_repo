@@ -1,0 +1,194 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "The document is labeled as a research article in the AAIA '23 conference proceedings with an ACM DOI, includes structured sections (abstract, methods, experiments, references), indicating a peer-reviewed conference paper.",
+  "title": "QAOA-based MRMR Algorithm for Feature Selection",
+  "authors": [
+    "Xinyu Jiang",
+    "Zhaoyun Chen",
+    "Jingjing Zhang",
+    "Zhiqian Yu",
+    "Lu Wang",
+    "Hao Mei"
+  ],
+  "year": "2024",
+  "journal_or_venue": "Proceedings of the 2023 International Conference on Advances in Artificial Intelligence and Applications (AAIA '23)",
+  "doi": "10.1145/3603273.3631193",
+  "abstract_summary": "The paper proposes a hybrid quantum-classical feature selection method that integrates the Quantum Approximate Optimization Algorithm (QAOA) with the classical Maximum Relevance–Minimum Redundancy (MRMR) approach by formulating MRMR as a QUBO and mapping it to an Ising Hamiltonian. It uses polynomial fitting to avoid division-by-zero in the Hamiltonian encoding and employs a shallow p=2 QAOA circuit; experiments on eight real-world datasets show the method tends to select smaller feature subsets while achieving comparable or better classification accuracy than classical MRMR.",
+  "methodology_description": "The authors propose a hybrid quantum-classical feature selection method that integrates the classical Maximum Relevance-Minimum Redundancy (MRMR) criterion with the Quantum Approximate Optimization Algorithm (QAOA). They first reformulate the MRMR maximization objective as a Quadratic Unconstrained Binary Optimization (QUBO) problem. To avoid division-by-zero issues from the MRMR terms 1/S and 1/S^2 when encoding into a Hamiltonian, they approximate those terms with polynomial curve fits (second-order for 1/S and third-order for 1/S^2) obtained via least-squares. The QUBO is then mapped to an Ising-type cost Hamiltonian by using the standard mapping z_i -> (1 - Z_i)/2 so that computational-basis bitstrings correspond to feature-selection vectors. A QAOA circuit (p = 2 layers) is used to prepare a parameterized state: alternating applications of the problem (cost) unitary U_C(γ) and the mixer unitary U_M(β). Parameters (γ, β) are optimized classically using the ADAM optimizer; the optimized circuit is sampled (1000 shots) to obtain candidate feature subsets (measurement bitstrings). Selected subsets are evaluated by training a classical Support Vector Machine (SVM) classifier with 5-fold cross-validation to compute classification accuracy. The classical MRMR heuristic is used as the baseline. Additional diagnostics reported include the fidelity of polynomial fits (MSE and R²) and the empirical probability distribution over sizes of feature subsets obtained by QAOA versus random sampling.",
+  "algorithms_used": [
+    "QAOA",
+    "MRMR",
+    "QUBO",
+    "Ising model mapping",
+    "Support Vector Machine (SVM)",
+    "ADAM optimizer"
+  ],
+  "frameworks": [],
+  "experimental_setup": "Experiments were run on a simulated quantum computer (no simulator name specified). QAOA used p = 2 layers, with 1000 measurement shots per parameter set. Classical parameter optimization used the ADAM optimizer; convergence required between ~150 and ~800 optimizer generations depending on dataset. Feature-subset evaluations used a classical SVM with 5-fold cross-validation. Eight real-world datasets from the UCI repository were used.",
+  "dataset_used": "Datasets drawn from the UCI Machine Learning Repository spanning finance, medicine, and natural hazards. Financial-related datasets mentioned include Australian Credit Approval (14 features) and South German Credit (20 features); other datasets used: Breast Cancer (Wisconsin) (9 features), Heart Failure Clinical Records (12), Algerian Forest Fire (12), Audit Data (17), Cervical Cancer Behavior Risk (19), and Glioma Grading Clinical (23).",
+  "experiment_input": {
+    "source": "UCI Machine Learning Repository",
+    "datasets": [
+      {
+        "name": "Breast Cancer (Wisconsin)",
+        "feature_count": 9
+      },
+      {
+        "name": "Heart Failure Clinical Records",
+        "feature_count": 12
+      },
+      {
+        "name": "Algerian Forest Fire",
+        "feature_count": 12
+      },
+      {
+        "name": "Australian Credit Approval",
+        "feature_count": 14
+      },
+      {
+        "name": "Audit Data",
+        "feature_count": 17
+      },
+      {
+        "name": "Cervical Cancer Behavior Risk",
+        "feature_count": 19
+      },
+      {
+        "name": "South German Credit",
+        "feature_count": 20
+      },
+      {
+        "name": "Glioma Grading Clinical",
+        "feature_count": 23
+      }
+    ],
+    "preprocessing": "Paper does not specify detailed preprocessing steps. Mutual information is used to compute MRMR terms; polynomial least-squares fitting applied to approximate 1/S and 1/S^2 for Hamiltonian encoding."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Compute MRMR mutual-information terms between features and class and among features.",
+      "Formulate MRMR objective as a QUBO (binary vector x indicating included features).",
+      "Approximate problematic denominator terms (1/S and 1/S^2) using polynomial least-squares fits (2nd and 3rd order respectively).",
+      "Map QUBO coefficients to an Ising-type cost Hamiltonian using z_i -> (1 - Z_i)/2 and express cost unitaries as Rz rotations.",
+      "Construct QAOA circuit with p = 2 alternating layers of U_C(γ) (cost) and U_M(β) (mixer).",
+      "Optimize the variational parameters (γ, β) using the ADAM optimizer (classical loop).",
+      "Sample the optimized circuit (1000 shots) to obtain measurement bitstrings representing feature subsets.",
+      "Evaluate sampled feature subsets by training an SVM classifier and computing 5-fold cross-validated accuracy; compare to classical MRMR results."
+    ],
+    "parameters_and_iterations": {
+      "QAOA_layers": 2,
+      "shots_per_evaluation": 1000,
+      "optimizer": "ADAM",
+      "optimizer_generations_to_converge": "~150–800 (dataset-dependent)",
+      "polynomial_orders": {
+        "1_over_S": 2,
+        "1_over_S_squared": 3
+      }
+    }
+  },
+  "experiment_output": {
+    "metrics": [
+      "Classification accuracy (SVM with 5-fold CV)",
+      "Polynomial fit metrics: Mean Squared Error (MSE) and R-squared (R²)",
+      "Probability distribution over selected feature-subset sizes from QAOA (empirical sampling)",
+      "Comparison against baseline classical MRMR (optimal feature size and max accuracy)"
+    ],
+    "baseline": "Classical MRMR feature selection",
+    "output_format": "Tabulated accuracies by dataset and feature-subset size, fit statistics (MSE, R²), and histograms/probabilities of subset sizes obtained by QAOA vs random sampling."
+  },
+  "experiment_parameters": {
+    "qubits": "Varies with dataset (equal to number of features): [9, 12, 12, 14, 17, 19, 20, 23]",
+    "depth_p": 2,
+    "shots": 1000,
+    "optimizer": "ADAM",
+    "optimizer_iterations_range": "Approximately 150 to 800 until convergence",
+    "polynomial_fit_orders": {
+      "1/S": 2,
+      "1/S^2": 3
+    },
+    "classifier": "Support Vector Machine (SVM) with 5-fold cross-validation"
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "Datasets are publicly available via the UCI repository. The paper reports key settings (p = 2, 1000 shots, ADAM optimizer, SVM with 5-fold CV) but does not specify the quantum simulator name, random seeds, exact optimizer hyperparameters (learning rate, betas), initial parameter values, or provide code. No code or experiment scripts are referenced. Reproduction would require reimplementing the QUBO/Hamiltonian mapping and polynomial fits using the reported orders and the reported optimizer/shot settings.",
+  "key_findings": [
+    "[supported] The authors propose and implement a QAOA-based MRMR feature selection algorithm that maps MRMR to a QUBO and encodes it as an Ising Hamiltonian.",
+    "[supported] A polynomial curve‑fitting approach (second/third order) was used to approximate the 1/S and 1/S^2 terms to avoid division-by-zero when encoding the MRMR loss into a Hamiltonian; the fits show low MSE and high R^2 on the tested datasets.",
+    "[supported] The implementation uses a shallow QAOA circuit (p = 2), ADAM optimizer, 1000 sampling shots, and reported convergence in 150–800 iterations across datasets.",
+    "[supported] In simulation on eight UCI datasets, QAOA-based MRMR often selects feature subsets that are typically less than half the full feature set while yielding comparable or better SVM classification accuracy than classical MRMR.",
+    "[supported] Example dataset result: for the Cervical Cancer Behavior Risk dataset, QAOA-based MRMR selected an optimal subset of size 5 with accuracy 0.944444, while classical MRMR's reported optimal subset size was 11 with accuracy 0.929739.",
+    "[supported] The authors report that QAOA has a higher probability (in simulation) than random selection to return smaller feature subsets and tends to favor smaller subsets.",
+    "[supported] The paper provides per-dataset classifier results (accuracies) and reports that in many cases QAOA-based MRMR attains equal or higher maximum accuracy than MRMR (examples: Breast Cancer max 0.969893, Cervical Cancer QMRMR max 0.944444).",
+    "[speculative] The authors suggest that shallow-depth QAOA circuits make the approach practical for near-term NISQ devices, but experiments were only simulated and no hardware runs are reported.",
+    "[speculative] The paper frames QAOA search as able to find approximate global solutions improving over MRMR’s susceptibility to local optima; this is supported by simulation on the chosen datasets but not proven generally.",
+    "[supported] The authors report specific polynomial curve-fit metrics (MSE near zero and R^2 > 0.8 across datasets) indicating the fitting minimally perturbs the encoded loss landscape."
+  ],
+  "results_summary": "The paper introduces a hybrid quantum-classical feature selection method that encodes MRMR as a QUBO/Ising Hamiltonian and uses QAOA (p=2) to search for good feature subsets. In noiseless simulation on eight UCI datasets, the QAOA-based MRMR method often selects substantially smaller feature subsets (typically ≤ half of the full set) and attains comparable or improved SVM classification accuracies relative to classical MRMR. The authors address a practical encoding issue (division-by-zero) using polynomial fitting with low MSE/high R^2 and report that the algorithm converges in 150–800 optimizer iterations with 1000 sampling shots.",
+  "performance_claims": [
+    "QAOA circuit depth used: p = 2 (shallow circuit).",
+    "Sampling shots per QAOA run: 1000.",
+    "Optimizer: ADAM; reported convergence range: ~150–800 iterations across datasets.",
+    "Cervical Cancer Behavior Risk dataset: QAOA-based MRMR optimal subset size 5 with accuracy 0.944444 vs MRMR optimal size 11 with accuracy 0.929739.",
+    "Australian Credit Approval dataset: QAOA-based MRMR reported max accuracy 0.8579452 vs MRMR max 0.854970.",
+    "Breast Cancer (Wisconsin) dataset: reported max accuracy 0.969893 (both methods equal in this case).",
+    "Polynomial fitting metrics (examples): MSE values as low as 1.708e-6 (South German Credit) and R^2 values generally > 0.8 (e.g., Breast Cancer R^2 = 0.9528, Glioma R^2 = 0.9845)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper reports simulation evidence that QAOA-based MRMR can find smaller feature subsets with comparable or improved classification accuracy relative to classical MRMR; however, the experiments are simulated (no hardware demonstrations) and no formal proof of quantum speedup or advantage is provided, so any claimed practical advantage on real quantum hardware remains speculative.",
+  "limitations": [
+    "Experiments were performed on a simulated quantum computer rather than real quantum hardware (author-stated).",
+    "The method was implemented with a shallow QAOA circuit (p = 2); increasing layers on noisy hardware may not improve accuracy due to gate errors and fidelity limits (author-stated).",
+    "Encoding the MRMR cost required polynomial curve-fitting to avoid division-by-zero terms; this introduces an approximation to the original objective (author-stated).",
+    "Results are reported for relatively small datasets/features (feature counts in experiments range from 9 to 23), so scalability to much larger feature spaces is not demonstrated [inferred].",
+    "[inferred] The approach requires one qubit per feature (Ising/QUBO mapping), implying potentially large qubit requirements for high-dimensional problems.",
+    "[inferred] The robustness of the algorithm to realistic device noise and gate errors is unknown because the tests were simulated and not run on NISQ hardware.",
+    "[inferred] The polynomial fitting approach depends on the chosen polynomial order and fitting quality; suboptimal fits could bias the Hamiltonian and hence the ground-state search.",
+    "[inferred] The study compares only against classical MRMR; comparative performance versus other classical or hybrid feature-selection methods is not evaluated.",
+    "[inferred] The probability results and classifier improvements are empirical; no theoretical guarantees on finding global optima or bounds on approximation quality are provided.",
+    "[inferred] Use of a particular classical optimizer (ADAM) and fixed sampling (1000 shots) may affect results; sensitivity to optimizer choice and sampling budget was not explored."
+  ],
+  "open_questions": [
+    "How will the QAOA-based MRMR method perform on real quantum hardware (NISQ devices) with realistic noise and limited gate fidelity?",
+    "How does the performance and resource requirement scale as the number of features increases to higher dimensional datasets?",
+    "What is the impact of increasing QAOA depth p on solution quality in practice, given the trade-off with noise/gate errors?",
+    "How sensitive are results to the choice of polynomial degree and fitting method used to approximate 1/S and 1/S^2 in the Hamiltonian?",
+    "Can the QAOA-based approach provide provable advantages (e.g., approximation guarantees or runtime benefits) over classical global optimization for feature selection?",
+    "How does QAOA-based MRMR compare against a broader set of classical and hybrid feature-selection algorithms beyond MRMR (e.g., recursive feature elimination, LASSO, evolutionary methods)?",
+    "What is the effect of different classical optimizers, sampling shot budgets, and initialization strategies on convergence and solution quality?",
+    "Does the apparent bias of QAOA toward selecting smaller feature subsets generalize across domains, and could that bias lead to omission of useful features in some problems?",
+    "What are the memory, qubit connectivity, and gate decomposition requirements when mapping real-world QUBO instances of feature selection onto specific quantum hardware architectures?"
+  ],
+  "future_work": [
+    "Implement and evaluate the QAOA-based MRMR algorithm on real quantum hardware (planned/forthcoming manuscript mentioned).",
+    "Extend the application of QAOA to other classical feature selection algorithms (explicitly stated)."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance",
+    "credit-lending"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — QAOA-formulated MRMR (encoded as a QUBO/Ising Hamiltonian) empirically selects smaller feature subsets while achieving comparable or improved SVM classification accuracy versus classical MRMR on eight UCI datasets (results from simulated QAOA, reported accuracies, and fit statistics).",
+    "#idea:near-term-feasibility — Uses a shallow p = 2 QAOA circuit and problem sizes of 9–23 qubits, suggesting potential applicability on NISQ-era devices for small-to-moderate feature-selection problems.",
+    "#idea:hybrid-approach — Hybrid pipeline: classical computation of mutual-information MRMR terms, polynomial approximation for problematic 1/S denominators, variational QAOA parameter optimization with ADAM, and classical SVM evaluation of sampled subsets.",
+    "#limitation:qubit-count — Experiments are limited to small bitwidths (number of qubits = number of features, max 23), restricting demonstrated applicability to modest feature sizes and not showing scalability to high-dimensional feature sets.",
+    "#limitation:simulation-only — All quantum experiments were run on an unspecified simulator (no real QPU results), so hardware noise and device constraints are not evaluated.",
+    "#limitation:data-encoding — The need to approximate 1/S and 1/S^2 via polynomial least-squares (2nd/3rd order) to encode MRMR into a Hamiltonian highlights encoding/representation workarounds that may affect fidelity and generality."
+  ],
+  "contradictions": []
+}

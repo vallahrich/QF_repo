@@ -1,0 +1,195 @@
+{
+  "source_type": "peer-reviewed-theoretical",
+  "source_type_confidence": "medium",
+  "reasoning": "The document is an article published in the MDPI journal Risks with received/accepted/published dates and DOI, indicating peer review. It develops a novel quantum algorithm (theoretical/methodological contribution) with simulation experiments for validation rather than primary empirical field data, so it best fits a peer-reviewed theoretical research article.",
+  "title": "A Quantum Algorithm for Pricing Asian Options on Valuation Trees",
+  "authors": [
+    "Mark-Oliver Wolf",
+    "Roman Horsky",
+    "Jonas Koppe"
+  ],
+  "year": "2022",
+  "journal_or_venue": "Risks",
+  "doi": "10.3390/risks10120221",
+  "abstract_summary": "The paper presents a novel quantum algorithm to approximate the price of discrete floating-strike Asian options using a valuation-tree representation of the underlying. Paths are encoded into a qubit register with amplitudes set by state preparation to reflect path probabilities, and the payoff and an indicator for positive payoff are implemented via amplitude-based arithmetic and a gearbox-style unit step approximation. The construction is compatible with quantum amplitude estimation, potentially providing a quadratic speed-up over classical Monte Carlo methods while reducing circuit size by allowing different discretizations across time steps.",
+  "methodology_description": "The paper develops a quantum-circuit-based algorithm to approximate the fair price of a discrete floating-strike Asian option using a valuation tree approximation of the underlying. Methodologically, the authors (1) discretize the underlying in time and value to obtain a scenario/valuation tree; (2) map each possible path through the tree to computational-basis states of an N-qubit state register (N = ceil(log2(product of per-time-node counts)); in the binomial example they use one qubit per time step); (3) load path probabilities into amplitudes via a quantum state-preparation operator P (or by simple Hadamard preparation when probabilities are equal); (4) encode scaled asset values Sk_norm(ti) in amplitudes using uniformly-controlled RY rotations (Möttönen-style construction) and build operators Gti/GM/G that produce amplitudes encoding the mean and terminal value information; (5) implement the positive-part (indicator) function q(x) using an amplitude-based gearbox circuit GbD that approximates a unit step via a Fourier-series-based series of RY rotations (parameterized by approximation level D and number of Fourier terms n_f); (6) combine amplitudes (addition/subtraction) and multi-controlled gates (Toffoli/multi-control X) to form a final target qubit whose measurement probability is proportional (after known rescaling) to the expected payoff; (7) the final circuit Z is compatible with Quantum Amplitude Estimation (AE) in principle, though AE was not executed in their simulations due to circuit-depth constraints; (8) to reduce depth and gate-count they split computations into subcircuits (e.g., separate circuits for g+ and g- and for Fourier terms) and recombine classically. The algorithm is validated on a simulated Rendleman–Bartter binomial model (risk-neutral up/down p=1/2) with classical precomputation of node values and scaling to [0,1], and results are obtained by executing the constructed circuits on the Qiskit simulator with large numbers of measurement shots to estimate output probabilities and compare to classical binomial pricing.",
+  "algorithms_used": [
+    "Quantum state preparation (amplitude loading operator P)",
+    "Uniformly-controlled rotations (Möttönen et al. style) for loading values",
+    "Amplitude arithmetic (addition/subtraction via controlled rotations)",
+    "Gearbox / amplitude-based unit-step approximation (GbD) implemented via Fourier-series of RY rotations",
+    "Quantum Amplitude Estimation (AE) (algorithm is made compatible with AE; not executed in simulations)"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Simulations were executed on the Qiskit simulator (no physical QPU). Classical preprocessing computed the valuation tree node values and normalized them (Sk_norm := Sk / M with M = max Sk). For the binomial example, parameters used: T=1, S(0)=1, r=0, sigma=0.2, time-steps n (example n=5), u and d per standard binomial formulas. State-register mapping used one qubit per time step (n qubits). The gearbox approximation uses approximation level D and number of Fourier terms n_f; circuits were split into subcircuits per Fourier term and for g+ / g-. Per-path circuit evaluations used 1e7 shots; full-superposition pricing runs used 1e6 shots per circuit execution; ensembles of 100 independent circuit runs were collected for histograms.",
+  "dataset_used": "Synthetic/analytical valuation tree data generated from a Rendleman–Bartter (equal-probability binomial) model. No external financial dataset was used; node values for S(t_i) were computed classically from model parameters (T, n, sigma, r, S0).",
+  "experiment_input": {
+    "source": "Classically generated Rendleman–Bartter binomial model (authors' implementation)",
+    "size": "For n=5 time steps the tree yields 2^5 = 32 paths; generally number of paths = product_i Ni (binomial Ni=2).",
+    "preprocessing": "Classical computation of all node values Sk(ti); scaling/normalization to [0,1] via M = max_k,i Sk(ti) and Sk_norm = Sk / M; encoding of normalized values into RY rotation angles (and into gearbox input angles) and mapping of each path to a computational basis index. For equal-probability binomial, they used Hadamard preparation instead of a dedicated P operator."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Classical: compute valuation tree node values Sk(ti) and probabilities (Rendleman–Bartter binomial parameters: T=1, S0=1, r=0, sigma=0.2, n time steps).",
+      "Normalize node values by M = max Sk(ti) to obtain Sk_norm in [0,1].",
+      "Map each path to a computational basis state of an N-qubit state register (for binomial example, one qubit per time step).",
+      "Prepare path-probability amplitudes: use Hadamard for equal p=1/2 or a state-preparation operator P for general probabilities.",
+      "Construct uniformly-controlled rotations Gti to load Sk_norm(ti) amplitudes; combine into GM/G to encode average/terminal info on target qubits.",
+      "Construct gearbox circuit GbD approximating unit-step (positive part) by summing RY rotation angles derived from the normalized values; use Fourier-series truncation with n_f terms and approximation level D for GbD.",
+      "Combine g(x), q(x) and any auxiliary amplitude V(x) via amplitude-addition/subtraction and multi-controlled gates (Toffoli/multi-control X) to obtain final measurement qubit whose measurement probability encodes the scaled expected payoff.",
+      "Split circuit into subcircuits per Fourier term and for g+ / g- to reduce depth; execute each subcircuit on the Qiskit simulator.",
+      "Aggregate measured probabilities, rescale according to analytic factors (e.g., factors coming from amplitude arithmetic and normalization by M and gearbox scaling) to produce estimated option price; repeat runs to build histograms and compute bias/errors versus classical binomial price."
+    ],
+    "parameters_and_variations": {
+      "n_time_steps": "[examples: n=5 reported]",
+      "approximation_level_D": "[tested D = 1, 2]",
+      "fourier_terms_n_f": "[tested n_f values e.g. 4, 5, 8]",
+      "shots_per_run": "[per-path evaluation: 1e7 shots; full-superposition pricing runs: 1e6 shots]",
+      "ensemble_runs": "100 independent circuit results (histogram bins)",
+      "circuit_splitting": "subcircuits per Fourier term and for g+ / g-"
+    },
+    "iterations": "Not iterative optimization; multiple independent circuit executions (shots) were performed to estimate probabilities. No classical optimizer reported."
+  },
+  "experiment_output": {
+    "output_format": "Estimated measurement probability for final qubit (P(|1>_z)) which is rescaled to produce an estimator of the expected payoff / option price.",
+    "metrics_reported": "Histograms of repeated estimator values, ensemble mean, bias relative to exact classical binomial-tree price, absolute error per-path vs analytic payoff, gate counts (cX gate counts) and circuit widths (number of qubits) for configurations.",
+    "baselines": "Exact classical binomial-tree price computed analytically for comparison.",
+    "other_outputs": "Tables of cX-gate counts and circuit width for varying n and parameterizations; visual error comparisons of gearbox approximations per path."
+  },
+  "experiment_parameters": {
+    "qubits_used": {
+      "general": "N = ceil(log2(prod_i Ni)), ancillary qubits for arithmetic and gearbox; for binomial example using one qubit per time step: N = n",
+      "example_n5": 5
+    },
+    "approximation_level_D": [
+      1,
+      2
+    ],
+    "fourier_terms_n_f": [
+      4,
+      5,
+      8
+    ],
+    "shots": {
+      "per_path": 10000000,
+      "full_superposition": 1000000
+    },
+    "ensemble_runs": 100,
+    "cX_gate_counts": {
+      "reported_examples": {
+        "n=5_D=1_n_f=4_subcircuit_cX": 473,
+        "n=5_D=2_n_f=5_subcircuit_cX": 663,
+        "n=5_D=2_n_f=8_subcircuit_cX": 663
+      }
+    },
+    "circuit_widths": {
+      "n=5_D=1": 18,
+      "n=5_D=2": 22
+    },
+    "other_notes": "Amplitude estimation (AE) compatible but not run due to circuit depth restrictions; circuits were split into multiple subcircuits to lower per-circuit cX counts."
+  },
+  "hardware_details": {
+    "simulator": "Qiskit simulator (Qiskit reference cited: Sajid et al. 2021)",
+    "qpu_model": null,
+    "cloud_provider": null,
+    "notes": "All experiments executed on a simulator; no physical quantum hardware was used."
+  },
+  "reproducibility_notes": "Authors state: 'The Python code used for data generation is available upon request.' No public repository or direct code link is provided in the paper. Classical model parameters and circuit construction details (P, Gti/GM/G, GbD gearbox design, D and n_f values, shot counts, and cX/gate counts) are described in the text and tables enabling reproduction if code or implementation expertise is available.",
+  "key_findings": [
+    "[speculative] The authors develop a novel quantum algorithm to price discrete floating-strike Asian options using valuation trees by encoding entire paths into a qubit state register and loading path probabilities via quantum state preparation.",
+    "[speculative] The algorithm composes the option expectation from three components—path probabilities f(xk), scaled payoff g(xk), and an indicator q(xk)—implemented as separate quantum subroutines and recombined into amplitudes of an output qubit.",
+    "[supported] The authors implemented and simulated the algorithm (Qiskit simulator) on a binomial model with n=5 time steps, demonstrating the approach on a small example and reporting numerical results.",
+    "[supported] Encoding the underlying as probabilities (amplitude encoding) rather than bitwise values allows different discretizations per time step and can reduce required qubits per time step in the illustrated example.",
+    "[speculative] The positive-part (indicator) function is implemented via an amplitude-based unit-step-like construction (gearbox/Fourier approximation) that maps RY rotation angles to a qubit probability approximating 0/1 for the sign test.",
+    "[supported] The authors split the global circuit into subcircuits (e.g., per Fourier term and g+/g−) to reduce circuit depth and to avoid some arithmetic scaling factors, and provide resource counts for these subcircuits.",
+    "[supported] Simulation experiments explored approximation level D (gearbox depth) and number of Fourier terms n_f, showing trade-offs: higher D reduces bias near zero but requires more Fourier terms (higher circuit complexity).",
+    "[supported] The paper provides explicit resource estimates (cX-gate counts and total qubit widths) for various n (2..6) and parameter settings (D and n_f), demonstrating linear/quasi-exponential cost drivers for uniformly controlled rotations.",
+    "[speculative] The proposed circuit is in principle compatible with quantum amplitude estimation (AE), which would yield a theoretical quadratic speed-up over classical Monte Carlo (O(1/Ns) vs O(1/sqrt(Ns))).",
+    "[supported] In practice the authors did not run AE due to circuit depth restrictions of their simulator/hardware constraints; amplitude estimation was not demonstrated experimentally in this work.",
+    "[speculative] The method is generalizable to other path-dependent derivative pricing problems (e.g., cliquet options) and could reduce qubit requirements relative to fully bit-based encodings.",
+    "[supported] Each module of the algorithm (state preparation/probability loading; payoff arithmetic; positive-part indicator) can be executed individually on existing hardware or simulators, while the full end-to-end circuit is currently too deep for noisy devices.",
+    "[speculative] Using amplitude-based arithmetics and an amplitude-based unit step may lead to smaller quantum circuits compared to bit-encoding approaches for some valuation-tree-based derivatives."
+  ],
+  "results_summary": "The paper proposes a new quantum circuit method to price discrete floating-strike Asian options on valuation trees by amplitude-encoding complete asset paths and implementing payoff and sign-test operations as amplitude-manipulating subcircuits. The authors implemented the approach on a Qiskit simulator for a 5-step binomial model, investigated gearbox approximation depth D and Fourier term count n_f for the indicator function, and reported resulting biases and trade-offs. They present resource estimates (cX-gate counts and qubit widths) for different parameter settings and show that splitting into subcircuits can reduce depth. While the circuit is theoretically compatible with amplitude estimation (which would yield quadratic convergence vs classical Monte Carlo), amplitude estimation was not executed due to circuit depth limitations; the full end-to-end algorithm remains beyond current NISQ hardware but individual modules are runnable.",
+  "performance_claims": [
+    "Simulation experiments: single-path circuit results used 1e7 shots (Figure tests); full pricing algorithm histograms used 1e6 shots per experimental result, 100 repetitions (so histogram aggregate corresponds to 1e8 shots for means).",
+    "Amplitude estimation theoretical convergence: O(1/Ns) compared to classical Monte Carlo O(1/√Ns) (cited from AE literature).",
+    "Resource estimates (representative for n=5): parameter set (a) D=1, n_f=4 -> cX = 473, circuit width = 18 qubits; (b) D=2, n_f=5 -> cX = 663, width = 22 qubits; (c) D=2, n_f=8 -> cX = 663, width = 22 qubits. (Detailed Table 1 provides cX and widths for n=2..6.)",
+    "Uniformly controlled rotations dominate gate counts and require O(2^n) cX operations (cited/used in their resource analysis).",
+    "Authors note current NISQ hardware can reliably run circuits with up to roughly 30 cX two-qubit gates (stated as a practical limit in discussion)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper argues the algorithm is compatible with quantum amplitude estimation, which theoretically yields a quadratic speed-up (O(1/Ns) vs O(1/sqrt(Ns))). However, this speed-up is not demonstrated experimentally: amplitude estimation was not executed due to circuit depth/hardware limitations, and the full end-to-end algorithm was only simulated for small instances. Thus the claimed advantage is theoretical/speculative rather than empirically demonstrated.",
+  "limitations": [
+    "Evaluations performed on a quantum simulator only; not demonstrated on real quantum hardware (author-stated).",
+    "Cannot employ amplitude estimation (AE) in the presented simulations due to circuit depth restrictions of the simulator (author-stated).",
+    "Construction of the probability-loading operator P (quantum state preparation) for arbitrary distributions requires an exponential number of gates in general; the paper assumes an appropriate P is available (author-stated).",
+    "Approximation of the positive-part indicator uses a gearbox/Fourier approximation that introduces bias and requires tuning (approximation level D and number of Fourier terms n_f); trade-offs between approximation error and circuit complexity are observed (author-stated).",
+    "Circuit depth and two-qubit (cX) gate counts are high for nontrivial instances; uniformly controlled rotations dominate resource counts and may exceed current NISQ device capabilities (author-stated).",
+    "The method relies on precomputing and classically supplying the valuation-tree node values S(ti) and transition probabilities (author-stated).",
+    "Simplifying modelling assumptions used in experiments (zero interest rate, assumed risk-neutral measure Q = P for clarity) reduce realism of demonstrated experiments (author-stated).",
+    "Assumes valuation tree structure where every node in a previous level is connected to every node in the next level (author-stated assumption that limits class of trees directly handled).",
+    "[inferred] Scalability to large, high-dimensional trees or long time horizons is uncertain due to state-preparation and gate-count growth.",
+    "[inferred] Noise sensitivity and error accumulation on real hardware are not evaluated; the algorithm's robustness under realistic noise is unknown.",
+    "[inferred] Splitting into many subcircuits to reduce depth increases overall number of circuit executions and classical post-processing, potentially reducing practical speed-up.",
+    "[inferred] Choice of mapping from tree paths to qubit registers (discretization strategy) affects resources and accuracy and is nontrivial for general trees."
+  ],
+  "open_questions": [
+    "How can efficient, scalable quantum state-preparation operators P be constructed for general valuation trees and path distributions?",
+    "What are the practical resource and noise thresholds (qubits, gate fidelity, circuit depth) required on real hardware to realize quantum amplitude estimation and a genuine quadratic speed-up for this algorithm?",
+    "How to optimally choose gearbox approximation level D and Fourier-series term count n_f to balance bias, variance, and circuit complexity for given problem instances?",
+    "Can the algorithm be made robust to realistic noise (NISQ-era devices), and what error-mitigation or circuit-optimization techniques are most effective?",
+    "How does the algorithm generalize and perform on more complex underlying dynamics (e.g., stochastic volatility models), multidimensional/multi-asset trees, or non-fully-connected scenario trees?",
+    "What are the best mappings/discretizations of valuation trees to qubit registers to minimize qubit count and gate depth while controlling discretization error?",
+    "How to combine the amplitude-based positive-part implementation with bit-based encodings or other established quantum finance algorithms to reduce depth/qubit requirements?",
+    "What is the end-to-end trade-off (including classical pre- and post-processing and possible circuit splitting) for total runtime compared with classical Monte Carlo in realistic settings?"
+  ],
+  "future_work": [
+    "Apply the approach to different types of path-dependent options, in particular cliquet options (explicitly mentioned).",
+    "Explore and develop alternative quantum circuits to more optimally implement the various functions (probability loading, payoff arithmetic, indicator) to reduce depth and gate counts (explicitly mentioned).",
+    "Combine the amplitude-based positive-part implementation with established quantum algorithms that use bit-based encoding to reduce circuit depth and qubit requirements (explicitly mentioned).",
+    "Generalize the method to other derivative-pricing algorithms and valuation-tree constructions to reduce discretization errors (explicitly suggested).",
+    "Investigate splitting the circuit into subcircuits and recombining results to reduce single-circuit depth while quantifying the impact on total runtime and accuracy (discussed in the paper).",
+    "Perform resource estimation and noise-resilience studies to determine the practical requirements for achieving quantum advantage (implied by discussion of hardware limits).",
+    "Demonstrate the full algorithm (including amplitude estimation) on real or larger-scale quantum hardware when resources permit (implied by simulation-only current results)."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — The proposed circuit construction is compatible with Quantum Amplitude Estimation and in principle offers a quadratic speed-up over classical Monte Carlo for pricing discrete floating-strike Asian options.",
+    "#idea:hybrid-approach — Practical pipeline uses substantial classical preprocessing (valuation-tree computation, normalization) and classical recombination of subcircuit results; circuits are split into Fourier-term and g+/g- subcircuits to reduce depth and recombined classically.",
+    "#idea:near-term-feasibility — Authors demonstrate the algorithm on a Qiskit simulator for small binomial trees (e.g., n=5) but do not execute AE on hardware due to circuit-depth constraints, indicating limited NISQ feasibility without further advances or algorithmic compression.",
+    "#idea:quantum-advantage — The paper provides numerical simulation results (bias/errors versus classical binomial price) validating the circuit construction on small instances, but these do not demonstrate end-to-end speedup because amplitude estimation was not executed."
+  ],
+  "contradictions": [
+    "The paper claims a potential quadratic speed-up via amplitude estimation but its own results highlight circuit-depth, data-encoding and qubit-scaling costs that prevent executing AE and scaling to realistic option sizes; thus practical scalability is contradicted by the demonstrated simulation constraints (contradiction:scalability)."
+  ],
+  "synthesis_tags_applied": [
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:data-encoding",
+    "limitation:simulation-only"
+  ]
+}

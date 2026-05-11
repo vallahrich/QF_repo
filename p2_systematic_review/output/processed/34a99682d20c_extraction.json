@@ -1,0 +1,246 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "The document is a journal article (The Journal of Supercomputing) with DOI and acceptance date, contains an abstract, methods, experiments on multiple datasets, results, metrics, and extensive citations—indicating a peer-reviewed empirical study.",
+  "title": "QEKLR: quantum‑enhanced kernel logistic regression for classification",
+  "authors": [
+    "Shreshtha Misra",
+    "Poonam Rani"
+  ],
+  "year": "2025",
+  "journal_or_venue": "The Journal of Supercomputing",
+  "doi": "10.1007/s11227-025-07266-y",
+  "abstract_summary": "The paper proposes QEKLR, a hybrid quantum–classical classifier that encodes classical data with a shallow ZZFeatureMap, builds a fidelity-based quantum kernel, and uses that kernel within a classical logistic regression model to improve classification. The method is NISQ-compatible (≤4 qubits, shallow circuits) and avoids variational barren-plateau issues; experiments on synthetic, Iris, Statlog Heart Disease and Ecoli datasets show strong performance (notably 94.87% accuracy and AUC ~0.98 on Statlog HD), while highlighting scalability and kernel-concentration challenges for larger datasets.",
+  "methodology_description": "This empirical study proposes QEKLR, a hybrid quantum–classical classification pipeline. Classical datasets are preprocessed via outlier removal using the interquartile range (IQR), dimensionality reduction with PCA (when applicable), and MinMax scaling (scaled to [-1,1]). For multiclass data a binary subset of classes was selected. Preprocessed classical feature vectors (k features, with k <= 4 for quantum encoding) are encoded into quantum states using a shallow ZZFeatureMap (configurable entanglement, full entanglement used; repetitions <= 2). A fidelity-based quantum kernel is computed as the squared inner product of encoded quantum states to produce a kernel matrix (diagonal elements = 1). That kernel matrix is used in a kernelized logistic regression (kernel logistic regression): the decision function is z_i = beta_0 + sum_j beta_j K(x_i, x_j) and probabilities are obtained via the logistic sigmoid. Model parameters are optimized by classical gradient descent minimizing cross-entropy. The approach is compared against classical baselines (RF, LR, CART, KLR) and other QML methods (VQC, QSVC). Evaluation metrics include accuracy, precision, sensitivity/recall, specificity, F1, Matthews correlation coefficient (MCC) and AUC-ROC. Experiments were implemented in Qiskit (software versions reported) and run on simulators (no physical QPU specified).",
+  "algorithms_used": [
+    "QEKLR (quantum-enhanced kernel logistic regression)",
+    "ZZFeatureMap (quantum feature map)",
+    "Fidelity quantum kernel",
+    "Kernel Logistic Regression",
+    "Variational Quantum Classifier (VQC) [baseline]",
+    "Quantum Support Vector Classifier (QSVC) [baseline]",
+    "Random Forest (RF) [baseline]",
+    "Logistic Regression (LR) [baseline]",
+    "Classification and Regression Trees (CART) [baseline]",
+    "Kernel Logistic Regression (KLR) [baseline]",
+    "PCA (Principal Component Analysis)",
+    "IQR outlier removal",
+    "MinMax scaling"
+  ],
+  "frameworks": [
+    "Qiskit 1.0 SDK",
+    "Qiskit Machine Learning 0.7.2",
+    "Qiskit Algorithms 0.3.0",
+    "Python 3.9"
+  ],
+  "experimental_setup": "Experiments were implemented using Qiskit (versions: Qiskit 1.0 SDK, Qiskit Machine Learning 0.7.2, Qiskit Algorithms 0.3.0) on Python 3.9. Quantum circuits relied on a shallow ZZFeatureMap (full entanglement) with up to 4 qubits and up to 2 repetitions; kernels were estimated via fidelity. No physical quantum hardware was reported; experiments were executed on Qiskit simulators/backends (not further specified).",
+  "dataset_used": "",
+  "experiment_input": {
+    "datasets": [
+      {
+        "name": "Synthetic",
+        "source": "authors' generated dataset (GitHub: https://github.com/shreshthamisra03/SytheticData_2_features)",
+        "size": 40,
+        "features": 2,
+        "notes": "No missing values or outliers initially."
+      },
+      {
+        "name": "Iris (binary subset)",
+        "source": "UCI Machine Learning Repository (https://archive.ics.uci.edu/dataset/53/iris)",
+        "size": 100,
+        "features": 4,
+        "notes": "Binary classification using Iris Setosa (0) and Iris Versicolor (1); no missing values/outliers."
+      },
+      {
+        "name": "Statlog Heart Disease (Statlog HD)",
+        "source": "UCI Machine Learning Repository (https://archive.ics.uci.edu/dataset/145/statlog+heart)",
+        "original_size": 270,
+        "post_IQR_size": 192,
+        "features": 13,
+        "notes": "Binary classification for presence/absence of heart disease."
+      },
+      {
+        "name": "Ecoli",
+        "source": "UCI Machine Learning Repository (https://archive.ics.uci.edu/dataset/39/ecoli)",
+        "original_size": 336,
+        "post_IQR_size": 306,
+        "features": 7,
+        "notes": "Originally 8-class dataset; experiments converted to binary subsets as needed; reported experiment used 3 features in one run."
+      }
+    ],
+    "preprocessing": [
+      "Outlier detection/removal using IQR (values outside Q1-1.5*IQR and Q3+1.5*IQR removed)",
+      "Dimensionality reduction using PCA (applied when dataset had > required features)",
+      "Normalization using MinMaxScaler to range [-1,1]",
+      "For multiclass datasets, binary selection of two classes (strategy: arbitrary if balanced, based on distribution if imbalanced)",
+      "Train/test split: 80/20"
+    ]
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "1) Preprocess classical data: IQR outlier removal, PCA, MinMax scaling to [-1,1]; select two classes for binary experiments.",
+      "2) Encode preprocessed classical feature vectors into quantum states using ZZFeatureMap with full entanglement. Encoding used k qubits where k equals the number of features (k <= 4); repetitions <= 2.",
+      "3) Compute fidelity quantum kernel matrix K where K(i,j) = |<phi(x_j)|phi(x_i)>|^2 (implementation via quantum circuit evaluation of U†(x_j) U(x_i) and measuring probability of |0...0> state).",
+      "4) Train kernelized logistic regression: decision z_i = beta_0 + sum_j beta_j K(x_i, x_j); apply sigmoid to obtain probabilities.",
+      "5) Optimize parameters (beta) via classical gradient descent minimizing cross-entropy loss until convergence (learning rate and number of iterations not specified).",
+      "6) For test instances compute K_test relative to training set, compute z_i and predict labels using logistic function and threshold.",
+      "7) Evaluate predictions using accuracy, precision, sensitivity/recall, specificity, F1, MCC, and AUC-ROC. Compare against baselines (RF, LR, CART, KLR, VQC, QSVC)."
+    ],
+    "notes": "Exact optimizer hyperparameters (learning rate, number of epochs/iterations), measurement shots, random seeds, and simulator backend type (statevector vs qasm) are not specified in the paper."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Accuracy",
+      "Precision",
+      "Sensitivity (Recall)",
+      "Specificity",
+      "F1 score",
+      "Matthews Correlation Coefficient (MCC)",
+      "AUC-ROC"
+    ],
+    "key_results_summary": {
+      "Synthetic (2 features)": {
+        "QEKLR_accuracy": "100%",
+        "comparative": "Matches best classical and other quantum baselines (RF, LR, CART, KLR, QSVC)."
+      },
+      "Iris (2-class subset, 4 features)": {
+        "QEKLR_accuracy": "100%",
+        "comparative": "Matches or exceeds prior QML methods reported in literature."
+      },
+      "Statlog Heart Disease": {
+        "QEKLR_proposed_1 (2 features)_accuracy": "92.31%",
+        "QEKLR_proposed_2 (4 features)_accuracy": "94.87%",
+        "QEKLR_proposed_2_MCC": 0.88,
+        "QEKLR_AUC_ROC": "0.98 (Proposed 2)",
+        "comparative": "Outperforms classical baselines (e.g., RF, SVM) and recent methods (e.g., GAPSO-RF at 91.40%)."
+      },
+      "Ecoli (multi-class reduced to binary/3-feature run)": {
+        "QEKLR_accuracy": "70.97%",
+        "comparative": "Comparable to Random Forest (70.97%) and better than LR/CART in reported run; overall performance dataset-dependent."
+      }
+    },
+    "baselines_compared": [
+      "Random Forest (RF)",
+      "Logistic Regression (LR)",
+      "CART",
+      "Kernel Logistic Regression (KLR)",
+      "Variational Quantum Classifier (VQC)",
+      "Quantum Support Vector Classifier (QSVC)",
+      "Recent published methods (e.g., GAPSO-RF, QVK-SVM, Quantum Discriminator, ECRCNN) for cross-study comparison"
+    ],
+    "output_format": "Tabular performance metrics, confusion matrices, kernel fidelity matrices, KDE plots, ROC curves."
+  },
+  "experiment_parameters": {
+    "qubits": "<=4 (feature map dimension equals number of features encoded; limited to 4 qubits)",
+    "feature_map": "ZZFeatureMap",
+    "feature_map_repetitions": "<=2",
+    "entanglement": "full entanglement used (configurable patterns available: Linear, Circular, Full)",
+    "kernel_type": "Fidelity quantum kernel (|<phi(xj)|phi(xi)>|^2)",
+    "train_test_split": "80/20",
+    "preprocessing": "IQR outlier removal, PCA (when applicable), MinMax scaling to [-1,1]",
+    "optimizer": "Classical gradient descent (learning rate η referenced symbolically but not numerically specified)",
+    "shots": "Not specified",
+    "random_seed": "Not specified",
+    "software_versions": {
+      "Qiskit": "1.0",
+      "Qiskit Machine Learning": "0.7.2",
+      "Qiskit Algorithms": "0.3.0",
+      "Python": "3.9"
+    }
+  },
+  "hardware_details": {
+    "simulator": "Qiskit SDK simulators (backend not precisely specified: paper reports Qiskit usage but does not state whether statevector or qasm simulator was used)",
+    "qpu_model": null,
+    "cloud_provider": null,
+    "notes": "No physical quantum processor (QPU) or cloud QPU provider was reported."
+  },
+  "reproducibility_notes": "Data availability: dataset sources are publicly listed (synthetic dataset GitHub link provided; Iris, Statlog Heart, and Ecoli from UCI repository). Software stack and versions are specified (Qiskit 1.0, Qiskit Machine Learning 0.7.2, Qiskit Algorithms 0.3.0, Python 3.9). However, the authors do not provide a public code repository for the QEKLR implementation (only synthetic data link is given). Important implementation details that affect reproducibility are missing: exact quantum backend type (statevector vs qasm), number of measurement shots, optimizer hyperparameters (learning rate, number of iterations/epochs, convergence criteria), random seeds for dataset splits, and any circuit transpilation/noise model used. Reproducing exact numeric results will require choices for these unspecified parameters.",
+  "key_findings": [
+    "[supported] The authors propose QEKLR, a hybrid classification method that encodes classical data with a shallow ZZFeatureMap, computes a fidelity-based quantum kernel, and uses that kernel within a classical logistic regression classifier.",
+    "[supported] QEKLR was implemented and evaluated on four datasets (synthetic, Iris, Statlog Heart Disease, Ecoli) using simulations (Qiskit), with train/test splits of 80/20.",
+    "[supported] Empirical results: QEKLR achieved 100% accuracy on the synthetic dataset (2 features) and the selected binary subset of the Iris dataset (4 features).",
+    "[supported] Empirical results: QEKLR achieved 94.87% accuracy, MCC = 0.88, and AUC-ROC = 0.98 on the Statlog Heart Disease dataset using 4 features, outperforming the classical baselines reported by the authors on that experimental setup.",
+    "[supported] Empirical results: QEKLR achieved 92.31% accuracy on Statlog HD using 2 features (alternate configuration) and 71.0% accuracy on the Ecoli dataset (3 features), comparable to classical Random Forest on Ecoli.",
+    "[supported] The fidelity quantum kernel used produces values in [0,1] with diagonal elements equal to 1; visualizations (kernel matrix, KDE) show diagonal dominance and a bulk of pairwise similarities around 0.4–0.6 in their experiments.",
+    "[supported] The implementation used small circuits (≤4 qubits, ≤2 repetitions) and was intended to be NISQ-compatible; experiments were run with Qiskit (simulator).",
+    "[speculative] The authors claim that QEKLR 'avoids the barren plateau issue' because it uses a shallow feature map and no trainable variational circuit.",
+    "[speculative] The authors claim QEKLR improves interpretability relative to deep quantum/PQC models because the final classifier is logistic regression and yields inspectable decision boundaries.",
+    "[supported] The paper acknowledges and reiterates a literature-backed limitation: quantum kernel methods face scalability challenges (kernel concentration/exponential concentration) as dataset size and qubit counts increase.",
+    "[speculative] The authors suggest future directions (hybrid quantum–classical optimization, improved feature maps, quantum transfer learning) to scale quantum kernel techniques to medium/large datasets."
+  ],
+  "results_summary": "The paper introduces QEKLR, a hybrid quantum-classical classifier that encodes classical inputs with a shallow ZZFeatureMap, computes a fidelity-based quantum kernel, and feeds that kernel into classical logistic regression. In Qiskit simulations the method achieved perfect accuracy on small/synthetic benchmarks (synthetic, Iris) and outperformed several classical and quantum baseline models on the Statlog Heart Disease dataset (best reported: 94.87% accuracy, MCC 0.88, AUC-ROC 0.98 using 4 features). On the multiclass Ecoli dataset performance was comparable to classical baselines (~71% accuracy). The authors argue QEKLR is NISQ-friendly (≤4 qubits, shallow circuits) and more interpretable than deep PQC models, while noting known scalability limitations of quantum kernels.",
+  "performance_claims": [
+    "Synthetic dataset (2 features): QEKLR accuracy 100%, precision 100%, sensitivity 100%, specificity 100%, F1 100%, MCC 1.0.",
+    "Iris dataset (binary subset, 4 features): QEKLR accuracy 100%, precision 100%, sensitivity 100%, specificity 100%, F1 100%, MCC 1.0.",
+    "Statlog Heart Disease (2 features, 'Proposed 1'): QEKLR accuracy 92.31%, precision 81.25%, sensitivity 100.0%, specificity 88.46%, F1 89.65%, MCC 0.85.",
+    "Statlog Heart Disease (4 features, 'Proposed 2'): QEKLR accuracy 94.87%, precision 92.31%, sensitivity 92.31%, specificity 96.15%, F1 92.31%, MCC 0.88, AUC-ROC 0.98.",
+    "Ecoli dataset (3 features): QEKLR accuracy 70.97%, precision 72.48%, sensitivity 31.62%, specificity 31.62%, F1 31.16%, MCC 58.14 (as reported).",
+    "Comparative claim: On Statlog HD, QEKLR (94.87% with 4 features) outperformed several recent classical and hybrid methods cited (e.g., GAPSO-RF 91.40%, SVM 87.04%, ECRCNN 85.19%) in the authors' experiments."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper reports empirical classification improvements on certain small/medium datasets (notably Statlog HD) when using a quantum-enhanced kernel with logistic regression, but does not demonstrate provable computational or generalizable quantum advantage; claims about NISQ suitability and mitigation of PQC training issues are presented as design motivations or theoretical benefits rather than rigorously proven advantages across broader benchmarks.",
+  "limitations": [
+    "NISQ hardware constraints limit qubit counts and scalability (authors note QEKLR is designed for ≤4 qubits and shallow depth to remain NISQ-compatible).",
+    "Barren‑plateau problem affects parameterized quantum circuits (PQCs); authors avoid it by using shallow feature‑map-based quantum kernels rather than trainable variational circuits.",
+    "Limited interpretability of many quantum models; QEKLR provides only moderate interpretability by combining quantum kernel with classical logistic regression.",
+    "Kernel stability / exponential concentration for larger datasets: as dataset size and qubit count increase, kernel values may cluster and lose discriminative power (author‑stated).",
+    "Dataset‑dependent performance: QEKLR achieved strong results on some datasets (synthetic, Iris, Statlog HD) but only comparable performance on Ecoli, indicating variable generalization across domains.",
+    "Use of a shallow ZZFeatureMap with small repetitions (repetition ≤ 2) constrains expressive power—practical for NISQ but limiting for more complex problems.",
+    "[inferred] Experiments appear to be performed in simulation (Qiskit) with no reported runs on actual noisy quantum hardware, so hardware noise impact is untested.",
+    "[inferred] Potential overfitting risk given very high accuracies on small/benchmarked datasets and reduced sample sizes after outlier removal.",
+    "[inferred] Multiclass capability is limited in practice: multiclass datasets were converted to binary by selecting two classes, so true multiclass performance is not evaluated.",
+    "[inferred] Computational cost and scalability of computing the fidelity quantum kernel for medium/large datasets is not reported (potentially high for large Ntrain).",
+    "[inferred] Robustness to realistic noise, calibration error, and limited measurement shots on NISQ devices is not addressed.",
+    "[inferred] Limited discussion of hyperparameter tuning and comparative fairness (e.g., whether classical baselines received equivalent tuning effort) is present."
+  ],
+  "open_questions": [
+    "How can quantum kernel techniques be improved to remain effective on medium‑ to large‑scale datasets?",
+    "What methods can mitigate kernel stability issues (exponential concentration) so quantum kernels retain discriminative power as dataset size and dimension grow?",
+    "How should hybrid quantum–classical optimization be designed to scale quantum kernel methods effectively?",
+    "Which feature‑map designs or encodings increase expressivity without inducing barren plateaus or impractical resource demands?",
+    "Can quantum transfer learning (QTL) meaningfully improve adaptability and generalization of quantum kernel classifiers on larger, real‑world datasets?",
+    "How will QEKLR perform on real NISQ hardware under realistic noise models and limited measurement budgets?",
+    "Can the QEKLR approach be extended to and validated on true multiclass problems without reducing to binary tasks?",
+    "What are the computational and resource trade‑offs (time, memory, quantum circuit evaluations) between QEKLR and classical kernel methods for large datasets?",
+    "How can interpretability be further improved for quantum‑enhanced models in sensitive domains such as healthcare?",
+    "What are best practices for preventing overfitting when very high accuracies are observed on small benchmark datasets using quantum kernels?"
+  ],
+  "future_work": [
+    "Improve quantum kernel techniques for medium‑ to large‑scale datasets.",
+    "Incorporate hybrid quantum–classical optimization strategies to enhance scalability and performance.",
+    "Design and evaluate more effective feature maps / encoding strategies to increase adaptability and expressivity.",
+    "Explore quantum transfer learning (QTL) to improve generalization and adaptability of quantum kernel models."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — QEKLR (fidelity quantum kernel + kernel logistic regression) attains strong quantitative performance on small benchmarks (e.g., 94.87% accuracy and AUC ≈ 0.98 on Statlog Heart Disease), outperforming classical baselines in these experiments.",
+    "#idea:hybrid-approach — A practical hybrid pipeline: classical preprocessing (IQR, PCA, MinMax scaling) → shallow ZZFeatureMap encoding (≤4 qubits) → fidelity-based quantum kernel → classical kernel logistic regression trained by gradient descent.",
+    "#idea:near-term-feasibility — Method is explicitly NISQ-oriented (≤4 qubits, shallow circuits, few repetitions) and avoids variational training/barren-plateau issues by using a fidelity kernel rather than deep parameterised circuits.",
+    "#limitation:qubit-count — Encoding limited to k ≤ 4 qubits/features, requiring dimensionality reduction (PCA) for higher-dimensional inputs.",
+    "#limitation:data-encoding — Fidelity kernel approach forces aggressive preprocessing and binary class selection; authors report kernel-concentration and scalability issues as dataset size/dimensionality increase.",
+    "#limitation:no-empirical-validation — All experiments run on Qiskit simulators (no physical QPU reported), so hardware noise and real-device performance remain untested (also simulation-only)."
+  ],
+  "contradictions": [
+    "The paper reports a quantum advantage on standard classification benchmarks but evaluations are limited to small, low-dimensional, simulator-based experiments—this undermines claims of general superiority on large or real-world tasks.",
+    "Authors themselves note kernel-concentration and scalability challenges for larger datasets, which contradicts any implication that the method straightforwardly scales to high-dimensional financial data without substantial preprocessing and feature reduction."
+  ]
+}

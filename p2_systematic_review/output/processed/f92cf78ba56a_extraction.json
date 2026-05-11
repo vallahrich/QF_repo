@@ -1,0 +1,186 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document shows typical preprint cues: posted date and DOI with rs (Research Square) identifier, CC BY license, 'Version of Record' note pointing to a later journal publication, plus structured Abstract/Methods/Results and citations. These indicate an uploaded preprint rather than an original peer-reviewed article or other report.",
+  "title": "A Comparative Analysis of Quantum Computing Variational Quantum Eigensolver Algorithm and Molecular Dynamics Simulations for Peptide Folding",
+  "authors": [
+    "Akshay Uttarkar",
+    "Vidya Niranjan"
+  ],
+  "year": "2023",
+  "journal_or_venue": "Preprint (Research Square); version published in Quantum Information Processing (2024)",
+  "doi": "https://doi.org/10.21203/rs.3.rs-3460426/v1",
+  "abstract_summary": "This preprint compares a quantum computing approach (CVaR-augmented Variational Quantum Eigensolver) to classical molecular dynamics (MD) simulations for folding 50 seven-residue peptides drawn from disorder-promoting amino acids. The authors report that CVaR-VQE on a local quantum simulator yields lower (more favorable) ground-state energies for the majority of peptides compared to 50 ns MD trajectories, and argue that quantum algorithms hold promise for protein-folding problems as hardware and methods mature.",
+  "methodology_description": "The study compares molecular dynamics (MD) simulations and a hybrid quantum-classical Variational Quantum Eigensolver (VQE) workflow (with a Conditional Value at Risk, CVaR, objective) to find low-energy folds for 50 coarse-grained 7-residue peptides. Peptide sequences were sampled at random from permutations of seven disorder-promoting amino acids (D, H, Q, K, S, E, P). For the quantum workflow each peptide fold is encoded into a sparse turn-to-qubit mapping (12 classical bits described, with 7 variable qubits for turns and additional qubits for interactions; nine qubits were used for the full fold model including interaction/helper qubits). An explicit Hamiltonian including nearest-neighbour contact interactions and penalty terms for invalid geometries and chirality was constructed. A parameterized quantum circuit (ansatz) with two layers of RX/RY/RZ rotations and added conditional rotation gates plus CNOTs and Hadamards was used to prepare trial states. The CVaR-VQE objective computes an expectation over the lowest-energy tail (alpha=0.05; 0.025 used for noise-free cases) of measured bitstrings; optimization of variational parameters used surrogateopt (Global Optimization Toolbox) in this work (the original approach used a genetic optimizer). Quantum runs used a high shot count (500,000 shots) per evaluation and 100 optimizer iterations. For MD, each peptide was built as an extended structure in Maestro, prepared with Epik and OPLS3e force field (peptides were not minimized prior to production), solvated in an orthorhombic box with TIP3P water and no extra ions, and subjected to 50 ns Desmond MD runs. Trajectories were sampled every 10 ns (six frames per peptide), frames were minimized, and Lennard-Jones interaction energies and folding RMSDs were analyzed. Results were compared via energy metrics (kcal/mol), counts of peptides reaching negative ΔG, and statistical testing (two-tailed t-test, R^2 reported).",
+  "algorithms_used": [
+    "Variational Quantum Eigensolver (VQE)",
+    "CVaR-VQE (VQE with Conditional Value at Risk objective)",
+    "surrogateopt (Global Optimization Toolbox)",
+    "Genetic optimization (referenced/used in prior work)",
+    "Molecular dynamics (Desmond)"
+  ],
+  "frameworks": [
+    "Amazon Braket (local simulator)",
+    "SV1 state vector simulator (Amazon Braket)",
+    "Schrödinger Maestro (3D builder)",
+    "Epik (Schrödinger)",
+    "Desmond MD engine",
+    "OPLS3e force field"
+  ],
+  "experimental_setup": "Quantum: Amazon Braket local simulator and SV1 state-vector simulator; nine-qubit circuits (7 configuration qubits + 2 interaction/helper qubits); 500,000 shots per energy evaluation; 100 optimization iterations; CVaR alpha=0.05 (0.025 for noise-free). Classical MD: Desmond 50 ns production runs per peptide, TIP3P solvent, OPLS3e force field, orthorhombic box, frames extracted every 10 ns.",
+  "dataset_used": "",
+  "experiment_input": {
+    "source": "Authors-constructed; random sample from permutations",
+    "description": "50 peptide sequences of length 7 sampled randomly from permutations of residues {D, H, Q, K, S, E, P} (5040 possible permutations, 50 selected). Coarse-grained bead representation on a tetrahedral lattice (turn-to-qubit encoding). For MD: extended-structure peptide models built in Maestro and prepared with Epik/OPLS3e.",
+    "size": 50,
+    "preprocessing": "For quantum workflow: encode peptide turns and interactions into qubit mapping (sparse encoding, fixed bits and variable qubits), construct Hamiltonian with contact energies and penalty terms for invalid turns/overlaps/chirality. For MD: protein preparation via Epik, application of OPLS3e force field, solvation in TIP3P water in orthorhombic box; peptides were not energy-minimized prior to production runs."
+  },
+  "experiment_process": {
+    "quantum_pipeline": [
+      "Map peptide fold problem to sparse qubit encoding (turn2qubit mapping; total 9 qubits for model).",
+      "Assemble Hamiltonian including 1-NN contact interaction terms and penalty terms for invalid configurations and chirality.",
+      "Construct parameterized quantum circuit (ansatz) with two levels of RX/RY/RZ rotations, conditional rotation gates, CNOTs, and Hadamards.",
+      "Run circuit on Amazon Braket local simulator / SV1 with 500,000 shots to sample bitstrings.",
+      "Evaluate exact Hamiltonian on sampled bitstrings; sort outcomes by energy and compute CVaR expectation over lowest-energy tail (alpha=0.05).",
+      "Optimize variational parameters using surrogateopt (Global Optimization Toolbox) over 100 iterations to minimize CVaR objective (original genetic optimizer referenced).",
+      "Record best-found bitstrings, their probabilities, and ground-state energy estimates; repeat per peptide."
+    ],
+    "md_pipeline": [
+      "Build extended peptide structure in Maestro (Schrödinger).",
+      "Prepare structure using Epik and apply OPLS3e force field; do not perform initial minimization.",
+      "Solvate in orthorhombic box with TIP3P water, no added ions.",
+      "Run Desmond MD production for 50 ns per peptide (equilibration/minimization steps per referenced protocols).",
+      "Extract frames at 0, 10, 20, 30, 40, 50 ns; minimize frames and compute Lennard-Jones interaction energy and RMSD.",
+      "Identify frame with minimum energy per peptide and aggregate statistics across 50 peptides."
+    ]
+  },
+  "experiment_output": {
+    "format": "Per-peptide energies (kcal/mol), best bitstring configurations with associated probabilities, iteration convergence traces, MD per-frame energies and RMSDs.",
+    "metrics": [
+      "Ground-state energy (kcal/mol)",
+      "Count/proportion of peptides achieving negative ΔG",
+      "Mean and standard deviation of energies across peptides",
+      "Convergence behavior across optimizer iterations",
+      "Probability distribution of output bitstrings"
+    ],
+    "baselines": "MD simulation results (Desmond 50 ns per peptide) used as baseline for comparison against CVaR-VQE energies; statistical comparison via two-tailed t-test (alpha=0.05) and reported R-squared."
+  },
+  "experiment_parameters": {
+    "qubits_total": 9,
+    "variable_turn_qubits": 7,
+    "interaction_qubits": 2,
+    "shots_per_evaluation": 500000,
+    "optimizer": "surrogateopt (Global Optimization Toolbox)",
+    "alternate_optimizer_referenced": "Genetic optimizer (used in original referenced work); COBYLA mentioned as alternative in literature",
+    "iterations": 100,
+    "cvar_alpha": 0.05,
+    "ansatz_gates": "Two levels of RX/RY/RZ rotations, conditional rotation gates, CNOTs, Hadamard",
+    "md_simulation_time": "50 ns per peptide",
+    "md_frame_interval": "10 ns (6 frames: 0,10,20,30,40,50 ns)",
+    "force_field": "OPLS3e",
+    "water_model": "TIP3P",
+    "solvent_box": "orthorhombic",
+    "peptides_minimized_before_md": false
+  },
+  "hardware_details": {
+    "quantum_simulator": "Amazon Braket local simulator and SV1 state vector simulator (Amazon Web Services Braket)",
+    "classical_compute": "NVIDIA A100 GPU (for classical computations/support)",
+    "md_software": "Desmond (Schrödinger) run on institutional compute; Maestro used for building/preparation",
+    "cloud_provider_access": "Amazon Braket access provided via MeitY QCaL Cohort-II"
+  },
+  "reproducibility_notes": "The manuscript references supplementary files containing per-peptide energies, output configurations, and 3D representations (Supplementary Files 1-5). No public code repository or explicit runnable scripts are provided in the paper. Reproducibility would require reproducing the turn-to-qubit encoding and Hamiltonian construction following the referenced scheme, access to Amazon Braket SV1/local simulator, and Desmond/Schrödinger tools; specific circuit parameters and exact ansatz gates are described at a high level but not provided as code.",
+  "key_findings": [
+    "[supported] In simulations of 50 seven-residue peptides, a CVaR-VQE implementation produced ground-state energies < 0 kcal/mol for 49 out of 50 peptides (98%).",
+    "[supported] Molecular dynamics (MD) 50 ns simulations produced ground-state energies < 0 kcal/mol for 36 out of 50 peptides (72%), with 14 peptides remaining > 0 kcal/mol after 50 ns.",
+    "[supported] Mean energies reported: MD simulations mean = 2.302 kcal/mol; CVaR-VQE mean = -5.885 kcal/mol (values reported by the authors).",
+    "[supported] The CVaR-VQE runs used 100 optimizer iterations and 500,000 shots per evaluation in a local simulator; typical convergence for example peptides was reached after ~42 and ~63 iterations in the provided examples.",
+    "[supported] For MD simulations, the fraction of peptides that reached their minimum energy at different timepoints was reported (e.g., 26 peptides reached minimum at 50 ns; others at earlier times), indicating variability in MD folding times across peptides.",
+    "[supported] The authors used a lattice coarse-grained tetrahedral encoding mapping and a Hamiltonian with 1-nearest-neighbour interactions and penalty terms to represent the folding problem in the VQE formulation.",
+    "[speculative] The paper claims that the additional conditional rotation gates in their ansatz increase circuit robustness compared to prior work (no ablation study provided).",
+    "[speculative] The authors assert that VQE/CVaR approaches (and related quantum algorithms) offer a promising direction to resolve protein folding for disordered regions as quantum hardware and algorithms improve.",
+    "[speculative] The work is described by the authors as the first direct comparison (at time of submission) between MD-based folding and a quantum-algorithm-based (VQE) approach for the chosen peptide set.",
+    "[speculative] The authors suggest that integrating algorithms like QAOA with VQE could yield more accurate folding ground-state energies in future developments.",
+    "[speculative] The paper notes that VQE may be resilient to barren-plateau issues with appropriate ansatz and design choices (this is primarily a literature-based/theoretical point cited by the authors)."
+  ],
+  "results_summary": "The preprint reports a head-to-head comparison between MD-based folding (50 ns Desmond simulations) and a CVaR-enhanced VQE pipeline (simulated locally) on 50 coarse-grained seven-residue peptides derived from disorder-prone amino acids. In their experiments the CVaR-VQE pipeline produced substantially lower mean ground-state energies (mean -5.885 kcal/mol) and achieved energetically favorable (< 0 kcal/mol) folds for 49/50 peptides, compared with 36/50 favorable results from 50 ns MD. The quantum experiments used 100 optimization iterations, 500,000 shots per evaluation, a tetrahedral lattice encoding, and reported convergence behavior on example sequences. The authors argue these simulation results indicate promise for quantum approaches to protein folding, while acknowledging current hardware and scaling limitations.",
+  "performance_claims": [
+    "CVaR-VQE achieved < 0 kcal/mol ground-state energies for 49/50 peptides (98%).",
+    "MD 50 ns simulations achieved < 0 kcal/mol ground-state energies for 36/50 peptides (72%); 14 peptides remained > 0 kcal/mol after 50 ns.",
+    "Reported mean ground-state energies: MD = 2.302 kcal/mol; VQE = -5.885 kcal/mol.",
+    "VQE runs used 100 optimizer iterations and 500,000 shots per evaluation.",
+    "Example convergence: peptide 16 converged after ~42 iterations; peptide 19 converged after ~63 iterations (authors' examples).",
+    "Distribution of MD minima by time: 26 peptides (52%) reached their minimum at 50 ns, 6 (12%) at 40 ns, 9 (18%) at 30 ns, 8 (16%) at 20 ns, and 1 (2%) at 10 ns (per authors' reported breakdown).",
+    "Authors report an R-squared value of 0.8032 for a statistical comparison (two-tailed t-test at alpha=0.05 mentioned).",
+    "Authors state that for full modeling nine qubits are needed (7 setup qubits + 2 interaction qubits) for their encoding."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors present simulation-based evidence that their CVaR-VQE pipeline yields lower ground-state energies than 50 ns MD for the specific set of small, coarse-grained peptides tested. However, the experiments were performed on simulators/local resources (not on quantum hardware), on small lattice-encoded peptides, and without demonstrated scaling to larger/protein-relevant sizes or performance comparisons against advanced classical optimization or enhanced-sampling MD approaches. Therefore any claim of practical quantum advantage is speculative based on the reported results.",
+  "limitations": [
+    "The current VQE model has biases with respect to defining the qubit configuration and interaction qubits.",
+    "Limited QPU qubit counts currently prevent running larger peptide/protein sequences on actual quantum hardware.",
+    "Quantum algorithms, circuits and hardware are still in early stages; noise and hardware constraints were not fully addressed.",
+    "This study only considered 1-nearest-neighbour (1-NN) interactions in the Hamiltonian for this work.",
+    "Use of a coarse-grained tetrahedral lattice model (lattice/bead representation) simplifies the physics compared to atomistic models.",
+    "VQE experiments were performed on simulators (Amazon Braket local simulator and SV1 state-vector simulator) rather than demonstrated on real noisy quantum hardware.",
+    "MD simulations were limited to 50 ns per peptide; many peptides required longer/variable simulation times to reach minimum energy.",
+    "Study limited to small peptides (7 amino acids); conclusions may not generalize to larger proteins.",
+    "[inferred] The coarse-grained lattice representation likely omits important atomistic details (side-chain chemistry, detailed solvent effects, long-range electrostatics).",
+    "[inferred] The dataset is small (50 randomly selected sequences) and restricted to disorder-promoting residues, which may limit generalizability and introduce selection bias.",
+    "[inferred] MD setup choices (peptides not minimized prior to production runs, no added ions, specific force field/water model) may influence folding outcomes and comparability.",
+    "[inferred] The CVaR cutoff (alpha) choice and other optimizer hyperparameters may materially affect VQE outcomes but sensitivity analysis is not reported.",
+    "[inferred] The high number of shots (500,000) and 100 iterations increase computational cost and may be impractical on real QPUs or for larger problems.",
+    "[inferred] The comparison does not report wall-clock runtime or resource/cost comparison between MD (classical) and VQE (quantum/simulator) workflows.",
+    "[inferred] While an enhanced conditional-rotation ansatz was used, the study does not fully assess risks like barren plateaus or optimizer trapping for the chosen ansatz.",
+    "[inferred] Mapping lattice bitstrings to realistic 3D structural validation beyond energy (e.g., detailed structural metrics, experimental validation) is limited."
+  ],
+  "open_questions": [
+    "How will the CVaR-VQE approach scale to larger peptides and full proteins as system size increases?",
+    "How robust are the reported VQE results to realistic quantum hardware noise and connectivity constraints?",
+    "How sensitive are the VQE outcomes to choices of encoding, qubit mapping, CVaR alpha, and variational ansatz design?",
+    "Can VQE-based lattice folding predictions be validated and reconciled with atomistic structural metrics and experimental data?",
+    "How to incorporate medium- and long-range interactions (beyond 1-NN) and more realistic potentials into the quantum Hamiltonian efficiently?",
+    "What is the comparative wall-clock time, energy consumption and computational cost trade-off between VQE (on real QPUs) and classical MD for equivalent accuracy?",
+    "Which classical optimizers (genetic algorithms, surrogateopt, COBYLA, etc.) are most effective/stable in CVaR-VQE for this problem class?",
+    "How well do adaptive or problem-tailored ansätze perform versus the enhanced conditional-rotation ansatz used here, especially regarding barren plateaus?",
+    "Can quantum algorithms (VQE, QAOA, digitized counterdiabatic approaches) be combined with enhanced-sampling MD methods to improve folding predictions for disordered regions?",
+    "How generalizable are the findings beyond the selected disorder-promoting residue set and the specific lattice model used?",
+    "What is the minimal quantum hardware capability (qubit count, fidelity) required to meaningfully outperform classical methods for peptide folding?",
+    "How to systematically choose the CVaR alpha parameter and other hyperparameters to balance exploration/exploitation in the probability tail used for objective calculation?"
+  ],
+  "future_work": [
+    "Integrate QAOA with VQE to improve folding ground state predictions (explicitly mentioned).",
+    "Investigate adaptive and problem-tailored ansätze (k-UpCCGSD, adaptive ansätze) and study their computational cost and accuracy trade-offs.",
+    "Explore alternative classical optimizers for CVaR-VQE (e.g., COBYLA) and compare optimizer performance.",
+    "Scale the approach to larger peptides/proteins as quantum hardware (qubit counts and fidelities) and algorithms improve.",
+    "Further studies to improve noise resilience and test CVaR-VQE on actual quantum hardware rather than simulators.",
+    "Extend the Hamiltonian/encoding to include more interaction types and longer-range contacts (beyond 1-NN) and side-chain representations.",
+    "Combine quantum approaches with classical MD/enhanced sampling methods to address disordered regions and sampling challenges."
+  ],
+  "topic_tags": [],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "low",
+  "relevance_phase3": "low",
+  "key_ideas": [
+    "#idea:quantum-advantage — CVaR-augmented VQE on a local state-vector simulator produced lower (more favorable) ground-state energies for the majority of 50 seven-residue peptides compared to 50 ns MD trajectories (reported per-peptide energies, counts of negative ΔG, t-tests, R^2).",
+    "#idea:hybrid-approach — The study uses a hybrid quantum-classical VQE workflow: parameterized ansatz circuits prepared on a simulator with classical optimization (surrogateopt) over 100 iterations and high-shot sampling (500,000 shots) to minimize a CVaR objective.",
+    "#idea:near-term-feasibility — Authors argue quantum algorithms hold promise for protein-folding problems as hardware and methods mature, but current results are based on small, simulator-based experiments.",
+    "#limitation:qubit-count — The full fold model used only nine qubits (7 variable turn qubits + 2 interaction/helper qubits), limiting problem size and raising questions about scalability to realistic biomolecular systems.",
+    "#limitation:simulation-only — All quantum experiments were performed on Amazon Braket local and SV1 state-vector simulators; no runs on noisy quantum hardware were reported.",
+    "#limitation:no-empirical-validation — There is no empirical validation on real QPUs; claims of superiority are drawn from simulator data versus classical MD baselines.",
+    "#limitation:data-encoding — The peptide-to-qubit encoding (sparse turn-to-qubit mapping, explicit penalty Hamiltonian) is problem-specific and may introduce overhead or limit generality for larger sequences.",
+    "#limitation:noise — The study reports noise-free simulator settings (and adjusts CVaR alpha for noise-free cases) but does not model realistic hardware noise or error mitigation strategies, so performance on NISQ devices is uncertain."
+  ],
+  "contradictions": []
+}

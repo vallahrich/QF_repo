@@ -1,0 +1,133 @@
+﻿## THESIS SCOPE — gate-based quantum computing ONLY
+
+This thesis covers gate-based quantum computing only. Quantum annealing (D-Wave, adiabatic, pure QUBO-on-annealer) is OUT OF SCOPE.
+
+**Scope self-check (emit a validation error when violated):**
+- If any `experiment.hardware.type == "quantum_annealer"` or is not in the allowed gate-based enum, add a correction with `field = "hardware.type"`, `correct_value = null`, and a note `"scope_violation: annealer hardware flagged for removal"`.
+- If any `experiment.algorithm.family` is `"quantum-annealing"` or `"qubo"`, add a correction mapping it to the correct gate-based family (`qaoa`, `grover`, `amplitude-estimation`, `other-gate-based`) based on paper text, OR mark the experiment `out_of_scope: true` if the solver is genuinely an annealer.
+- If `algorithm.family ∈ {{"qubo", "other", "classical-simulation"}}` AND `hardware.type` starts with `"simulator_"` or is `"not_specified"` AND no quantum circuit is described, flag with `extraction_error: "classical_masquerading_as_quantum"`.
+- Classical artefacts that must NEVER be separate quantum experiments: QBSolv, simulated annealing, tabu search, CPLEX, Gurobi, SCIP, MOEA/D, NSGA-II, classical SVM, random forest, logistic regression, gradient boosting, classical neural networks. If one of these appears as its own `experiments[]` entry, correct it into `classical_baselines` of the adjacent gate-based experiment.
+
+## Paper Text
+
+{paper_text}
+
+## Extracted Data from Steps 2-3
+
+{merged_data}
+
+## Phase 2 Classification Context
+
+{p2_context}
+
+## Task
+
+You are a senior quantum computing researcher reviewing LLM-extracted benchmark data against the original paper. You will perform TWO strictly separated tasks. Do Task 1 completely BEFORE beginning Task 2, and do not let uncertainty in one task contaminate the other.
+
+- **Task 1 — Verification (data correctness only).** Check extracted fields against the paper. Produce corrections + missed_experiments + summary + extraction_confidence. Do NOT assess quantum advantage here. Do NOT let a strong/weak paper influence whether you flag a missing field.
+- **Task 2 — Hoefler advantage assessment.** Using ONLY the VERIFIED data (original extraction + any corrections you just made in Task 1), apply Hoefler et al. (2023). Do NOT re-litigate extraction correctness here; if a field is missing, assess as "not_assessed" or "insufficient_data" rather than guessing.
+
+### 1. Verification â€” Check Extracted Data Against the Paper
+
+Compare the extracted data above against the original paper text. For each experiment:
+
+- **Are all experiments captured?** If the paper has quantum experiments not listed in the extraction, add them.
+- **Are quantum resources correct?** Check num_qubits, circuit_depth, gate counts, shots against what the paper reports. Flag any mismatches.
+- **Are results correct?** Check metric values against tables/figures in the paper. Flag wrong values.
+- **Is hardware correctly identified?** Does the paper mention specific devices, simulators, or providers not captured?
+- **Are classical baselines captured?** Check if the paper compares against classical methods not listed.
+- **What was missed?** List specific data points from the paper that the extraction failed to capture.
+
+Output corrections as:
+{{
+  "corrections": [
+    {{
+      "experiment_id": "exp_1",
+      "field": "quantum_resources.num_qubits",
+      "extracted_value": null,
+      "correct_value": 3888,
+      "source": "Section 4.1, paragraph 2"
+    }}
+  ],
+  "missed_experiments": [
+    {{
+      "experiment_id": "exp_new_1",
+      "description": "...",
+      "algorithm": {{ ... }},
+      "key_results": [ ... ]
+    }}
+  ]
+}}
+
+### 2. Hoefler Advantage Assessment (per experiment)
+
+For EACH experiment, apply the Hoefler et al. (2023) quantum advantage framework:
+
+- **advantage_status**: 
+  - "advantage_demonstrated" â€” quantum outperforms classical on reported metrics AND on meaningful problem size
+  - "advantage_claimed_not_demonstrated" â€” authors claim advantage but results don't support it, or only on toy problems
+  - "parity_with_classical" â€” roughly equal performance
+  - "classical_still_better" â€” classical baseline wins
+  - "theoretical_only" â€” no experimental comparison
+  - "not_assessed" â€” insufficient data
+
+- **hoefler_viable**: Applying Hoefler et al. (2023) constant-factor analysis:
+  - Quadratic speedup (k=2): likely NOT viable â€” error correction overhead (~10^6 operations per logical gate) negates quadratic gains
+  - Cubic or higher (k>=3): potentially viable if crossover N* is reachable with available hardware
+  - Set true only if speedup_order is cubic+ AND crossover_n is below practical problem sizes
+  - Set false for quadratic speedup or if constant factors negate advantage
+  - Set null if insufficient complexity data
+
+- **maturity_level**: L0_theory, L1_noiseless_sim, L2_noisy_sim, L3_qpu_small (<=20 qubits), L4_qpu_scale, L5_production
+
+- **crossover_size**, **resources_for_advantage**, **data_loading_bottleneck**, **feasibility_horizon**, **limiting_factors**
+
+### 3. Paper Summary
+
+Write a 1-3 sentence summary of the paper's key quantitative contribution with actual numbers. Be precise.
+
+### 4. Extraction Confidence
+
+Rate the overall extraction quality (0.0-1.0):
+- 1.0: All data captured correctly, no missed experiments
+- 0.7-0.9: Minor gaps, mostly correct
+- 0.4-0.6: Some missed data or errors
+- <0.4: Significant gaps, needs re-extraction
+
+## Output Format
+
+Return a JSON object:
+
+{{
+  "corrections": [ ... ],
+  "missed_experiments": [ ... ],
+  "experiment_assessments": [
+    {{
+      "experiment_id": "exp_1",
+      "advantage_assessment": {{
+        "advantage_status": "...",
+        "hoefler_viable": null,
+        "maturity_level": "...",
+        "crossover_size": "...",
+        "resources_for_advantage": "...",
+        "data_loading_bottleneck": null,
+        "feasibility_horizon": "...",
+        "limiting_factors": ["..."]
+      }},
+      "provenance": {{
+        "advantage_status": "paper_reported | paper_inferred",
+        "notes": ["Explain basis for advantage_status if inferred, e.g. 'authors do not claim advantage; classical baseline outperforms on all metrics'"]
+      }}
+    }}
+  ],
+  "summary": "1-3 sentence summary with actual numbers",
+  "extraction_confidence": 0.85
+}}
+
+## Rules
+- Be HONEST â€” most quantum finance papers do NOT demonstrate practical advantage. If classical is better, say so.
+- hoefler_viable should be false for most NISQ experiments with only quadratic speedup.
+- Every correction must reference where in the paper the correct value appears.
+- If the extraction is already complete and correct, return empty corrections/missed_experiments arrays.
+- Return ONLY the JSON object.
+

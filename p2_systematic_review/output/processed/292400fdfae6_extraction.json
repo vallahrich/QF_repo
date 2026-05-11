@@ -1,0 +1,299 @@
+{
+  "source_type": "other",
+  "source_type_confidence": "high",
+  "reasoning": "Document is a university PhD thesis/dissertation (title page, supervisor, acknowledgements, table of contents, chapters, appendices) rather than a journal article or conference paper; therefore it does not fit the listed peer-reviewed/preprint/industry categories.",
+  "title": "Quantum Algorithms for Differential Equations in Finance and Physics",
+  "authors": [
+    "Javier Gonzalez Conde"
+  ],
+  "year": "2024",
+  "journal_or_venue": "PhD thesis, Departamento de Química Física, Facultad de Ciencia y Tecnología, University of the Basque Country (UPV/EHU)",
+  "doi": "",
+  "abstract_summary": "This doctoral thesis develops end-to-end quantum algorithms for solving differential equations via Hamiltonian simulation, with concrete applications in option pricing (Black–Scholes), mixed quantum–semiclassical dynamics, and hardware benchmarking. It emphasizes the often-overlooked input step (efficient amplitude/state loading) and presents novel methods—approximated Grover–Rudolph constructions, variational circuits, MPS encodings, DHWT and QSVT-based approaches—and analyzes the use of Carleman linearisation for nonlinear PDEs in fluid dynamics, relating algorithmic efficiency to physical length scales (e.g., Reynolds number and Kolmogorov scale).",
+  "methodology_description": "This work develops and evaluates end-to-end quantum procedures to solve differential equations relevant to finance (Black–Scholes), semiclassical physics, and hardware benchmarking. Methodologically it (1) maps PDEs to (possibly non-Hermitian) Hamiltonians (Black–Scholes → H_BS), (2) digitizes continuous variables with uniform grids and periodic/open/Dirichlet boundary conditions and encodes initial conditions into quantum states (amplitude / Qsample embedding) using a range of encodings (Grover–Rudolph variants, approximated unitary maps, variational circuits, MPS compression, DHWT + QSVT / block-encoding), (3) simulates time evolution with Hamiltonian-simulation toolchains (first-order Magnus expansion for time discretization + second-order Trotter–Suzuki per Magnus step, or quantum-walk/QSP-based sparse-HS when applicable), and (4) for non-unitary propagators applies unitary dilation plus ancilla postselection to realize non-Hermitian PDE evolution on gate-model devices. The empirical component benchmarks discretized circuit-model simulations of a transverse-field Ising (quantum-annealing-type) problem (a 4-spin “T4” signature instance) across ideal simulation, noisy open-system simulators (multiple noise models), and real IBM superconducting hardware (ibm_mumbai and ibmq_osaka). Metrics for solution quality are primarily state infidelity and Total Variation Distance (TVD) of measured computational-basis distributions. Open-system dynamics are also modeled with master-equation approaches (adiabatic/weak-coupling AME and singular-coupling limit SCL) implemented via HOQST. Parameter studies tune the number of Magnus steps NM and Trotter steps Nr to trade discretization error vs. noise exposure and identify practical operating points.",
+  "algorithms_used": [
+    "Grover–Rudolph (deterministic amplitude loading) and approximations",
+    "Variational state-preparation ansatz",
+    "Matrix Product State (MPS) based loading / compression",
+    "Discrete Hadamard–Walsh Transform (DHWT) + truncation",
+    "Block-encoding + Quantum Singular Value Transformation (QSVT)",
+    "Quantum Signal Processing (QSP)",
+    "Amplitude amplification (AA)",
+    "Hamiltonian Simulation (Magnus expansion + Trotter–Suzuki)",
+    "Quantum random walk / qubitization / QSP sparse-HS",
+    "Quantum Carleman Linearisation (QCL) (theoretical analysis)",
+    "Classical SVMC (Spin Vector Monte Carlo, for comparison)",
+    "Open-system master equations (AME and SCL)"
+  ],
+  "frameworks": [
+    "Qiskit (including fake_backend / calibration-based noise models)",
+    "HOQST (Hamiltonian Open Quantum System Toolkit)",
+    "Julia QuantumAnnealing (used to obtain high-precision reference evolutions)"
+  ],
+  "experimental_setup": "Two experiment classes: (A) PDE application (Black–Scholes): classical derivation and digital-simulation experiments (state-preparation algorithms examined analytically and numerically). (B) Benchmark QA simulation: 4-qubit transverse-field Ising (T4) problem evaluated across (i) ideal circuit-model simulations using first-order Magnus + second-order Trotter per step, (ii) noisy circuit-model simulations using Qiskit mock-backend noise models (dephasing-only and full noise: readout, depolarizing, relaxation), (iii) open-system simulations with master equations (AME and SCL via HOQST) and (iv) experiments on IBM superconducting hardware (ibm_mumbai and ibmq_osaka). For circuit-model timing assumptions each circuit layer was counted as 25 ns; gate compilation assumed availability of arbitrary single-qubit rotations and CNOTs (i.e., optimistic compilation). Dynamical decoupling sequences (XYXY, UR10) were applied on hardware runs for mitigation.",
+  "dataset_used": "No external financial dataset. For finance-focused experiments the payoff initial condition of European put option (Black–Scholes) was used analytically (V(T,S)=max(K-S,0)) and discretized on grids S in [S_min,S_max] (via x = log S). Parameters used in examples: K (strike), sigma (volatility), r (risk-free rate), S_max; numerical values shown in text examples (e.g., K=50, S_max=150, sigma=0.2, r=0.04, T=1 year).",
+  "experiment_input": {
+    "type": "synthetic / analytic",
+    "description": "Analytic payoff (European put) discretized to N = 2^n grid points in spatial coordinate x = log S. For QA benchmarking the input is the easily prepared ground state |+> of initial transverse field Hamiltonian. Example grid sizes: n up to 8 used in demonstrations; example T4 QA problem uses 4 qubits.",
+    "size": "Black–Scholes examples used n up to 8 (N=2^n grid points); QA instance uses 4 logical qubits",
+    "preprocessing": "Discretization of continuous variables (finite differences), optionally duplicate/reflect initial condition for periodic boundary conditions; quantum amplitude encoding via chosen preparation method (Grover–Rudolph variants, MPS, DHWT)."
+  },
+  "experiment_process": [
+    "1) Problem mapping: e.g., Black–Scholes PDE → (non-Hermitian) Hamiltonian H_BS via x=log S and p = -i∂/∂x; separate Hermitian and anti-Hermitian parts.",
+    "2) Digitization: choose n qubits (N=2^n) for spatial grid; construct discrete position and momentum operators (finite difference, PBC/OBC/Dirichlet).",
+    "3) State preparation: prepare discretized initial condition with one of amplitude-loading methods (approximated Grover–Rudolph with angle clustering; variational ansatz; MPS→circuit; DHWT→circuit; or block-encoding+QSVT pipeline).",
+    "4) If H non-Hermitian: perform unitary dilation embedding with an ancilla qubit, evolve under dilated Hermitian H_emb, and postselect ancilla outcome to recover non-unitary evolution (success probability analyzed).",
+    "5) Time evolution (processing): for time-dependent evolution use first-order Magnus per coarse step and decompose each Magnus step using second-order Trotter–Suzuki with Nr trotter steps; alternate approach for sparse Hamiltonians uses QRW/QSP/qubitization (where applicable).",
+    "6) Measurements: measure computational basis to estimate probabilities or global functionals; optionally perform amplitude estimation for amplitude extraction.",
+    "7) Evaluation: compare outputs to reference high-precision Magnus integration (Julia QuantumAnnealing) via fidelity and Total Variation Distance (TVD).",
+    "8) Hardware/noise studies: run simulations with Qiskit fake backends (noise models obtained from real-device calibration JSON), open-system AME/SCL runs via HOQST, and execute selected circuits on ibm_mumbai / ibmq_osaka with/without dynamical decoupling sequences (XYXY / UR10)."
+  ],
+  "experiment_output": {
+    "format": "State vectors / density matrices; computational-basis probability distributions.",
+    "metrics": [
+      "State fidelity (F = |<ψ_exact | ψ_approx>|^2)",
+      "Total Variation Distance (TVD) between measured and ideal computational-basis distributions",
+      "Postselection success probability (for unitary dilation on non-Hermitian dynamics)",
+      "Gate counts, two-qubit gate counts, circuit depth estimates, and wall-time estimates (using 25 ns per layer assumption)"
+    ],
+    "baselines": [
+      "High-precision Magnus integrator reference (QuantumAnnealing.jl)",
+      "Ideal (noiseless) discretized circuit",
+      "Noisy simulators (Qiskit fake backends with device calibration)",
+      "Open-system master-equation models (AME, SCL)",
+      "Real-device runs (ibm_mumbai, ibmq_osaka)",
+      "Classical SVMC model for QA distribution comparison"
+    ]
+  },
+  "experiment_parameters": {
+    "BlackScholes_example": {
+      "strike_K": 50,
+      "Smax": 150,
+      "sigma": 0.2,
+      "r": 0.04,
+      "maturity_T": 1.0,
+      "discretization_qubits_n": 8,
+      "grid_points_N": 256
+    },
+    "QA_benchmark": {
+      "problem": "T4 4-qubit Ising signature",
+      "ising_scale_J": 1.0,
+      "anneal_schedules": "A(s)=1-s, B(s)=s (linear)",
+      "simulated_times_JT": [
+        0.01,
+        0.1,
+        1,
+        10,
+        100,
+        1000
+      ],
+      "Magnus_steps_NM": [
+        1,
+        1,
+        5,
+        17,
+        70,
+        660
+      ],
+      "Trotter_steps_Nr": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        2
+      ],
+      "gate_layer_time_assumption": "25 ns per circuit layer",
+      "shots": 8192,
+      "fidelity_target_TVD": 0.01
+    },
+    "noise_models": {
+      "noisy_discretized_1": "phase damping only (T2 from device cal)",
+      "noisy_discretized_2": "readout + depolarizing + thermal relaxation + gate errors (from ibm_mumbai calibration)",
+      "noisy_discretized_3": "phase damping + thermal relaxation"
+    },
+    "open_system": {
+      "AME_T": [
+        0.015,
+        0.00238
+      ],
+      "single_qubit_dephasing_time": "100 ns (used to match SCL)",
+      "system_bath_coupling": "chosen to give above dephasing times; used Ohmic spectral density"
+    },
+    "QCL_analysis": {
+      "efficiency_ratio_R": "R = ||F2|| / (|Re(eig(F1))| * ||u0||)",
+      "Kolmogorov_scale_link": "R_KS computed via problem parameters and used to define efficiency frontier"
+    }
+  },
+  "hardware_details": {
+    "simulators": [
+      "Qiskit Aer fake backends (mock backend built from ibm_mumbai calibration JSON v1.4.5)",
+      "HOQST (Hamiltonian Open Quantum System Toolkit) for master-equation integrations",
+      "Julia QuantumAnnealing.jl (high-precision Magnus reference)"
+    ],
+    "real_qpus": [
+      {
+        "provider": "IBM Quantum",
+        "models": [
+          {
+            "name": "ibm_mumbai",
+            "notes": "used both as real hardware and as source of calibration JSON for fake backend (version and calibration file referenced)"
+          },
+          {
+            "name": "ibmq_osaka",
+            "notes": "used for dynamical decoupling experiments (XYXY, UR10 sequences)"
+          }
+        ]
+      }
+    ],
+    "gate_timing_assumptions": "single-qubit arbitrary rotations and CNOTs assumed available; per-layer duration assumed 25 ns for wall-time estimates"
+  },
+  "reproducibility_notes": "Simulations used Qiskit fake backends constructed from publicly referenced IBM calibration JSON files (props_mumbai json referenced). High-precision references used Julia QuantumAnnealing.jl (public package). Open-system simulations used HOQST (public). Exact experiment scripts / code repository not explicitly provided in the thesis text, but all major software components are standard open-source toolkits (Qiskit, HOQST, Julia package). Calibration/version details were cited (ibm_mumbai mock backend, props_mumbai json, ibmq_mumbai version 1.1.0 / 1.4.5 referenced).",
+  "key_findings": [
+    "[supported] An approximated (clustered-angle) implementation of the Grover–Rudolph amplitude-loading algorithm can dramatically reduce two-qubit gate count while retaining high fidelity; the paper proves a bound and presents numerical evidence (fidelities > 0.99 with large gate reductions).",
+    "[supported] A variational extension of Grover–Rudolph (ansatz with clustered angles + targeted hyperparameters) can load real functions with zeros/singularities efficiently in practice (numerical demonstrations).",
+    "[supported] Polynomials can be encoded into quantum amplitudes via matrix-product-state (MPS) representations (exact bond-dimension d+1 for degree-d polynomials) and via block-encoding + QSVT acting on an efficiently loaded linear-amplitude state; both routes are practical in many cases.",
+    "[supported] The linear function admits an extremely shallow, structured loading via a Discrete Hadamard–Walsh Transform (DHWT) circuit; truncating its Walsh expansion gives a controllable approximation with tunable infidelity vs. circuit depth.",
+    "[supported] A block-encoding of amplitudes obtained from an efficiently-prepared linear-amplitude state together with QSVT permits polynomial transformations of amplitudes (encoding arbitrary polynomials) with controlled error and resource scalings comparable to prior approaches.",
+    "[supported] The Black–Scholes PDE (parabolic, non-Hermitian) is mapped to a non-Hermitian Hamiltonian; embedding (unitary dilation) + postselection yields a valid method to simulate option-price dynamics on a gate model quantum computer, with analytical bounds and numerics showing postselection success probabilities typically >~0.6 for realistic parameters.",
+    "[supported] Koopman–von Neumann (KvN) embedding yields a Schrodinger-picture quantum representation of semiclassical (classical Hamiltonian) dynamics; mixed quantum–semiclassical (MQS) simulations can be implemented on quantum computers and can yield significant resource savings vs. fully quantum or fully classical treatments when the semiclassical action greatly exceeds the quantum action.",
+    "[supported] For a small quantum-annealing (QA) benchmark (4-qubit Ising instance) the paper shows (simulation + hardware) that: (a) accurate circuit-model emulation requires many Magnus/Trotter steps (depth far beyond current NISQ), (b) analog QA (native continuous annealing) can reach shorter physical run-times and better performance in certain parameter regimes, and (c) current superconducting gate devices (IBM backends) fail to reproduce high-quality emulations beyond very short anneal times (empirical TVD and fidelity data presented).",
+    "[speculative] For nonlinear PDEs (e.g., Navier–Stokes / Burgers), the efficiency of quantum Carleman linearisation (QCL) can be characterized relative to physical length scales: relating the Carleman truncation criterion R to Reynolds number Re and to the Kolmogorov scale yields a partition of (N, Re) regimes where QCL may be efficient; the work conjectures convergence regimes and delineates when QCL is expected to be useful.",
+    "[supported] Numerical case studies (Burgers, test distributions) support the practical performance of the encoding and simulation subroutines: examples show high fidelities and reasonable gate-depth trade-offs for modest problem sizes (typically n <= 12 qubits in reported experiments/simulations).",
+    "[speculative] The combination of efficient amplitude-loading subroutines (approx. Grover–Rudolph, DHWT, MPS truncation) with Hamiltonian simulation primitives could enable end-to-end speedups for specific classes of linear PDEs and some nonlinear problems after suitable linearisation — but an unconditional, general end-to-end quantum advantage is not established."
+  ],
+  "results_summary": "This body of work develops and evaluates end-to-end components for quantum algorithms that solve differential equations relevant to finance and physics. Key technical contributions include (i) practical amplitude-loading methods: a proved, approximated Grover–Rudolph with angle-clustering (large gate reductions for small fidelity loss), a variational extension for singular/zero-containing functions, MPS-based encodings and a DHWT-based shallow circuit for the linear function; (ii) use of block-encodings and QSVT to transform linear-amplitude states into polynomial-amplitude states; (iii) mapping of PDEs to Hamiltonian simulation tasks: non-Hermitian (Black–Scholes) dynamics handled by unitary dilation and postselection with demonstrable success probabilities, and Koopman–von Neumann embedding to enable mixed quantum–semiclassical (MQS) simulations with provable resource scalings; (iv) benchmarking time-dependent Hamiltonian simulation (digital vs analog) including realistic noise models and experiments on IBM hardware showing current NISQ limitations for long-time emulation. For nonlinear PDEs, the thesis proposes relating Carleman linearisation efficiency to physical scales (Reynolds number, Kolmogorov scale) and provides numerical evidence in toy problems, but stops short of claiming a general, unconditional quantum advantage.",
+  "performance_claims": [
+    {
+      "claim": "Approximated Grover–Rudolph angle clustering can reduce two-qubit gate count to ~12% of the full exact-circuit for n=8 (one example) while keeping fidelity ~0.9984",
+      "value": "12.16% gate count, fidelity 0.99841"
+    },
+    {
+      "claim": "MPS bond-dimension X=1 approximation of the linear function achieves fidelity ~0.9885 (n=6 example)",
+      "value": "fidelity 0.9885"
+    },
+    {
+      "claim": "DHWT-based loading of linear function yields shallow circuits O(n) and truncation gives controllable infidelity; e.g., truncation level ko ≈ O(log(1/ε))",
+      "value": "ko ~ log2(1/(4ε)) asymptotic"
+    },
+    {
+      "claim": "Block-encoding + QSVT pipeline encodes polynomials with fidelities comparable to direct polynomial-MPS for modest sizes (example polynomial showed combined-method fidelities >0.6–0.99 depending on degree/truncation), and filling ratio F affects amplitude-amplification cost",
+      "value": "fidelities varied by method and truncation; explicit table in thesis (see Tab. 3.7)"
+    },
+    {
+      "claim": "Black–Scholes unitary-dilation + postselection yields success probability >~0.6 for typical maturity and interest-rate ranges; asymptotic lower bound >0.6 for some parameter choices",
+      "value": "postselection Ps > 0.6 (typical parameters)"
+    },
+    {
+      "claim": "MQS example (massive mediator toy model): fully quantum encoding used 9 qubits (2 spin + 7 oscillator) while KvN semiclassical encoding used 16 qubits in that example; dynamics show different entanglement/purity behavior but MQS can lower resources for larger scale problems when action ratios are large",
+      "value": "example: fully quantum 9 qubits vs KvN 16 qubits (toy system); resource scaling claims provable for field-type systems (linear in action ratio)"
+    },
+    {
+      "claim": "Circuit-model simulation of a 4-qubit QA instance requires hundreds-to-thousands of Magnus/Trotter steps to reach TVD ~0.01 for long JT; example: JT=100 required 1320 total Trotter steps (NM=660, Nr=2) and achieved fidelity ~0.9995 in ideal discretization while theoretical bounds predict many more steps",
+      "value": "JT=100: NM=660, NT=2, total steps=1320, fidelity ~0.9995 (ideal); TVD target 0.01"
+    },
+    {
+      "claim": "NISQ IBM device experiments: example TVD results show NISQ hardware TVD ~0.28 for one device at JT≈1.06, newer device improved to ~0.242 and applying dynamical decoupling (XYXY or UR10) further reduced TVD to ~0.125 for that case",
+      "value": "TVD examples: NISQ HW 0.280, new HW 0.242, new HW+DD ~0.125 (for single example JT)"
+    },
+    {
+      "claim": "In many tested cases, the dominant cause of simulation inaccuracy on gate-model NISQ hardware is open-system decoherence rather than discretization error for modest problem sizes.",
+      "value": "empirical result from comparison of noisy simulators and hardware"
+    }
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The thesis demonstrates theoretical and numerical components that could enable quantum speedups for subroutines (e.g., exponentially compressed amplitude encodings, efficient Hamiltonian simulation primitives, MQS reductions when action ratios are large). However, it does not provide an end-to-end, experimentally demonstrated quantum advantage for practical financial or fluid-dynamics problems; many claims are conditional on assumptions (efficient loading, favourable condition numbers, long coherent runtimes or fault tolerance). Therefore any claimed advantage remains conditional/speculative rather than demonstrated.",
+  "limitations": [
+    "Data loading (input step) is a major bottleneck for end-to-end quantum algorithms: preparing classical initial conditions (especially amplitude encodings) can require exponential resources in general and conditions/assumptions for efficiency are nontrivial.",
+    "Measurement collapse and the lack of quantum RAM / quantum hard-disk mean outputs are limited (Holevo bound) and every measurement requires re-preparing the input and re-running the processing stage.",
+    "Quantum algorithms generally give a quantum-encoded solution (amplitudes), not an explicit classical vector, so extracting full solutions requires O(N) cost and limits practical advantage to obtaining global features/expectation values.",
+    "No-fast-forward theorem limits the ability to simulate long-time dynamics with sublinear (in simulated time) complexity.",
+    "Amplitude-embedding methods: Grover–Rudolph oracle-based approach is practically problematic (oracle construction not explicit and questioned in literature); exact unitary map implementations require an exponential number of multi-controlled gates in the worst case.",
+    "Approximated Grover–Rudolph reduces gate counts but still relies on function smoothness conditions; performance degrades or becomes unclear for functions with interior singularities or rapid features.",
+    "Variational-state-preparation approaches can help but inherit variational training issues (local minima, barren plateaus) and no universal guarantees of scalability.",
+    "MPS-based loading: classical preprocessing (SVD / tensor decompositions) can be expensive (exponential worst-case) and the quality of truncation depends on entanglement / singular-value decay; error control is problem-dependent.",
+    "[inferred] QSVT + block-encoding approaches for polynomials can require significant ancilla and/or costly precomputation (and amplitude amplification if filling fraction is low), so practical resource costs may be high.",
+    "Block-encoding construction for linear amplitude vectors requires careful oracle/implementation choices; different constructions trade ancilla count, circuit depth, and classical preprocessing.",
+    "Hamiltonian simulation (HS) resource requirements (Magnus + Trotterization) can be large for high-precision or long-time dynamics; theoretical Trotter bounds can be pessimistic but practical step counts remain substantial.",
+    "Simulating non-Hermitian dynamics (e.g., Black–Scholes) requires unitary dilation + postselection: postselection success probability < 1 and incurs overhead; while > ~0.6 was observed for parameter ranges studied, the probability depends on model parameters.",
+    "Noise on NISQ devices significantly limits the achievable simulation time / fidelity: discretized circuit-model simulations degrade before reaching adiabatic/long-time regimes relevant for benchmarked QA problems.",
+    "Open-system noise models (AME, SCL, device mockbacks) do not always match actual device behaviour; understanding and modelling device noise remains challenging.",
+    "[inferred] For MQS (mixed quantum–semiclassical) savings: advantages depend on specific action ratios and problem representation; for small systems the reduction may be marginal or absent.",
+    "Carleman linearisation (QCL) applicability and guaranteed efficiency depend on a numerical parameter R that in prior sufficient conditions depends on discretisation; this confounds statements about algorithmic efficiency being a function of physics alone.",
+    "In standard DNS setups: resolving the correct smallest physical length scale (e.g., Kolmogorov scale) sets a minimum discretisation; crossing that frontier can make QCL infeasible (or at least not provably efficient).",
+    "[inferred] There is limited rigorous understanding of when QCL (or other quantum linearisation approaches) yields a practical advantage for nonlinear PDEs in realistic fluid dynamics parameter regimes.",
+    "[inferred] Readout/estimation overheads (e.g., amplitude estimation, SWAP test) can offset quantum speedups when many observables or fine-grained solution information are required."
+  ],
+  "open_questions": [
+    "Under what physical conditions (e.g., Reynolds number, characteristic time) does Carleman linearisation admit provable and practically useful truncation (i.e., when is QCL efficient) for fluid-dynamics PDEs?",
+    "Is there a well-characterized radius of convergence t* for Carleman linearisation when R > 1, and how does t* scale with physical nonlinearity parameters (e.g., Re)?",
+    "What are the precise classes of functions (including cases with interior singularities or zeros) for which the approximate Grover–Rudolph clustering gives controlled, small errors with drastically reduced circuit depth?",
+    "How to best construct block-encodings of amplitude vectors (especially the linear function) in practice with minimal ancilla overhead and gate count on near-term hardware?",
+    "How small can the amplitude-encoding filling ratio F be before amplitude amplification negates any speedup, and how does that tradeoff behave in realistic polynomial encodings via QSVT?",
+    "What are the optimal strategies to combine classical preprocessing (MPS / SVD) with quantum circuit construction to minimize total end-to-end cost (classical + quantum)?",
+    "How well do noise models (AME, SCL, mock-backends) capture real device errors for time-dependent HS benchmarking, and how to close gaps between model and hardware behaviour?",
+    "For analog vs circuit-model quantum simulation of time-dependent Hamiltonians (e.g., QA), what are the rigorous runtime/accuracy tradeoffs with realistic noise and hardware constraints?",
+    "How to design readout/estimation procedures that extract useful global solution features efficiently from quantum-encoded PDE solutions without losing the asymptotic speedup to classical costs?",
+    "What are realistic application regimes in finance (beyond Black–Scholes) — e.g., local volatility, SABR — where the proposed HS + state-prep methods would be advantageous?",
+    "How to generalize the MQS (Koopman–von Neumann) approach and rigorously quantify resource savings across field and particle systems, including the impact of doubling the KvN Hilbert space?",
+    "How robust are the proposed approximate state-preparation and variational schemes to NISQ noise, and what minimal hardware improvements (gate fidelities, coherence times) are required to realize practical advantages?",
+    "Can waveform-specific approximations (e.g., DHWT truncation) be generalized to wider function classes with provable error-vs-depth tradeoffs?",
+    "[inferred] How to integrate quantum precomputation (e.g., density exponentiation variants) with limited-copy constraints to realize practical subroutines (LMR-like) for finance & PDEs?"
+  ],
+  "future_work": [
+    "Extend non-Hermitian HS techniques and the Black–Scholes mapping to more complex pricing models, e.g., local volatility and SABR models.",
+    "Further develop and benchmark approximate Grover–Rudolph and variational state-preparation methods for broader function classes, including practical NISQ implementations and noise-robust variants.",
+    "Investigate the use of MPS truncation and approximate multi-qubit unitary decompositions to produce shallower circuits with controlled errors, and quantify classical pre-processing costs.",
+    "Explore and refine block-encoding constructions and polynomial transforms (QSVT) for polynomial amplitude loading, including strategies to manage ancilla use and amplitude amplification costs.",
+    "Study and quantify the practical radius of convergence / time-limits for Carleman linearisation (QCL) in fluid dynamics and other nonlinear PDEs, and connect efficiency to physical parameters (e.g., Reynolds number, forcing scales).",
+    "Develop more realistic device noise models and perform comprehensive hardware benchmarking (digital and analog) for time-dependent Hamiltonian simulations and QA emulations.",
+    "Advance MQS simulation techniques (KvN formalism) for larger systems and fields; quantify resource savings for cases of practical interest (e.g., semiclassical gravity, Born–Oppenheimer regimes).",
+    "Design and test readout protocols that efficiently extract useful global quantities from quantum-encoded PDE solutions, minimizing classical sampling overhead.",
+    "Benchmark end-to-end quantum PDE solvers (state prep + HS + readout) on hardware and simulators, identify bottlenecks, and test mitigation strategies such as dynamical decoupling and variational compression.",
+    "Analyze tradeoffs between analog and digital simulation paradigms for practical problem instances to guide choice of platform for specific PDE applications.",
+    "Investigate theoretical and empirical conditions under which quantum algorithms (including QCL) can offer practical speedup for turbulence and complex fluid-flow problems beyond asymptotics."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "variational-nisq",
+    "amplitude-estimation",
+    "quantum-walks",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability",
+    "contradiction:classical-vs-quantum"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Presents end-to-end quantum pipelines (state preparation, Hamiltonian simulation, measurement) that could in principle accelerate PDE-based option pricing using QSVT/QSP/qubitization and Carleman linearisation for nonlinear problems.",
+    "#idea:quantum-advantage — Explores block-encoding and QSVT-based approaches to encode differential operators and apply high-accuracy evolution operators for Black–Scholes-type PDEs.",
+    "#idea:near-term-feasibility — Provides extensive NISQ-focused benchmarking (noisy simulators, open-system models, and IBM hardware) showing fidelity/TVD metrics and identifying operating points balancing discretization error vs. noise exposure.",
+    "#idea:hybrid-approach — Proposes multiple practical state-preparation strategies (approximated Grover–Rudolph, variational ansätze, MPS compression, DHWT truncation) and hybrid pipelines (classical preprocessing + quantum kernels) to reduce qubit and gate requirements.",
+    "#idea:hybrid-approach — Uses unitary dilation with ancilla and postselection to implement non-Hermitian PDE evolution on gate-model devices, analyzing success probabilities and resource trade-offs.",
+    "#idea:near-term-feasibility — Studies error-mitigation (dynamical decoupling) and noise-model-aware circuit design; tunes Magnus/Trotter step counts to trade discretization error against accumulated noise."
+  ],
+  "contradictions": [
+    "contradiction:scalability — Empirical and numerical results emphasize severe practical scaling bottlenecks (state-preparation costs, ancilla postselection success probability for non-unitary evolution, limited qubit counts used in examples n≤8 and 4-qubit QA), contradicting optimistic claims that quantum PDE solvers are readily scalable to production-sized finance problems.",
+    "contradiction:classical-vs-quantum — Comparisons (e.g., with classical SVMC for QA benchmarking and high-precision classical Magnus integration as reference) and the quantified noise/discretization trade-offs indicate that classical methods remain competitive on small-to-moderate instances; the thesis therefore tempers claims of near-term quantum superiority for option-pricing PDEs."
+  ],
+  "limitation_tags": [
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:data-encoding"
+  ]
+}

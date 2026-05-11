@@ -1,0 +1,60 @@
+{
+  "_citation": "Stilck França, García-Patrón. 'Limitations of optimization algorithms on noisy quantum devices.' Nature Physics 17, 1221–1227 (2021).",
+
+  "_methodology": "Proves via relative-entropy bounds and mirror descent that for any noisy quantum circuit solving a cost-function or sampling problem, the product p×L (per-gate error × circuit depth) upper-bounds achievable approximation quality. If p×L > ~1, output converges to the noise fixed point (mixed state) and is indistinguishable from random sampling. Applies to ANY non-fault-tolerant noisy circuit — variational (QAOA, VQE, QML), quantum annealing, AND non-variational optimization/estimation (QAE, Grover, quantum walk). Does not apply to fault-tolerant error-corrected circuits.",
+
+  "_audit_2026_04_20": "Applicable-families list broadened beyond variational. Per the paper's general scope (any noisy non-FT circuit optimizing a cost function), amplitude-estimation, Grover, and quantum-walk are now in scope. Excluding them previously hid the bound from ~228 finance experiments (audit fix M1).",
+
+  "applicable_algorithm_families": [
+    "qaoa", "vqe", "quantum-annealing", "quantum_annealing",
+    "variational-nisq", "variational_nisq", "variational",
+    "qnn", "qgan", "qcbm",
+    "hybrid",
+    "quantum-ml", "quantum_ml", "qml",
+    "quantum-svm", "quantum_svm", "qsvm",
+    "quantum-neural-network", "quantum_neural_network",
+    "quantum-boltzmann-machine", "quantum-generative-adversarial-network",
+    "amplitude-estimation", "amplitude_estimation",
+    "quantum-amplitude-estimation", "quantum_amplitude_estimation",
+    "grover", "amplitude_amplification", "amplitude-amplification",
+    "quantum_walk", "quantum-walk",
+    "quantum_monte_carlo", "quantum-monte-carlo", "qmc"
+  ],
+
+  "noise_bound": {
+    "formula": "If p * L > c (for constant c ≈ 1), then cost function expectation converges to the trivial (random) value exponentially fast. p = single-gate error rate, L = circuit depth.",
+    "critical_pL_product": 1.0,
+    "interpretation": "p * L > 1 means the noise has corrupted the circuit beyond any useful signal. Even p * L ≈ 0.1-1.0 severely limits the approximation quality.",
+    "practical_threshold": 0.1,
+    "practical_threshold_note": "Below p*L = 0.1 there may be some useful signal; above, advantage is impossible."
+  },
+
+  "noise_estimates_by_hardware": {
+    "superconducting_2023": {
+      "two_qubit_error": 0.005,
+      "label": "IBM Eagle/Heron, Google Sycamore range (2023)",
+      "max_useful_depth": 20,
+      "max_useful_depth_note": "0.005 * 20 = 0.1 (at threshold)"
+    },
+    "superconducting_2025_target": {
+      "two_qubit_error": 0.001,
+      "label": "Roadmap target ~2025",
+      "max_useful_depth": 100
+    },
+    "ion_trap_2023": {
+      "two_qubit_error": 0.003,
+      "label": "IonQ Aria, Quantinuum H2 range",
+      "max_useful_depth": 33
+    },
+    "fault_tolerant": {
+      "two_qubit_error": 1e-10,
+      "label": "Error-corrected logical gates",
+      "max_useful_depth": 1e9,
+      "note": "Stilck França bound is irrelevant for FT circuits — this framework only constrains NISQ."
+    }
+  },
+
+  "_verdict_rules": {
+    "_guidance": "Only runs on variational/NISQ algorithms. If algorithm is QAOA/VQE/QA and noise_model.is_noisy = true (or inferred from hardware name): compute p*L and compare against threshold. If p*L > 1 → fails. If 0.1 < p*L ≤ 1 → conditional. If p*L ≤ 0.1 → potentially_viable. If no noise info → insufficient_data. If algorithm is not variational → not_applicable."
+  }
+}

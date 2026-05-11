@@ -1,0 +1,206 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document header includes an arXiv identifier (arXiv:2207.10838v1 [math.NA] 22 Jul 2022), indicating it is an arXiv submission. The structure (abstract, methods, experiments, references) is that of a research paper, but no journal or conference venue is listed, consistent with a preprint.",
+  "title": "Quantum-inspired variational algorithms for partial differential equations: Application to financial derivative pricing",
+  "authors": [
+    "Tianchen Zhao",
+    "Chuhao Sun",
+    "Asaf Cohen",
+    "James Stokes",
+    "Shravan Veerapaneni"
+  ],
+  "year": "2022",
+  "journal_or_venue": "arXiv (preprint)",
+  "doi": "",
+  "abstract_summary": "The paper generalizes McLachlan's time-dependent variational principle to arbitrary time-dependent PDEs and introduces a variational quantum Monte Carlo (VMC) style solver using autoregressive neural-network quantum states. The method is applied to high-dimensional parabolic PDEs, notably the multi-asset Black–Scholes equation for option pricing, and numerical experiments show polynomial scaling with dimension and competitive accuracy compared to mesh-based Euler methods.",
+  "methodology_description": "The authors generalize McLachlan's time-dependent variational principle (TDVP) to handle general time-dependent PDEs and implement a quantum-inspired, classical variational quantum Monte Carlo (VMC) solver based on neural-network quantum states (NQS). The continuous PDE is discretized on a regular d-dimensional mesh of size |Ω_mesh| = 2^n, and the discretized field is encoded as an unnormalized n-qubit state |u(t)>. The trial ansatz is u_θ(x) = α ψ_β(x) where ψ_β is a unit-normalized autoregressive NQS (MADE-style autoregressive factorization) and α is a scalar amplitude; the augmented parameter vector is θ = (log α, β). Starting from a pre-training stage (minimizing L2 mismatch between u_θ and initial condition u0 using Adam), the time evolution is carried out by deriving the infinitesimal TDVP ODE M(θ) θ'(t) = V(t, θ) where M and V are inner products involving ∂u_θ/∂θ and F(t,u_θ) (affine case F = L u + f is considered). Expectations in M and V are estimated by importance sampling from the Born distribution ρ_β(x)=|ψ_β(x)|^2. Per-sample gradients ∇_β ψ_β(x) are computed efficiently via BackPack to avoid repeated backward passes. The local energy (Lψ_β)/ψ_β and other per-sample quantities are computed by extracting nonzero entries of L’s row for each sampled mesh index (CPU-parallelized). The linear system M δθ = V δt is solved each step (SVD-based regularization / truncation of tiny singular values, threshold 1e-12) to obtain an Euler update θ ← θ + δθ. The implementation uses Monte Carlo batch estimates (various batch sizes studied), SVD regularization, and forward Euler time stepping for the parameter ODEs. Baselines include explicit forward-Euler finite-difference evolution on the full grid and, where available (1D Black–Scholes), the analytic Black–Scholes formula. Performance is evaluated in terms of relative L2 error over space-time, running time, and qualitative solution snapshots.",
+  "algorithms_used": [
+    "Variational Quantum Monte Carlo (VMC)",
+    "Time-dependent variational principle / McLachlan's TDVP",
+    "Autoregressive neural-network quantum state (MADE-style)",
+    "Adam optimizer",
+    "Forward Euler time stepping (for ODE updates and baseline PDE solver)",
+    "Finite-difference (central) discretization (baseline)",
+    "SVD-based regularized linear solver (truncation)"
+  ],
+  "frameworks": [
+    "BackPack (for per-sample gradients)"
+  ],
+  "experimental_setup": "Classical experiments run on discretized PDEs mapped to 2^n mesh points (n qubits equivalent). Pre-training: Adam optimizer for 50k iterations, batch size 128, β1=0.9, β2=0.999, ϵ=1e-8; learning rate warm-started then decayed at specified milestones. Evolution: typical δt = 5e-5, total evolution time T = 1, evolution iterations ≈ 20k, typical Monte Carlo batch sizes B ∈ {128, 500, 1024, 5000} studied; SVD truncation threshold ϵ_SVD = 1e-12. Diffusion constant D = 0.1 for diffusion experiments. CPU-parallelized extraction of sparse-row entries of L. Computational resources provided in part by University of Michigan Advanced Research Computing (ARC).",
+  "dataset_used": "",
+  "experiment_input": {
+    "type": "synthetic / PDE initial and boundary data",
+    "mesh": "Regular d-dimensional hypercube mesh with 2^n grid points; each axis has 2^{n/d} points",
+    "initial_conditions": "Gaussian-like initializations expressed via modified Bessel functions: u0(x) = ∏_{i=1}^d e^{-t} I_{x_i}(t) with parameter t controlling width",
+    "PDEs": "Heat/diffusion equation (L = D ∇·∇) with Dirichlet or periodic boundary conditions; multi-asset Black–Scholes PDE mapped to a heat equation via log-transform",
+    "option_payouts": "Synthetic payoff functions for option pricing experiments (1D European call; 2D basket call/put, rainbow max call, spread put) as specified in paper",
+    "domain_truncation_for_BS": "Heat equation domain approx [-5,5]^d corresponding to asset domain [K e^{-3σ√T}, K e^{3σ√T}]^d",
+    "size": "mesh sizes determined by n (total discretized points = 2^n); experiments up to n=16 qubits (i.e., 65536 grid points)",
+    "source": "synthetic (constructed for numerical experiments)"
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "1) Discretize spatial domain on a regular mesh (|Ω_mesh| = 2^n); map grid indices to n-bit strings.",
+      "2) Choose trial ansatz u_θ = α ψ_β with ψ_β an autoregressive, unit-normalized NQS (ψ_β(k) = ∏_i sqrt(p_{β,i}(k_i | k_{<i}))).",
+      "3) Pre-train θ_0 = (log α_0, β_0) by minimizing L2 norm between α_0 ψ_{β_0} and initial condition u0 over mesh using Adam (50k iterations, batch size 128).",
+      "4) For each evolution step: draw Monte Carlo batch of samples from ρ_β(x)=|ψ_β(x)|^2 (autoregressive sampling), compute per-sample scores σ_β(x)=∇_β ψ_β(x)/ψ_β(x) via BackPack, compute local energy l_θ(t,x) = (L ψ_β)(x)/ψ_β(x) + f(t,x)/α (obtain nonzero row entries of L per sample using CPU parallelization), estimate M and V by averaging over batch.",
+      "5) Regularize M via SVD, truncate singular values < 1e-12, solve M δθ = V δt for δθ (Euler step for parameter ODE), update θ ← θ + δθ.",
+      "6) Repeat evolution for total time T (e.g., T=1) with step size δt (e.g., 5e-5) for ≈20k iterations.",
+      "7) Evaluate outputs vs baselines: compute relative L2 error across space-time (eq. 24), compute running time statistics, and (for 1D Black–Scholes) compare with analytical Black–Scholes formula."
+    ],
+    "key_parameters_and_values": {
+      "pretraining_iterations": 50000,
+      "pretraining_batch_size": 128,
+      "Adam_beta1": 0.9,
+      "Adam_beta2": 0.999,
+      "Adam_epsilon": 1e-08,
+      "evolution_iterations": 20000,
+      "evolution_delta_t": 5e-05,
+      "total_time_T": 1,
+      "typical_batch_sizes": [
+        128,
+        500,
+        1024,
+        5000
+      ],
+      "SVD_truncation_threshold": 1e-12,
+      "diffusion_constant_D": 0.1,
+      "mesh_point_counts": "2^n (experiments up to n=16)"
+    },
+    "baselines": [
+      "Forward-Euler finite-difference PDE solver on full grid (same time step)",
+      "Analytical Black–Scholes formula for 1D European call"
+    ]
+  },
+  "experiment_output": {
+    "formats": "Numerical arrays (discretized solution u_θ on mesh over time), runtime logs, and plots (snapshots, convergence curves, option price vs strike)",
+    "metrics": [
+      "Relative L2 error over space-time (error = (1/T) ∑_t ||u(t) - u_θ(t)||_{mesh} / ||u(t)||_{mesh})",
+      "Running time (seconds) averaged over iterations",
+      "Qualitative solution snapshots (boundary condition adherence, visual comparisons)"
+    ],
+    "comparisons": [
+      "Relative error of VMC solution vs forward Euler baseline",
+      "Relative error of forward Euler vs analytical solution (where available)",
+      "Runtime comparison vs forward Euler (exponential vs polynomial scaling)"
+    ],
+    "representative_results": "Tables of relative errors (see Table 1 & 4), running time (Table 2), and plots showing dependence on batch size, dimensionality, volatility, interest rate, strike, and initial price."
+  },
+  "experiment_parameters": {
+    "max_qubits_used_n": 16,
+    "typical_mesh_points": "up to 2^16",
+    "pretraining_iters": 50000,
+    "pretraining_batch_size": 128,
+    "optimizer": "Adam",
+    "Adam_parameters": {
+      "beta1": 0.9,
+      "beta2": 0.999,
+      "epsilon": 1e-08
+    },
+    "evolution_iters": 20000,
+    "evolution_delta_t": 5e-05,
+    "total_time_T": 1,
+    "batch_sizes_tested": [
+      128,
+      500,
+      1024,
+      5000
+    ],
+    "SVD_threshold": 1e-12,
+    "diffusion_constant": 0.1,
+    "boundary_conditions": [
+      "Dirichlet",
+      "Periodic"
+    ]
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "The paper describes algorithmic details, hyperparameters, and experimental settings (mesh mapping, pre-training and evolution hyperparameters, batch sizes, SVD truncation threshold), but no code repository or scripts are provided in the text. The authors note use of BackPack for per-sample gradients and computational resources from University of Michigan ARC. Reproducing results should be possible given the detailed numerical parameters, but requires implementing the autoregressive NQS, the Monte Carlo estimators, efficient per-sample gradient extraction (BackPack or equivalent), and sparse-row access to the discretized operator L; authors do not provide explicit code or data links.",
+  "key_findings": [
+    "[speculative] A generalization of McLachlan's time-dependent variational principle (TDVP) can be formulated for arbitrary time-dependent PDEs and yields an ODE system M(θ) θ'(t) = V(t, θ(t)) for variational parameters (derivation provided).",
+    "[speculative] The finite-element Galerkin discretization of linear PDEs arises as a special case of the TDVP formulation, establishing a formal analogy between the proposed variational approach and classical FEM.",
+    "[speculative] Parametrizing the PDE solution as u_theta = α · ψ_beta where ψ_beta is a unit-normalized autoregressive neural-network quantum state (NQS) and α a scale factor yields a practical variational ansatz for high-dimensional problems.",
+    "[supported] Using VMC-style importance sampling with an autoregressive NQS allows stochastic estimation of the TDVP matrix M and vector V via expectations under the Born distribution |ψ_beta|^2.",
+    "[supported] The authors implemented a mesh-based encoder mapping a d-dimensional spatial grid to an n-qubit-like indexing and enforced boundary conditions via source functions on the mesh.",
+    "[supported] Empirically on diffusion PDE benchmarks, the VMC/NQS evolution matches forward Euler solutions with small relative errors in low dimensions and increasing error with dimension (examples: Table 1 reports relative errors ranging from ~5.1e-3 up to ~1.47e-1 depending on n and d).",
+    "[supported] Empirical running-time behavior: classical forward Euler scales exponentially with grid size (O(T·2^n) in their notation), while the proposed method scales as O(T·B·poly(n)) where B is Monte Carlo batch size; for the tested problems the VMC method became faster than forward Euler around n = 16 qubits.",
+    "[supported] The method's accuracy improves with larger Monte Carlo batch sizes (authors report error improvements, e.g., from ~15% to ~3% when increasing batch size tenfold in one ablation), indicating a trade-off between compute (batch) and accuracy.",
+    "[supported] The approach can be applied to option pricing: via the Feynman-Kac transform and a known mapping of the multidimensional Black–Scholes PDE to a heat equation, the authors used the method to price multi-asset European options and compared results to analytic 1D Black–Scholes and to forward Euler in 2D examples (see Table 4 and Figure 3).",
+    "[supported] Numerical option-pricing results: 1D European call pricing errors of the VMC/NQS method versus analytic Black–Scholes were small in many tested settings (representative error entries in Table 4: e.g., 0.01178, 0.03279, 0.01727 for various volatilities and parameters).",
+    "[speculative] The mesh is not mandatory for the formulation and the method could be extended to mesh-free continuous-variable NQS (normalizing flows), which may be advantageous for some PDEs and boundary conditions.",
+    "[speculative] Higher-order time-stepping methods or direct discrete-time variational updates (instead of Euler in parameter space) may improve accuracy/stability and are natural next steps.",
+    "[speculative] The VMC-based approach avoids quantum state preparation and readout complications that limit the practicality of analogous VQA algorithms on quantum hardware, making it attractive as a classical 'quantum-inspired' solver.",
+    "[disputed] The paper implies the method 'overcomes the curse-of-dimensionality' broadly; while empirical and complexity-analytic evidence shows polynomial scaling in tested aspects, the claim of fully overcoming the curse in general is not proven nor demonstrated for arbitrarily high dimensions and is therefore not established."
+  ],
+  "results_summary": "The authors derive a TDVP formulation for general time-dependent PDEs and propose a quantum-inspired variational Monte Carlo algorithm that uses autoregressive neural-network quantum states (NQS) as trial functions. They implement a mesh-based encoding, importance-sampling estimation of TDVP matrix/vector elements, and evolve parameters via an Euler step with regularization. Numerical experiments on diffusion PDEs show that the method approximates forward Euler solutions with small errors in low dimensions; errors increase with dimensionality but can be mitigated by larger Monte Carlo batches. Runtime analysis and timings indicate polynomial scaling in number of qubits and batch size (O(T·B·poly(n))) versus exponential scaling for direct grid methods, and the method becomes favorable at moderate problem sizes (reported around n=16 qubits). The approach is applied to multi-asset Black–Scholes option pricing (via the heat-equation transform), producing reasonable option prices in 1D and 2D tests. The authors emphasize methodological flexibility (mesh-free extensions, improved time-stepping) and position the approach as a classical, quantum-inspired alternative rather than a quantum-computing implementation.",
+  "performance_claims": [
+    "Table 1 diffusion relative errors (Dirichlet): for n/d=4 across dimensions d=1..4: [5.13e-3, 7.92e-3, 3.12e-2, 1.47e-1]; for n/d=5 across d=1..3: [2.91e-3, 9.91e-3, 7.24e-2].",
+    "Runtime complexity: forward Euler O(T·2^n) (exponential in grid size), proposed method O(T·B·poly(n)) (polynomial in n), with forward pass O(T·B·n^2) and autoregressive sampling O(T·B·n^3) described.",
+    "Empirical running times (Table 2, averaged over 2k iterations) show forward Euler times: e.g., n/d=4, d=4 → 305.92s; proposed method times increase polynomially and for n=16 qubits the proposed method is already faster than forward Euler on tested hardware (specific entries: 'Ours' n/d=4,d=9 → 1812.94s; comparison points show cross-over at problem sizes limited by memory for Euler).",
+    "Batch-size ablation: increasing batch size improves accuracy; authors report an example improvement from ~15% relative error to ~3% when increasing the batch size by a factor of 10.",
+    "Option pricing errors (Table 4): representative VMC/NQS 1D call relative errors vs analytic Black–Scholes: 0.011781, 0.032792, 0.017272, 0.011560 across several volatilities and parameter settings.",
+    "Pre-training and evolution hyperparameters used in experiments: pre-training 50k Adam iterations, evolution total time T=1 with step size δt=5e-5, batch size B=1024 for Monte Carlo evolution, results averaged over 5 seeds trained for 20k steps."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The work is 'quantum-inspired' and uses concepts from variational quantum algorithms and neural-network quantum states but implements a classical variational Monte Carlo solver. The paper does not claim or demonstrate a quantum-computational advantage on quantum hardware; it argues that VMC avoids quantum state-preparation/readout overheads relevant to VQA but does not report quantum speedup.",
+  "limitations": [
+    "Numerical experiments consider only the aﬃne linear case F(t,x,u) = L u + f; non-linear PDEs are not demonstrated.",
+    "The implementation in the paper is mesh-based (spatial discretization onto a regular grid); mesh-free variants are not implemented.",
+    "Time evolution uses a simple first-order Euler scheme for the ODE (4); higher-order time-stepping schemes were not used.",
+    "The mass matrix M can be degenerate or ill-conditioned, requiring regularization (SVD truncation and thresholding) to obtain stable updates.",
+    "Monte Carlo estimation of M and V introduces stochastic approximation error and variance; accurate updates require large batch sizes which grow with dimension.",
+    "The method has substantial computational overhead (sampling, forward/backward passes, per-sample gradient extraction and matrix-element extraction) and is slower than forward Euler in low-dimensional problems; only for larger problem sizes does it become competitive.",
+    "Boundary conditions are imposed via source functions on the mesh; non-trivial boundary-condition treatment is not fully explored.",
+    "Pre-training is required to match the initial condition, adding to computational cost and complexity of initialization.",
+    "Per-sample gradient computation relies on specialized tooling (e.g., BackPack) and CPU parallelization for matrix-element extraction, which adds implementation complexity and overhead.",
+    "[inferred] Scalability to very high spatial dimensionalities remains uncertain due to sample complexity, required batch sizes, and neural-network capacity.",
+    "[inferred] No rigorous theoretical error bounds or convergence guarantees are provided for the generalized stochastic TDVP applied to arbitrary time-dependent PDEs.",
+    "[inferred] Extension to free-boundary problems (e.g., American options) and other non-trivial PDE classes is not implemented in this work."
+  ],
+  "open_questions": [
+    "How to construct mesh-free variants (e.g., based on continuous-variable neural-network states or normalizing flows) that can handle non-trivial boundary conditions reliably?",
+    "How to incorporate higher-order time-stepping methods (e.g., Runge–Kutta) or otherwise improve temporal accuracy and stability of the variational evolution?",
+    "Can the discrete-time variational problem (3) be solved directly and more efficiently than via the current infinitesimal-time Euler approximation?",
+    "What are robust alternatives to the SVD truncation/thresholding approach for dealing with ill-conditioned or degenerate mass matrices M?",
+    "How does the required batch size / sample complexity scale with spatial dimension and desired accuracy, and can this scaling be improved?",
+    "Can the method be extended to and remain efficient for non-linear PDEs or strongly non-linear terms in F(t,x,u)?",
+    "How does this VMC-based variational approach compare empirically and theoretically to other neural PDE solvers (PINNs, neural Galerkin, flow-based methods) in accuracy, runtime and scalability?",
+    "What are appropriate strategies to reduce algorithmic overhead (sampling, per-sample gradient computation, matrix element extraction) to make the method competitive in low- and moderate-dimensional settings?",
+    "How should domain truncation and boundary approximations be chosen for problems (e.g., Black–Scholes → heat equation) so as to control bias introduced at the artificial boundaries?",
+    "What theoretical convergence and error guarantees (if any) can be established for the generalized McLachlan/Taylor expansion based TDVP when applied to general PDEs?"
+  ],
+  "future_work": [
+    "Develop mesh-free variants of the approach, for example using continuous-variable neural-network quantum states or normalizing flows.",
+    "Incorporate higher-order time-stepping schemes (e.g., Runge–Kutta methods) to improve temporal accuracy.",
+    "Explore direct solution of the discrete-time variational problem (equation (3)) rather than relying on the infinitesimal Euler limit.",
+    "Extend the methodology to free-boundary problems required for American option pricing and other related problems."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "benchmark-comparison",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Generalized McLachlan TDVP + VMC-style solver (using autoregressive NQS) applied to parabolic PDEs yields polynomial scaling with dimension for multi-asset Black–Scholes and competitive accuracy versus mesh-based Euler baselines.",
+    "#idea:hybrid-approach — Quantum-inspired approach: encode discretized field as an n-qubit unnormalized state and implement the variational algorithm classically using neural-network quantum states (MADE-style autoregressive parameterization) and classical ML tooling (BackPack, Adam).",
+    "#idea:quantum-advantage — Importance sampling from the Born distribution (|ψ_β|^2) with autoregressive sampling and per-sample score computation enables scalable Monte Carlo estimates of TDVP inner products (M and V).",
+    "#idea:quantum-advantage — Numerical experiments (up to n=16, 65,536 grid points) report relative L2 errors and runtimes; 1D results validated against analytic Black–Scholes solution and multi-dimensional tests (basket, rainbow, spread payoffs) show competitive accuracy.",
+    "#limitation:simulation-only — All experiments are classical (quantum-inspired) implementations; no quantum hardware/QPU experiments or noise considerations are presented.",
+    "#limitation:qubit-count — Mapping to an n-qubit state and reporting experiments only up to n=16 implies substantial qubit requirements to realize the approach on actual quantum hardware for large-scale problems.",
+    "#limitation:data-encoding — The method discretizes the domain to 2^n grid points and encodes the field as an n-qubit state; the encoding and mesh-size growth (and associated overhead) are potential practical bottlenecks for very high-dimensional or high-resolution problems."
+  ],
+  "contradictions": []
+}

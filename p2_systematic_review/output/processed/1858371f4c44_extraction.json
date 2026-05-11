@@ -1,0 +1,252 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document has an academic structure (abstract, methods, results, citations) but no journal or conference venue is stated; it is dated and cites arXiv items, matching typical preprint formatting rather than a published peer-reviewed article.",
+  "title": "Autonomous Quantum Agents for Portfolio Optimization: Orchestrating QAOA Workflows on Cloud Quantum Simulators",
+  "authors": [
+    "Kaushik Ganguly"
+  ],
+  "year": "2026",
+  "journal_or_venue": "preprint",
+  "doi": "",
+  "abstract_summary": "This preprint presents an agentic framework that automates end-to-end portfolio optimization with a LangGraph-orchestrated DAG of eight specialized agents handling policy, data ingestion, QAOA circuit construction from live Yahoo Finance data, simulation pre-validation, cloud submission via the QBraid runtime, quality gating, and artifact generation. The QAOA ansatz maps annualized returns and pairwise covariances to single- and two-qubit rotations; experiments on two QBraid-backed cloud simulators show consistent measurement distributions and a dominant, high-Sharpe portfolio, while a maturity-gated governance model controls hardware access and the agentic overhead remains under 2% of pipeline time.",
+  "methodology_description": "The study implements an end-to-end, agent-orchestrated pipeline that takes live financial market data and produces QAOA-based portfolio-selection samples on cloud quantum simulators. The workflow is decomposed into eight single-responsibility agents coordinated by a LangGraph DAG state machine: PolicyAgent (maturity-gated resource permissions), Planner (task decomposition and routing), AutoCircuitDesigner (constructs a QAOA ansatz from market data), SimulationSandbox (local pre-validation via Qiskit simulators or fallback random generator), QPUBroker (backend selection and submission through the QBraid runtime), Result Polling (asynchronous job monitoring), QCAAgent (statistical quality gate), Aggregator (provenance-tracked artifact generation) and RejectionHandler. Market data (one year of daily closes) are fetched from Yahoo Finance using yfinance; daily log-returns are computed and annualized to produce per-asset expected returns and an annualized covariance matrix. These empirical parameters directly determine QAOA gate angles: single-qubit RZ angles encode returns (γ_i^(l) = l * μ_i * π), two-qubit ZZ interactions are implemented as CX–RZ(γ_ij)–CX with γ_ij^(l) = l * C_ij * π/2, and mixer RX rotations use β_i^(l) = l * 0.4 * π / p. The circuit uses n qubits (assets) with p alternating cost/mixer layers, is prepared from H⊗n, executed locally for pre-validation (Qiskit BasicSimulator / Aer) and then submitted via QBraid to cloud simulator backends. Measurement counts are retrieved, checked against a simple statistical gate (normalized mean > 0), and translated into equal-weight portfolios for financial evaluation (annualized return, portfolio volatility, Sharpe ratio). The presented experiments used n=5, p=5, produced a compiled circuit (≈210 gates, depth 93), and were executed on two QBraid-accessible simulators to assess cross-platform consistency and end-to-end orchestration performance.",
+  "algorithms_used": [
+    "QAOA"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "Qiskit Aer",
+    "LangGraph (StateGraph)",
+    "QBraid SDK / runtime",
+    "yfinance"
+  ],
+  "experimental_setup": "5-qubit QAOA circuit with p=5 layers (H⊗5 initial state, data-driven RZ and ZZ cost unitaries, RX mixers). Local pre-validation on Qiskit BasicSimulator (1000 shots). Cloud execution via QBraid: AWS Tensor Network simulator (aws:aws:sim:tn1, 1000 shots) and QBraid QIR state-vector simulator (qbraid:qbraid:sim:qir-sv, 2000 shots). Compiled circuit: ~210 gates, transpiled depth 93.",
+  "dataset_used": "One year of daily closing prices (≈252 trading days, ending February 2026) for five tickers fetched from Yahoo Finance via the yfinance library: AAPL, XOM, JPM, JNJ, GLD. Preprocessing: compute daily log-returns r_t = log(p_t / p_{t-1}), annualize returns and covariance using 252 trading days.",
+  "experiment_input": {
+    "source": "Yahoo Finance via yfinance Python library",
+    "tickers": [
+      "AAPL",
+      "XOM",
+      "JPM",
+      "JNJ",
+      "GLD"
+    ],
+    "time_horizon": "one year of daily closes (~252 trading days, ending Feb 2026)",
+    "preprocessing": "Daily log-returns r_t = log(p_t / p_{t-1}); annualization of returns and covariance using 252 trading days; equal-weight allocation used when evaluating selected portfolios",
+    "derived_inputs": "Per-asset annualized expected returns (μ_i) and annualized covariance matrix C (used to parameterize QAOA angles)"
+  },
+  "experiment_process": {
+    "steps": [
+      "PolicyAgent enforces maturity-level resource permissions (determines whether QPU access and shot budgets are allowed).",
+      "Planner decomposes the job into subtasks and sets routing_path (optimization → full quantum path).",
+      "AutoCircuitDesigner constructs QAOA circuit from live market data (n=5 qubits, p=5 layers); parameterizes single-qubit RZ angles from annualized returns and two-qubit ZZ interactions from covariance entries; mixer RX angles scheduled per layer.",
+      "SimulationSandbox runs local pre-validation using Qiskit BasicSimulator (fallback to Aer or market-weighted random sampler) to ensure non-trivial measurement distribution.",
+      "QPUBroker enumerates backends through QBraid, selects backend respecting policy, estimates cost, and submits the Qiskit QuantumCircuit via device.run(circuit, shots).",
+      "Result Polling monitors job status via QBraid at 5-second intervals up to a 5-minute timeout and retrieves measurement counts on completion.",
+      "QCAAgent applies a statistical quality gate (normalized mean > 0) to detect catastrophic failures.",
+      "Aggregator generates a provenance-tracked JSON artifact with job descriptor, market snapshot, circuit, measurements and metrics; RejectionHandler provides remediation suggestions if the quality gate fails."
+    ],
+    "parameters_and_behaviors": {
+      "QAOA_parameterization": {
+        "return_encoding": "γ_i^(l) = l * μ_i * π",
+        "covariance_encoding": "γ_ij^(l) = l * C_ij * π/2 implemented via CX(i,j)-RZ(γ_ij)-CX(i,j)",
+        "mixer": "β_i^(l) = l * 0.4 * π / p",
+        "layers": "p = 5",
+        "initial_state": "H⊗n |0⟩⊗n"
+      },
+      "prevalidation": "1000-shot BasicSimulator run to check distribution; pass if non-trivial and normalized mean ≈ 0.67",
+      "submission_and_polling": "Submit via QBraid; poll status every 5s up to 60 attempts; fall back to local simulation on submission failure",
+      "quality_gate": "Normalized mean of measurement distribution must be > 0"
+    },
+    "iterations": "Single-run pipeline per experiment reported; no variational outer-loop (no iterative parameter optimization) was used"
+  },
+  "experiment_output": {
+    "format": "Measurement count distributions (bitstring frequencies), normalized mean statistic, top-k bitstrings with per-bitstring counts and probabilities, decoded portfolios (bit → asset inclusion), and financial metrics for each decoded portfolio (annualized return R_p, portfolio volatility σ_p, Sharpe ratio). Aggregated provenance JSON artifact containing job descriptor, market snapshot, circuit, measurement counts, and metadata (UUID, timestamp).",
+    "metrics_reported": [
+      "Measurement probabilities for bitstrings (counts, percentages)",
+      "Normalized mean of measurement distribution",
+      "Portfolio annualized return (R_p)",
+      "Portfolio volatility (σ_p)",
+      "Sharpe ratio",
+      "Comparison to baselines: equal-weight all-assets, best/worst single-asset, random 3-asset average, min-variance classical solution"
+    ],
+    "baselines": [
+      "Equal-weight (all 5 assets)",
+      "Random 3-asset (average)",
+      "Best single asset (highest μ)",
+      "Min-variance classical solution"
+    ]
+  },
+  "experiment_parameters": {
+    "n_qubits": 5,
+    "layers_p": 5,
+    "shots": {
+      "local_prevalidation": 1000,
+      "aws_tn1": 1000,
+      "qbraid_qir": 2000
+    },
+    "mixer_coefficient": 0.4,
+    "rotation_formulas": {
+      "single_qubit_RZ": "γ_i^(l) = l * μ_i * π",
+      "two_qubit_ZZ": "γ_ij^(l) = l * C_ij * π/2",
+      "mixer_RX": "β_i^(l) = l * 0.4 * π / p"
+    },
+    "compiled_circuit": {
+      "gate_count": {
+        "H": 5,
+        "RZ_returns_total": 25,
+        "CX_total": 100,
+        "RZ_cov_total": 50,
+        "RX_total": 25,
+        "measurement": 5,
+        "total_instructions_reported": 214
+      },
+      "transpiled_depth": 93
+    },
+    "optimizer": null,
+    "quality_gate_threshold": {
+      "normalized_mean": 0
+    },
+    "policy_shot_budgets": {
+      "Concept": 0,
+      "Prototype": 2000,
+      "Validated": 5000,
+      "Certified": 8000
+    }
+  },
+  "hardware_details": {
+    "local_simulators": [
+      {
+        "name": "Qiskit BasicSimulator",
+        "type": "state-vector / basic simulator",
+        "shots_used": 1000
+      },
+      {
+        "name": "Qiskit Aer (fallback)",
+        "type": "aer simulator",
+        "shots_used": null
+      }
+    ],
+    "cloud_backends_via_QBraid": [
+      {
+        "provider_label": "AWS (Tensor Network simulator)",
+        "backend_id": "aws:aws:sim:tn1",
+        "backend_type": "tensor-network simulator",
+        "shots": 1000,
+        "cost_estimate": "$0.00 (for the runs reported)"
+      },
+      {
+        "provider_label": "QBraid QIR (state-vector)",
+        "backend_id": "qbraid:qbraid:sim:qir-sv",
+        "backend_type": "QIR state-vector simulator",
+        "shots": 2000,
+        "cost_estimate": "$0.00 (for the runs reported)"
+      }
+    ],
+    "runtime": "QBraid unified runtime for device discovery, transpilation and submission",
+    "transpiler": "QBraid internal transpilation (Qiskit QuantumCircuit object submitted unchanged)"
+  },
+  "reproducibility_notes": "The paper details dataset source (Yahoo Finance via yfinance), circuit construction formulas, full QAOA parameterization, exact tickers, and measured backends and shot counts, which supports reproducibility in principle using the specified open tools (Qiskit, QBraid SDK, LangGraph, yfinance). However, the preprint does not provide an explicit public code repository or scripts, nor does it specify random seeds or exact QBraid environment versions; the artifact generation component is described but no artifact URI is provided. Reproducibility therefore would require reimplementation following the described parameters and environment; access to the same QBraid backends and versions would be necessary to reproduce cloud-execution timings and job lifecycle behavior.",
+  "key_findings": [
+    "[supported] An agentic DAG-based workflow (implemented with LangGraph) can orchestrate an end-to-end quantum portfolio optimization pipeline composed of eight specialized agents (policy, planner, auto-circuit, simulation sandbox, QPU broker, polling, quality control, aggregator/rejection handler).",
+    "[supported] The system constructs a data-driven QAOA circuit where single-qubit RZ angles are derived from annualized returns and two-qubit ZZ interaction angles are derived from empirical covariance entries (live Yahoo Finance data for 5 assets).",
+    "[supported] The full pipeline (circuit construction → local pre-validation → cloud submission → polling → quality gate → artifact generation) was executed on QBraid-backed cloud simulators (AWS tensor-network sim and QBraid QIR state-vector sim).",
+    "[supported] Cross-platform measurement consistency was observed: normalized measurement distribution means agreed to within 0.0001 across local simulator and two cloud simulator backends.",
+    "[supported] The dominant measured bitstring (01011 → portfolio AAPL+XOM+JNJ) appeared at 23.55% frequency (7.6× uniform baseline) and corresponds to an evaluated annualized return 31.17%, volatility 19.29%, Sharpe 1.62 (equal-weight allocation).",
+    "[supported] The top-5 measured bitstrings accounted for 67.60% of shots, indicating a strongly non-uniform output distribution induced by the cost Hamiltonian.",
+    "[supported] The agentic orchestration overhead is negligible: state routing and orchestration consumed ~0.108 s (≈0.4% of total 27 s wall-clock for AWS TN1 run), i.e., under the claimed 2% overhead.",
+    "[supported] The SimulationSandbox pre-validation detected a non-trivial distribution (all 32 bitstrings observed) and yielded a normalized mean consistent with cloud runs, enabling safe cloud submission.",
+    "[speculative] The maturity-gated governance model (mapping job maturity levels to backend/shot permissions) can prevent inadvertent expenditure on paid QPUs during development (model described and enforced by policy agent but not tested on paid hardware).",
+    "[speculative] The paper claims novelty in being the first application of agentic AI orchestration to quantum optimization workflows (presented as a positioning claim rather than an exhaustively validated bibliographic fact).",
+    "[supported] QBraid’s runtime abstraction enabled submission of the same Qiskit circuit object to heterogeneous backends without code modification in these experiments (simulator backends).",
+    "[supported] The covariance-encoded ZZ interactions produced interpretable selection/exclusion behavior (e.g., GLD excluded from the dominant portfolio due to higher covariance penalties).",
+    "[supported] The paper documents implementation-level resource characteristics (gate counts, compiled depth, OpenQASM instruction counts) for the n=5, p=5 circuit.",
+    "[supported] Limitations are clearly acknowledged: small problem scale (n=5), simulator-only cloud execution (no physical QPU runs), non-variational parameter choice, single-run evaluation, and equal-weight post-processing assumption."
+  ],
+  "results_summary": "The authors implemented and ran an end-to-end agentic orchestration framework that automates data retrieval, data-driven QAOA circuit construction, local pre-validation, cloud simulator submission via the QBraid runtime, asynchronous polling, statistical quality gating, and provenance-tracked artifact generation. Using one year of Yahoo Finance data for five assets (AAPL, XOM, JPM, JNJ, GLD) the system produced a strongly non-uniform measurement distribution on simulators: the dominant bitstring (AAPL+XOM+JNJ) appeared with 23.55% frequency and yielded a Sharpe of 1.62. Cross-platform simulator runs showed measurement means agreeing within 0.0001, and the orchestration overhead was negligible (~0.4% of total wall-clock time). The paper emphasizes architecture, governance, and reproducibility rather than any claim of quantum computational advantage.",
+  "performance_claims": [
+    "Normalized measurement means: local Qiskit BasicSimulator 0.6713, AWS tensor-network sim 0.6712, QBraid QIR state-vector sim 0.6713 (agreement within 0.0001).",
+    "Dominant bitstring 01011 frequency: 23.55% (471 counts out of 2000 shots on QBraid QIR run).",
+    "Top-5 bitstrings collectively account for 67.60% of shots (vs uniform expectation 15.63%).",
+    "QBraid QIR run shots: 2000; AWS TN1 run shots: 1000.",
+    "Circuit resource counts (n=5, p=5): total gates 210, compiled depth reported as 93, OpenQASM instructions 214.",
+    "Wall-clock time breakdown (AWS TN1 run total 27.0 s): QBraid initialization 1.5 s, job submission 1.34 s, job wait/polling 20.0 s (74.07%), LangGraph routing/state 0.108 s (0.40%), total agentic overhead ~0.108 s (~0.4%).",
+    "Policy shot budgets by maturity (illustrative): Concept 0 shots, Prototype 2000 shots, Validated 5000 shots, Certified 8000 shots (governance table).",
+    "Asset statistics (annualized): AAPL return 13.13% risk 32.43%; XOM return 58.66% risk 25.58%; JPM return 44.56% risk 19.05%; JNJ return 21.72% risk 25.73%; GLD return 35.32% risk 24.89%."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "No claim of quantum advantage is demonstrated. Experiments were run on simulators for a classically trivial n=5 instance; results demonstrate orchestration, data-driven parameterization, and cross-platform reproducibility rather than superiority over classical methods. The paper explicitly notes limitations (small scale, simulator-only, non-variational parameters) and frames contributions as operational/architectural, not as evidence of quantum computational advantage.",
+  "limitations": [
+    "Problem scale: demonstration limited to n = 5 assets (5 qubits), a classically trivial instance; value for larger, practically relevant n is unproven.",
+    "Non-variational QAOA parameters: rotation angles are analytically/data-driven rather than obtained via a variational outer-loop, which may limit solution quality.",
+    "Simulator-only cloud execution: experiments ran on simulators (QBraid/AWS simulators); no execution on physical QPU hardware was performed.",
+    "Single-run evaluation: results are from individual pipeline executions without repeated runs or bootstrapped confidence intervals for financial metrics.",
+    "Equal-weight allocation for financial evaluation: within-subset weight optimization was not performed (selected portfolios evaluated with equal weights).",
+    "Real hardware noise and error mitigation untested: the framework did not evaluate noise effects or incorporate error mitigation strategies despite their expected importance on real QPUs.",
+    "[inferred] Pre-validation and quality gating are simplistic (e.g., QCA threshold mean > 0) and may fail to detect subtle or systematic problems in outputs.",
+    "[inferred] Scalability of the agentic orchestration (state size, number of agents, parallel QPU submissions) is untested; agentic overhead may rise with problem scale and concurrency.",
+    "[inferred] Dependence on QBraid and Qiskit abstractions: portability and semantic preservation across other runtimes, direct vendor APIs, or non-Qiskit circuit representations are not fully validated.",
+    "[inferred] Empirical hyperparameter choices (mixer coefficient 0.4, linear layer scaling of cost angles) were selected heuristically and may not generalize across datasets, assets, or circuit depths.",
+    "[inferred] Governance and cost estimates are approximate and static; real-world pricing dynamics, quotas, and organizational policy complexity may complicate the maturity-gated model.",
+    "[inferred] Circuit depth, gate counts and resulting compilation/transpilation requirements may be prohibitive on current noisy hardware as n grows, limiting practical applicability without additional circuit reduction or error mitigation techniques.",
+    "[inferred] The impact of transpiler optimizations and hardware-specific constraints on final measurement distributions (beyond the tested simulators) is not characterized."
+  ],
+  "open_questions": [
+    "How will the framework and the data-driven QAOA parameterization perform on physical, noisy QPUs (including the effect of decoherence, gate errors and readout noise)?",
+    "How does solution quality, measurement distribution concentration, and orchestration overhead scale with problem size (e.g., n >= 20, n >= 50)?",
+    "Would incorporating a variational outer loop to optimize QAOA parameters materially improve outcomes relative to the analytic/data-driven angles, and what is the added computational and orchestration cost?",
+    "How well does the Planner’s decomposition approach (e.g., correlation-based partitioning) integrate with the agent pipeline for large asset universes and parallel QPU jobs?",
+    "What are effective, noise-aware statistical quality gates and divergence measures that reliably separate useful quantum signal from hardware/systematic noise?",
+    "Can multi-objective Hamiltonians (e.g., encoding Sharpe ratio or other risk-adjusted objectives) be formulated and executed efficiently within this agentic workflow?",
+    "How robust are measurement distributions to different transpilation strategies and backend-specific optimizations, and are there subtle cross-platform biases in practice on hardware?",
+    "How should maturity-gated governance thresholds, shot budgets, and backend permissions be calibrated in production environments to balance exploration, cost, and risk?",
+    "What level of repetition and statistical sampling is required to produce stable, actionable financial recommendations from quantum-sampled portfolios?",
+    "How does live-data variability (market non-stationarity) affect reproducibility and the interpretability of artifacts across time, and what snapshot/versioning best practices are required?",
+    "Can the agentic orchestration handle dynamic, real-time backend selection under changing availability, queue times, and calibration data at production scale?",
+    "What security, auditability and compliance implications arise when integrating cloud quantum runtimes into regulated financial workflows?"
+  ],
+  "future_work": [
+    "Incorporate a variational outer loop around the AutoCircuitDesigner to optimize QAOA parameters (hybrid quantum-classical optimization).",
+    "Implement correlation-based decomposition in the Planner for large asset universes, enabling partitioning and parallel QPU submissions.",
+    "Enable dynamic backend selection based on real-time availability, queue depth, and calibration data (runtime-aware device routing).",
+    "Develop noise-aware quality gating using statistical divergence measures and more sophisticated QCA criteria.",
+    "Design and evaluate multi-objective cost Hamiltonians that directly encode objectives such as the Sharpe ratio.",
+    "Parallelize QPUBroker instances to support concurrent subproblem execution and scale-out orchestration.",
+    "Integrate error mitigation techniques and noise-aware transpilation strategies for execution on real QPUs.",
+    "Extend the financial evaluation to include within-subset weight optimization (optimal weights for selected assets) rather than equal-weight allocations.",
+    "Perform repeated runs and bootstrap statistical analysis to produce confidence intervals on financial metrics and distributional stability."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach",
+    "idea:quantum-advantage"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — An eight-agent LangGraph-orchestrated pipeline automates end-to-end QAOA workflow (data ingestion, circuit construction, prevalidation, cloud submission, quality gating, artifacting) demonstrating practical orchestration patterns for finance-oriented quantum workflows.",
+    "#idea:near-term-feasibility — Implements a data-driven QAOA ansatz that encodes annualized returns and pairwise covariances directly into single- and two-qubit rotation angles and runs on cloud-backed quantum simulators (Qiskit Aer locally; two QBraid cloud simulators) showing an executable NISQ-era workflow.",
+    "#idea:quantum-advantage — For n=5, p=5 instances the pipeline produced consistent measurement distributions and a dominant high-Sharpe portfolio when compared to baselines (equal-weight, single-asset, random 3-asset average, classical min-variance), suggesting potential benefit in small instances.",
+    "#idea:hybrid-approach — Uses local prevalidation sandbox to gate submissions to cloud simulators and a policy/maturity agent to control hardware access and shot budgets, reducing wasted cloud runs and integrating classical checks with quantum execution.",
+    "#idea:near-term-feasibility — Reports concrete engineering metrics (compiled circuit ~210 gates, depth 93; runshots 1000–2000; agentic overhead <2% of pipeline time) useful for practical feasibility assessment.",
+    "#idea:quantum-advantage — Comparison to classical baselines is reported (Sharpe, return, volatility) but no variational outer-loop or parameter optimization was performed — results are single-run and small-scale."
+  ],
+  "contradictions": [],
+  "synthesis_tags": [],
+  "limitation_tags": [
+    "limitation:qubit-count",
+    "limitation:simulation-only"
+  ]
+}

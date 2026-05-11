@@ -1,0 +1,319 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes an arXiv identifier (arXiv:2311.00825v1) and date, has abstract, methods, results and citations but no journal/venue information; formatting and header/footer match an arXiv preprint.",
+  "title": "Quantum Computational Algorithms for Derivative Pricing and Credit Risk in a Regime Switching Economy",
+  "authors": [
+    "Eric Ghysels",
+    "Jack Morgan",
+    "Hamed Mohammadbagherpoor"
+  ],
+  "year": "2023",
+  "journal_or_venue": "arXiv preprint (arXiv:2311.00825)",
+  "doi": "",
+  "abstract_summary": "The paper introduces a class of regime-switching stochastic processes—Geometric Brownian Motion with drift and volatility driven by an observable finite-state Markov chain—that are both realistic for financial markets and more amenable to quantum algorithm implementation. It develops quantum circuits and amplitude-estimation-based algorithms for option pricing and credit risk (Value-at-Risk) under these regime-switching models, and demonstrates proof-of-concept implementations and experiments on IBM quantum hardware and simulators.",
+  "methodology_description": "The authors propose and implement quantum algorithms for option pricing and credit risk in a regime-switching economy modeled by a finite-state (primarily two-state) Markov chain. They translate the discrete-time transition matrix into quantum state preparation via RY rotations (steady-state preparation and controlled rotations to implement transition probabilities) and build application-specific operators: U for loading uncertainty (defaults or price distributions), S for computing aggregated losses or payoffs, and C for threshold comparison (for VaR) or payoff conditioning (for options). For risk estimation they map the problem to amplitude estimation: prepare the probability amplitude of the event of interest on an ancilla qubit then estimate that amplitude using amplitude estimation methods. Because canonical QAE circuits are large, they use Iterative Quantum Amplitude Estimation (IQAE) with adaptive k-selection and practical settings (shots per iteration, target error epsilon, confidence level). Circuits incorporate QFT-based arithmetic (Draper addition), truncated discretization of latent Gaussian factors (2^{nZ}-1 grid), Taylor linearizations to map parameters to rotation angles (Pauli polynomial circuits), and multi-controlled additions conditioned on both Markov state and Brownian motion bits for derivative pricing. The methodology includes both noiseless simulation and experiments on IBM Quantum hardware (several Falcon/Eagle devices), using standard mitigation techniques (readout error mitigation M3, circuit depth optimization heuristics, and PEC in some runs). Results are evaluated using mean-squared error (MSE) against exact or simulator baselines, and practical complexity measures (two-qubit gate counts) are reported.",
+  "algorithms_used": [
+    "Quantum Amplitude Estimation (QAE)",
+    "Iterative Quantum Amplitude Estimation (IQAE)",
+    "Quantum Fourier Transform (QFT) / Draper addition",
+    "Quantum Phase Estimation (QPE) - classical-bit variant (discussed)",
+    "Grover operator (used in QAE framework)",
+    "State preparation via controlled RY rotations",
+    "Pauli polynomial circuits (for linear/taylor approximation mappings)"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "IBM Quantum (cloud/runtime & devices)"
+  ],
+  "experimental_setup": "Noiseless and noisy experiments: state-preparation and estimation circuits were tested on Qiskit simulators (ibmq_qasm_simulator, mps backends) and on IBM Quantum superconducting processors (examples: ibm_brisbane, ibm_kolkata Falcon, ibm_sherbrooke Eagle r3). Error mitigation (M3 readout mitigation), circuit depth optimization heuristics and Probabilistic Error Cancellation (PEC) were applied in some hardware runs. Circuit sizes varied by experiment (see parameters).",
+  "dataset_used": "Economic/financial time series and business cycle chronology: NBER business cycle dating (used to compute transition probabilities pGB and pBG for 1986–2020 and 1854–present series), FRED bond yields for Aaa and Baa indices (series AAA10Y and BAA10Y) for 1986–2022, and synthetic Markov transition probabilities for sensitivity tests.",
+  "experiment_input": {
+    "Markov_chain": {
+      "states": 2,
+      "transition_matrix_form": "A = [[1-pGB, pGB],[pBG,1-pBG]]",
+      "pGB_examples": [
+        0.0097,
+        0.024,
+        0.3
+      ],
+      "pBG_examples": [
+        0.11,
+        0.059,
+        0.4
+      ],
+      "steady_state_initialization": "RY rotation with angle θ0 computed from transition probs"
+    },
+    "CreditRisk": {
+      "groups": "G homogeneous groups; Og obligors per group (often assumed large/asymptotic)",
+      "default_model": "Probit-style conditional defaults, p = Φ((Φ^{-1}(p_g) - sqrt(ρ) * dW)/sqrt(1-ρ))",
+      "latent_factor_discretization": {
+        "nZ": 3,
+        "grid_size": "2^{nZ} - 1 (example nZ=3 used)",
+        "example_mean_sd": {
+          "mean": 3.5,
+          "sd": 1.5
+        }
+      },
+      "example_parameters_source": "Table 2 in paper (GE/BE pg and ρ ranges)"
+    },
+    "DerivativePricing": {
+      "S0": 1.0,
+      "T": "six months in experiments (6 timesteps)",
+      "time_steps_tested": [
+        3,
+        6,
+        12,
+        24
+      ],
+      "strike_prices": [
+        0.9,
+        0.95,
+        1.0,
+        1.05,
+        1.1
+      ],
+      "volatility/rates": "state dependent (Table 4)"
+    },
+    "Data_sources": {
+      "NBER": "NBER business cycle dating (used to compute peak/trough frequencies)",
+      "FRED": [
+        "AAA10Y",
+        "BAA10Y"
+      ]
+    },
+    "preprocessing": "Compute pGB = #peaks / months_of_expansion; pBG = #troughs / months_of_recession; compute means, std devs, and correlations of Aaa/Baa returns conditional on NBER regimes; map probabilities and parameters to rotation angles (RY) and to discretized latent grids; linear/Taylor approximations for rotation angles and log-to-linear mappings."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "1) Define Markov chain transition matrix and compute steady-state distribution.",
+      "2) Map Markov chain to a quantum register: initialize first qubit with RY(θ0) for steady state; sequentially add period qubits using controlled RY rotations (θ^(0), θ^(1)) to simulate transitions (circuit depth T+1).",
+      "3) For credit risk: prepare latent factor grid (nZ qubits), prepare group qubits Xg with controlled RY rotations encoding conditional default probabilities (U operator), compute weighted sum of losses into sum register S (operator S), compare against threshold L using comparator C to flip objective qubit.",
+      "4) For derivative pricing: prepare Brownian motion register B (Hadamards), prepare price register P, use QFT on P, apply Draper-style additions D to add log-price increments controlled on B (and additionally on Markov state in regime-switching variant), inverse QFT, then linear amplitude mapping F to objective qubit for payoff.",
+      "5) Use amplitude estimation: for large canonical QAE circuits impractical, apply Iterative QAE (IQAE) with adaptive choice of k and repeated shot batches to estimate amplitude a (probability of objective qubit=1), target epsilon=0.1 and 95% confidence in practical example.",
+      "6) For VaR locate L by binary search invoking the amplitude-estimation-based probability-of-exceedance oracle repeatedly.",
+      "7) Run experiments on noiseless simulators (ibmq_qasm_simulator, mps) for baseline and on IBM Quantum hardware (ibm_brisbane, ibm_kolkata, ibm_sherbrooke) with readout mitigation (M3), circuit depth optimization, and in some tests PEC.",
+      "8) Evaluate outputs (MSE against exact solutions/simulator baseline, confidence intervals, gate counts)."
+    ],
+    "key_parameters_and_iterations": {
+      "IQAE": {
+        "epsilon": 0.1,
+        "confidence": 0.95,
+        "shots_per_iteration": 100
+      },
+      "shots_examples": {
+        "Table1": 1028,
+        "Derivative": 128,
+        "IQAE_iterations": 100
+      },
+      "MonteCarlo_runs": {
+        "N_table1": 64,
+        "N_derivative": 100
+      }
+    }
+  },
+  "experiment_output": {
+    "formats": [
+      "Mean Squared Error (MSE) between estimated probability histograms and true model probabilities (tables for various T, parameter sets)",
+      "Estimated confidence/probability α for a candidate loss L (used to find VaR) with confidence intervals from IQAE",
+      "Derivative price estimates converted from measured probability via classical post-processing mapping (using small-angle approximation)",
+      "Complexity metrics: number of two-qubit gates (ideal and transpiled on-device), circuit depth, and observed hardware MSE"
+    ],
+    "baselines": [
+      "Exact classical solutions (where available) used as ground truth for MSE",
+      "Noiseless simulator runs (ibmq qasm simulator / mps) as idealized baseline",
+      "Synthetic examples (higher-transition-rate Markov) for sensitivity tests"
+    ],
+    "representative_outputs": "Tables of MSE for Markov-chain state estimation (Table 1), MSE for static portfolio credit risk (Table 3), MSE for derivative pricing with/without regime switching (Table 5), IQAE estimates and confidence intervals for dynamic portfolio VaR (Table 7), and two-qubit gate complexity/overhead."
+  },
+  "experiment_parameters": {
+    "time_steps_T_tested": [
+      3,
+      6,
+      12,
+      24
+    ],
+    "bins_B_formula": "B = 2^{T+1}",
+    "shots_S": {
+      "Table1": 1028,
+      "Derivative": 128,
+      "IQAE_shots_per_iter": 100
+    },
+    "MonteCarlo_N": {
+      "Table1": 64,
+      "Derivative": 100
+    },
+    "nZ": 3,
+    "IQAE": {
+      "epsilon": 0.1,
+      "confidence": 0.95
+    },
+    "rotation_angles": {
+      "θ0": "2 * arccos( sqrt(pBG/(pGB+pBG)) ) (as given in paper formula)",
+      "θ^(0)": "2 * arccos( sqrt(1-pGB) )",
+      "θ^(1)": "2 * arccos( sqrt(pBG) )"
+    },
+    "Markov_probs": {
+      "1986-present": {
+        "pGB": 0.0097,
+        "pBG": 0.11
+      },
+      "1854-present": {
+        "pGB": 0.024,
+        "pBG": 0.059
+      },
+      "synthetic": {
+        "pGB": 0.3,
+        "pBG": 0.4
+      }
+    },
+    "derivative_params": {
+      "S0": 1.0,
+      "T_horizon": "6 months",
+      "strikes": [
+        0.9,
+        0.95,
+        1.0,
+        1.05,
+        1.1
+      ],
+      "time_steps": 6
+    },
+    "credit_risk_params": {
+      "λ_g_example": [
+        1,
+        2
+      ],
+      "group_defaults_GE_range": [
+        0.1,
+        0.25
+      ],
+      "sensitivities": [
+        0.05,
+        0.15
+      ]
+    }
+  },
+  "hardware_details": {
+    "simulators": [
+      {
+        "name": "ibmq_qasm_simulator",
+        "provider": "IBM Quantum"
+      },
+      {
+        "name": "ibmq_qasm_simulator (mps)",
+        "provider": "IBM Quantum"
+      }
+    ],
+    "quantum_processors": [
+      {
+        "model": "ibm_brisbane",
+        "type": "Falcon (example)",
+        "provider": "IBM Quantum"
+      },
+      {
+        "model": "ibm_kolkata",
+        "type": "Falcon",
+        "provider": "IBM Quantum"
+      },
+      {
+        "model": "ibm_sherbrooke",
+        "type": "Eagle r3",
+        "provider": "IBM Quantum"
+      }
+    ],
+    "notes": "Hardware runs used standard IBM basis (single-qubit gates + ECR two-qubit) and employed M3 readout mitigation, circuit depth optimization heuristics, and PEC for some experiments. Some canonical circuits could not be transpiled within cloud memory limits."
+  },
+  "reproducibility_notes": "Data sources are public (NBER business cycle dating; FRED series AAA10Y and BAA10Y) and key parameter values and circuit construction steps (gates, angle formulas, discretizations, and operator definitions U/S/C) are described in the paper. Implementation used Qiskit and IBM Quantum backends. The authors did not publish code in the preprint; they note practical obstacles to reproducing full canonical QAE experiments (transpilation memory limits on IBM Quantum Lab). Reproducibility is feasible for smaller instances (parameter sets and simulator runs) using the provided descriptions, but full hardware reproduction of the largest canonical circuits may require resources beyond standard cloud quotas.",
+  "key_findings": [
+    "[supported] Finite-state (observable) Markov regime-switching models are practical to encode on gate-based quantum hardware and avoid discretization bias problems of continuous-time stochastic volatility diffusions.",
+    "[supported] A two-state T-period Markov chain quantum circuit (Figure 1) was implemented; state probabilities were estimated with low mean-squared error (MSE) on simulators and on IBM hardware (representative MSEs reported in Table 1).",
+    "[supported] Quantum circuits for credit-risk (A = C S U style operator with a regime-dependent U) were constructed and executed in simulation and on real hardware; empirical MSEs for the static portfolio tests are reported (Table 3).",
+    "[supported] Quantum circuits for European-style derivative pricing with regime switching were implemented; simulation and hardware MSEs are reported (Table 5).",
+    "[supported] A practical dynamic-portfolio V@R example was developed: a Draper-QFT based growth register combined with a Markov chain controller and Iterative Quantum Amplitude Estimation (IQAE) was simulated and analyzed (Table 7), including estimates of two-qubit gate counts and transpilation overheads on current hardware.",
+    "[supported] Canonical QAE (standard QPE-based amplitude estimation) is currently infeasible for the presented realistic circuits on present superconducting hardware due to circuit depth / memory / connectivity limits; IQAE (iterative variants) is more practical for near-term experiments.",
+    "[speculative] Quantum Amplitude Estimation (QAE) delivers the theoretical quadratic sampling speedup over classical Monte Carlo for the presented regime-switching credit-risk and option-pricing settings, implying potential asymptotic quantum advantage.",
+    "[speculative] The class of regime-switching models introduced here is closer to realistic market practice than constant-parameter Black–Scholes or hard-to-simulate diffusions (e.g., Heston) and therefore brings quantum computing closer to practical financial applications.",
+    "[supported] In practice, transpilation/connectivity increases two-qubit gate counts (reported overhead ≈2× in their practical example) which limits current ability to realize theoretical speedups on present devices."
+  ],
+  "results_summary": "The paper presents a family of finite-state, observable Markov regime-switching models (primarily two-state) and details quantum circuits to load the Markov process, encode regime-dependent default probabilities or asset-return dynamics, and evaluate credit-risk (V@R) and European option payoffs using amplitude-estimation-style procedures. The authors implemented and tested the circuits in simulation and on IBM quantum hardware, reporting mean-squared-error (MSE) results for Markov-chain state probabilities, static credit-risk portfolios, and derivative pricing. They show that exact discrete-time transition densities of regime-switching chains simplify state preparation (compared to diffusion models), but also document practical limits: canonical QAE is infeasible on current devices for their realistic circuits, iterative QAE is a more viable near-term approach, and hardware connectivity/transpilation roughly doubles two-qubit gate counts, constraining realized advantage.",
+  "performance_claims": [
+    "Markov-chain circuit (T=3) simulator MSE (1986-present params) ≈ 2.8e-4; corresponding real-device MSE ≈ 1.2e-4 (Table 1, representative).",
+    "Markov-chain circuit (T=24) simulator MSE (synthetic params) ≈ 6.2e-8; real-device MSE ≈ 6.2e-8 (Table 1, representative).",
+    "Static portfolio credit-risk MSEs (no regime switching) simulator ≈ 2.1e-3; quantum hardware reported ≈ 1.1e-2 (Table 3, representative).",
+    "Static portfolio credit-risk (1986-present regime-switching) simulator MSE ≈ 2.6e-4; quantum hardware entry reported numerically tiny value (3.7e-27) in table (Table 3).",
+    "Derivative pricing MSEs on simulator across tested regimes ≈ 2.1e-4 to 3.4e-4; on IBM hardware reported MSEs ≈ 2.7e-3 to 5.1e-3 (Table 5).",
+    "Practical dynamic-portfolio IQAE simulation results (Table 7): for 3 time steps reported estimate vs ideal α with two-qubit 'ideal complexity' ≈ 1,082 gates and transpilation overhead ≈ 2.00×; for 6 time steps ideal two-qubit count ≈ 12,932 with overhead ≈ 1.88×.",
+    "Iterative QAE runs used 100-shot iterations, aimed for 95% confidence and ε = 0.1 in the practical example (implementation detail reported)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper relies on known theoretical results for Quantum Amplitude Estimation (quadratic sampling speedup versus classical Monte Carlo) to claim potential quantum advantage for pricing and V@R estimation in regime-switching models. However, the authors do not demonstrate a realized, experimentally measured quantum advantage on current hardware—canonical QAE was infeasible for their realistic circuits and only iterative variants were practically simulated or run with limited depth—so the advantage remains theoretical/speculative for near-term devices.",
+  "limitations": [
+    "Quantum hardware (NISQ) currently cannot deliver computational advantages for many practical continuous-time stochastic diffusion models (e.g., Heston) due to circuit depth, qubit count, noise, and connectivity constraints.",
+    "Canonical Quantum Amplitude Estimation (QAE) circuits are infeasible on current processors for the presented examples (high circuit depth and classical memory/transpilation constraints).",
+    "The paper assumes Markov chain states are observable (ex post) to avoid the added complexities of filtering latent regime states; the latent-state case is not implemented.",
+    "Most experiments use a two-state (M = 2) Markov chain for simplicity; scaling behavior and resource requirements for larger numbers of regimes are not fully explored.",
+    "The approach uses approximations (e.g., first-order Taylor and small-angle approximations, truncation/discretization of continuous variables) that introduce approximation error in state preparation and payoff mappings.",
+    "Results on real hardware depend on error mitigation and circuit optimization heuristics (e.g., readout mitigation, depth-optimization), indicating sensitivity to current device calibration and mitigation techniques.",
+    "[inferred] The asymptotic/homogeneous-group assumptions in the credit model (large homogeneous groups with identical parameters) may not hold for realistic, heterogeneous portfolios, limiting immediate practical applicability.",
+    "[inferred] Modeling choices such as treating the NBER business-cycle state as an observable, steady-state initialization, and coarse time discretization simplify real-world regime detection and can reduce realism and robustness in live settings.",
+    "[inferred] The regime-switching discrete-time models used to avoid diffusion discretization bias may still fail to capture important continuous-time stochastic volatility features and market microstructure effects present in practice.",
+    "[inferred] Circuit resource limitations (number of qubits, growth in number of bins/states with horizon T) create exponential scaling of the state-space representation that restricts horizon length and resolution in practice."
+  ],
+  "open_questions": [
+    "How to choose the optimal scaling constant c for the payoff mapping (small-angle approximation) when accounting for real quantum hardware noise and error, balancing approximation and sampling errors?",
+    "How to extend the algorithms to handle latent (unobservable) regime states (i.e., incorporate filtering / Bayesian priors) in a quantum algorithmic framework?",
+    "How to realize the theoretical quadratic QAE speedup in practice on noisy, connectivity-limited hardware — what circuit constructions, error mitigation, or algorithmic variants (e.g., iterative QAE) best bridge theory and NISQ reality?",
+    "How to scale the presented methods to more regimes (M > 2), larger portfolios, and longer time horizons without prohibitive growth in qubit counts, circuit depth, or bins?",
+    "What are more efficient state-preparation methods and amplitude-encoding techniques tailored to regime-switching financial models that reduce circuit complexity and noise sensitivity?",
+    "How to reduce or avoid approximation bias introduced by Taylor/small-angle approximations and truncated discretizations while keeping circuits implementable on near-term devices?",
+    "How sensitive are model calibration and quantum algorithm performance to realistic, nonstationary transition matrices and heterogeneous obligor/asset characteristics?",
+    "How to integrate richer market inputs (e.g., implied volatilities, latent volatility dynamics) and hybrid classical–quantum pipelines while maintaining feasible quantum resource requirements?",
+    "[inferred] What are the practical implications (accuracy, robustness) of using observable historical chronologies (e.g., NBER dating) as proxies for real-time regime detection in deployed risk systems?"
+  ],
+  "future_work": [
+    "Investigate and determine the optimal choice of the payoff scaling constant c when accounting for real-hardware noise and its effect on total error.",
+    "Extend algorithms to handle latent (unobservable) regime states by incorporating Bayesian priors and filtering into the quantum circuits/encodings.",
+    "Develop and test more NISQ-friendly amplitude estimation variants and circuit constructions (depth-reduced, connectivity-aware) to approach the theoretical speedup in practice.",
+    "Evaluate and optimize state-preparation techniques and Pauli-polynomial mappings to reduce circuit depth and approximation error for regime-switching distributions.",
+    "Study scalability to more than two regimes (M > 2), longer horizons, and larger portfolios including heterogeneous obligor groups.",
+    "Explore improved approximations (higher-order expansions or alternate encodings) to reduce truncation/Taylor approximation biases while keeping circuits feasible.",
+    "Advance error mitigation, transpilation, and connectivity-aware optimization workflows to make the presented models more robust on real quantum processors.",
+    "Investigate hybrid classical–quantum architectures for dynamic portfolio optimization and risk estimation that offload parts of computation to classical pre-/post-processing."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "risk-management",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "qft-phase-estimation",
+    "grover-search",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Amplitude-estimation-based circuits (IQAE) can be used to estimate option prices and VaR probabilities in regime-switching models, potentially offering quadratic speedups in sample complexity relative to naive Monte Carlo in the idealized setting.",
+    "#idea:hybrid-approach — Practical implementation relies on hybrid elements: classical preprocessing (computing transition probs, Taylor linearizations, binary search for VaR) and classical control of iterative QAE (adaptive k-selection, shots), enabling experiments on current hardware.",
+    "#idea:near-term-feasibility — Authors demonstrate proof-of-concept runs on IBM superconducting devices and simulators using truncated discretizations (small nZ, two-state Markov chain), error-mitigation (M3, PEC) and circuit optimizations, arguing limited NISQ-era applicability for small instances.",
+    "#idea:quantum-advantage — Problem-specific state preparation (controlled RY rotations for Markov transitions, Pauli-polynomial mappings, Draper QFT additions for log-price increments) makes regime-switching processes more amenable to quantum implementation than fully continuous models."
+  ],
+  "contradictions": [],
+  "limitation_tags": [
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:data-encoding"
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2208.01203v1) and date, lacks a journal or conference venue, and reads like a research manuscript with abstract, sections, and references—consistent with an arXiv preprint.",
+  "title": "Unsupervised quantum machine learning for fraud detection",
+  "authors": [
+    "Oleksandr Kyriienko",
+    "Einar B. Magnusson"
+  ],
+  "year": "2022",
+  "journal_or_venue": "arXiv preprint (arXiv:2208.01203)",
+  "doi": "",
+  "abstract_summary": "The authors develop quantum kernel-based protocols for unsupervised anomaly detection applied to credit card fraud detection, using one-class SVM with quantum feature maps (notably IQP circuits with data re-uploading). In simulations up to 20 qubits they report that quantum kernels outperform classical RBF kernels, achieving up to a 15% improvement in average precision at 20 qubits, and discuss practical resource, shot, and hardware considerations for deploying such methods in near- and mid-term quantum devices.",
+  "methodology_description": "The study evaluates quantum-kernel based unsupervised anomaly detection for credit-card fraud and compares it to classical supervised and unsupervised baselines. The authors use the publicly available Kaggle credit-card fraud dataset (28 anonymized features) and subsample it to create a balanced small dataset (≈500 samples with 25 fraud cases) for scalable simulation. Preprocessing uses feature-wise standard scaling and PCA to reduce dimensionality to N principal components; N is varied and directly mapped to the number of qubits in quantum experiments. Classical baselines include logistic regression and SVC with RBF kernels (supervised) and OC-SVM with RBF kernels (unsupervised), with hyperparameters (C and γ) tuned by random search and cross-validation optimizing average precision (AP). Quantum experiments embed data via an IQP-like quantum feature map (Hadamard layer, feature-dependent single-qubit rotations and pairwise ZZ interactions), with data re-uploading (d up to 3). Quantum kernels are estimated via statevector return-probability overlaps to form Gram matrices, which are then used in the same SVM/OC-SVM workflow as classical kernels. Simulations were batched and run with PennyLane using the JAX interface compiled with XLA on an NVIDIA A100 GPU. Evaluation metric throughout is average precision; comparisons report AP vs number of features (qubits) and quantify quantum–classical separation (up to ≈15% AP improvement at 20 qubits).",
+  "algorithms_used": [
+    "Principal Component Analysis (PCA)",
+    "t-SNE (visualization)",
+    "Logistic Regression (L2)",
+    "Support Vector Classification (SVC) with RBF kernel",
+    "One-Class SVM (OC-SVM) with RBF kernel",
+    "Quantum kernel methods using IQP-like quantum feature maps (re-uploading)",
+    "Quantum OC-SVM (kernel SVM using quantum Gram matrix)"
+  ],
+  "frameworks": [
+    "scikit-learn",
+    "PennyLane",
+    "JAX (with XLA compilation)"
+  ],
+  "experimental_setup": "Statevector-based quantum circuit simulation using PennyLane with the JAX backend (XLA-compiled), batched Gram matrix evaluation on an NVIDIA A100 GPU (40 GB). Quantum feature maps (IQP-like circuits with re-uploading, up to d=3) simulated for registers up to 20 qubits; Gram matrices constructed from state overlaps (return probabilities). Classical models implemented with scikit-learn.",
+  "dataset_used": "Kaggle credit-card fraud detection dataset (anonymized), original size 284,807 transactions with 28 anonymized features (plus time and amount, but authors used the 28 anonymized features). Highly imbalanced (492 fraud cases in full dataset).",
+  "experiment_input": {
+    "source": "Kaggle credit card fraud dataset (public)",
+    "original_size": 284807,
+    "original_fraud_count": 492,
+    "used_subsample": {
+      "size": 500,
+      "fraud_cases": 25
+    },
+    "features": "Used 28 anonymized numerical features; prior to experiments features were standardized (zero mean, unit variance) and reduced by PCA to N principal components. N was varied (mapped to number of qubits). For quantum embedding features were further scaled by factor η = 0.1 to keep embedding phases < 2π."
+  },
+  "experiment_process": "1) Data preprocessing: feature-wise standard scaling, PCA to retain first N principal components; vary N (mapped to number of qubits). 2) Classical baseline training: supervised — logistic regression (L2) and SVC with RBF kernel; unsupervised — OC-SVM with RBF kernel. Hyperparameter tuning: random search over C (and γ for RBF) using cross-validation optimizing average precision; for OC-SVM default ν=0.1 (and γ defaulted to 1/Var[X]) unless tuned. 3) Quantum pipeline: define IQP-like quantum feature map (Hadamards, feature-dependent rotations, all-to-all ZZ interactions) with data re-uploading (d up to 3), no trainable variational parameters used. Map each datum to an N-qubit state |φ(x)>. 4) Kernel evaluation: compute Gram matrix entries κ(x,x') = |⟨φ(x)|φ(x')⟩|^2 using statevector return probabilities (batched evaluation). 5) Use the quantum Gram matrix in SVM/OC-SVM training (same downstream solver as classical) and evaluate anomaly detection performance. 6) Metrics and comparison: compute average precision (AP) as threshold-free metric; plot AP vs number of features/qubits and compare quantum kernels to classical RBF kernels. Simulations batched and executed on the PennyLane+JAX stack on an NVIDIA A100 GPU.",
+  "experiment_output": "Primary metric: average precision (AP). Outputs include AP curves as a function of number of features/qubits for: (i) supervised methods (Logistic Regression, SVC-RBF, quantum kernel SVC), and (ii) unsupervised methods (OC-SVM with classical RBF kernel vs OC-SVM with quantum kernel). Reported results: quantum kernel methods (IQP with re-uploading d=3) outperform classical RBF baselines at larger feature counts, reaching up to ~0.7 AP in unsupervised OC-SVM at 20 qubits and a reported ~15% absolute AP improvement over classical RBF OC-SVM at 20 qubits. Baselines: tuned classical RBF SVM/OC-SVM and logistic regression.",
+  "experiment_parameters": {
+    "num_qubits_features": {
+      "min": "varied (few)",
+      "max": 20,
+      "interpretation": "number of PCA components = number of qubits"
+    },
+    "reuploading_depth_d": 3,
+    "feature_scaling_eta": 0.1,
+    "subsample_size_Ns": 500,
+    "fraud_cases_subsample": 25,
+    "OC_SVM_nu": 0.1,
+    "classical_RBF_gamma_default": "1 / Var[X] (also tuned via random search)",
+    "hyperparameter_tuning": "random search over C and γ with cross-validation optimizing average precision",
+    "quantum_shots": "statevector simulator used (deterministic overlaps); no measurement-shot sampling used in simulations",
+    "variational_parameters": "none (quantum feature map fixed, no trainable θ used)"
+  },
+  "hardware_details": {
+    "simulator": "PennyLane statevector simulation via JAX backend (XLA-compiled)",
+    "gpu": "NVIDIA A100 GPU (40 GB) used for batched simulation",
+    "qpu_model": null,
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "The input dataset is publicly available (Kaggle credit card fraud dataset). The paper specifies preprocessing steps (standard scaling, PCA, feature scaling η=0.1), model types, and quantum feature-map structure (IQP-like with re-uploading d=3) and reports numerical settings (subsample size ≈500, up to 20 qubits). Implementation libraries are listed (scikit-learn, PennyLane, JAX). However, no public code repository or exact random seeds for subsampling/PCA/hyperparameter search are provided in the text, and some minor inconsistencies in reported subsample size appear (500 vs 525). Reproduction will require reimplementation of batched Gram-matrix evaluation and IQP circuit details as described; direct run scripts and seeds are not provided.",
+  "key_findings": [
+    "[supported] Quantum-kernel-based one-class SVM (OC-SVM) using IQP-like feature maps with data re-uploading outperforms classical RBF-kernel OC-SVM on the tested credit-card fraud dataset in statevector simulations up to 20 qubits.",
+    "[supported] In the simulations, quantum kernels with re-uploading produced up to a 15% absolute increase in average precision (AP) over classical RBF kernels at 20 qubits.",
+    "[supported] The unsupervised quantum OC-SVM achieved AP values up to approximately 0.70 at 20 qubits on the subsampled, PCA-reduced credit-card dataset used in the study.",
+    "[supported] Supervised quantum-kernel classification (quantum SVC) produced high AP (reported up to ~0.90) in simulations for 5–10 features/qubits, and showed less deterioration with increasing feature count than classical counterparts in these tests.",
+    "[supported] The authors observed that quantum kernels in their experiments appeared less prone to overfitting than classical RBF kernels as the number of features/qubits increased (based on their simulated experiments).",
+    "[supported] The experimental/simulation setup specifics: authors subsampled the Kaggle credit card fraud dataset to ~500 samples (25 fraud cases), applied PCA to vary feature count (which they identified with qubits), used IQP circuits with d=3 re-uploadings, scaled features by η=0.1, and evaluated kernels via statevector-return-probability estimates.",
+    "[supported] Building full Gram matrices requires O(Ns^2) kernel evaluations and adding a new sample requires O(Ns) kernel evaluations — a bottleneck highlighted for deployment.",
+    "[speculative] Practical deployment on current or near-term quantum hardware faces significant challenges (Gram-matrix scaling, required number of measurement shots, hardware cycle times) that may make mass, low-latency real-time inference impractical; QC may be more suitable for prioritized / additional checks rather than full-line real-time filtering.",
+    "[speculative] The authors provide back-of-envelope hardware/time estimates (superconducting, trapped-ion, photonic) under optimistic and conservative assumptions and conclude that large datasets (e.g., ~100k samples) would be very costly without sparsification/randomized strategies or massive parallelization.",
+    "[speculative] A robust, practical quantum advantage for fraud detection will likely require larger quantum registers (the authors suggest going beyond 20 qubits, e.g., 50–100 qubits) and deeper/structured quantum kernels; current results are promising but in-silico.",
+    "[speculative] Even small improvements in average precision translate to significant economic impact in the financial context (the paper gives an illustrative example: 15% of £1 billion fraud prevented = £150M), but this is an illustrative argument rather than an empirically validated business-case study within the paper.",
+    "[speculative] To be practical, quantum FD workflows will need shot-frugal kernel estimators, randomized/sparse Gram matrix methods, or other algorithmic reductions to mitigate quadratic kernel-evaluation costs."
+  ],
+  "results_summary": "The paper reports statevector simulations applying quantum-kernel methods (IQP-like feature maps with data re-uploading) to unsupervised fraud detection (OC-SVM) on a subsampled PCA-reduced credit card dataset (≈500 samples, 25 frauds). Quantum kernels outperformed classical RBF-kernel baselines in these simulations, with a reported separation in average precision that grows with feature/qubit count and reaches ~15% at 20 qubits (quantum AP ≈0.70 vs classical AP ≈0.55). The authors discuss implementation considerations, hardware-specific runtime/shot estimates, and practical bottlenecks (Gram-matrix scaling, shot counts, inference latency), and they argue that further algorithmic and hardware advances (and larger quantum registers) are needed before practical, large-scale deployment is feasible.",
+  "performance_claims": [
+    "15% absolute increase in average precision (AP) of quantum OC-SVM vs classical RBF OC-SVM at 20 qubits (simulations).",
+    "Quantum OC-SVM achieved AP ≈ 0.70 at 20 qubits (simulations on the subsampled dataset).",
+    "Classical RBF OC-SVM saturated around AP ≈ 0.55 at ≈15 features (simulations).",
+    "Supervised quantum kernel classifier reported AP up to ≈0.90 for 5–10 features/qubits (simulations).",
+    "Simulations were performed on subsampled dataset of ~500 samples (25 fraud examples) and with quantum circuits simulated up to 20 qubits.",
+    "Gram matrix evaluations for the 500-sample reduced-size dataset require on the order of 10^5 kernel evaluations (Ns^2 scaling) — used for runtime estimates in the discussion."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper presents in-silico (statevector) evidence of a quantum-classical separation in average precision for OC-SVM-based fraud detection up to 20 qubits (≈15% AP improvement). However, this is a simulation result (no noisy-hardware experiments) on a heavily subsampled and PCA-reduced dataset; practical advantage on real, large-scale datasets and on real hardware remains unproven and contingent on resolving significant algorithmic and hardware bottlenecks (shot requirements, Gram-matrix scaling, low-latency inference, and larger qubit counts).",
+  "limitations": [
+    "Simulations limited to statevector emulation up to 20 qubits (in-silico results do not include realistic device noise or error sources).",
+    "Need to go beyond 20 qubits (potentially 50–100 qubits and deeper kernels) to claim strong quantum advantage; current results show separation at 20 qubits but not full-scale advantage.",
+    "Training computational cost: full Gram matrix estimation scales as O(Ns^2) kernel evaluations which becomes prohibitive for industrial-size datasets (e.g., Ns ≈ 100,000).",
+    "Inference computational cost: assigning labels for Nd incoming samples requires O(Nd * Ns) kernel evaluations, making real-time, en-masse testing of transactions potentially infeasible with current hardware speeds.",
+    "Large number of measurement shots (Nshots) may be required to estimate kernels reliably; high Nshots amplifies runtime significantly.",
+    "Hardware limits and latencies: realistic hardware gate times, readout, shot rates and lack of deterministic gates (especially in photonic systems) constrain training and inference speed — making some deployment scenarios (real-time inference) unrealistic today.",
+    "Hyperparameter tuning in the unsupervised setting relied on labels in the validation set (authors note this is conceptually troublesome), i.e., supervised information was used to establish benchmarks.",
+    "Feature embedding periodicity requires careful feature scaling/normalization to avoid ambiguity in quantum encoding; this constrains preprocessing choices.",
+    "The study focuses on one-class SVM kernels — other unsupervised approaches (distance/density-based, deep models, GANs, clustering) were not directly compared in the quantum setting.",
+    "Potential for data leakage/bias if quantum kernels or maps are tuned in a supervised manner, which can hurt genuine novelty detection.",
+    "Classical post-processing (solving SVM/QP) for large kernel matrices may be a bottleneck even if kernel values are available from QC.",
+    "[inferred] Real-device noise, decoherence and sampling error are likely to degrade the measured overlaps/kernels and reduce the observed gap between quantum and classical performance.",
+    "[inferred] The simulations assume the ability to evaluate kernel overlaps with sufficient precision; on noisy hardware and with constrained shot budgets, reproducing reported AP gains may be difficult.",
+    "[inferred] Use of PCA to reduce dimensionality to match qubit counts may discard informative structure; performance sensitivity to preprocessing choices was not fully characterized.",
+    "[inferred] The work does not demonstrate a full production pipeline (including prioritized sampling strategies, streaming updates, and latency guarantees) required for industrial deployment."
+  ],
+  "open_questions": [
+    "Is quantum computing viable for industrially-relevant fraud detection given training/inference times, shot budgets, and hardware latencies?",
+    "What are the relevant timescales and precision targets for training and inference in production FD systems, and can QC meet them?",
+    "How to prioritize incoming transactions and reduce the number of kernel evaluations (i.e., which samples to evaluate) to make inference tractable?",
+    "What is the minimal number of measurement shots (Nshots) required to obtain stable, near-deterministic kernel estimates while keeping runtimes acceptable?",
+    "How can the quadratic scaling of Gram matrix estimation be reduced in practice (randomized, sparse, streaming or linear-scaling approaches) and what impact does this have on detection quality?",
+    "Which quantum feature maps / kernel structures are best matched to financial datasets (highly correlated multi-feature data) without introducing supervision-induced bias?",
+    "How severe are the effects of real-device noise, finite sampling, and gate errors on quantum kernel performance for FD?",
+    "What are the trade-offs among different hardware platforms (superconducting, trapped ions, photonic) for FD: in particular, how do gate times, readout, and deterministic operation affect feasibility?",
+    "What size and depth of quantum kernels are required to achieve a robust, practically meaningful quantum advantage over state-of-the-art classical unsupervised FD approaches?",
+    "How does insimulability on classical hardware limit the timeline for practical quantum advantage in FD?",
+    "Can shot-frugal, parallelized, or adaptive kernel-evaluation schemes be developed that retain detection performance while reducing resource needs?",
+    "How to prevent data leakage and maintain genuine unsupervised novelty detection when tuning quantum kernels?"
+  ],
+  "future_work": [
+    "Adjust and optimize quantum kernels (feature maps) to better capture dataset-specific correlations and improve performance.",
+    "Investigate and mitigate data leakage risks introduced by supervised tuning to preserve unsupervised novelty detection.",
+    "Develop tailored Gram matrix construction methods (e.g., randomized, sparse, adaptive or streaming approaches) to reduce quadratic training scaling and enable large-dataset operation.",
+    "Establish shot-frugal kernel evaluation strategies and determine minimal Nshots for reliable kernel estimation.",
+    "Explore prioritization and reduction strategies for kernel evaluations so that only informative or high-priority transactions are evaluated (to make inference tractable).",
+    "Study kernel bandwidth control and kernel alignment techniques to improve quantum kernel performance and stability.",
+    "Evaluate quantum FD on noisy intermediate-scale quantum hardware, including noise modelling, error mitigation, and realistic timing/latency assessments.",
+    "Scale experiments beyond 20 qubits (toward 50–100 qubits) and consider deeper quantum kernels to probe stronger quantum-classical separation.",
+    "Investigate parallelized quantum kernel evaluation across multiple QC nodes to accelerate Gram matrix estimation.",
+    "Examine alternative kernel evaluation methods (e.g., SWAP/Hadamard tests, projective kernels) and their resource/noise trade-offs.",
+    "Develop adaptive detection protocols and sparse Gram matrix inference pipelines suitable for production settings.",
+    "Characterize sensitivity of FD performance to preprocessing choices (e.g., PCA, scaling) and explore encoding schemes that minimize information loss."
+  ],
+  "topic_tags": [
+    "fraud-detection",
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Quantum kernel methods (IQP-like feature maps with data re-uploading d=3) show improved anomaly-detection performance vs classical RBF kernels in OC-SVM on a subsampled credit-card fraud dataset, reporting up to ~15% absolute improvement in average precision at 20 qubits (AP ~0.7).",
+    "#idea:hybrid-approach — The pipeline is hybrid: classical preprocessing (standard scaling, PCA to N components mapped to N qubits) and a classical SVM/OC-SVM solver are used downstream of the quantum Gram matrix (kernel) computed from statevector overlaps.",
+    "#idea:near-term-feasibility — The authors discuss resource, shot, and hardware considerations and frame the approach as relevant for near- and mid-term devices, noting practical constraints and implementation details (feature scaling η, PCA mapping to qubits).",
+    "#limitation:simulation-only — All quantum-kernel evaluations were performed via deterministic statevector simulation (PennyLane+JAX) on an A100 GPU with no shot noise or hardware error; no QPU experiments reported.",
+    "#limitation:no-empirical-validation — Claims of quantum advantage are based on simulated overlaps on a small, balanced subsample (~500 samples) rather than on large-scale or hardware experiments; no public code or seeds are provided to exactly reproduce results.",
+    "#limitation:qubit-count — Experiments scale only up to 20 qubits (via PCA components); reported improvements at this scale may not generalize to larger, real-world deployments or current noisy hardware with limited qubit connectivity.",
+    "#limitation:data-encoding — The approach relies on PCA dimensionality reduction and manual feature scaling (η=0.1) to keep embedding phases bounded; this highlights data-encoding and preprocessing costs that may affect applicability and fairness of comparison to classical kernels."
+  ],
+  "contradictions": []
+}

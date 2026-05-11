@@ -1,0 +1,293 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document header includes an arXiv identifier (arXiv:2502.05226v1) and date, and the manuscript has standard academic structure (abstract, methods, results, references) but no journal or conference venue is listed, indicating an arXiv preprint rather than a peer-reviewed publication.",
+  "title": "Benchmarking of Quantum and Classical Computing in Large-Scale Dynamic Portfolio Optimization Under Market Frictions",
+  "authors": [
+    "Ying Chen",
+    "Thorsten Koch",
+    "Hanqiu Peng",
+    "Hongrui Zhang"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (arXiv:2502.05226)",
+  "doi": "",
+  "abstract_summary": "The paper proposes a challenging yet solvable benchmark for large-scale multi-period portfolio optimization under realistic market frictions, formulating the problem as a QUBO so it is compatible with both classical and quantum approaches. The authors run experiments on real S&P500 data (up to 499 assets) comparing digital BQP solvers (e.g., Gurobi) and GPU QUBO heuristics (ABS2/qoqo) alongside quantum-ready/quantum platforms (D-Wave, IBM Qiskit, InfinityQ), and report that while current quantum hardware cannot yet surpass classical methods, the QUBO benchmark provides a fair, transparent basis to measure future quantum advantage.",
+  "methodology_description": "The study formulates a realistic multi-period discrete portfolio optimization problem (mean-variance objective) with transaction costs, short selling, integer/block constraints and path-dependent cash limits, and casts it as a Quadratic Unconstrained Binary Optimization (QUBO) and equivalent Binary Quadratic Program (BQP). The QUBO/BQP objective includes a time-indexed risk term q * sum_{t} x_t^T (P_t Σ_t P_t) x_t, a profit term based on price differences, transaction costs proportional to absolute position changes, short-selling costs, terminal liquidation costs, interest on unspent cash, and quadratic penalty terms enforcing capital and asset-count constraints via binary-encoded slack variables. Two empirical experiments are run: a medium-scale problem (n=200 assets, T=10 days, k=3 blocks per asset, B=60, C=10 resulting in 12,100 binary variables) and a large-scale problem (n=499, T=15, same k/B/C resulting in 45,060 binaries). The risk-aversion parameter q is swept over eight values (0, 1e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 1e-2). Digital solvers (Gurobi 11.0, CPU-based Branch-and-Bound with relaxation-based lower bounds) are used as precise baselines; GPU-based heuristic QUBO solver ABS2 (integrated in qoqo) runs on an NVIDIA A100 GPU to produce rapid heuristic solutions; quantum/quantum-ready platforms explored include IBM Qiskit (VQE/QAOA style variational circuits), D-Wave Advantage quantum annealer (including hybrid workflows for larger problems), and InfinityQ’s quantum-inspired Ising solver. Performance is evaluated using computational metrics (objective value, optimality gap to BQP relaxation lower bound, time-to-solution) and economic metrics (portfolio volatility, profits, Sharpe ratio, transaction costs, and trading trajectories). Time limits were set per-solver (Gurobi: 10,000 s; ABS2: 3,600 s) and results compared across q values to produce Pareto frontiers and convergence profiles.",
+  "algorithms_used": [
+    "Branch-and-Bound (via Gurobi)",
+    "Quadratic Unconstrained Binary Optimization (QUBO) heuristics (ABS2 / qoqo)",
+    "Adaptive Bulk Search (ABS2)",
+    "Variational Quantum Eigensolver (VQE)",
+    "Quantum Approximate Optimization Algorithm (QAOA) (discussed/implemented via Qiskit)",
+    "Adiabatic Quantum Annealing (D-Wave)",
+    "Quantum-inspired Ising solver (InfinityQ)"
+  ],
+  "frameworks": [
+    "Gurobi 11.0",
+    "qoqo (ABS2 integration)",
+    "NVIDIA CUDA / GPU (A100) for ABS2",
+    "IBM Qiskit",
+    "D-Wave (Advantage / Hybrid)",
+    "InfinityQ (Ising machine)"
+  ],
+  "experimental_setup": "Two realistic datasets from S&P 500 stocks were prepared: a 200-stock, 10-day scenario (Oct 2–13, 2023) and a 499-stock, 15-day scenario (Apr 29–May 17, 2024). BQP instances were solved with Gurobi (CPU workstation) with a 10,000 s time limit to obtain feasible solutions and relaxation-based lower bounds. QUBO instances were solved with ABS2 (qoqo) on an NVIDIA A100 GPU with a 3,600 s time limit. Additional quantum/quantum-ready experiments used IBM Qiskit (VQE/QAOA on IBM superconducting backends), D-Wave Advantage annealer (Pegasus topology, with hybrid decomposition for larger instances), and InfinityQ’s Ising-machine service. Key optimization parameters: transaction cost δ=0.1%, daily risk-free rate ρc=0.01%, short-sale loan rate ρs=0.0025%, capital C=10 units, B=60 assets, k=3 blocks per asset. The risk-aversion parameter q was varied across eight values. Evaluation metrics included objective values, optimality gaps vs the BQP relaxation lower bound, time-to-first-best-solution (TTS), Sharpe ratio, transaction costs, and Pareto frontiers.",
+  "dataset_used": "Real historical price data for S&P 500 constituent stocks. Two experimental selections were used: top 200 market-cap stocks from S&P 500 for Oct 2–13, 2023 (n=200, T=10) and 499 S&P 500 stocks for Apr 29–May 17, 2024 (n=499, T=15). The model uses per-asset daily prices p_{i,t} and time-indexed covariance matrices σ_{ij,t}. No public code or explicit public data repository is referenced in the paper.",
+  "experiment_input": {
+    "source": "S&P 500 stock universe (top-200 by market cap for Exp1; 499 constituents for Exp2)",
+    "size": [
+      {
+        "experiment": "Exp1",
+        "n": 200,
+        "T": 10,
+        "binary_variables": 12100
+      },
+      {
+        "experiment": "Exp2",
+        "n": 499,
+        "T": 15,
+        "binary_variables": 45060
+      }
+    ],
+    "time_windows": [
+      {
+        "experiment": "Exp1",
+        "dates": "2023-10-02 to 2023-10-13"
+      },
+      {
+        "experiment": "Exp2",
+        "dates": "2024-04-29 to 2024-05-17"
+      }
+    ],
+    "features_computed": [
+      "daily prices p_{i,t}",
+      "time-indexed covariance matrices σ_{ij,t}",
+      "binary encoding of asset-block selections (k=3)",
+      "binary encoding of cash and asset-count slack variables"
+    ],
+    "preprocessing_notes": "The paper states that per-period covariances σ_{ij,t} and prices p_{i,t} are used; exact procedures (lookback window, covariance estimator, missing-data handling) are not specified in the text."
+  },
+  "experiment_process": {
+    "modeling_steps": [
+      "Formulate multi-period mean-variance portfolio optimization with transaction costs, short-selling, liquidation costs, cash interest, capital and asset-count constraints.",
+      "Encode constraints via binary slack variables and quadratic penalties to obtain QUBO form; present equivalent BQP formulation for classical solvers.",
+      "Map QUBO to Ising Hamiltonian where needed (xi = (si+1)/2)."
+    ],
+    "solver_pipeline": [
+      "BQP path: Solve BQP directly with Gurobi 11.0 (branch-and-bound), obtain best feasible (upper bound) and relaxation-based lower bound; time limit 10,000 s.",
+      "QUBO path (classical heuristic): Use ABS2 (Adaptive Bulk Search) implemented in qoqo on NVIDIA A100 GPU; multiple solution pools and genetic / bit-flip operations in parallel; time limit 3,600 s.",
+      "Quantum/quantum-ready path: Implement VQE/QAOA variational circuits in IBM Qiskit (prepare ansatz, measure expectation of Hamiltonian, classical optimizer loop); use D-Wave Advantage annealer or hybrid flows for annealing-based runs; use InfinityQ Ising solver for quantum-inspired runs."
+    ],
+    "parameters_and_variations": [
+      "Sweep risk-aversion parameter q over {0, 1e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 1e-2}.",
+      "Transaction cost δ=0.1%; daily risk-free ρc=0.01%; short-sale loan ρs=0.0025%; capital C=10 units; B=60; k=3.",
+      "Solver time limits: Gurobi 10,000 s; ABS2 3,600 s. Additional experiments run with varied time budgets (120, 600, 1800, 3600 s) for sensitivity analyses."
+    ],
+    "evaluation_steps": [
+      "Record best-found objective values per solver and per q.",
+      "Compute optimality gap relative to BQP relaxation lower bound: Gap = |Solver Obj - BQP LB| / |Solver Obj|.",
+      "Measure time-to-solution (TTS) for first best feasible solution.",
+      "Compute economic metrics (annualized Sharpe ratio, transaction costs, volatility, realized profit) and produce Pareto frontiers across q.",
+      "Compare trading trajectories (selected assets and block holdings over time) across solvers."
+    ],
+    "iterations": "ABS2 runs multiple parallel solution pools and iterative genetic/bit-flip updates until time limit; Gurobi executes branch-and-bound with relaxations until time limit. Exact iteration counts and classical optimizer settings for VQE/QAOA are not provided."
+  },
+  "experiment_output": {
+    "outputs_produced": [
+      "Best feasible objective values per solver and per q",
+      "BQP relaxation lower bounds and optimality gaps",
+      "Time-to-first-best-solution (TTS) per solver",
+      "Convergence traces (objective vs time)",
+      "Pareto frontier (profit vs variance) across q values",
+      "Economic metrics: annualized Sharpe ratio, realized profits, volatility, transaction costs",
+      "Trading strategy trajectories: binary holdings per asset/block over time"
+    ],
+    "baselines": "Gurobi BQP solutions (with relaxation LB) used as the main classical baseline; optimality gaps computed relative to BQP LB.",
+    "metrics_reported": [
+      "Objective value",
+      "Optimality gap (%)",
+      "Time-to-solution (s)",
+      "Sharpe ratio (annualized)",
+      "Transaction costs (absolute USD units)",
+      "Portfolio variance / volatility",
+      "Comparison plots and tables across q"
+    ]
+  },
+  "experiment_parameters": {
+    "solver_time_limits_seconds": {
+      "Gurobi": 10000,
+      "ABS2_qoqo": 3600,
+      "additional_timings_tested": [
+        120,
+        600,
+        1800,
+        3600
+      ]
+    },
+    "problem_parameters": {
+      "Exp1": {
+        "n": 200,
+        "T": 10,
+        "k": 3,
+        "B": 60,
+        "C": 10,
+        "binary_variables": 12100
+      },
+      "Exp2": {
+        "n": 499,
+        "T": 15,
+        "k": 3,
+        "B": 60,
+        "C": 10,
+        "binary_variables": 45060
+      }
+    },
+    "financial_parameters": {
+      "transaction_cost_delta": 0.001,
+      "daily_risk_free_rho_c": 0.0001,
+      "daily_short_loan_rho_s": 2.5e-05,
+      "capital_C_units": 10,
+      "block_count_k": 3,
+      "max_assets_B": 60
+    },
+    "q_values_tested": [
+      0,
+      1e-06,
+      1e-05,
+      5e-05,
+      0.0001,
+      0.0005,
+      0.001,
+      0.01
+    ],
+    "quantum_parameters": {
+      "qubits_used": null,
+      "circuit_depth": null,
+      "shots": null,
+      "classical_optimizer_for_VQE": null
+    },
+    "penalty_weight_P": null
+  },
+  "hardware_details": {
+    "classical_cpu": {
+      "description": "AMD Ryzen 9 workstation (exact model not specified)",
+      "usage": "Gurobi 11.0 runs for BQP baseline"
+    },
+    "classical_gpu": {
+      "description": "NVIDIA A100-SXM4-80GB",
+      "usage": "ABS2 / qoqo heuristic QUBO solver (multiple GPU solution pools)"
+    },
+    "quantum_annealer": {
+      "provider": "D-Wave Systems",
+      "model": "Advantage (Pegasus topology, >5000 qubits)",
+      "usage_notes": "Used directly for small/medium embeddings; hybrid decomposition used for larger instances"
+    },
+    "quantum_gate_backend": {
+      "provider": "IBM",
+      "framework": "Qiskit",
+      "model_notes": "IBM superconducting processors with >100 qubits (exact backend, qubit count, and topology not specified)"
+    },
+    "quantum_inspired": {
+      "provider": "InfinityQ",
+      "description": "Ising-machine / quantum-inspired solver service (details not specified)"
+    }
+  },
+  "reproducibility_notes": "The paper describes the full mathematical model, parameter settings, solver versions (Gurobi 11.0), and hardware used (AMD Ryzen 9 workstation, NVIDIA A100 GPU, D-Wave Advantage, IBM Qiskit). It does not provide code, solver scripts, specific data-download links, exact covariance estimation/preprocessing procedures, nor precise quantum circuit ansatz or optimizer hyperparameters. No public repository or data release is referenced in the text. Reproducibility is therefore partially supported (model and parameters documented) but would require the authors' code/data or additional implementation details to fully reproduce the experiments.",
+  "key_findings": [
+    "[supported] The authors formulate a multi-period portfolio optimization with transaction costs, short-selling, integer block selection and cash constraints as a QUBO/BQP problem and implement it.",
+    "[supported] The authors constructed benchmark instances up to n=499 assets, T=15 timesteps (45,060 binary variables in the QUBO representation) and a medium instance n=200, T=10 (12,100 variables).",
+    "[supported] Classical BQP solver (Gurobi 11.0) provides provable bounds (lower/upper) and can solve these instances given sufficient time (10,000s time limit used).",
+    "[supported] GPU-based heuristic QUBO solver (qoqo/ABS2) often finds good feasible solutions much faster than Gurobi in early-stage runtime; in many tested settings ABS2 reached competitive objective values quickly.",
+    "[supported] For harder, balanced risk-profit settings (intermediate q), Gurobi can achieve better final objective values with longer runtime, while ABS2 attains high-quality solutions more quickly but sometimes with larger final gaps.",
+    "[supported] In extreme risk-aversion or profit-only regimes (q at extremes) the optimization becomes easier; both solvers rapidly converge to the intuitive solutions (e.g., cash-only when q large).",
+    "[supported] Quantum platforms tested (D-Wave annealer and InfinityQ quantum-inspired solver and IBM Qiskit experiments) produced objectively worse optimization results and lower economic performance (Sharpe ratios) than the best classical/digital solvers in these experiments.",
+    "[supported] Empirically, objective improvements for both ABS2 and Gurobi largely plateau after a few hundred seconds in these instances, with only marginal gains afterward under the tested settings.",
+    "[speculative] Any QUBO can be mapped to an Ising Hamiltonian and is therefore ‘‘quantum-ready’’ for variational/annealing quantum algorithms (QAOA, VQE, QA).",
+    "[speculative] QAOA (in theory) can produce high probability of good or optimal solutions when run with sufficient depth/steps; current NISQ hardware, however, cannot practically realize the required depth for the studied large instances.",
+    "[speculative] The provided QUBO benchmark will serve as a transparent and comparable baseline to measure future quantum (or hybrid) advantages as hardware/software improve."
+  ],
+  "results_summary": "The paper presents a QUBO/BQP formulation of a realistic multi-period portfolio optimization problem (transaction costs, short-sales, integer blocks, cash constraints) and releases medium (n=200, T=10; 12,100 vars) and large (n=499, T=15; 45,060 vars) benchmark instances. Empirical experiments show that classical exact/branch-and-bound BQP solving (Gurobi) yields provable bounds and strong final solutions given long runtimes, while a GPU-based QUBO heuristic (qoqo/ABS2) typically attains high-quality feasible solutions faster in early runtime. For balanced risk-profit settings, Gurobi can surpass ABS2 when allowed much longer solve times. Current quantum hardware and quantum-inspired solvers tested (D-Wave, InfinityQ, IBM Qiskit runs) underperformed the best digital solvers by objective and economic metrics (Sharpe ratios). The authors argue the QUBO benchmark is ‘‘quantum-ready’’ and useful to measure future progress but do not demonstrate a practical quantum advantage on present devices.",
+  "performance_claims": [
+    "Instance sizes: medium instance n=200, T=10 → 12,100 binary variables; large instance n=499, T=15 → 45,060 binary variables.",
+    "Solver time limits used in experiments: Gurobi 11.0 time limit = 10,000 seconds; ABS2 (qoqo) time limit = 3,600 seconds.",
+    "Experiment n=200,T=10, q=0: BQP lower bound and UB both -1,855,197 (gap 0.000%), Gurobi TTS 0.22s, ABS2 objective equal and ABS2 TTS 102s.",
+    "Experiment n=200,T=10, q=0.0005: reported LB -356,010, UB -296,540 (gap 20.055%); ABS2 reached objective -272,033 (gap* 30.870%) in 3,562s; Gurobi ran to 10,000s and reported UB -296,540.",
+    "Experiment n=499,T=15, q=0: LB and UB -4,841,118 (gap 0.000%), Gurobi TTS 0.93s, ABS2 objective -4,831,302 (gap 0.203%) in 3,615s.",
+    "Experiment n=499,T=15, q=0.0005: LB -708,516, UB -563,441 (gap 25.748%); ABS2 objective -451,312 (56.990% gap*) in 3,579s; Gurobi UB -563,441 found in 4,843s.",
+    "Reported Sharpe ratios: for n=200,T=10 and small q, Sharpe ratios ~69–136 (varies with q and solver), for n=499,T=15 and small q Sharpe ratios ~79–166; quantum solvers (D-Wave, InfinityQ) yielded substantially lower Sharpe ratios (exact numbers not listed in the summary table but described as 'significantly lower').",
+    "Authors observed solution improvement plateau for both ABS2 and Gurobi after ~600s in many settings."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper does not demonstrate a practical quantum advantage on current hardware. It reports that tested quantum and quantum-inspired solvers underperformed classical/digital methods on the presented large, realistic benchmarks. The authors present the QUBO formulation as 'quantum-ready' and argue the benchmark will help identify future quantum advantages as hardware and algorithms improve, but they make no empirical claim of existing quantum advantage.",
+  "limitations": [
+    "Quantum computing advantages remain unproven empirically; current experiments do not demonstrate a clear quantum advantage over classical methods (author-stated).",
+    "Current quantum hardware and software cannot effectively solve the largest benchmark instances in this study (e.g., n=499, T=15); only digital solvers could solve the large-scale problem (author-stated).",
+    "Quantum hardware suffers from robustness and noise issues and lacks full error correction, limiting practical performance of VQE/QAOA/other variational methods (author-stated).",
+    "QUBO problem matrices tend to be dense and grow quadratically with the number of assets, creating severe scaling and embedding difficulties (author-stated).",
+    "Proving global optimality for large-scale BQP/QUBO instances is computationally demanding; optimality gaps can be large and require long solver runtimes or cannot be closed within time limits (author-stated).",
+    "[inferred] Benchmark and experiments rely on simplified and fixed market-model parameters (uniform transaction cost δ, fixed loan rate ρs, normalized capital units, etc.), which may limit the generality of conclusions for other market settings.",
+    "[inferred] Some realistic market frictions are not modeled or are simplified (e.g., liquidity constraints, market impact, slippage, taxes, varying transaction costs), reducing economic realism of the benchmark.",
+    "[inferred] The discrete/block binary representation of holdings (k blocks per asset) coarsely approximates real share counts and may limit the realism of allocation granularity and execution implications.",
+    "[inferred] Quantum platforms (gate-based and annealers) are constrained by qubit connectivity, embedding overhead and the maximum size of fully-connected subproblems (e.g., D-Wave Pegasus limits), restricting direct applicability to large dense QUBOs.",
+    "[inferred] Heuristic QUBO solvers (e.g., ABS2/qoqo) achieve good near-term performance but do not provide the same provable optimality guarantees (tight bounds) as classical BQP solvers like Gurobi.",
+    "Solver progress often plateaus after ~600 seconds in these experiments; additional runtime yields marginal improvements for both QUBO and BQP approaches (author observation).",
+    "[inferred] Experiments report in-sample optimization results; out-of-sample robustness, transaction execution feasibility, and economic viability under live trading conditions are not evaluated.",
+    "[inferred] Operational and implementation aspects necessary for live trading (latency, order execution scheduling, regulatory constraints, borrowing limits beyond simple rates) are not modeled or tested."
+  ],
+  "open_questions": [
+    "When will quantum hardware and algorithms reach the maturity (scale, connectivity, error rates) necessary to obtain a practical advantage on large-scale, multi-period portfolio optimization benchmarks?",
+    "Which quantum algorithms, ansätze, and mixer/driver choices (QAOA variants, VQE circuits, improved mixers) are most effective for dense, large-scale financial QUBOs?",
+    "How can the number of QAOA/VQE steps or circuit depth be reduced in practice while retaining solution quality, and what theoretical/practical trade-offs are involved?",
+    "How can QUBO-to-quantum embedding and problem decomposition be improved to handle dense quadratic structure and very large n×T instances on near-term hardware?",
+    "How sensitive are optimal/near-optimal solutions to key hyperparameters (risk-aversion q, transaction cost δ, short-sale cost ρs, capital B/C, block granularity k), and how should benchmarks account for that sensitivity?",
+    "What methods can certify or tighten optimality bounds for quantum or hybrid solutions, enabling fair comparison with classical BQP solvers?",
+    "How should additional realistic market frictions (market impact, liquidity limits, stochastic transaction costs, taxes) be incorporated into QUBO/BQP benchmarks without rendering problems intractable?",
+    "How do quantum-inspired and hybrid classical-quantum approaches compare across diverse market regimes and out-of-sample tests?",
+    "What is the appropriate methodology to translate QUBO optimization outputs into executable trading strategies, accounting for execution risk and latency?",
+    "How will advances in error correction and noise mitigation change the landscape for applying quantum algorithms to financial optimization?"
+  ],
+  "future_work": [
+    "Release the benchmark instances and data publicly to enable reproducible comparisons and to track progress across classical, quantum-inspired, and quantum methods (paper states release/benchmarking goal).",
+    "Evaluate emerging quantum hardware and improved quantum algorithms (QAOA, VQE variants, better ansätze) on the released benchmarks as devices and software improve (paper suggests this as the motivation).",
+    "Extend benchmark problem sizes (larger n and T) and more complex settings as quantum hardware scales, to re-assess when/if quantum advantage appears.",
+    "Investigate algorithmic improvements to QAOA/VQE (e.g., step reduction, better initialization, improved classical optimizers) inspired by recent theoretical work (paper references Montanez-Barrera & Michielsen 2024).",
+    "Develop hybrid classical-quantum and quantum-inspired decomposition/embedding strategies to handle large dense QUBOs more effectively (e.g., D-Wave hybrid methods, InfinityQ).",
+    "Work on methods to provide tighter bounds or certification techniques for QUBO solutions so that solution quality from quantum/hybrid solvers can be fairly compared to BQP optimality guarantees.",
+    "Incorporate richer and more realistic market frictions (liquidity, price impact, variable transaction costs, taxes) and perform out-of-sample/backtest evaluations to assess economic robustness of optimized strategies.",
+    "Benchmark the time-to-solution (TTS) versus solution quality trade-offs across a wider set of solvers and problem instances to characterize practical runtime regimes.",
+    "Explore mapping refinements (e.g., variable reduction, sparsification, alternative binary encodings) to reduce QUBO density and embedding overhead for quantum devices."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "benchmark-comparison",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Empirical benchmark across Gurobi, GPU QUBO heuristics (ABS2), D-Wave, IBM VQE/QAOA and InfinityQ shows current quantum and quantum-ready platforms do not outperform classical solvers on realistic multi-period portfolio QUBOs (n=200 up to n=499, up to 45,060 binaries).",
+    "#idea:hybrid-approach — Hybrid workflows (D-Wave hybrid decomposition, classical optimizers with variational circuits) and quantum-inspired Ising solvers provide viable routes to obtain feasible solutions for large instances, but they are used as complements rather than replacements for classical BQP solvers.",
+    "#limitation:qubit-count — The full problem encoding (tens of thousands of binary variables) far exceeds current QPU capacity, necessitating decomposition/hybridization and preventing end-to-end quantum solutions.",
+    "#limitation:noise — Results on IBM variational circuits and other QPUs were degraded by hardware noise and limitations of NISQ devices, contributing to inferior objective values and larger optimality gaps relative to classical baselines.",
+    "#limitation:data-encoding — Binary slack-variable encoding and quadratic penalties inflate problem size (many auxiliary binaries), highlighting a costly data-encoding overhead for mapping realistic multi-period constraints to QUBO/Ising form.",
+    "#idea:near-term-feasibility — The paper proposes the presented large-scale QUBO benchmark as a transparent standard to measure and track future quantum advantage, despite no current advantage being observed."
+  ],
+  "contradictions": [
+    "The paper provides empirical evidence that classical BQP solver (Gurobi) and GPU-based QUBO heuristics (ABS2 on A100) outperform current quantum platforms (IBM VQE/QAOA, D-Wave annealer, InfinityQ Ising) on both medium (n=200) and large (n=499) portfolio instances, contradicting claims that near-term quantum devices already deliver superior performance for practical portfolio optimization.",
+    "Scaling results show that mapping realistic multi-period portfolio problems (up to ~45k binary variables) requires decomposition or hybrid classical-quantum approaches; this contradicts optimistic assertions that current annealers or variational circuits can directly scale to industrial-sized QUBOs without hybridization."
+  ]
+}

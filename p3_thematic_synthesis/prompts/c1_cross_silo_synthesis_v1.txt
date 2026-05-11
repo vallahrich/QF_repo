@@ -1,0 +1,63 @@
+## Instructions
+
+You are a research assistant performing **Stage C of Thomas & Harden (2008) thematic synthesis**: cross-silo meta-theme synthesis for a systematic literature review on quantum computing in financial services.
+
+Stage C builds on the analytical themes produced by Stage B2 across 8 independent problem-domain silos. Your job is to identify **cross-silo meta-themes**: higher-order patterns that are only visible when the 8 silos are placed side by side.
+
+A meta-theme is NOT a union of silo themes. It is an **interpretive claim about the field as a whole** that no single silo could have surfaced.
+
+## Inputs
+
+### Scope
+- 8 silos: trading_execution (TE), credit_lending (CL), fraud_detection (FD), derivative_pricing (DP), risk_management (RM), simulation_monte_carlo (SMC), portfolio_optimization (PO), quantum_ml_finance (QML).
+- Aggregated analytical themes from Stage B2 (one call per silo) across 654 unique papers.
+
+### B2 analytical themes from all 8 silos (silo -> list of analytical themes)
+{all_analytical_themes}
+
+### B2 descriptive-theme headers (silo -> list of [theme_id, theme_label]) — for context only
+{all_descriptive_headers}
+
+## Output Format
+
+Return a JSON object. ONLY the JSON object — no markdown fences, no prose.
+
+```json
+{{
+  "meta_themes": [
+    {{
+      "meta_theme_id": "MT-001",
+      "meta_theme_label": "<concise interpretive claim — not a description>",
+      "claim": "<2-4 sentences stating the cross-silo interpretive claim. Must say something about the FIELD that no single silo could say on its own.>",
+      "silos_grounded_in": ["RM", "DP", "QML"],
+      "grounded_in_themes": {{
+        "RM": ["AT-RM-001"],
+        "DP": ["AT-DP-002", "AT-DP-004"],
+        "QML": ["AT-QML-001"]
+      }},
+      "divergence_notes": "<1-2 sentences: where does this pattern NOT hold? Which silos contradict or qualify it? Cite the silo(s) and the contradicting analytical theme if applicable.>",
+      "implication_for_field": "<1-2 sentences: what this means for the research agenda, for practitioners, or for the thesis' overall argument in Ch 7 Discussion>",
+      "implication_for_phase4": "<1-2 sentences: does this meta-theme suggest which experiments P4 should prioritise, or which claims to stress-test empirically? Write 'none' if not applicable.>"
+    }}
+  ],
+  "meta_synthesis_note": "<3-5 sentences: what is the single most important thing the 8-silo synthesis reveals about the state of quantum computing in finance? This note frames §6.11 of the manuscript.>"
+}}
+```
+
+## Hard rules
+
+1. **Silo grounding**: every meta-theme must cite `silos_grounded_in` with **at least 3 distinct silos**. Meta-themes grounded in <3 silos are not cross-silo; they belong in the silo chapters.
+2. **Theme grounding**: `grounded_in_themes` must reference actual `AT-XX-NNN` IDs present in the input. Do not invent theme IDs.
+3. **Non-obviousness**: a meta-theme must pass the *"so what?"* test. Rejected examples:
+   - "Most silos use NISQ hardware" — trivially true; no interpretive content.
+   - "The literature claims quantum advantage" — descriptive, not interpretive.
+   Accepted examples (illustrative):
+   - "Speedup claims decouple from I/O overhead across all speedup-bearing silos, suggesting a shared methodological blind spot in how 'advantage' is operationalized."
+   - "Hybridization trajectories diverge sharply by silo maturity: QML collapses into pragmatic hybrid ML, while optimization silos retain aspirational pure-quantum goals."
+4. **Divergence engaged**: every meta-theme must have non-trivial `divergence_notes`. If you cannot identify a divergent silo, state this explicitly and justify ("no divergence because the pattern is universal — unanimous across all 8 silos, see AT-XX-NNN in each").
+5. **Implication bearing**: every meta-theme must have a non-empty `implication_for_field`. Meta-themes without implications are observations, not contributions.
+6. **Meta-theme count**: produce between 5 and 8 meta-themes. Fewer than 5 indicates under-synthesis; more than 8 indicates the line between meta-theme and silo-theme has blurred.
+7. **Do not re-describe silo themes**: a meta-theme is a new interpretive layer. Do not write a meta-theme that is essentially a union of 3 silo themes with no added interpretation.
+8. **Do not use Phase 1 taxonomy codes** (PD-01..PD-10, SA-01..SA-11) or their labels as meta-theme names. Meta-themes emerge from the cross-silo evidence only.
+9. **Meta-synthesis note**: the final `meta_synthesis_note` is the single most important contribution of Stage C. It should be defensible at an oral examination and publishable in the Discussion chapter. If your note could be written without doing the 8-silo synthesis, rewrite it.
+10. **Output JSON only** — no markdown fences, no commentary, no reasoning traces.

@@ -1,0 +1,280 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier and version header ('arXiv:2603.10707v1 11 Mar 2026'), typical of an unrefereed preprint. Its structure (abstract, methods, results, refs) matches a research preprint rather than a published peer-reviewed venue.",
+  "title": "Hybrid Photonic Quantum Reservoir Computing for High-Dimensional Financial Surface Prediction",
+  "authors": [
+    "Fyodor Amanov",
+    "Azamkhon Azamov"
+  ],
+  "year": "2026",
+  "journal_or_venue": "arXiv preprint (quant-ph)",
+  "doi": "",
+  "abstract_summary": "The paper proposes a hybrid photonic quantum reservoir computing framework to predict high-dimensional swaption surfaces by compressing 224-dimensional surfaces to a 20-dimensional latent space via a sparse denoising autoencoder, extracting 1,215 Fock-basis features from an ensemble of three fixed photonic reservoirs, and mapping concatenated features with a Ridge regression readout. Evaluated on six held-out trading days and compared to ten baselines, the approach attains the lowest surface RMSE (0.0425) with sub-millisecond inference, while variational quantum methods overfit and perform poorly on the small financial dataset.",
+  "methodology_description": "The authors propose a hybrid photonic quantum reservoir computing (QORC) pipeline to predict next-day swaption surfaces. Each 224-dimensional daily surface is preprocessed with a three-stage, train-only fitted pipeline (Winsorization at 1/99 percentiles → median/IQR robust scaling → min-max to [0,1]), compressed to a 20-dimensional latent code by a sparse denoising autoencoder (symmetric encoder/decoder, ELU bottleneck, L1 sparsity, 15% input masking during training), and windowed temporally (k=5 with a first-difference momentum) into a 120-dimensional classical context. An ensemble of three fixed photonic reservoirs (sandwich architecture Urand · PS(φ) · Urand with Haar-random unitaries and phase encoding from an orthogonal projection + sigmoid) is used to extract Fock-basis probability features (364 + 715 + 136 = 1,215 features); these are standardised and concatenated with the 120-dim classical context to yield a 1,335-dim feature vector. Only a classical Ridge regression readout (closed-form solution with ℓ2 penalty) is trained to map features to the next latent code, which is decoded back to a 224-dim surface. Benchmarks include a suite of classical and quantum baselines (Ridge, SVR, Random Forest, Gradient Boosting, MLP, LSTM, QUANTECH MLP with quantum features, a variational photonic circuit (VQC) trained end-to-end, and a Quantum LSTM). All quantum circuits are classically simulated (MerLin/Perceval); the quantum reservoirs are fixed (zero trainable parameters) while variational models are trained with Adam. Performance is reported via latent MSE, surface RMSE, R2, training time and inference latency on a dataset of 494 daily surfaces with 6 strictly held-out future test days.",
+  "algorithms_used": [
+    "Quantum Optical Reservoir Computing (QORC)",
+    "Photonic sandwich circuit (Urand · PS · Urand) with Fock-basis measurement",
+    "Sparse Denoising Autoencoder (ELU bottleneck, L1 sparsity)",
+    "Ridge Regression (closed-form ℓ2-penalised readout)",
+    "Support Vector Regression (RBF)",
+    "Random Forest",
+    "Gradient Boosting",
+    "Multilayer Perceptron (MLP)",
+    "Long Short-Term Memory (LSTM)",
+    "Variational Quantum Circuit (VQC)",
+    "Quantum LSTM (hybrid variational-recurrent)"
+  ],
+  "frameworks": [
+    "Python 3.12",
+    "PyTorch 2.x",
+    "scikit-learn 1.5.x",
+    "MerLin",
+    "Perceval"
+  ],
+  "experimental_setup": "All quantum circuits and photonic reservoirs were classically simulated using MerLin and Perceval. Random seeds were fixed (42). Models were implemented in Python using PyTorch and scikit-learn. Training/evaluation splits: training (439 windows), validation (last 50 windows), test (6 held-out future days). Latencies and train times reported are measured on the classical simulation environment; reported inference latencies exclude quantum-hardware feature acquisition.",
+  "dataset_used": "Proprietary swaption dataset of 494 daily swaption surfaces; each surface is a 14×16 tenor–maturity grid flattened to 224 dimensions. Six additional future days were held out as a test set (strict walk-forward evaluation).",
+  "experiment_input": "Proprietary swaption surfaces (494 days × 224 dims, 14×16 grid). Preprocessing: (1) per-dimension Winsorization at 1st/99th percentiles computed on training set, (2) robust centering by median and scaling by IQR, (3) min-max scaling to [0,1] — all statistics fitted on training data only. Autoencoder: 224→128→64→20 encoder, 20→64→128→224 decoder, ELU bottleneck, ReLU elsewhere, sigmoid final activation, L1 sparsity λ=1e-4, 15% masking during training. Temporal windowing: k=5, include ∆zt−1 momentum producing 120-dim classical context. Photonic features: three reservoirs producing 1,215 Fock-basis probabilities; concatenated with classical context → 1,335-dim feature vector.",
+  "experiment_process": "1) Preprocess raw surfaces with Winsorize→RobustScale→MinMax fitted on training set. 2) Train sparse denoising autoencoder (Adam lr=1e-3, mask ratio=0.15, L1 sparsity=1e-4, early stopping on validation) to compress 224→20 latent codes. 3) Form temporal inputs with window k=5 and momentum to get 120-dim classical context. 4) Construct three fixed photonic reservoirs (sandwich Urand·PS·Urand): R1: 12 modes, 3 photons → 364 Fock features; R2: 10 modes, 4 photons → 715 features; R3: 16 modes, 2 photons → 136 features. Phase encoding: orthogonal projection of classical context to m modes followed by sigmoid then scaled to 2π. 5) Concatenate and standardise QORC features (1,215) with classical context (120) → 1,335 features. 6) Train Ridge regression readout (closed-form) with α=100 mapping features to next latent code; decode to 224-dim prediction. 7) Evaluate against 10 baselines with fixed hyperparameters: classical Ridge (α=1), SVR (RBF γ=1/(120·Var), C=1, ε=0.1), Random Forest (B=300, max_depth=20), Gradient Boosting (M=200, depth=5, lr=0.1), sklearn MLP (128,64, Adam lr=1e-3, batch 32), LSTM (2-layer hidden=64, FC head), QUANTECH MLP (uses QORC features, 256/128 layers, Adam lr=5e-4), VQC (6 modes, 2 photons, 4 variational layers, 1,166 trainable params, Adam lr=1e-3, 200 epochs), Quantum LSTM (nq=4, 2 entangling layers, hidden=32, Adam lr=5e-4, 200 epochs). Metrics recorded: latent MSE, surface RMSE, R2, training time and inference latency.",
+  "experiment_output": "Outputs are numeric performance metrics per model on 6 held-out test days: latent MSE (mean squared error in 20-dim latent space), surface RMSE (root MSE across 224-dim reconstructed surfaces), R2, training time (wall-clock), and inference latency (ms/sample). Baselines: 10 classical and quantum models as described. Reported top result: QORC + Ridge achieved surface RMSE=0.0425, latent MSE=0.0099 and inference latency ≈0.10 ms. Variational quantum baselines (VQC, Quantum LSTM) produced negative R2, indicating poor generalisation.",
+  "experiment_parameters": {
+    "random_seed": 42,
+    "autoencoder": {
+      "input_dim": 224,
+      "latent_dim": 20,
+      "encoder_layers": [
+        128,
+        64
+      ],
+      "decoder_layers": [
+        64,
+        128
+      ],
+      "activations": {
+        "bottleneck": "ELU",
+        "hidden": "ReLU",
+        "output": "sigmoid"
+      },
+      "sparsity_l1": 0.0001,
+      "mask_ratio": 0.15,
+      "optimizer": "Adam",
+      "learning_rate": 0.001,
+      "early_stopping_patience": 30,
+      "validation_split": 50
+    },
+    "temporal_window": {
+      "k": 5,
+      "context_dim": 120,
+      "momentum": "first_difference"
+    },
+    "photonic_reservoirs": [
+      {
+        "name": "R1",
+        "modes": 12,
+        "photons": 3,
+        "fock_dim": 364,
+        "correlation_order": "cubic"
+      },
+      {
+        "name": "R2",
+        "modes": 10,
+        "photons": 4,
+        "fock_dim": 715,
+        "correlation_order": "quartic"
+      },
+      {
+        "name": "R3",
+        "modes": 16,
+        "photons": 2,
+        "fock_dim": 136,
+        "correlation_order": "pairwise"
+      }
+    ],
+    "phase_encoding": {
+      "projection": "fixed orthogonal",
+      "nonlinearity": "sigmoid",
+      "scale": "2π"
+    },
+    "final_readout": {
+      "method": "Ridge",
+      "alpha": 100,
+      "closed_form": true
+    },
+    "classical_ridge_baseline": {
+      "alpha": 1.0
+    },
+    "svr": {
+      "kernel": "RBF",
+      "gamma": "1/(120·Var(X))",
+      "C": 1.0,
+      "epsilon": 0.1
+    },
+    "random_forest": {
+      "n_estimators": 300,
+      "max_depth": 20,
+      "min_samples_leaf": 2,
+      "max_features": 10
+    },
+    "gradient_boosting": {
+      "n_rounds": 200,
+      "max_depth": 5,
+      "learning_rate": 0.1
+    },
+    "mlp": {
+      "hidden_layers": [
+        128,
+        64
+      ],
+      "optimizer": "Adam",
+      "lr": 0.001,
+      "batch_size": 32
+    },
+    "lstm": {
+      "layers": 2,
+      "hidden_size": 64,
+      "dropout": 0.1,
+      "optimizer": "Adam",
+      "lr": 0.001
+    },
+    "vqc": {
+      "modes": 6,
+      "photons": 2,
+      "variational_layers": 4,
+      "trainable_params": 1166,
+      "optimizer": "Adam",
+      "lr": 0.001,
+      "epochs": 200
+    },
+    "quantum_lstm": {
+      "nq": 4,
+      "entangling_layers": 2,
+      "hidden_size": 32,
+      "trainable_params": 2180,
+      "optimizer": "Adam",
+      "lr": 0.0005,
+      "epochs": 200
+    }
+  },
+  "hardware_details": {
+    "quantum_simulators": [
+      "MerLin",
+      "Perceval"
+    ],
+    "classical_frameworks": [
+      "PyTorch 2.x",
+      "scikit-learn 1.5.x"
+    ],
+    "quantum_hardware": null,
+    "notes": "All photonic circuits were classically simulated. No QPU or cloud quantum provider was used. Reported inference times exclude time to acquire quantum features on actual hardware."
+  },
+  "reproducibility_notes": "Authors provide source code and trained model weights at the linked GitHub repository (https://github.com/Azamhon/Quandela_Quantech/tree/v2). The swaption dataset is proprietary and not redistributed; the paper notes the pipeline can be reproduced with any similarly structured financial surface dataset. Random seeds and framework versions are specified. Detailed hyperparameters and model configurations are reported in the text and appendices.",
+  "key_findings": [
+    "[supported] A hybrid pipeline combining a sparse denoising autoencoder (224→20), temporal windowing, an ensemble of three fixed photonic reservoirs producing 1,215 Fock-basis features, and a Ridge readout achieves the best surface RMSE (0.0425) on the paper's 6-day held-out test set.",
+    "[supported] The quantum layer in the proposed model has zero trainable parameters; only the classical Ridge readout is trained, which removes optimization stochasticity and avoids barren-plateau issues associated with variational circuit training.",
+    "[supported] Variational quantum models (the VQC and Quantum LSTM baselines) catastrophically overfit on this dataset, producing negative R2 values on test data (VQC R2 = -1.089, Quantum LSTM R2 = -1.306).",
+    "[supported] Regularised linear readouts (Ridge) paired with fixed quantum reservoirs outperform large trainable neural readouts on this small-data financial task (e.g., QUANTECH MLP with 377k parameters performs worse than QORC+Ridge).",
+    "[supported] The ensemble/heterogeneous-reservoir design (different photon numbers and sandwich architecture) improves surface reconstruction relative to simpler single-reservoir ablations, despite small differences in latent MSE.",
+    "[supported] The full pipeline yields sub-millisecond inference latency in their implementation (QORC + Ridge: ~0.10 ms per sample), making it computationally attractive for real-time use (excluding quantum feature extraction overhead).",
+    "[supported] The three-stage preprocessing (Winsorize → robust scaling → min-max) and denoising autoencoder are important for robustness and to avoid look-ahead bias in financial data.",
+    "[speculative] Photonic reservoirs can produce features that classical computers cannot efficiently replicate, because Fock-basis output probabilities depend on matrix permanents and relate to boson-sampling hardness results (#P-hard).",
+    "[speculative] On photonic hardware, feature extraction could be performed at optical speeds (nanosecond shots) and scale to reservoir sizes intractable for classical simulation, potentially yielding a practical quantum advantage.",
+    "[supported] Classical baselines (linear Ridge on classical context, SVR, Random Forest, LSTM) remain competitive and in some cases outperform certain quantum baselines, highlighting the importance of inductive bias and regularisation in small-data regimes.",
+    "[supported] The authors' empirical results support three practical lessons: (1) fixed quantum feature extractors outperform trainable quantum circuits on small datasets (in this study), (2) regularised linear readouts outperform deep learning when data is limited, (3) ensemble diversity through differing photon numbers produces meaningful feature diversity."
+  ],
+  "results_summary": "The preprint proposes a hybrid photonic quantum reservoir computing (QORC) pipeline for forecasting high-dimensional swaption surfaces. Using a sparse denoising autoencoder to compress surfaces to a 20-d latent space, concatenating 1,215 simulated Fock-basis features from three fixed photonic reservoirs with a 120-d classical context, and applying Ridge regression as the readout, the authors report the lowest surface RMSE (0.0425) on their 6-day held-out test set and sub-millisecond inference latency in their implementation (excluding quantum feature extraction). Variational, trainable quantum models performed poorly (negative R2), supporting the paper's claim that fixed quantum feature extractors plus regularised classical readouts are a more robust approach in this small-data financial setting.",
+  "performance_claims": [
+    "QORC + Ridge surface RMSE on 6 held-out test days: 0.0425",
+    "QORC + Ridge latent MSE (test): 0.0099",
+    "Simple PML + Ridge latent MSE: 0.0085; surface RMSE: 0.0461",
+    "Classical Ridge (120-d context) latent MSE: 0.0091; surface RMSE: 0.0484",
+    "Classical LSTM surface RMSE: 0.0445",
+    "QUANTECH MLP (quantum features + neural readout) latent MSE: 0.0218; surface RMSE: 0.0475; parameters: 377,492",
+    "VQC (trained end-to-end) latent MSE: 0.0581; surface RMSE: 0.0851; R2 = -1.089; trainable params: 1,166",
+    "Quantum LSTM latent MSE: 0.0641; surface RMSE: 0.1079; R2 = -1.306; params: 2,180",
+    "Inference latency reported for QORC + Ridge: ~0.10 ms/sample (implementation-specific; excludes quantum feature extraction)",
+    "Training time for QORC + Ridge: ~0.23 s (implementation-specific, readout only)",
+    "Autoencoder hyperparameter claim: latent dim = 20 achieves >98% reconstruction fidelity (presented as justification in hyperparameters section)",
+    "Total concatenated feature dimension used by Ridge readout: 1,335 (1,215 quantum + 120 classical)",
+    "Ridge regularisation alpha used for final readout: α = 100"
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper argues that photonic reservoirs can provide features classically hard to simulate (drawing on boson-sampling/#P-hardness theory) and contends that on photonic hardware large reservoirs could produce features intractable for classical simulation. However, all reported experiments simulate the photonic reservoirs classically and do not demonstrate a practical quantum advantage on hardware; thus the advantage is argued on theoretical complexity grounds rather than empirically demonstrated.",
+  "limitations": [
+    "Simulation: All photonic circuits are classically simulated; reported inference latencies exclude quantum feature extraction (author-stated).",
+    "Small test set: Only six held-out test days provide limited statistical power; differences among top models may not be statistically significant (author-stated).",
+    "Dataset specificity: Results are reported on a single proprietary swaption dataset and have not been tested on equities, credit, FX, or other market types (author-stated).",
+    "Linear readout: The pipeline uses a Ridge regression readout which captures only linear relationships between features and targets; while nonlinear readouts were tested and overfit, the exploration of other regularised nonlinear methods is limited (author-stated).",
+    "No ensemble ablation: The contributions of individual reservoirs or reservoir subsets were not isolated; authors explicitly leave this for future work (author-stated).",
+    "[inferred] Proprietary dataset and inability to redistribute the data limit direct reproducibility of empirical numbers.",
+    "[inferred] Classical simulation omits real-device effects (photon loss, noise, calibration errors); results may not transfer directly to physical photonic hardware.",
+    "[inferred] Finite-shot sampling / shot-noise of photonic measurements is not modelled; feature estimation error from finite measurement budgets is ignored.",
+    "[inferred] End-to-end inference latency in deployment would need to include time to extract quantum features on hardware and any classical–quantum communication overhead, which is not measured.",
+    "[inferred] Scalability concerns: classical simulation of larger photon numbers/modes becomes intractable, so practical resource requirements and limits for achieving a genuine quantum advantage remain uncertain.",
+    "[inferred] Sensitivity to preprocessing, autoencoder architecture, and hyperparameters is not fully characterised; robustness to different choices is unclear.",
+    "[inferred] Interpretability and economic meaning of extracted Fock-basis features (why certain features help prediction) are not analysed.",
+    "[inferred] Operational, deployment, and regulatory considerations of integrating photonic quantum subsystems into production finance systems are not discussed.",
+    "[inferred] Potential vulnerability to market regime shifts or structural breaks is untested; generalisation under nonstationary market conditions is uncertain."
+  ],
+  "open_questions": [
+    "How well do the simulated photonic-reservoir features and the overall pipeline translate to measurements on real photonic hardware with realistic noise, photon loss, and finite-shot sampling?",
+    "What is the per-sample measurement budget (number of shots) required on hardware to estimate the Fock-basis probabilities with sufficient accuracy for the Ridge readout, and how does that affect end-to-end latency and performance?",
+    "How much does each individual reservoir (different photon numbers / mode counts) contribute to final performance? Which reservoir configurations are most valuable for surface prediction?",
+    "Does the QORC advantage persist on larger, richer financial datasets (more days), or on other asset classes such as equities, FX, or credit surfaces?",
+    "At what scale (modes, photons) does a photonic reservoir produce features that are classically intractable and yield a practical advantage for finance applications?",
+    "Can regularised nonlinear readouts (e.g., kernel methods, kernel Ridge) better exploit quantum features without overfitting, compared with linear Ridge and deep MLP readouts?",
+    "How sensitive are results to choices in preprocessing, autoencoder architecture (latent dim = 20), temporal window size, and Ridge regularisation hyperparameter α?",
+    "How robust is the pipeline to market regime changes or structural breaks (out-of-distribution testing)?",
+    "What are the trade-offs between ensemble diversity (heterogeneous reservoirs) and the added feature dimensionality with respect to generalisation and computational cost?",
+    "How interpretable are the Fock-basis features in economic or financial terms, and can we map specific features to meaningful latent market factors?",
+    "What are the minimal classical-quantum interfacing requirements and deployment pathways to integrate photonic feature extraction into existing low-latency trading or risk systems?",
+    "How does finite training-data availability interact with reservoir size and the risk of overfitting—i.e., is there a principled way to select reservoir complexity given sample size?"
+  ],
+  "future_work": [
+    "Isolate and quantify the contributions of individual reservoirs and reservoir subsets (ensemble ablation) — explicitly called out by the authors as left for future work (author-stated).",
+    "Validate the pipeline on real photonic hardware, including modelling and measuring finite-shot sampling error, device noise, losses, and end-to-end inference latency (inferred from discussion of hardware prospects).",
+    "Evaluate generalisation across other datasets and asset classes (equities, credit, FX) to assess dataset specificity and broader applicability (inferred/author-stated implication).",
+    "Investigate regularised nonlinear readouts (e.g., kernel Ridge, other kernel methods) that may exploit nonlinear structure in quantum features without overfitting (inferred / suggested by discussion).",
+    "Scale reservoir configurations beyond the limits of classical simulation to probe regimes where classical simulation is intractable and a quantum advantage may appear (inferred from computational complexity discussion).",
+    "Incorporate shot-noise modelling and measurement-budget trade-offs into end-to-end latency and accuracy evaluations (inferred).",
+    "Perform systematic sensitivity and ablation studies on preprocessing steps, autoencoder hyperparameters (latent dimension, mask ratio, sparsity), temporal windowing, and Ridge regularisation to characterise robustness (inferred).",
+    "Study interpretability of Fock-basis features and relationships to known market factors, to better understand why quantum features aid reconstruction and prediction (inferred)."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "hybrid-quantum-classical",
+    "variational-nisq"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — The hybrid photonic quantum reservoir computing (QORC) + Ridge readout attained the best reported surface RMSE (0.0425) and latent MSE (0.0099) versus ten classical and quantum baselines on the proprietary swaption dataset.",
+    "#idea:hybrid-approach — Pipeline combines classical preprocessing and a sparse denoising autoencoder (224→20) with an ensemble of three fixed photonic reservoirs (Fock-basis features) and a closed-form Ridge regression readout; only the readout and autoencoder are trained.",
+    "#idea:near-term-feasibility — Use of fixed (non-trainable) photonic reservoirs and a classical readout suggests a path compatible with near-term photonic implementations; authors report sub-millisecond inference latency in simulation.",
+    "#contradiction:classical-vs-quantum — Variational photonic models (VQC, Quantum LSTM) trained end-to-end overfit and produced negative R2 on the small dataset, contradicting claims that variational quantum ML will outperform classical methods on such finance tasks.",
+    "#limitation:simulation-only — All quantum circuits and photonic reservoirs were classically simulated (MerLin/Perceval); no experiments on real photonic hardware were reported.",
+    "#limitation:no-empirical-validation — Reported inference latencies exclude quantum-hardware feature acquisition and hardware-induced overheads; no hardware benchmarks provided.",
+    "#limitation:data-encoding — The approach relies on an orthogonal projection + sigmoid phase encoding and extraction of very high-dimensional Fock-basis features (1,215 features), which may be costly or infeasible on actual photonic hardware at scale.",
+    "#limitation:noise — The study does not evaluate hardware noise, photon loss, or other experimental imperfections; robustness to realistic photonic noise models is unknown."
+  ],
+  "contradictions": [
+    "Variational photonic methods (VQC, Quantum LSTM) performed worse than classical baselines (negative R2) and overfit on the small proprietary dataset; this contradicts some prior literature that promotes variational quantum models as broadly beneficial for financial ML.",
+    "The reported sub-millisecond inference latency is measured in a classical simulation environment and explicitly excludes quantum-hardware feature acquisition; this conflicts with any claim that the method is immediately deployable with the same latency on real photonic hardware.",
+    "Results are based on a small proprietary dataset (494 days) with only 6 held-out test days and classical simulation of quantum components; this undermines strong claims about scalability and generalization to production-scale derivative-surface prediction."
+  ]
+}

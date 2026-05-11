@@ -1,0 +1,116 @@
+{
+  "_citation": "Dalzell, McArdle, Berta, Bienias, Chen, Gilyén, Hann, Kastoryano, Khabiboulline, Kubica, Salton, Wang, Brandão. 'Quantum algorithms: A survey of applications and end-to-end complexities.' arXiv:2310.03011 (2023). 337 pages.",
+  "_version": "Dalzell arXiv:2310.03011 v1 (2023-10-05); MSA values pinned to v1 figures and not refreshed against post-2023 algorithmic improvements (see dalzell_framework.md caveats).",
+
+  "_methodology": "Dalzell gives PER-APPLICATION logical-qubit and T-count estimates grounded in end-to-end resource analyses. For each silo, we record a 'minimum scale for advantage' (MSA) — below that scale the problem is classically trivial; at/above that scale Dalzell considers the quantum resources to be competitive with the best classical methods.",
+
+  "silo_thresholds": {
+    "derivative-pricing": {
+      "_sources": "Section 8.2 Monte Carlo methods: Option pricing. Based on Chakrabarti et al. 2021 autocallable/TARF benchmarks and Stamatopoulos 2022 QSP follow-up.",
+      "min_logical_qubits": 4700,
+      "min_t_count": 2.4e9,
+      "min_t_depth": 4.5e7,
+      "target_clock_rate_hz": 5e7,
+      "target_clock_rate_label": "50 MHz logical clock for wall-clock competitiveness with classical MC (1-10 s)",
+      "classical_reference": "Classical MC: ~10^4 samples, 1-10 seconds runtime",
+      "speedup_type": "quadratic (from QAE)",
+      "notes": "Three sets of estimates available: Chakrabarti autocallable (8k qubits, 1.2e10 T), TARF (12k qubits, 9.8e9 T), QSP-polished (4.7k qubits, 2.4e9 T). We use the most optimistic (QSP) as the MSA floor."
+    },
+    "simulation-monte-carlo": {
+      "_sources": "Section 8.2 (option pricing is the canonical MC use case in finance)",
+      "min_logical_qubits": 4700,
+      "min_t_count": 2.4e9,
+      "min_t_depth": 4.5e7,
+      "target_clock_rate_hz": 5e7,
+      "speedup_type": "quadratic (QAE over classical MC)",
+      "notes": "Same MSA as derivative pricing; both are QAE-on-MC."
+    },
+    "risk-management": {
+      "_sources": "Section 8 mentions VaR/CVaR/CVA (Woerner-Egger 2019; Han-Rebentrost 2022; Stamatopoulos 2022 quantum gradient for Greeks). Resource requirements similar to derivative pricing MC.",
+      "min_logical_qubits": 12000,
+      "min_t_count": 9.8e9,
+      "min_t_depth": 1e8,
+      "target_clock_rate_hz": 5e7,
+      "speedup_type": "quadratic (QAE + quantum gradient)",
+      "notes": "Greeks / VaR require gradient estimation on top of MC, pushing resources slightly higher than plain option pricing."
+    },
+    "portfolio-optimization": {
+      "_sources": "Section 22 QIPM for SOCP, Dalzell et al. 2022 resource analysis.",
+      "min_logical_qubits": 8e6,
+      "min_t_count": 1e29,
+      "min_t_depth": 1e24,
+      "speedup_type": "sub-quadratic (QIPM is strictly less than quadratic)",
+      "notes": "For n=500, m=400 SOCP instance — which classical solvers handle in seconds. Dalzell flags this as a case where the QRAM + QLSS overhead kills any speedup. Effectively infeasible under current end-to-end estimates.",
+      "is_infeasible": true
+    },
+    "quantum-ml-finance": {
+      "_sources": "Dalzell explicitly defers QML-in-finance to reviews; does NOT give end-to-end numbers. Uses the generic QML Section 13.",
+      "min_logical_qubits": null,
+      "min_t_count": null,
+      "notes": "Dalzell provides no end-to-end estimate for QML. Many QML proposals (QSVM, Gaussian process regression, low-rank PCA) are dequantized by Tang 2019 / GST 2022. Flagged as insufficient_data unless the specific sub-problem matches a Dalzell-analyzed primitive."
+    },
+    "fraud-detection": {
+      "_sources": "Not a Dalzell application area. Typically treated as QML.",
+      "min_logical_qubits": null,
+      "min_t_count": null,
+      "notes": "Not analyzed. Emit not_applicable unless algorithm is a generic QML primitive."
+    },
+    "trading-execution": {
+      "_sources": "Not a Dalzell application area.",
+      "min_logical_qubits": null,
+      "min_t_count": null,
+      "notes": "Not analyzed. Emit not_applicable."
+    },
+    "credit-lending": {
+      "_sources": "CVA falls under derivative pricing in Dalzell's taxonomy. Credit scoring is QML.",
+      "min_logical_qubits": 12000,
+      "min_t_count": 9.8e9,
+      "min_t_depth": 1e8,
+      "notes": "Use risk-management thresholds (CVA is a risk measure)."
+    },
+    "cryptography-security": {
+      "_sources": "Section 6.1 Breaking cryptosystems. RSA-2048 Shor factoring (Gidney-Ekerå 2021 [10]): ~6000 logical qubits, ~3×10⁹ non-Clifford gates (Toffoli+T), 14000 logical qubits after routing. ECC-256 ECDLP (Ref [27]): 6000 logical qubits, 1.1×10⁸ Toffoli. Grover on AES: 3000-7000 logical, 10^25+ T-gates.",
+      "min_logical_qubits": 6000,
+      "min_t_count": 3e9,
+      "min_t_depth": null,
+      "speedup_type": "exponential (Shor) / quadratic (Grover on AES)",
+      "notes": "RSA-2048 via Gidney-Ekerå: 0.3n³ ≈ 3×10⁹ non-Clifford gates for n=2048. ECC-256 is cheaper at 1.1×10⁸ Toffoli. Grover on AES is far worse (10^25+). We use RSA-2048 as the MSA floor since it is the most commonly cited cryptanalysis target."
+    },
+    "insurance-actuarial": {
+      "_sources": "Not explicitly analyzed. Closest analog is risk-management (tail probabilities via QAE).",
+      "min_logical_qubits": 12000,
+      "min_t_count": 9.8e9,
+      "min_t_depth": 1e8,
+      "notes": "Treated as risk-management: actuarial tail estimation is QAE on MC."
+    },
+    "simulation-electronic-structure": {
+      "_sources": "Section 6 electronic structure, Section 7 quantum chemistry. Von Burg 2021: ~2000 logical qubits, 1e10 Toffoli for FeMoCo.",
+      "min_logical_qubits": 2000,
+      "min_t_count": 1e10,
+      "min_t_depth": 1e8,
+      "speedup_type": "exponential (QPE)",
+      "notes": "Chemistry is Dalzell's most credible exponential-speedup territory."
+    },
+    "simulation-condensed-matter": {
+      "_sources": "Section 5 condensed matter (Hubbard, spin systems). Babbush et al. 2018 Hubbard: 3n logical qubits ~6000, 0.3n^3 Toffoli ~3e9.",
+      "min_logical_qubits": 6000,
+      "min_t_count": 3e9,
+      "min_t_depth": 1e8,
+      "speedup_type": "exponential (Hamiltonian simulation)"
+    }
+  },
+
+  "budget_seconds": 604800,
+  "budget_label": "1 week",
+
+  "margin_tiers": {
+    "far_above": 10.0,
+    "above": 1.0,
+    "below": 0.1,
+    "_note": "Ratio = reported_resource / min_resource. 'far_above' = solidly past the MSA; 'below' = still classically-reachable scale."
+  },
+
+  "_verdict_rules": {
+    "_guidance": "Compare (logical_qubits, T-count) against the silo's Minimum Scale for Advantage (MSA). Logic: (1) If no MSA for silo → not_applicable or insufficient_data. (2) If both resources reported and BOTH >= MSA → likely_viable (Dalzell says 'this regime is what end-to-end analysis targets'). (3) If both reported and BOTH below MSA → fails (problem too small — classically trivial). (4) Mixed → conditional. (5) Missing resources → insufficient_data."
+  }
+}

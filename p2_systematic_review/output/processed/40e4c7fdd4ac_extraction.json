@@ -1,0 +1,305 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2007.00017v2) and date, and has the structure of a manuscript (abstract, methods, results, references) posted to a preprint server rather than indicating a journal or conference publication.",
+  "title": "Dynamic Portfolio Optimization with Real Datasets Using Quantum Processors and Quantum-Inspired Tensor Networks",
+  "authors": [
+    "Samuel Mugel",
+    "Carlos Kuchkovsky",
+    "Escolástico Sánchez",
+    "Samuel Fernández-Lorenzo",
+    "Jorge Luis-Hita",
+    "Enrique Lizaso",
+    "Román Orús"
+  ],
+  "year": "2021",
+  "journal_or_venue": "arXiv preprint (quant-ph)",
+  "doi": "",
+  "abstract_summary": "This work addresses dynamic portfolio optimization on real financial data (daily prices over 8 years for 52 assets) using discrete QUBO formulations. The authors implement and compare classical solvers, D-Wave Hybrid quantum annealing, two VQE-based approaches on IBM-Q (including a novel VQE-Constrained method), and a quantum-inspired Tensor Network optimizer, using clustering preprocessing; they report that D-Wave Hybrid and Tensor Networks handle the largest problem sizes (demonstrated up to 1272 fully-connected qubits) and discuss extensions for realistic constraints and performance improvements.",
+  "methodology_description": "The authors formulate the dynamic portfolio optimization problem in a discrete QUBO form by binary-encoding discrete asset allocations (ωn,t) with Nq bits per asset and including returns, covariance-based risk, transaction costs (approximated as quadratic) and Lagrange penalty terms to enforce budget constraints. They preprocess real financial data (daily prices for 52 assets over 8 years) via Hodrick–Prescott smoothing, compute log-returns, estimate covariance with a 20-business-day window, remove low-variance/low-return assets, and apply hierarchical clustering (Euclidean distance on trends) to reduce dimensionality (typically to 6–8 clusters for some solvers). They construct several benchmark dataset sizes (XS to XXL) with varying N, Nt, Nq and Ntot. Multiple solvers are applied to the resulting QUBO/HUBO problems: classical baselines (exhaustive search for small sizes and Gekko), D-Wave Hybrid quantum annealing (using problem decomposition / hybrid classical-quantum workflow), two VQE-based approaches on IBM-Q (a standard VQE with an ansatz of single-qubit y-rotations and entangling CNOT layers; and a VQE-Constrained variant that collects multiple low-energy states per time step and recombines them classically), and a quantum-inspired Tensor Network (matrix product state) optimizer using imaginary-time evolution tailored to the problem. Performance is compared across metrics including Sharpe ratio, percentual profit (returns minus transaction costs), and computational time. Key global parameters used in experiments include risk-aversion γ = 1 and transaction-cost quadratic coefficient λ = 1.",
+  "algorithms_used": [
+    "QUBO formulation / Ising mapping",
+    "Exhaustive search",
+    "Gekko (classical nonconvex integer optimization)",
+    "Quantum annealing (D-Wave Hybrid)",
+    "Variational Quantum Eigensolver (VQE)",
+    "VQE-Constrained (hybrid low-energy-subspace sampling + classical recombination)",
+    "Tensor Network optimization (Matrix Product State, imaginary-time evolution)"
+  ],
+  "frameworks": [
+    "Xanadu PennyLane",
+    "IBM-Q backends (IBM quantum processors)",
+    "D-Wave Hybrid / D-Wave 2000Q platform",
+    "Gekko (Python)",
+    "MATLAB (used for Tensor Network implementation / runs)"
+  ],
+  "experimental_setup": "Real-data experiments: daily prices of 52 assets over eight years. Preprocessing: Hodrick–Prescott smoothing, log-returns, 20-business-day rolling covariance, remove low-variance/low-return assets (reduced to ≈28 relevant assets), hierarchical clustering by Euclidean distance on trends to produce cluster-level assets (typically 6–8 clusters for constrained solvers). Discrete time rebalancing once per month. Binary encoding ωn,t = (1/K) Σ_{q=0}^{Nq-1} 2^q x_{n,t,q} yields a QUBO matrix Q of size Ntot = N * Nt * Nq. Solvers applied per dataset size; VQE circuits with ~12 active qubits (ansatz: single-qubit y-rotations and layers of CNOTs; circuit stated as 82 CNOTs & 24 variational rotations in the paper). D-Wave Hybrid used for large problems (up to 1272 fully-connected logical qubits in hybrid mode). Tensor Network (MPS) optimization via imaginary-time evolution implemented and executed on a laptop (MacBook Pro) using MATLAB for timings reported.",
+  "dataset_used": "Daily price time series for 52 assets (mix including government bonds, variable and fixed income securities) over 8 years. Derived log-returns per business day, aggregated to monthly-period rebalancing returns. Covariance estimated from prior 20-business-day windows. Pre-filtering removed assets with simultaneous sub-average variance and returns, reducing to ~28 relevant assets. Clustering (hierarchical with Euclidean distance on trends) used to further reduce dimensionality to 6–8 clusters for some experiments.",
+  "experiment_input": {
+    "source": "Proprietary/dataset described in paper; daily prices for 52 assets over 8 years (authors state code/data available from corresponding author on reasonable request)",
+    "size": {
+      "assets": 52,
+      "time_span_years": 8,
+      "preprocessed_assets": "reduced to ~28 relevant assets; cluster experiments used 6 clusters typically",
+      "datasets_defined": {
+        "XS": {
+          "N": 3,
+          "Nt": 2,
+          "Nq": 1,
+          "Ntot": 6
+        },
+        "S": {
+          "N": 4,
+          "Nt": 5,
+          "Nq": 1,
+          "Ntot": 20
+        },
+        "M": {
+          "N": 4,
+          "Nt": 7,
+          "Nq": 1,
+          "Ntot": 28
+        },
+        "L": {
+          "N": 8,
+          "Nt": 17,
+          "Nq": 2,
+          "Ntot": 272
+        },
+        "XL": {
+          "N": 8,
+          "Nt": 29,
+          "Nq": 2,
+          "Ntot": 464
+        },
+        "XXL": {
+          "N": 8,
+          "Nt": 53,
+          "Nq": 3,
+          "Ntot": 1272
+        }
+      }
+    },
+    "preprocessing": [
+      "Hodrick–Prescott smoothing to extract trends",
+      "Compute log returns (µn,t = log(Pn,t / Pn,t-1))",
+      "Estimate covariance Σt using prior 20 business days",
+      "Remove assets with sub-average variance and returns",
+      "Hierarchical clustering (Euclidean distance) to group similar assets; choose 6–8 clusters via mean cluster variance elbow",
+      "Renormalize cluster-level investments (equal distribution among assets within cluster)",
+      "Discretize allocations into binary variables via fixed-point binary encoding"
+    ]
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Preprocess raw price data (smoothing, compute log-returns, covariance estimation)",
+      "Filter out irrelevant assets and cluster remaining assets to reduce dimensionality",
+      "Set up discrete encoding: choose Nq bits per asset, form QUBO/Ising Hamiltonian including returns, γ/2 ω^T Σ ω risk term, quadratic transaction cost approximation λ(Δω)^2, and penalty ρ (u^T ω − 1)^2",
+      "For problems with exact-linear transaction-costs or 10-5-40 constraints, formulate extra ancillary/quadratic/quartic penalty terms (HUBO)",
+      "Run solvers per dataset size: exhaustive search for very small sizes, Gekko for moderate sizes, VQE (standard) and VQE-Constrained on IBM-Q for small/clustered instances, D-Wave Hybrid for large instances, Tensor Network (MPS imaginary-time evolution) for medium-to-large instances",
+      "VQE specifics: variational circuit with single-qubit y-rotations and entangling CNOT layers (15 total qubits in circuit, 12 used in ansatz), implemented with PennyLane and executed on IBM-Q backends; collect low-energy states for VQE-Constrained (top ~10 per time step) and recombine classically to optimize trajectory",
+      "D-Wave Hybrid specifics: hybrid decomposition of large QUBO into parts, recombine candidate solutions, collect energy/returns/Sharpe landscape",
+      "Tensor Network specifics: MPS ansatz with bond dimension D (not explicitly specified), optimization via imaginary-time evolution tailored to the QUBO, implemented in MATLAB and run on a laptop for reported timings",
+      "Evaluate and compare outputs across metrics (Sharpe ratio, percentual profit, run-time) and across datasets and solvers"
+    ],
+    "iterations_and_parameters": [
+      "Risk aversion γ fixed to 1 across experiments",
+      "Transaction-cost quadratic coefficient λ fixed to 1 in reported runs",
+      "Penalty multipliers (ρ, ρ', ρ'') used to enforce constraints (values tuned but not explicitly listed)",
+      "VQE-Constrained: collect best 10 solutions per time step (as stated), then exhaustively recombine them classically",
+      "VQE ansatz: circuit composed of ~24 variational single-qubit rotations and ~82 CNOTs (circuit structure described); classical optimizer not fully specified but conjugate gradient mentioned as an example"
+    ]
+  },
+  "experiment_output": {
+    "result_format": "Tabulated quantitative comparisons across solvers and dataset sizes",
+    "metrics_reported": [
+      "Sharpe ratio (computed as cumulative returns over sqrt(cumulative variance))",
+      "Percentual profit (returns minus transaction costs)",
+      "Computational run-time (seconds) per solver/dataset",
+      "Energies and components of cost function (for D-Wave Hybrid: energy, covariance, returns, transaction costs, profit, Sharpe) for sampled candidate solutions"
+    ],
+    "baselines": [
+      "Exhaustive search (small sizes)",
+      "Gekko classical optimizer"
+    ],
+    "observed_outputs": "Tables showing Sharpe ratios, percentual profits, and run-times for each solver across dataset sizes (XS..XXL). Example: D-Wave Hybrid solved up to 1272 logical qubits (XXL) in reported 171s; TN reported higher profits/Sharpe on some mid-size problems but with longer runtimes (e.g., 116,833s for XXL on laptop MATLAB implementation)."
+  },
+  "experiment_parameters": {
+    "risk_aversion_gamma": 1,
+    "transaction_cost_lambda": 1,
+    "penalty_rho": "tuned per-experiment (value not explicitly listed)",
+    "encoding": "binary fixed-point encoding ωn,t = (1/K) Σ_{q=0}^{Nq-1} 2^q x_{n,t,q}",
+    "datasets": {
+      "XS": {
+        "N": 3,
+        "Nt": 2,
+        "Nq": 1,
+        "Ntot": 6
+      },
+      "S": {
+        "N": 4,
+        "Nt": 5,
+        "Nq": 1,
+        "Ntot": 20
+      },
+      "M": {
+        "N": 4,
+        "Nt": 7,
+        "Nq": 1,
+        "Ntot": 28
+      },
+      "L": {
+        "N": 8,
+        "Nt": 17,
+        "Nq": 2,
+        "Ntot": 272
+      },
+      "XL": {
+        "N": 8,
+        "Nt": 29,
+        "Nq": 2,
+        "Ntot": 464
+      },
+      "XXL": {
+        "N": 8,
+        "Nt": 53,
+        "Nq": 3,
+        "Ntot": 1272
+      }
+    },
+    "VQE_circuit": {
+      "total_qubits_in_layout": 15,
+      "active_ansatz_qubits": 12,
+      "variational_parameters": 24,
+      "CNOT_count": 82,
+      "ansatz_type": "single-qubit y-rotations + layered entangling CNOTs"
+    },
+    "VQE_Constrained_sampling": {
+      "low_energy_states_per_timestep": 10
+    },
+    "covariance_window_days": 20,
+    "rebalancing_frequency": "monthly"
+  },
+  "hardware_details": {
+    "quantum_annealer": {
+      "model": "D-Wave 2000Q (Chimera) used; D-Wave Hybrid hybrid-classical service used for large problems",
+      "notes": "Authors mention D-Wave 'Advantage' (Pegasus) in discussion but experiments used 2000Q and D-Wave Hybrid"
+    },
+    "universal_quantum": {
+      "provider": "IBM-Q",
+      "backend": "IBM quantum processors (up to 12 qubits used in VQE experiments)"
+    },
+    "classical": {
+      "Gekko": "Python Gekko library used",
+      "TensorNetwork_runtime": "Implemented in MATLAB and run on a MacBook Pro for timings reported"
+    },
+    "cloud_or_access": "Experiments used cloud-access IBM-Q backends and D-Wave cloud/hybrid service (not further specified)"
+  },
+  "reproducibility_notes": "The authors state that data and code are available from the corresponding author on reasonable request. Specific numeric values for some hyperparameters (exact penalty multipliers ρ, ρ', ρ'' and TN bond dimension D) and the exact classical optimizer parameters for VQE are not fully specified in the text, which will require contacting the authors for full reproducibility. The paper lists software frameworks used (PennyLane, Gekko, MATLAB) and hardware models (D-Wave 2000Q, IBM-Q), which aids reproducibility but complete scripts and raw datasets are not publicly attached to the preprint.",
+  "key_findings": [
+    "[supported] The authors implemented and benchmarked multiple solvers (D-Wave Hybrid quantum annealing, VQE on IBM-Q, a novel 'VQE-Constrained' approach, a Tensor Network optimizer, and classical solvers Gekko and exhaustive search) on real financial data (daily prices over 8 years of 52 assets).",
+    "[supported] Preprocessing (Hodrick-Prescott smoothing, clustering) was used to reduce dimensionality; clustering to ~6–8 clusters was used to fit smaller quantum resources and to remove low-variance/low-return assets.",
+    "[speculative] The continuous-variable formulation of the dynamic portfolio problem is analytically solvable (Euler–Lagrange / continuous limit) while the discrete formulation maps to a QUBO / Ising spin glass (NP-hard).",
+    "[speculative] Linear transaction costs can be represented exactly in a QUBO by introducing ancillary binary variables (at the expense of more variables); quadratic (parabolic) costs are a practical approximation used in this work.",
+    "[supported] D-Wave Hybrid and the Tensor Network (TN) solver handled the largest prepared problem instances; the authors report demonstrative calculations up to 1272 fully-connected qubits.",
+    "[supported] D-Wave Hybrid produced large-percentual profits on the largest tested dataset (XXL); for that XXL case D-Wave Hybrid returned 67.6% profit and completed in 171 seconds (per authors' tables).",
+    "[supported] The Tensor Network solver reached higher Sharpe ratios than other methods on some datasets (e.g., Sharpe ratio 15.83 reported for the XXL dataset) but with much longer run-times (116,833 s on the authors' Matlab/MacBook Pro implementation for XXL).",
+    "[supported] VQE on IBM-Q was applied up to ~12 qubits; the plain VQE scale is limited by current universal quantum hardware availability and required clustering/preprocessing to be competitive.",
+    "[supported] The authors introduced a VQE-Constrained hybrid workflow: use VQE to sample low-energy candidate states per time step, then recombine candidates classically to build full trading trajectories.",
+    "[supported] Classical solver Gekko performed competitively on medium-size instances and in some metrics outperformed quantum/quantum-inspired methods, but ran into memory limits at larger problem sizes (authors report limits around ~500 qubits).",
+    "[supported] There is no single best algorithm/hardware across all figures of merit (Sharpe ratio, profit, compute time); algorithm ranking depends on the chosen metric and problem sizing.",
+    "[speculative] The authors claim this work is the first application of Tensor Networks and of VQE (and their VQE-Constrained variant) to dynamic portfolio optimization with real data.",
+    "[speculative] Potential performance improvements are feasible: TN implementations could be accelerated by software/hardware/algorithmic optimization (authors estimate ~100x speedup with optimized C++/parallel/HPC/GPU implementations), and upcoming quantum hardware (e.g., D-Wave Advantage) should enable larger/ faster hybrid runs.",
+    "[speculative] Real-life constraints such as market impact, exact linear transaction costs, and regulatory '10-5-40' rules can be incorporated into the QUBO/HUBO formulations (with trade-offs: more ancilla variables, higher-order terms, and greater problem complexity)."
+  ],
+  "results_summary": "The authors implemented and compared multiple classical, quantum, hybrid, and quantum-inspired solvers for the discrete dynamic portfolio optimization problem on a real dataset (52 assets, 8 years). They preprocessed the data via smoothing and clustering to reduce dimensionality for restricted hardware. Empirically, D-Wave Hybrid and a Tensor Network optimizer handled the largest instances (up to 1272 fully-connected qubits in demonstrative runs). D-Wave Hybrid produced the largest percentual profit on the largest dataset (67.6%) in short wall-clock time (171 s), while the Tensor Network solver achieved higher Sharpe ratio (15.83) but required far longer computation (authors report ~116,833 s for the XXL case on their Matlab laptop implementation). VQE (IBM-Q) was limited to small problem sizes (~12 qubits) and required clustering; the authors also developed a VQE-Constrained hybrid strategy. There was no universally best solver: relative performance depends on the metric (profit, Sharpe, runtime). The paper also discusses methods to include additional realistic constraints and proposes algorithmic/hardware improvements as future work.",
+  "performance_claims": [
+    "D-Wave Hybrid solved an instance with 1272 fully-connected qubits (XXL dataset) and returned 67.6% percentual profit, completing in 171 seconds (Table III and IV).",
+    "Tensor Network solver handled the same 1272-variable instance (XXL) and reported a Sharpe ratio of 15.83 and percentual profit 39.7%, with runtime 116,833 seconds on the authors' Matlab/MacBook Pro implementation (Tables II–IV).",
+    "Gekko (classical solver) produced large percentual profits on mid-size problems (e.g., 71.6% profit for the XL dataset) and Sharpe ratios up to 20.76 (XL), but ran out of memory beyond ~500 qubits (Tables II–IV).",
+    "VQE (IBM-Q) was run up to 12 qubits (ansatz with 82 CNOTs and 24 parametrized single-qubit rotations); reported runtimes include ~278 s for the smallest XS dataset run (Table IV) and limited scalability. ",
+    "The exhaustive solver could handle up to the S/M scale reported (e.g., exhaustive returned Sharpe 8.90 on S dataset); exhaustive runtimes very small for XS (0.005 s) but scale exponentially (Table IV)."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper does not claim a definitive quantum advantage. Instead, it reports that hybrid quantum-classical (D-Wave Hybrid) and quantum-inspired (Tensor Network) approaches can handle larger instances than direct NISQ VQE on current universal hardware, and that relative performance depends on the metric (profit, Sharpe, runtime). The authors emphasize hybrid methods' practical utility rather than asserting a demonstrated quantum computational advantage over classical approaches.",
+  "limitations": [
+    "VQE on current universal quantum hardware is limited to small problem sizes (up to ~12 qubits in this work) and requires problem-size reduction (clustering) to be useful.",
+    "D-Wave 2000Q native hardware embedding restricts fully-connected problems to ~65 qubits; full-size problems require hybrid decomposition (D-Wave Hybrid).",
+    "Gekko (classical solver) hits a memory wall around ~500 qubits and cannot scale to larger problem instances tested here.",
+    "The Tensor Network (TN) solver in the current implementation is computationally slow for large instances (e.g., XXL: ~1.17e5 s) even though it can handle many variables; run-time and code optimization are needed.",
+    "Transaction costs were approximated by a quadratic (parabolic) form instead of using exact linear absolute values; the approximation may introduce modeling error.",
+    "Exact linear transaction costs and some realistic constraints (e.g., 10-5-40 rule) require ancilla/qubit expansion or higher-order (HUBO) terms, which substantially increase problem complexity.",
+    "Some realistic constraints (market impact, exact transaction costs, regulatory rules) lead to non-quadratic or higher-order formulations (cubic/quartic/HUBO) that are harder to solve on current QUBO-based hardware.",
+    "Preprocessing through clustering (dimensionality reduction) is required for some solvers but may discard relevant information and affects the fidelity of the unfolded trading trajectories.",
+    "Minimizing the Hamiltonian (energy) does not necessarily maximize financial metrics such as profit or Sharpe ratio; different solutions optimize different metrics.",
+    "There is no single best algorithm or hardware platform across all figures of merit (profit, Sharpe, run-time, monetary cost): performance depends on the chosen metric.",
+    "The VQE-Constrained approach is heuristic (e.g., sampling top-10 low-energy states per time step) and relies on the assumption that the global trajectory can be built from near-optimal instantaneous states.",
+    "The market-impact model used is simple (linear form ∆ω^T Λ' ω) and may not capture complex real-world market microstructure effects.",
+    "Empirical data processing choices (e.g., Hodrick-Prescott smoothing, choice of cluster count) influence results and introduce model-selection sensitivity.",
+    "[inferred] The TN implementation reported is not yet production-grade: it lacks software/hardware optimizations (parallelization, GPUs/HPC) and algorithmic refinements.",
+    "[inferred] The study uses a limited dataset (daily prices of 52 assets over 8 years) and clustered reduction to 28 relevant assets; generalization to broader markets or higher-frequency trading is untested.",
+    "[inferred] Hybrid solver performance and scaling depend on proprietary or evolving hardware (e.g., D-Wave Hybrid, IBM-Q improvements), so repeatability and long-term benchmarking are sensitive to platform changes."
+  ],
+  "open_questions": [
+    "Which algorithm and hardware combination is the best in practice for large-scale dynamic portfolio optimization when trading oﬀ profit, Sharpe ratio, run-time, and monetary cost?",
+    "How can one align the optimization objective (ground-state energy of QUBO/Hamiltonian) more directly with financial metrics of interest (profit, Sharpe, other risk-adjusted returns)?",
+    "How to include realistic constraints (exact linear transaction costs, market impact, regulatory rules such as 10-5-40) in a scalable way without exploding the problem size or order (avoiding large ancilla overhead and HUBO complexity)?",
+    "What are principled methods to choose the number of clusters (or otherwise perform dimensionality reduction) so as to preserve investment-relevant information while enabling tractable optimization?",
+    "How much does the clustering/unfolding strategy affect the actual realized returns and risk in practice, and can this bias be quantified or corrected?",
+    "How to scale VQE-style algorithms to commercially relevant dimensions (beyond tens of qubits) in a way that remains robust to noise and expressible with feasible ansatz circuits?",
+    "Can Tensor Network methods be optimized (algorithmically and via HPC/GPU/FPGAs/OPUs) to deliver both high-quality solutions and competitive run-times for industry-scale problems?",
+    "How effective are other quantum-inspired or metaheuristic solvers (e.g., Digital Annealer, Microsoft QIO, Amazon Alpha-QUBO) compared to D-Wave Hybrid and TNs for this problem domain?",
+    "What is the best way to handle HUBO formulations on available or near-term hardware, or to transform them to QUBO without prohibitive overhead?",
+    "How to robustly model market impact beyond simple linear forms so it is compatible with QUBO/TN/quantum architectures, while remaining realistic?",
+    "What hybrid architectures (e.g., quantum + TN, or quantum + classical metaheuristics) provide the most practical advantage on current and near-term hardware?",
+    "How sensitive are the results to data-preprocessing choices (smoothing window, return definition, covariance estimation) and what best practices should be standardized?"
+  ],
+  "future_work": [
+    "Test other quantum-inspired and specialized solvers (Fujitsu Digital Annealer, Microsoft QIO, Amazon Alpha-QUBO) and common metaheuristics to compare performance.",
+    "Optimize the Tensor Network implementation: software (C++), parallelization, use of HPC/GPU/FPGAs/OPUs, and algorithmic refinements to reduce run-time by ~100x.",
+    "Explore and benchmark D-Wave’s newer hardware (Advantage with Pegasus topology) and its effect on hybrid solver performance.",
+    "Further develop hybrid approaches, including the proposed combination of quantum processing and Tensor Networks.",
+    "Improve and fine-tune VQE and VQE-Constrained strategies, and investigate other circuit ansatzes and sampling strategies to scale to larger problems.",
+    "Implement more realistic constraints (market impact, exact linear transaction costs, the 10-5-40 rule) in the optimization formulations and study their computational implications.",
+    "Investigate methods to handle HUBO (higher-order) terms efficiently or transformations to QUBO with manageable overhead.",
+    "Perform sensitivity analyses on preprocessing choices (clustering, smoothing, covariance window) and develop best-practice guidelines.",
+    "Explore different TN strategies and hyperparameter tuning to further improve accuracy and scalability of TN solvers.",
+    "Run larger-scale experiments (less aggressive clustering or no clustering) to validate methods on fuller datasets and assess real-world applicability."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach",
+    "idea:quantum-advantage"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Demonstrates NISQ-era VQE on IBM-Q for small/clustered instances (~12 active qubits) with real-device metrics (Sharpe ratio, percent profit, runtime), showing feasibility but severe size limits.",
+    "#idea:hybrid-approach — Employs hybrid workflows: D-Wave Hybrid decomposition for large QUBOs and a VQE-Constrained hybrid (collect low-energy states on QPU and recombine classically), enabling much larger logical problem sizes (reported up to Ntot=1272).",
+    "#idea:quantum-advantage — Reports that D-Wave Hybrid can handle the largest formulated problems and provides competitive solutions on real datasets, but any claimed advantage is conditional on hybrid decomposition and problem preprocessing.",
+    "#contradiction:classical-vs-quantum — A quantum-inspired classical Tensor Network (MPS imaginary-time evolution) matches or outperforms some quantum solvers and scales to large instances on a laptop, challenging assertions of clear quantum superiority for this task.",
+    "#contradiction:scalability — Pure variational NISQ approaches (VQE) do not scale beyond very small clustered problems, while hybrid annealing and classical TN methods scale—paper thus presents mixed/contradictory evidence about scalability of quantum methods.",
+    "#limitation:qubit-count — VQE experiments are limited to ~12 active qubits; larger problem instances require clustering, decomposition, or hybrid methods.",
+    "#limitation:data-encoding — Fixed-point binary encoding (N * Nt * Nq) inflates QUBO size; clustering/preprocessing is required to make problems tractable for QPUs.",
+    "#limitation:noise — Circuit depth (e.g., ~82 CNOTs) and NISQ noise constrain VQE performance on IBM-Q, limiting solution quality for larger instances."
+  ],
+  "contradictions": [
+    "The paper shows D-Wave Hybrid and a classical Tensor Network both handle the largest problem sizes (up to Ntot=1272), which contradicts any straightforward claim that quantum methods (annealing) unambiguously outperform classical/quantum-inspired methods on this portfolio task.",
+    "The paper demonstrates that VQE on IBM-Q is limited to very small clustered instances (~12 qubits) and does not scale, contradicting optimistic narratives that NISQ variational algorithms will soon scale to realistic portfolio sizes without hybrid decomposition or classical assistance."
+  ]
+}

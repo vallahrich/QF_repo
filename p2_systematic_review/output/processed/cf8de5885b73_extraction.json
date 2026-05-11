@@ -1,0 +1,164 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes an arXiv identifier (arXiv:2308.13063v1), date, full author affiliations and typical preprint structure (abstract, methods, results, references) without journal or conference venue—indicating an arXiv preprint rather than a peer-reviewed publication.",
+  "title": "Grover Search for Portfolio Selection",
+  "authors": [
+    "A. Ege Yilmaz",
+    "Stefan Stettler",
+    "Thomas Ankenbrand",
+    "Urs Rhyner"
+  ],
+  "year": "2023",
+  "journal_or_venue": "arXiv preprint (q-fin.CP)",
+  "doi": "",
+  "abstract_summary": "The paper presents explicit quantum oracles tailored for Grover-based algorithms to select efficient portfolios that match investor preferences, by enforcing thresholds on returns and standard deviations and enabling selection by Sharpe ratio. The authors describe circuits for conditional slicing (greater-than comparisons using phase-encoded values), integrate these oracles into Quantum Exponential Search (QES) and Grover Adaptive Search (GAS), and demonstrate small-scale implementations using Qiskit simulators, discussing qubit scaling and practical limitations.",
+  "methodology_description": "The authors construct explicit quantum oracles to perform conditional selection (slicing) over a precomputed set of efficient portfolios (expected returns and standard deviations) and use Grover-based search algorithms to retrieve portfolios matching investor preferences. The workflow is: compute the efficient frontier classically (mean-variance optimization with no-short-selling), encode the list values into phase-encoding unitaries U = diag(e^{i2π s_k}) and use quantum phase estimation to obtain t-bit integer approximations of decimal parts, implement a bitwise greater-than (GT) comparison circuit (built from X, CX and multi-controlled-NOT (MCX) gates with uncomputation) to mark items exceeding thresholds, and wrap that oracle in Quantum Exponential Search (QES) to return an index satisfying the condition. For optimization (finding max Sharpe ratio) they use Grover Adaptive Search (GAS) with QES as a subroutine. They also employ quantum counting (phase estimation on the Grover operator) to detect number of solutions and handle the zero-solution case (time-out of O(sqrt(N)) if needed). The implementations and experiments are run on IBM Qiskit simulators using small subsamples (8 portfolios) due to qubit resource limits. Key implementation parameters include a chosen resolving power d = 0.01 for phase encoding and explicit formulae for the number of counting/phase-estimation qubits (m choices given in the paper).",
+  "algorithms_used": [
+    "Grover's algorithm",
+    "Quantum Exponential Search (QES)",
+    "Grover Adaptive Search (GAS)",
+    "Quantum Phase Estimation",
+    "Quantum Counting"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Implementation executed on IBM Qiskit simulators (no physical QPU). Small-scale experiments using a subsample of eight efficient portfolios due to qubit resource limits.",
+  "dataset_used": "Efficient frontier values (expected returns and standard deviations) computed classically via mean-variance optimization with no-short-selling. Authors used a subsample of eight portfolio entries; all values scaled to [0,1). Risk-free rate set to 0% for Sharpe ratio calculation.",
+  "experiment_input": {
+    "source": "Classical mean-variance optimization (no-short-selling) computed by authors; not computed quantumly",
+    "size": 8,
+    "features": [
+      "expected return (scaled to [0,1))",
+      "standard deviation (scaled to [0,1))"
+    ],
+    "preprocessing": "Values scaled to [0,1); decimal parts phase-encoded via diagonal unitary U = diag(e^{i2π s_k}); integer and decimal parts compared with GT-gate when needed. Risk-free rate set to 0% for Sharpe calculation."
+  },
+  "experiment_process": "1) Compute efficient frontier classically (mean-variance, no-short-selling). 2) Select a subsample (8 portfolios) and scale values to [0,1). 3) Construct phase-encoding unitaries Ur and Uσ for lists of returns and standard deviations. 4) Use quantum phase estimation to convert decimal parts into t-bit integers (t chosen per resolving power d). 5) Implement GT-gate (chain of X, CX and MCX gates with uncomputation) to compare sk > S (single-list) or combined conditions (e.g. σ_k < S2 AND r_k > S1) across two registers. 6) Wrap the oracle in Quantum Exponential Search (QES) to retrieve an index of a portfolio satisfying the condition; handle M=0 via a time-out O(sqrt(N)) or quantum counting. 7) For maximizing Sharpe ratio, run Grover Adaptive Search (GAS) where QES is used to find values below the current threshold iteratively. 8) Use quantum counting with chosen m to detect zero/single/multiple solutions when needed. Parameters explicitly mentioned: resolving power d=0.01, GT-gate uses 15 qubits, index register uses 3 qubits, circuits used 18 and 37 qubits in two described setups.",
+  "experiment_output": {
+    "outputs": "Measured indices of portfolios satisfying threshold conditions; measured index of portfolio with maximal Sharpe ratio (with risk-free rate 0%).",
+    "metrics": "No classical performance baselines reported. Theoretical success probabilities referenced: Grover gives ≥ 1/2 success with correct iteration count; GAS repeated c times gives success probability ≥ 1 - 1/2^c. Quantum counting error bounds and choices of m provided.",
+    "baselines": "None reported"
+  },
+  "experiment_parameters": {
+    "gt_gate_qubits": 15,
+    "index_qubits": 3,
+    "circuit2_total_qubits": 18,
+    "circuit3_total_qubits": 37,
+    "resolving_power_d": 0.01,
+    "timeout_for_M_eq_0": "O(sqrt(N))",
+    "quantum_counting_m_choices": {
+      "check_zero_one_multiple": "m = ceil(log N / 2 + 1.583)",
+      "precise_count_large_N": "m = ceil(log N + 1/2)"
+    },
+    "risk_free_rate": 0.0,
+    "phase_estimation_t_formula": "t = m + log(2 + 1/(2 epsilon))",
+    "shots": null,
+    "circuit_depth": null,
+    "optimizer": null
+  },
+  "hardware_details": {
+    "simulator": "IBM Qiskit simulators (Qiskit backends)",
+    "QPU_model": null,
+    "cloud_provider": "IBM / Qiskit",
+    "notes": "Experiments run on simulators provided by Qiskit; no physical quantum hardware used or specified."
+  },
+  "reproducibility_notes": {
+    "code_repository": "https://github.com/HSLU-IFZ-Competence-Center-Investments/Quantum-Portfolio-Selection/blob/main/QAIF_PortfOpt.ipynb",
+    "data_availability": "Paper states results and small-scale examples are accessible in the repository; efficient frontier was computed classically by the authors (not via quantum code).",
+    "requirements": "Reproducing experiments requires Qiskit and the notebook in the repository; parameter choices (e.g., d=0.01, m formulas) are specified in the paper."
+  },
+  "key_findings": [
+    "[supported] The authors designed explicit quantum oracles (GT-based) to select portfolios whose returns exceed and whose standard deviations fall below specified thresholds, and implemented these oracles in quantum circuits.",
+    "[supported] The implemented approach (oracles + QES/GAS) was executed on IBM Qiskit simulators for small-scale examples (subsample of 8 portfolios) and successfully returned portfolios satisfying the selection conditions, and identified the portfolio with the maximum Sharpe ratio (risk-free rate = 0%).",
+    "[supported] Practical implementation of full continuous-weight mean-variance portfolio optimization with positivity constraints on current gate-based hardware/simulators was judged infeasible by the authors, so they restricted the scope to selection from a precomputed set of efficient portfolios.",
+    "[speculative] Theoretical run-time advantages from Grover-based subroutines apply: QES returns a solution after an expected O(sqrt(N/M)) oracle calls, and GAS finds the minimum in O(sqrt(N)) oracle calls (claims rely on prior theoretical results).",
+    "[speculative] The authors provide formulas for required phase-estimation and counting qubits: phase-estimation qubits scale with desired resolving power t ≈ ceil(log(d^{-1})), counting qubits scale as O(log N) (specific choices for m in quantum counting are given).",
+    "[speculative] The total number of qubits required by the proposed selection/search procedures scales as O(log_N + log(d^{-1})) (written in the paper as O(log(N d^{-1}))).",
+    "[speculative] The resolving power requirement for phase-encoded comparisons is t ≥ log(|φ1 − φ2|^{-1}), i.e., increasing precision (smaller d) increases phase estimation qubit count.",
+    "[supported] Concrete small-scale resource measurements from the experiments: with resolving power d = 0.01 they used 15 qubits for the GT-gate, 3 qubits to encode indices for N = 8, resulting in Circuit 2 using 18 qubits and Circuit 3 using 37 qubits.",
+    "[speculative] The authors suggest that running these oracles on physical quantum hardware could enable larger portfolio sizes, but that is prospective and not demonstrated.",
+    "[speculative] The paper reuses standard Grover/GAS/GES theoretical bounds (e.g., success probability bounds and iteration counts) and suggests they apply in the portfolio-selection context when the risk-return lists are available as quantum-accessible data."
+  ],
+  "results_summary": "The paper presents explicit quantum oracle constructions (phase-encoded + GT comparison) to perform conditional slicing of lists of efficient portfolios by return and risk thresholds, and demonstrates small-scale implementations on Qiskit simulators. Using Grover Exponential Search (QES) and Grover Adaptive Search (GAS) with these oracles, the authors successfully selected portfolios meeting the specified conditions from a subsample of eight portfolios and located the maximum Sharpe-ratio portfolio. They report concrete qubit counts for the toy experiments (e.g., 18 and 37 qubits for two circuit variants at resolving power d=0.01), derive phase-estimation and counting-qubit requirements, and discuss theoretical scaling and precision trade-offs. They note that full continuous-weight portfolio optimization was infeasible on available hardware/simulators, so the work focuses on selection from precomputed efficient frontiers.",
+  "performance_claims": [
+    "Experiment scale: N=8 (subsample of 8 efficient portfolios) used in simulator demonstrations.",
+    "Resolving power chosen: d = 0.01 in experiments.",
+    "GT-gate resource: 15 qubits required for GT-gate at d = 0.01.",
+    "Index encoding: 3 qubits to encode indices of 8 values.",
+    "Circuit sizes reported: Circuit 2 used 18 qubits; Circuit 3 used 37 qubits in the experiments.",
+    "Theoretical expected oracle calls: QES returns a solution after an expected O(sqrt(N/M)) calls to the oracle (standard theoretical bound).",
+    "GAS theoretical termination bound cited: number of oracle calls threshold 22.5 * sqrt(N) + 1.4 * log2(N) (from Algorithm 2 in the paper).",
+    "Quantum counting qubit choices: to bound counting error < 1/2 choose m = ceil(log N + 1/2); to distinguish zero/single/multiple solutions choose m = ceil(log N / 2 + 1.583) (formulas provided).",
+    "Success probability statements: GAS returns the minimum with success probability >= 1/2; repeating GAS c times raises success to at least 1 - 1/2^c (standard theoretical statements reused)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper relies on well-known theoretical quadratic speed-ups of Grover-based algorithms (QES/GAS) — e.g., O(sqrt(N/M)) or O(sqrt(N)) oracle-call scalings — and provides oracle constructions to leverage those algorithms for portfolio selection. However, the work only demonstrates small-scale examples on simulators (N=8) and does not empirically demonstrate a practical quantum advantage on physical hardware or at meaningful problem sizes; thus the claimed advantage is theoretical, not experimentally demonstrated.",
+  "limitations": [
+    "Infeasibility of implementing the complete portfolio optimization problem with continuous asset allocations and positivity (no-short-selling) constraints on current gate-based quantum hardware or simulators (author-stated).",
+    "The implementation assumes that the efficient frontier (risk-return pairs) is precomputed classically and available as input; the quantum routines operate only on selection from that list (author-stated).",
+    "Small-scale experiments only: authors subsampled the efficient frontier to eight values to reduce qubit requirements; larger instances were not demonstrated (author-stated).",
+    "Experiments used simplifying assumptions: all values lie in [0, 1) so integer-part comparisons were not needed, and a 0% risk-free rate was used for Sharpe ratio computations (author-stated).",
+    "The approach requires access to phase-encoded unitaries U = diag(e^{i2π s_k}) for list items (quantum query / state-preparation assumption). Preparing such U efficiently is nontrivial and was assumed available (author-stated).",
+    "Resolving power depends on chosen phase-estimation precision d: the number of phase-estimation qubits (and hence resources) grows with desired precision even if independent of N (author-stated).",
+    "[inferred] Oracle implementations rely on multi-controlled gates (MCX) and many CX/NOT gates; the paper does not detail practical gate decomposition costs or circuit depth on real hardware, which may be large.",
+    "Grover-based subroutines (QES/GAS) yield bounded success probabilities (conventionally ≥1/2) and therefore require repetitions; multiple solutions require multiple runs and the M=0 case is handled via time-outs (author-stated).",
+    "Quantum counting and phase estimation introduce additional resource overhead (number of counting qubits scales as O(log N) for desired accuracies) (author-stated).",
+    "All reported results are from noise-free simulators (Qiskit); no assessment of noise robustness or error mitigation was performed (author-stated).",
+    "[inferred] Total qubit and depth requirements may still be large in practice: e.g., the multi-list circuit used 37 qubits for only eight items; scaling constants and realistic overheads could make implementation impractical on near-term devices.",
+    "[inferred] Phase estimation runtime and the repeated use of controlled operations may yield high circuit depth, challenging feasibility on NISQ devices.",
+    "[inferred] The framework as implemented is tailored to non-negative asset weights / returns (no short positions); handling negative values or short-selling would require additional circuit logic."
+  ],
+  "open_questions": [
+    "How will the proposed oracles and Grover-based selection algorithms perform on real, noisy quantum hardware (noise resilience, error rates, required error mitigation)?",
+    "How can the method be scaled to larger portfolios (larger N) in practice given qubit and gate-depth constraints?",
+    "How can the required phase-encoded unitaries U (encoding list items as phases) be prepared efficiently on quantum hardware for realistic data sizes?",
+    "[inferred] What are the practical gate-count and depth costs after decomposing multi-controlled gates (MCX) into native hardware gates, and how do these costs affect feasibility?",
+    "How to handle general value ranges, including integer parts and negative values (short positions), rather than assuming all values lie in [0,1)?",
+    "Can the original goal—full portfolio optimization with continuous allocations and positivity constraints—be realized on gate-based devices, and what algorithmic/hardware advances would be needed?",
+    "How does the end-to-end quantum approach (including state preparation) compare empirically to classical selection/search methods in runtime and resource use for realistic instance sizes?",
+    "Are there more resource-efficient oracle constructions or alternative quantum algorithms (e.g., variational, annealing-based, HHL-based) that would be preferable for this selection/optimization task?",
+    "How to handle multiple solutions more efficiently than repeated QES runs or time-outs—can counting/thresholding be integrated to reduce repetitions?",
+    "[inferred] What are the trade-offs between phase-estimation precision (resolving power) and overall algorithmic speed-up or success probability in realistic financial datasets?"
+  ],
+  "future_work": [
+    "Implement the proposed method on physical quantum hardware to assess performance in the presence of noise (author-stated).",
+    "Include larger portfolios by leveraging devices with higher qubit counts to test scalability (author-stated).",
+    "Use quantum counting as a termination/verification condition within GAS instead of time-outs (authors note this could be implemented).",
+    "[inferred] Develop and test more efficient oracle and state-preparation routines (including practical MCX decompositions and reduced-depth circuits) to lower resource requirements for hardware implementation.",
+    "[inferred] Extend experiments to remove simplifying assumptions (allow values outside [0,1), include integer-part comparisons, handle negative/short positions, and use realistic risk-free rates) and evaluate impacts on resource needs and correctness."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "grover-search",
+    "qft-phase-estimation",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Use classical precomputation (efficient frontier via mean-variance optimization) and a quantum search oracle to select portfolios from a precomputed set rather than performing full continuous-weight optimization on the QPU.",
+    "#idea:quantum-advantage — Leverage Grover-based subroutines (QES, GAS) to obtain the theoretical quadratic speedups for search/optimization over a discrete list of portfolios (O(sqrt(N/M)) and O(sqrt(N)) bounds discussed).",
+    "#idea:near-term-feasibility — Provide small-scale implementations on Qiskit simulators (8-item portfolio subsample) and detailed circuit recipes (phase-encoding unitaries, GT-gate construction, qubit counts), but conclude full continuous-weight portfolio optimisation is infeasible on current gate-based hardware.",
+    "#limitation:qubit-count — Experimental circuits require tens of qubits (examples: 18 and 37 qubits; GT-gate uses 15 qubits, index register 3 qubits), revealing qubit-count bottlenecks for larger N or finer resolving power.",
+    "#limitation:data-encoding — Phase-encoding of decimal parts (resolving power d = 0.01) and associated phase-estimation register sizes impose significant resource/precision trade-offs; explicit t and m formulae highlight encoding overhead.",
+    "#limitation:simulation-only — All experiments executed on IBM Qiskit simulators (no physical QPU experiments), limiting assessment of noise and real-device overheads."
+  ],
+  "contradictions": [
+    "The paper claims theoretical quadratic speedups from Grover-based search but also concludes that practical, full-weight mean-variance portfolio optimisation is infeasible on current gate-based hardware; this undercuts immediate claims of practical quantum advantage and highlights scalability barriers (i.e., contradicts optimistic notions of near-term scalability)."
+  ]
+}

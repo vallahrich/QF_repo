@@ -1,0 +1,120 @@
+# F1 — per-paper financial-framing extraction (v2)
+
+You are extracting **financial-problem framing** from a single quantum-finance
+paper for a systematic literature review. The output of this extraction will
+be aggregated across a silo to produce a per-silo finance brief.
+
+## Source
+
+You will be given:
+- `paper_id` — a 12-character hex identifier
+- `text_path` — the absolute path to the paper's extracted-text markdown file
+  in `shared/extracted_text/text/`
+- `silos` — the list of P3 silos this paper projects into (1 or more)
+
+You should **read the file at `text_path` directly**, focusing on the parts of
+the paper where authors typically state motivation:
+- Abstract
+- Introduction
+- Background / Related Work (when it frames the problem)
+- Conclusion (when it restates the problem)
+- Limitations (when it states what is hard)
+
+You may skip experimental tables, proofs, and detailed methodology sections.
+
+## Task
+
+Extract what THIS PAPER says about the financial problem and its classical
+difficulty. Do NOT import knowledge from outside the paper. Do NOT generalise
+from textbooks. If the paper does not address a field, return `null` for that
+field — silence is a finding.
+
+## Output schema
+
+Return one JSON object with exactly these fields:
+
+```json
+{
+  "paper_id": "<provided paper_id>",
+  "silos": ["<provided silo list>"],
+  "problem_statement": null | "<1-3 sentences in your own words paraphrasing what the paper says the financial problem is>",
+  "problem_statement_quotes": ["<verbatim quote 1>", "..."],
+  "classical_baseline": null | "<1-3 sentences on what the paper compares against / treats as the classical state of the art>",
+  "classical_baseline_quotes": ["<verbatim quote 1>", "..."],
+  "classical_difficulty": null | "<1-3 sentences on what the paper says about why the problem is hard classically — complexity, scaling, accuracy, tractability, data, latency>",
+  "classical_difficulty_quotes": ["<verbatim quote 1>", "..."],
+  "business_stakes": null | "<1-3 sentences on what the paper says about real-world stakes: capital efficiency, latency, regulation, market impact, costs, risk consequences. MOST PAPERS DO NOT MENTION. Default to null>",
+  "business_stakes_quotes": ["<verbatim quote 1>", "..."],
+  "extraction_confidence": "high" | "medium" | "low",
+  "extraction_notes": "<short string flagging anything unusual: 'paper assumes reader knows', 'motivation is one sentence in abstract', 'framing is purely algorithmic with no finance context', 'paper is a review and discusses many problems', etc.>"
+}
+```
+
+## Rules
+
+1. **Verbatim quotes are mandatory for every non-null field.** Each non-null
+   field must include 1–3 quotes (strings) in the corresponding `*_quotes`
+   array. If you cannot supply a verbatim quote, the field must be `null` and
+   its `*_quotes` must be `[]`.
+
+2. **Quotes must be verbatim substrings of the paper text.** Do not paraphrase
+   inside the quotes. Do not collapse whitespace artistically — copy what is
+   in the file. The downstream sanitiser will check this and drop any quote
+   that fails the substring check.
+
+3. **The prose statement must be fully grounded in the supplied quotes.**
+   Every claim in the prose statement (`problem_statement`,
+   `classical_baseline`, `classical_difficulty`, `business_stakes`) must be
+   directly supported by content in its corresponding `*_quotes` array. Do
+   NOT add details that come from methodology, experiments, or your own
+   inference — even if true. If you want to make a claim, you must have a
+   quote that supports it. If a claim cannot be quoted, drop it from the
+   prose. The prose is a careful paraphrase of the quotes, nothing more.
+
+4. **Silence is a valid finding.** If the paper does not state a financial
+   problem (e.g. it is a methods paper that just says "we test on portfolio
+   data"), set `problem_statement` to `null`. Do not invent context. Set
+   `extraction_notes` accordingly.
+
+5. **Do not paraphrase the abstract.** A paraphrase of the abstract is NOT
+   acceptable when the paper is silent on motivation. Either the paper says
+   something quotable, or the field is `null`.
+
+6. **Do not import method content into framing fields.** This is a common
+   failure mode: the paper describes its quantum/classical method in the
+   methodology section, and the model attributes those methodological choices
+   to the "problem framing." The financial problem and the proposed solution
+   are different things. Examples of method content to keep OUT of
+   `problem_statement` and `classical_baseline`:
+   - the algorithm or encoding the paper uses to solve the problem
+   - the dataset, simulator, or hardware used in experiments
+   - the paper's own contribution or technique
+   These belong in s4 thematic codes, not in s6 framing.
+
+7. **Multi-silo papers**: the financial framing of the paper does not change
+   based on which silo it is read from. Extract one consistent framing.
+
+8. **Confidence calibration**:
+   - `high`: paper has a clear motivation section with explicit financial
+     framing and explicit classical-difficulty statements.
+   - `medium`: motivation is present but brief, or split across abstract and
+     introduction; some fields are well-grounded and others are weaker.
+   - `low`: motivation is largely absent or purely algorithmic; most fields
+     end up as `null`.
+
+9. **Output ONLY the JSON object.** No markdown wrapping, no commentary
+   before or after.
+
+## Failure modes to avoid
+
+- Returning a paraphrase of the abstract when the paper is silent on
+  motivation.
+- Importing textbook knowledge ("portfolio optimization is NP-hard") when
+  the paper itself does not say so.
+- Including methodological choices ("graph-based representation", "iterative
+  partitioning", "QAOA ansatz") in the `problem_statement` when these are
+  the paper's *solution*, not the *problem framing*.
+- Quoting from sections of the file that are not from the paper itself
+  (e.g. arXiv metadata, license boilerplate, copyright headers).
+- Returning a JSON-like string with smart quotes or unbalanced braces.
+- Dropping a `*_quotes` array. Empty array is `[]`, not omitted.

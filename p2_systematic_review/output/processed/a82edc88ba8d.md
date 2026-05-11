@@ -1,0 +1,179 @@
+---
+aliases:
+- A Practical Quantum Solver for Multidimensional Partial Differential Equations
+- Practical Quantum Solver Multidimensional
+authors:
+- Manu Chaudhary
+- Kareem El-Araby
+- Alvir Nobel
+- Ishraq Islam
+- Manish Singh
+- Sunday Ogundele
+- Kieran Egan
+- Sneha Thomas
+- Vincent Vordtriede
+- Devon Bontrager
+- Serom Kim
+- Esam El-Araby
+auto_detected: true
+classification: ''
+contradiction_flags:
+- contradiction:scalability
+doi: 10.1145/3731599.3767550
+evaluation_type: real-hardware
+evidence_type: ''
+has_quantitative_results: true
+idea_tags:
+- idea:quantum-advantage
+- idea:near-term-feasibility
+- idea:hybrid-approach
+journal_or_venue: SC Workshops '25 (Workshops of the International Conference for
+  High Performance Computing, Networking, Storage and Analysis)
+methodology_tags:
+- quantum-linear-systems
+- variational-nisq
+- hybrid-quantum-classical
+paper_type: ''
+quantum_advantage_claim: speculative
+related_papers: []
+relevance_phase1: high
+relevance_phase3: high
+source_type: conference-paper
+source_type_confidence: high
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/derivative-pricing
+- method/quantum-linear-systems
+- method/variational-nisq
+- method/hybrid-quantum-classical
+- idea/quantum-advantage
+- idea/near-term-feasibility
+- idea/hybrid-approach
+- contradiction/scalability
+title: A Practical Quantum Solver for Multidimensional Partial Differential Equations
+topic_tags:
+- derivative-pricing
+year: '2025'
+zotero_key: ''
+---
+
+## Abstract summary
+The paper proposes a generalized, scalable quantum algorithm for solving multidimensional partial differential equations with two variants: one combining finite-difference discretization, classical-to-quantum (C2Q) encoding and numerical instantiation, and another using C2Q plus column-by-column decomposition (CCD). The authors validate the approach on Poisson, heat, Black–Scholes and Navier–Stokes problems, reporting improved accuracy, scalability and reduced execution time compared to variational quantum algorithm (VQA)-based solvers on noise-free and noisy simulators and promising results on real quantum hardware.
+## Methodology
+The authors propose a generalized, practical quantum algorithm for solving multidimensional partial differential equations (PDEs). Their approach first discretizes the PDE with the finite-difference method (FDM) to produce a linear system Au = b. The classical preprocessing pipeline then applies polar decomposition to factor A = P U (where P is positive semi-definite and U is unitary) and uses SVD where needed to obtain the components required for quantum processing. The core idea is to prepare an input quantum state |yin> representing the normalized vector P^{-1} b, encoded using a depth-optimized amplitude encoding called Classical-to-Quantum (C2Q). Two quantum implementation variants are provided: Variant 1 synthesizes the required unitary Ut (which acts to produce the output state |yout> = Ut |yin>) using numerical instantiation / unitary synthesis tools (BQSKit) to produce depth-optimized circuits; Variant 2 implements Ut by decomposing the target isometry column-by-column (CCD) into single-qubit and CNOT gates. After applying Ut and measuring, the classical solution vector is reconstructed from the measured output state and appropriate normalization. The authors compare their two variants to VQA-based baselines (VQE/VQLS), using EfficientSU2 ansatz and ADAM optimizer for the VQE baseline. They evaluate accuracy (RMSE), scalability (qubit/grid size), and wall-clock execution time across noise-free statevector simulation, noisy AerSimulator runs, and experiments on real IBM hardware (ibm_torino).
+
+**Algorithms used:** Finite-Difference Method (FDM), Classical-to-Quantum (C2Q) amplitude encoding, Polar decomposition, Singular Value Decomposition (SVD), Numerical instantiation / unitary synthesis (BQSKit), Column-by-Column Decomposition (CCD), Variational Quantum Eigensolver (VQE) (baseline), Variational Quantum Linear Solver (VQLS) (baseline), ADAM optimizer (for VQE)
+**Frameworks:** Qiskit, AerSimulator (Qiskit Aer), Cirq, Tket, BQSKit, IBM Quantum Platform
+
+**Experimental setup:** Experiments were run on a University of Kansas cluster node (48-core Intel Gold 6342 CPU, three NVIDIA A100 80 GB GPUs, CUDA 11.7, PCIe 4.0, 256 GB DDR4 RAM). Quantum experiments used Qiskit statevector simulator (noise-free), AerSimulator (noisy simulator), and IBM hardware ibm_torino. VQE baselines used Qiskit's MatrixOp to map Hamiltonians and EfficientSU2 ansatz trained with the ADAM optimizer.
+
+**Dataset:** Synthetic PDE discretization grids generated via finite-difference method. For financial experiments (Black-Scholes), parameterized grids were used (stock price S in [0,400], strike K=100, volatility sigma approx 0.207, risk-free rate r=4.37%, maturity ~3 months). No external market time-series dataset was used — solutions are computed over generated S × t grids.
+## Experiment details
+### Input
+{'source': 'Synthetic FDM grids derived from PDE specifications (Poisson, heat, Black-Scholes, Navier-Stokes).', 'sizes': [{'case': '1D/2D/3D Poisson', 'examples': ['Nx=128 (1D)', 'Nx=128,Ny=128 (2D)', 'Nx=Ny=4,Nz=2 example matrix sizes shown)']}, {'case': '2D heat', 'example': 'Nx=Nt=128'}, {'case': '3D heat', 'example': 'Nx=Ny=Nt=16'}, {'case': 'Black-Scholes', 'examples': ['small grid: Nx=Nt=4', 'large grid: Nx=Nt=128']}], 'preprocessing': 'FDM discretization to form Au=b; polar decomposition of A into P and U; compute P^{-1} b and normalize; SVD used in factor computations; encode normalized vectors into quantum states using C2Q.'}
+
+### Process
+{'pipeline_steps': ['1) Discretize PDE with finite-difference method to obtain linear system Au = b.', '2) Apply polar decomposition (A = P U) and SVD as needed to get unitary components and P^{-1}.', '3) Compute classical vector v = P^{-1} b and normalize to form the input state |yin>.', '4) Encode |yin> using C2Q amplitude encoding.', '5) Implement the unitary Ut that maps |yin> to |yout> via either (Variant 1) numerical instantiation/unitary synthesis (BQSKit) or (Variant 2) column-by-column decomposition (CCD).', '6) Execute the quantum circuit (statevector simulator, AerSimulator noisy, or real device ibm_torino) and measure to obtain classical output probabilities/state.', '7) Reconstruct the classical solution vector from measurement outcomes and normalization constants.', '8) Compare results to classical analytical/FD solutions and to VQE/VQLS baselines (VQE implemented with Qiskit MatrixOp, EfficientSU2 ansatz, ADAM optimizer).'], 'parameters_and_settings': 'Variants differ in circuit construction: Variant 1 targets shallower circuits using numerical instantiation; Variant 2 uses CCD yielding higher depth but faster decomposition time. VQE baseline uses EfficientSU2 ansatz and ADAM optimizer. Simulations used large shot counts for noisy runs (examples: 1M, 0.1M, 256M shots).'}
+
+### Output
+{'formats': 'Classical solution vectors (reconstructed from quantum measurements), solution profiles (gridded values), and visualizations.', 'metrics': ['Root Mean Square Error (RMSE) against analytical/classical FDM solutions', 'Total execution time (wall-clock) for circuit synthesis and execution', 'Scalability indicators (max number of qubits tested and grid sizes)'], 'baselines': ['Classical FDM/analytical solutions', 'VQE/VQLS-based quantum PDE solvers (implemented with Qiskit)']}
+
+### Parameters
+- qubits_used: ['4', '8', '12', '14', 'up to 14 in reported noisy runs; classical problems mapped to larger grid sizes correspond to 2^n state vectors']
+- shots: ['0.1M (100k)', '1M (1,000,000)', '256M (256,000,000) shown for some noisy runs']
+- ansatz: EfficientSU2 (for VQE baseline)
+- optimizer: ADAM (for VQE baseline)
+- simulators: ['statevector (noise-free)', 'AerSimulator (noisy)']
+- circuit_depth_complexity: {'Variant_1': 'O(N)', 'Variant_2': 'O(N^2)'}
+- FDM_grid_params_examples: {'Nx': [4, 16, 128], 'Ny': [4, 16, 128], 'Nt': [4, 16, 128], 'S_range': '0..400 for Black-Scholes'}
+
+### Hardware
+{'classical_cluster': {'cpu': '48-core Intel Gold 6342', 'gpus': '3 x NVIDIA A100 80GB (CUDA 11.7, PCIe 4.0)', 'ram': '256 GB DDR4'}, 'simulators': ['Qiskit statevector simulator', 'Qiskit AerSimulator (noisy)'], 'quantum_hardware': {'qpu_model': 'ibm_torino', 'provider': 'IBM Quantum'}, 'other_resources': ['Oak Ridge Leadership Computing Facility (acknowledged)', 'NERSC (acknowledged)']}
+
+### Reproducibility
+The paper does not provide public code or dataset links. Experiments rely on specific tool versions and toolchains (Qiskit, AerSimulator, BQSKit, Tket, Cirq) and on access to IBM hardware (ibm_torino). Random seeds, exact circuit depths, and full synthesis parameters are not explicitly documented, which may hinder exact reproduction without contacting authors or having access to their implementation artifacts.
+## Findings
+- [supported] The authors propose a generalized two-variant quantum algorithm for solving multidimensional PDEs (Variant 1: FDM + C2Q + numerical instantiation; Variant 2: FDM + C2Q + column-by-column decomposition) and validate it on Poisson, heat, Black–Scholes, and Navier–Stokes PDEs.
+- [supported] Empirical results on noise-free (statevector) and noisy (AerSimulator) IBM simulators show the proposed methods achieve higher accuracy, improved scalability, and lower total execution time than the VQE/VQA-based solvers in the tested cases.
+- [supported] Variant 1 (numerical instantiation) yields shallower circuits and performed better on real quantum hardware (ibm_torino) than Variant 2, which produces deeper circuits.
+- [supported] The authors ran experiments at multiple scales (examples reported: 4, 12, and 14 qubits) and with large shot counts in simulators (examples reported: 1M, 0.1M, and 256M shots) and report promising but noise-affected results on real hardware (example: ibm_torino with 4 qubits and 0.1M shots).
+- [supported] The preprocessing pipeline uses FDM discretization, polar decomposition to obtain a unitary and positive semidefinite factor, SVD for mapping, and C2Q amplitude encoding for state preparation; these steps are implemented in their workflow.
+- [speculative] The paper presents theoretical circuit depth complexity claims: Variant 1 has depth complexity O(N) (N = 2^n), and Variant 2 has depth complexity O(N^2).
+- [speculative] The authors claim their algorithm is a 'generalized' solver applicable across diverse PDE domains (engineering, finance, CFD), beyond prior VQA/HHL-focused work.
+- [supported] Column-by-column decomposition (CCD) produces higher-depth circuits than numerical instantiation but can be more scalable/accurate on simulators according to the authors' comparisons.
+- [disputed] The paper asserts Variant 1 attains better depth complexity than FFT-based classical solvers (stated O(N) vs classical O(N log N)) and thus is more efficient—this direct efficiency comparison between quantum circuit depth and classical algorithmic runtime is misleading and conflicts with standard complexity comparisons in the literature.
+
+**Results summary:** The paper introduces two variants of a quantum PDE solver that pair finite-difference discretization and amplitude encoding (C2Q) with either numerical instantiation (Variant 1) or column-by-column decomposition (Variant 2). Across benchmark PDEs (Poisson, heat, Black–Scholes, Navier–Stokes) and using IBM simulators and a small real device, the authors report that their methods outperform VQE-based approaches in accuracy, scalability (tested up to ~14 qubits), and wall-clock execution time in their experimental regime. Variant 1 produces shallower circuits and is preferable on current NISQ hardware, while Variant 2 can offer simulator-side advantages at the cost of greater circuit depth. The authors also present theoretical circuit-depth scalings for their variants and argue the approach is broadly applicable to multidimensional PDEs.
+
+**Performance claims:**
+- Variant 1 circuit depth complexity claimed O(N) where N = 2^n (theoretical claim).
+- Variant 2 circuit depth complexity claimed O(N^2) (theoretical claim).
+- Comparisons performed using simulators with shots: examples include 1,000,000 (1M), 100,000 (0.1M), and 256,000,000 (256M) shots.
+- Experiments reported on qubit counts including 4 qubits (real device ibm_torino, 0.1M shots) and 12–14 qubits (simulator experiments).
+- Authors report lower RMSE and reduced total execution time for their methods vs VQE in the presented plots, but the paper text does not give absolute RMSE or runtime numeric values in the provided excerpt.
+## Quantum advantage claim
+**Classification:** speculative
+
+The authors present empirical improvements over VQE-based solvers at small scales and on simulators, and report promising behavior on a 4-qubit real device. However, they do not demonstrate a provable or large-scale asymptotic quantum advantage over classical PDE solvers; some complexity comparisons (e.g., O(N) circuit depth vs classical O(N log N)) are not justified in a standard computational-complexity sense and therefore the claim of practical quantum advantage remains speculative.
+## Limitations
+- HHL-based approaches require ancilla qubits and many qubits to achieve eigenvalue precision, substantially increasing resource demands (author-stated).
+- HHL requires the input matrix to be sparse, well-conditioned, and Hermitian to realize promised complexity (author-stated).
+- HHL depends on quantum phase estimation (QPE), which is highly noise-sensitive and unsuitable for current NISQ devices (author-stated).
+- Existing VQA-based PDE solvers exhibit low accuracy, low scalability, and high execution time (author-stated).
+- Column-by-Column Decomposition (CCD) generates higher-depth circuits compared to numerical instantiation, which makes CCD less suitable for shallow NISQ circuits (author-stated).
+- Variant 2 (CCD-based) has worse circuit-depth complexity (O(N^2)) than Variant 1 (numerical-instantiation-based, O(N)), leading to reduced suitability on noisy hardware (author-stated).
+- Noise effects on real quantum hardware are significant and materially degrade accuracy and scalability of the proposed methods (author-stated).
+- Some experiments (notably VQE and certain Variant 1 runs) were omitted or infeasible due to unrealistically high execution times, indicating practical execution/compute bottlenecks (author-stated).
+- [inferred] Numerical instantiation (while producing lower-depth circuits) likely requires more classical processing/compilation time and resources than CCD.
+- [inferred] The experimental setup relies on very large shot counts in noisy runs (e.g., 1M or 256M shots), implying high sampling/resource costs to obtain accurate results.
+- [inferred] Evaluation on real quantum hardware was limited (example: ibm_torino with 4 qubits), so practical performance evidence on larger devices is lacking.
+- [inferred] Many case studies assume simplified boundary/initial conditions (often zero BVs), which may limit applicability to PDEs with complex or nonzero boundary conditions encountered in realistic problems.
+- [inferred] Classical preprocessing steps used (SVD, polar decomposition, FDM) may become computationally expensive for large-scale problems and could reduce or negate end-to-end quantum advantage.
+- [inferred] The work does not demonstrate handling of ill-conditioned, dense, or strongly non-Hermitian matrices — applicability in those regimes is unclear.
+- [inferred] Financial application evaluation is limited (Black–Scholes single-asset case); extension to multi-asset, path-dependent, American-style or other complex derivatives is not shown.
+- [inferred] Overall scalability to problem sizes required in production financial workflows is constrained by device decoherence, gate errors and available qubit counts.
+## Open questions
+- How can circuit depth be further reduced (especially for Variant 2/CCD) so that larger/more complex PDEs become viable on NISQ devices?
+- Which error-mitigation or noise-resilient techniques most effectively improve accuracy of the proposed variants on real hardware?
+- How do the trade-offs between numerical instantiation and CCD (depth vs classical preprocessing time vs accuracy) play out across a wider set of hardware profiles and PDE problem sizes?
+- What are the end-to-end wall-clock time and resource comparisons (including classical preprocessing, decomposition and shot counts) between the proposed quantum variants and state-of-the-art classical solvers (e.g., FFT-based) for practical problem sizes?
+- How does the proposed method perform for ill-conditioned, dense, or non-Hermitian linear systems that arise from some PDE discretizations?
+- Can the solver be generalized to handle complex, nonzero or time-dependent boundary conditions and arbitrary geometries common in real-world PDE problems?
+- What is the scaling behaviour and practical performance of the proposed algorithms on larger, multi-qubit real devices (beyond the small device tested)?
+- How many shots are truly required to reach acceptable statistical error for financial-grade PDE solutions, and can shot requirements be reduced via improved estimators or techniques?
+- How effective is this approach for more complex financial models: multi-asset Black–Scholes, stochastic volatility models, American options (early exercise), or path-dependent derivatives?
+- What is the impact of classical preprocessing (SVD, polar decomposition) complexity on the overall advantage; are there regimes where classical steps dominate run time?
+- How would the proposed algorithms perform on error-corrected, fault-tolerant quantum hardware — would theoretical complexity advantages translate into practical speedups?
+- Is there an automated decision framework to select Variant 1 vs Variant 2 given problem size, matrix properties, and target hardware characteristics?
+## Key ideas
+- #idea:quantum-advantage — The proposed generalized quantum PDE solver (two variants: numerical unitary synthesis and column-by-column decomposition) reports improved RMSE and reduced wall-clock execution time compared to VQA-based (VQE/VQLS) baselines on noise-free and noisy simulators and shows promising runs on IBM hardware for PDEs including Black–Scholes.
+- #idea:hybrid-approach — Heavy classical preprocessing (finite-difference discretization, polar decomposition, SVD, compute P^{-1}b) is used to produce an input state for quantum processing (C2Q amplitude encoding), i.e., a hybrid classical-quantum pipeline where classical steps produce the vector to be encoded and quantum circuits implement the target isometry Ut.
+- #idea:near-term-feasibility — The authors evaluate on noisy AerSimulator and on real IBM device (ibm_torino), use depth-optimized unitary synthesis (BQSKit) and CCD to produce relatively shallow circuits (Variant 1 O(N) depth) and demonstrate end-to-end reconstruction on hardware up to 14 qubits, suggesting NISQ-era applicability for small-to-moderate instances.
+- #limitation:qubit-count — Experiments are limited to up to 14 qubits in reported noisy/hardware runs, which constrains the practical grid sizes solvable on current devices despite claims about larger-grid scalability (e.g., Nx=128 grids reported in some contexts).
+- #limitation:noise — Results rely on noise-free statevector simulation for some claims; noisy-simulator and hardware runs are included but are limited in scale and subject to device noise affecting accuracy and shot requirements.
+- #limitation:data-encoding — The approach depends on amplitude encoding (C2Q) and classical inversion (P^{-1}b) and unitary synthesis; the costs and scalability of state preparation and unitary synthesis for large-scale financial grids remain significant practical bottlenecks.
+## Contradictions
+- contradiction:scalability — The paper claims improved scalability and demonstrates results for large FDM grids (e.g., references to Nx=128 cases), yet the empirical hardware/noisy experiments are limited to up to 14 qubits and many large-grid claims are supported primarily by statevector/noisy-simulator runs and classical preprocessing. This creates tension between claimed scalability to large financial PDE grids and demonstrated scalability on present quantum hardware/small-qubit experiments.
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

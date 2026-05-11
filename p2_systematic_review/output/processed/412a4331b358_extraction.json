@@ -1,0 +1,208 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document has an academic structure (abstract, methods, results, references, acknowledgements) and includes an arXiv identifier (arXiv:2511.02134v1) with no journal or conference venue listed, indicating it is an arXiv preprint rather than a peer-reviewed publication.",
+  "title": "Software for Creating Scalable Benchmarks from Quantum Algorithms",
+  "authors": [
+    "Noah Siekierski",
+    "Stefan Seritan",
+    "Neer Patel",
+    "Siyuan Niu",
+    "Thomas Lubinski",
+    "Timothy Proctor"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (arXiv:2511.02134)",
+  "doi": "",
+  "abstract_summary": "The paper introduces scarab, a software tool for generating scalable, robust benchmarks from user-specified quantum circuits and algorithms. scarab implements efficient fidelity estimation techniques (notably mirror circuit fidelity estimation and subcircuit volumetric benchmarking) to measure process fidelity across low-level, full-stack, and subcircuit benchmarks, and it is demonstrated on Hamiltonian simulation, compiler approximation, and subcircuit-based performance prediction tasks. The tool is integrated into pyGSTi and aims to enable non-experts to create reliable, large-scale benchmarks for quantum hardware.",
+  "methodology_description": "The authors developed scarab, a pyGSTi-integrated software tool that turns user-specified quantum algorithms or circuits into scalable, robust benchmarks that estimate process (process) fidelity efficiently. scarab accepts high-level or already-compiled circuits and a target backend specification, and creates benchmarking circuits and randomized-proxy mirror circuits (M1, M2, M3) using mirror-circuit fidelity estimation (MCFE). The proxy mirror circuits are executed on a simulator or hardware (no additional compilation applied), producing bitstring samples which scarab analyzes using a non-parametric bootstrap to produce process-fidelity estimates (and uncertainties) for the original benchmarking circuits. scarab supports three benchmark modes: low-level (benchmarks compiled, low-level circuits directly), full-stack (compiles high-level circuits with a chosen transpiler and measures fidelity to the original target unitary), and subcircuit (samples varied-width/depth subcircuits from large circuits to predict large-circuit performance). The paper validates scarab via qiskit_aer simulations and experiments on IBM backends (Kingston, Fez), comparing scarab estimates to exact fidelities for small qubit counts, exploring Hamiltonian-simulation Trotterization tradeoffs, assessing approximate compilation effects (varying qiskit transpiler approximation_degree and optimization flags), and using Gaussian-process regression and effective-error-rate extrapolation to predict full-circuit fidelities from subcircuit data.",
+  "algorithms_used": [
+    "Quantum Fourier Transform (QFT)",
+    "Quantum Phase Estimation (QPE)",
+    "Quantum Approximate Optimization Algorithm (QAOA)",
+    "Trotterization (first- and second-order)",
+    "Mirror Circuit Fidelity Estimation (MCFE)",
+    "Randomized compilation",
+    "Gaussian Process Regression (for fidelity prediction)"
+  ],
+  "frameworks": [
+    "pyGSTi (scarab module, v0.9.14)",
+    "Qiskit (transpiler, qiskit_aer simulator)",
+    "HamLib (library of Hamiltonians)",
+    "QED-C benchmarking suite",
+    "pandas (for DataFrame storage/analysis)"
+  ],
+  "experimental_setup": "Simulations: qiskit_aer simulator (including runs with IBM Kingston/Fez noise models). Hardware: IBM Quantum processors (IBM Kingston and IBM Fez). Compilation: Qiskit transpiler (optimization_level=3) used for full-stack benchmarks. Fidelity estimation: mirror circuits M1/M2/M3 with randomized single-qubit gates and randomized compilation; non-parametric bootstrap for uncertainties. Typical mirror-sampling counts varied by experiment (examples given below). Shots: examples include 1024 shots for runtime-scaling test; other experiments used hardware-default shot counts per mirror circuit.",
+  "dataset_used": "",
+  "experiment_input": null,
+  "experiment_process": {
+    "overview": "For each benchmark type the pipeline is: (1) ingest circuits (either already compiled low-level circuits or high-level circuits to be transpiled), (2) construct benchmarking set B and convert each benchmarking circuit into proxy mirror circuits P using MCFE (M1, M2, M3), (3) execute proxies on chosen backend (simulator or IBM QPU) to collect bitstring samples, (4) scarab computes error-free expected outcomes for proxies and calculates proxy circuit performances, (5) use M1/M2/M3 yields to isolate process fidelity of the benchmarking circuits and report fidelities with bootstrap uncertainties, (6) optionally aggregate results into volumetric plots, capability regions, effective-error-rate (EER) estimates, or fit Gaussian-process models to subcircuit data for prediction.",
+    "key_steps_and_methods": [
+      "Mirror circuit construction (M1: c + randomized inverse + randomized SPAM; M2: randomized compilation of c + inverse; M3: randomized SPAM) to separate SPAM and circuit errors.",
+      "Randomized compilation and gate randomization applied layer-by-layer.",
+      "Execution on qiskit_aer or IBM devices without further compilation after scarab outputs proxy circuits.",
+      "Non-parametric bootstrap to estimate confidence intervals on fidelities.",
+      "For full-circuit (Trotter) analysis, combine measured noise-process fidelity F(eU, Υ) with computed algorithmic-process fidelity F(U, eU) to approximate full fidelity via multiplication: F(U, Υ) ≈ F(U, eU)·F(eU, Υ).",
+      "Subcircuit benchmarking: sample varied-shape subcircuits (width w, depth d), estimate their process fidelities, compute effective error rates ϵ_{w,d} and extrapolate to predict full-circuit fidelity via F ≈ (1−ϵ_{w,d})^{w_c d_c}; optionally fit Gaussian process regression to subcircuit fidelity surface."
+    ],
+    "iterations_and_randomizations": [
+      "Mirror counts |M1|, |M2|, |M3| were varied per experiment (examples: 10, 50, 100, 200, 1000).",
+      "For stochastic qiskit transpilation, ten transpilations were tested per high-level circuit in the compilation experiments.",
+      "Subcircuit sampling: e.g., 30 subcircuits sampled per (w,d) shape in the QFT demonstration."
+    ],
+    "noise_models_used_in_simulation": [
+      "Depolarizing on 1Q and 2Q gates with λ1Q = 0.0005 and λ2Q = 0.005",
+      "Coherent over-rotation on X and SX gates: θ_X = θ_SX = 0.01 rad",
+      "Readout error rate ϵ = 0.01",
+      "IBM device-specific noise models (as provided to qiskit_aer)"
+    ],
+    "compilation_settings": {
+      "transpiler_optimization_level": 3,
+      "qiskit_approximation_degree": "varied between 0.9 and 1.0 (1.0 = exact compilation)"
+    }
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Process fidelity F(U, Λ) estimates with bootstrap uncertainties",
+      "Noise-process fidelity F(eU, Υ)",
+      "Algorithmic-process fidelity F(U, eU) (computed exactly when feasible)",
+      "Normalized classical fidelity ¯F_c for comparison in some experiments",
+      "Effective error rates (EER) ϵ_{w,d} derived from subcircuit fidelities",
+      "Circuit depths and volumetric capability-region plots",
+      "Gaussian-process regression prediction surfaces for fidelity as function of width/depth"
+    ],
+    "formats_and_artifacts": [
+      "Results stored as pandas DataFrames with metadata",
+      "Volumetric plots, heatmaps, capability-region plots, and EER-based extrapolations presented in the paper",
+      "Comparison of scarab-estimated fidelities to exact fidelities for small n (validation)"
+    ],
+    "baselines_and_comparisons": [
+      "Exact (simulated) process fidelities computed for small qubit counts (n ≤ 6 or 10) used as ground truth in simulation comparisons",
+      "Normalized classical fidelity used as a comparison metric to demonstrate differences from process fidelity",
+      "Circuit depth and compiled-circuit resource comparisons when evaluating approximate compilation"
+    ]
+  },
+  "experiment_parameters": {
+    "qubit_counts": "varies by experiment: benchmark runtime scaling up to n=10000 (low-level/subcircuit), full-stack experiments up to 150 qubits (Fez), algorithmic studies typically n in 2..10 or up to 10 for QFT/QPE/QAOA/Trotter demos",
+    "circuit_depths": "examples: Trotter circuits with varying number of Trotter steps (m=1..10); brickwork circuits depth 128 used for scaling tests; subcircuit depths chosen from {2,4,8,16,32,128} type sets in examples",
+    "shots": "examples: 1024 shots used in runtime-scaling test; hardware runs use backend default shots per mirror circuit; other experiments do not always fix a single shot count in the text",
+    "mirror_counts": "|M1|,|M2|,|M3| varied by experiment (examples: 10, 50, 100, 200, 1000). Typical values used in demonstrations: 10–200; some validation runs used 1000.",
+    "noise_model_parameters": {
+      "1Q_depolarizing": 0.0005,
+      "2Q_depolarizing": 0.005,
+      "coherent_overrotation_X_SX": 0.01,
+      "readout_error": 0.01
+    },
+    "transpiler_options": {
+      "optimization_level": 3,
+      "approximation_degree": "0.9 to 1.0 (used to explore approximate compilation)"
+    },
+    "subcircuit_sampling": {
+      "shapes_used": "(w,d) combinations e.g., w in {2,4,6}, d in {2,4,8,16,32,64} (paper gives example shapes: (2,4,6)×(2,4,8,16) etc)",
+      "samples_per_shape": 30
+    },
+    "other": {
+      "number_of_transpilations_tested": 10
+    }
+  },
+  "hardware_details": {
+    "simulator": "qiskit_aer (including runs with IBM device noise models)",
+    "quantum_processors": [
+      {
+        "name": "IBM Kingston",
+        "provider": "IBM Quantum"
+      },
+      {
+        "name": "IBM Fez",
+        "provider": "IBM Quantum",
+        "used_for": "full-stack benchmark transpilation tests up to 150 qubits"
+      }
+    ],
+    "noise_models": "IBM device noise models (used by qiskit_aer) and custom depolarizing/coherent/readout noise parameters for simulations"
+  },
+  "reproducibility_notes": "Code and tools are available: scarab is included in pyGSTi (version 0.9.14) at https://github.com/sandialabs/pyGSTi. Benchmarks and example workflows referencing HamLib and the QED-C benchmarking suite are reproducible using the QED-C repository https://github.com/SRI-International/QC-App-Oriented-Benchmarks. The paper specifies mirror counts, noise-model parameters, transpiler settings, and sampling choices used in demonstrations, enabling reproduction when combined with the referenced code and IBM device access.",
+  "key_findings": [
+    "[supported] scarab is a software tool (integrated into pyGSTi) that generates scalable, robust quantum algorithmic benchmarks from user-specified circuits and backends.",
+    "[supported] scarab implements efficient fidelity-estimation techniques (mirror circuit fidelity estimation (MCFE), randomized compilation, and subcircuit volumetric benchmarking) to estimate process fidelity without exponential classical simulation for large circuits.",
+    "[supported] scarab’s classical pre-/post-processing time (tc) scales practically: low-level benchmarks scale approximately linearly and remained practical up to n = 10000 qubits in tests (tc ≈ 5000 s at n = 10000); subcircuit benchmark processing scaled sublinearly in the testbed; full-stack benchmark processing was practical up to n = 150 (tc ≈ 800 s) using IBM’s transpiler.",
+    "[supported] scarab’s mirror-circuit-based benchmarks reliably estimate process fidelity F across multiple noise models (depolarizing, coherent over-rotations, readout errors) in numerical simulations (n = 3–6, |M1|=|M2|=|M3|=1000).",
+    "[supported] normalized classical fidelity (¯Fc) can differ substantially from process fidelity F depending on noise: examples observed where ¯Fc over- or under-estimates F by up to ~0.25 (≈40%) for coherent errors and up to ~0.1 (≈10%) for depolarizing or readout errors.",
+    "[supported] scarab can be used to create low-level benchmarks for Trotterized Hamiltonian simulation circuits, separating algorithmic (Trotter) error F(U, eU) from noise-induced error F(eU, Υ).",
+    "[supported] Approximating the full process fidelity by the product F(U, eU)·F(eU, Υ) (Eq. 9) produced close agreement with exact values in the authors' simulations for the tested instances (verified up to n ≤ 6), enabling practical estimation of combined algorithmic+noise error.",
+    "[supported] In experimental IBM Kingston runs on 5-qubit instances, there is a measurable trade-off between Trotter approximation order/steps and hardware noise; for the tested 5-qubit Heisenberg Hamiltonian the best in-situ performance occurred with second-order Trotterization and 3 time steps.",
+    "[supported] scarab full-stack benchmarks enable in-situ testing of approximate compilation: for QFT circuits on IBM Fez (n up to 10) approximate compilation sometimes improved process fidelity (notably for n = 8 and 10), while for QAOA circuits approximate compilation generally did not increase process fidelity.",
+    "[supported] scarab’s subcircuit benchmarking can produce volumetric maps of process fidelity across varied-width/varied-depth subcircuits sampled from a larger circuit and can be used (with regression / effective error-rate models) to predict full-circuit fidelity; in simulation subcircuit-based predictions matched the full circuit well, whereas in experiment varied-size benchmarks (varying n) matched better for the tested QFT examples.",
+    "[speculative] scarab (and the fidelity-estimation techniques it implements) can be extended to support Cliffordization and other proxy-circuit approaches (planned future enhancements).",
+    "[speculative] It may be possible to efficiently estimate the algorithmic process fidelity F(U, eU) for large n without exponential resources (the authors conjecture this, based on Trotter error literature and observed behavior).",
+    "[speculative] scarab’s approach and tools can be adapted to logical-qubit / fault-tolerant quantum computing benchmarking, although the authors note this may require new methods."
+  ],
+  "results_summary": "The paper introduces scarab, a pyGSTi-integrated software tool that converts user-specified quantum circuits into scalable, reliable benchmarks by generating proxy mirror circuits and using mirror-circuit fidelity estimation and subcircuit volumetric benchmarking to estimate process fidelity. The authors demonstrate that scarab’s classical processing is practical (linear/sublinear scaling in tested regimes, with tc ≈ 5000 s at 10k qubits for low-level benchmarks and tc ≈ 800 s at 150 qubits for full-stack benchmarks), that its MCFE-based estimates reliably recover process fidelity across depolarizing, coherent, and readout noise models, and that it enables meaningful investigations: separating algorithmic and noise errors in Trotterized Hamiltonian simulation (and approximating combined fidelity as a product), finding optimal Trotter parameters experimentally (e.g., second-order, 3 steps for a tested 5-qubit Heisenberg case), evaluating approximate compilation (improvements observed for some QFT sizes), and comparing subcircuit vs varied-size approaches for predicting full-circuit performance (different regimes where each approach performed better). The software and all benchmark code are made available within pyGSTi and companion repositories.",
+  "performance_claims": [
+    "scarab classical processing time tc ≈ 5000 s for low-level benchmarks at n = 10000 qubits (measured with U3-CZ brickwork circuits depth 128, |M1|=|M2|=|M3|=10, simulated uniform shot data).",
+    "Subcircuit benchmark processing shows sublinear tc scaling in the authors' test (subcircuits of fixed shape sampled from large circuits).",
+    "Full-stack benchmark classical processing time tc ≈ 800 s at n = 150 qubits (IBM Fez, qiskit transpiler optimization_level=3).",
+    "Mirror-circuit sampling parameters used in demonstrations: e.g., |M1|=|M2|=|M3|=100 (Hamiltonian simulation simulations) and |M1|=|M2|=|M3|=10 (some full-stack tests), with bootstrapped uncertainties.",
+    "Normalized classical fidelity differed from process fidelity by up to ≈0.25 (~40%) in presence of coherent idle errors; differences up to ≈0.1 (~10%) observed for depolarizing or readout errors in tested examples.",
+    "In IBM Kingston experiments on 5-qubit Heisenberg Hamiltonian, optimal in-situ performance found for second-order Trotterization with m = 3 time steps (per scarab’s estimated full process fidelity approximation).",
+    "In IBM Fez experiments for QFT, approximate compilation improved process fidelity for n = 8 and n = 10 in the observed runs; for QAOA circuits approximate compilation generally did not improve process fidelity in the tested instances."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "This work focuses on benchmarking methodology and software (scarab) for estimating process fidelity of quantum circuits; it does not claim or demonstrate quantum computational advantage for any application.",
+  "limitations": [
+    "scarab currently implements mirror-circuit fidelity estimation (MCFE) and does not yet implement Cliffordization (explicitly stated).",
+    "scarab’s full-stack benchmarks currently rely on the qiskit transpiler (optimization_level=3) and lack flexible support for alternative compilation toolchains (explicitly stated).",
+    "scarab’s analysis pipeline does not currently report separate estimates of SPAM (state preparation and measurement) errors, even though SPAM can be estimated (explicitly stated).",
+    "Applying scarab to fault-tolerant (logical-qubit) architectures is not yet supported out-of-the-box: FTQC benchmarking may require new methods to be developed and added to scarab (explicitly stated).",
+    "Estimating the algorithmic process fidelity F(U,eU) for large n is not currently scalable because it requires access to exponentially large unitaries U and eU (explicitly stated).",
+    "The paper uses a product approximation, F(U, Υ) ≈ F(U, eU) · F(eU, Υ), for the full process fidelity; the validity of this approximation in general is conjectured but not proven or fully characterized (explicitly stated).",
+    "[inferred] scarab requires proxy mirror circuits to be executed without additional compilation on the target backend; this could be problematic on platforms that automatically transform submitted circuits or insert transpilation layers.",
+    "[inferred] scarab currently requires circuits specified in pyGSTi/qiskit formats and is tightly coupled to the pyGSTi ecosystem, limiting immediate compatibility with other circuit specification toolchains.",
+    "[inferred] The accuracy and reliability of subcircuit-based predictions appear to be system- and noise-model-dependent (as shown by differing simulation vs experiment results), indicating limited understood applicability domains for those extrapolations.",
+    "[inferred] Some aspects of scarab (e.g., reliance on randomized compilation and bootstrap uncertainty) may have nontrivial resource or sampling requirements in practice for very large or deeply noisy systems, even if classical processing scales well."
+  ],
+  "open_questions": [
+    "How generally valid is the factorization approximation F(U, Υ) ≈ F(U, eU) · F(eU, Υ) for combining algorithmic (Trotter) error with hardware noise?",
+    "Can algorithmic process fidelity (F(U, eU)) be estimated efficiently and accurately for large n without exponential classical resources, and if so, how?",
+    "Under what conditions (noise models, circuit structures, hardware architectures) do subcircuit benchmarks reliably predict the fidelity of larger target circuits, compared to varying input-size (n) benchmarks?",
+    "What additional benchmarking methods or adaptations are required to reliably benchmark fault-tolerant (logical-qubit) quantum computers, and how should scarab be extended to support FTQC?",
+    "How do correlated, non-Markovian, or strongly coherent error processes affect the accuracy of scarab’s MCFE-based fidelity estimates and the comparisons to classical-fidelity metrics?",
+    "How should scarab and similar tools handle practical execution pipelines where cloud providers apply additional automatic compilation or routing steps, which could invalidate the assumption of running proxy circuits unchanged?",
+    "How do different compiler approximation strategies interact with real hardware noise in diverse regimes, and can full-stack benchmarks systematically identify optimal approximation tradeoffs across platforms?"
+  ],
+  "future_work": [
+    "Add support for Cliffordization (Clifford proxy circuits) as an alternative fidelity-estimation method in scarab (explicitly stated).",
+    "Enable flexibility in compilation software for full-stack benchmarks (i.e., support compilers beyond qiskit transpiler) (explicitly stated).",
+    "Extend scarab’s analysis to report SPAM error estimates (explicitly implied by current lack of reported SPAM estimates).",
+    "Develop and integrate new methods for reliable benchmarking of fault-tolerant quantum computing (FTQC) architectures into scarab (explicitly stated).",
+    "Investigate and validate efficient approaches to estimating algorithmic process fidelity for large systems (the authors conjecture this may be possible) (explicitly stated).",
+    "Perform more detailed comparative studies of benchmarking approaches (subcircuit sampling vs varying input size vs others) to determine their regimes of reliability and predictive power (explicitly stated/anticipated).",
+    "Broaden scarab’s interoperability with other circuit ecosystems and execution environments to reduce coupling to pyGSTi/qiskit (inferred from stated plans for flexibility)."
+  ],
+  "topic_tags": [],
+  "methodology_tags": [
+    "variational-nisq",
+    "qft-phase-estimation",
+    "error-mitigation",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "benchmark-comparison",
+  "related_papers": [],
+  "relevance_phase1": "medium",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — scarab provides an end-to-end tool for creating scalable benchmarks that run on simulators and NISQ hardware (IBM Kingston/Fez), demonstrating practical fidelity estimation with bootstrap uncertainties.",
+    "#idea:hybrid-approach — Uses classical post-processing (non-parametric bootstrap, Gaussian-process regression, effective-error-rate extrapolation) together with quantum proxy/mirror circuits to predict large-circuit fidelities from subcircuit data.",
+    "#idea:near-term-feasibility — Implements mirror-circuit fidelity estimation (M1/M2/M3) plus randomized compilation to separate SPAM and circuit errors, enabling noise-aware benchmarking on current devices.",
+    "#idea:hybrid-approach — Supports three benchmark modes (low-level, full-stack, subcircuit) and integrates with pyGSTi and Qiskit to evaluate compiler approximation effects and full-stack performance.",
+    "#idea:near-term-feasibility — Validated via comparisons to exact simulated process fidelities for small qubit counts and via experiments on IBM backends, showing quantitatively useful fidelity estimates and uncertainty bounds.",
+    "#limitation:qubit-count — Ground-truth validation (exact fidelities) is limited to small systems (n ≤ 6 or 10), requiring extrapolation/prediction methods for larger circuits.",
+    "#limitation:noise — Fidelity estimates depend on hardware noise and noise-model fidelity; mismatch between simulated noise models and device behaviour can limit prediction accuracy despite bootstrap uncertainty estimates."
+  ],
+  "contradictions": []
+}

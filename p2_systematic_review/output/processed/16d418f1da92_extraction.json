@@ -1,0 +1,192 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "Published in the MDPI journal Entropy with received/revised/accepted/published dates and Academic Editors (indicating peer review). The paper includes Abstract, Methods, Results, and Experiments on real QPUs and simulations, i.e., empirical evaluation.",
+  "title": "A More General Quantum Credit Risk Analysis Framework",
+  "authors": [
+    "Emanuele Dri",
+    "Antonello Aita",
+    "Edoardo Giusto",
+    "Davide Ricossa",
+    "Davide Corbelletto",
+    "Bartolomeo Montrucchio",
+    "Roberto Ugoccioni"
+  ],
+  "year": "2023",
+  "journal_or_venue": "Entropy",
+  "doi": "10.3390/e25040593",
+  "abstract_summary": "The paper extends prior quantum credit risk analysis (CRA) algorithms by introducing a multi-factor default model and support for non-integer loss-given-default (LGD) values, enabling more realistic financial inputs. The authors implement these enhancements, analyze their impact on circuit depth and qubit requirements, and validate the approach via classical simulations and experiments on IBM QPUs, finding improved modeling flexibility at the cost of increased quantum resources.",
+  "methodology_description": "The authors extended an existing quantum Credit Risk Analysis (CRA) framework by (1) incorporating multi-factor systemic risk into the uncertainty/default model and (2) enabling arbitrary (non-integer) loss-given-default (LGD) values. The methodology maps the portfolio loss CDF P[L ≤ x] into a quantum amplitude a via a Hermitian operator A and uses (iterative) Quantum Amplitude Estimation (IQAE/QAE) with a bisection search on x to compute VaRα. Two multi-factor encodings were proposed: (A) multiple registers, one per systemic factor, controlling per-asset rotations weighted via rotation slopes; (B) a single multivariate-normal register with a sum register to aggregate factor realizations and a single rotation per asset (covariance encodes factor weights). To remove the integer-LGD constraint the authors eliminated the weighted sum register and implemented a comparator-style operator using a piecewise linear amplitude function (Qiskit LinearAmplitudeFunction) to flip the objective qubit when total loss ≤ x, enabling arbitrary real LGD values. Experiments comprised noiseless classical simulation (Qiskit statevector/backends), noisy simulations using empirical noise models of IBM QPUs, and runs on real IBM QPUs. Evaluation metrics included loss PDF/CDF, expected loss and VaR (α = 0.95) and the ratio of estimated expected loss to maximum possible loss. Toy/realistic synthetic portfolios (small K) were used to demonstrate the approach and quantify resource and noise impacts.",
+  "algorithms_used": [
+    "Quantum Amplitude Estimation (QAE)",
+    "Iterative Quantum Amplitude Estimation (IQAE)",
+    "Grover operator (as part of amplitude estimation)",
+    "Piecewise linear amplitude encoding (LinearAmplitudeFunction-style encoding)"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Noiseless classical simulation using Qiskit simulators (statevector/simulator backends). Noisy simulations performed using IBM QPU noise models (simulators seeded with device-specific noise). Real-hardware experiments run on IBM Quantum processors: ibm_perth (7 qubits, quantum volume 32), ibm_lagos (7 qubits, quantum volume 32), ibm_canberra (27 qubits, quantum volume 32), and ibm_algiers (27 qubits, quantum volume 128). Toy experiments used 2 qubits per latent variable Z; example noiseless experiment used 9 qubits. Iterative amplitude estimation with bisection to find VaR (α = 0.95).",
+  "dataset_used": "Synthetic / toy portfolio data created by domain experts to be realistic; includes small portfolios (examples with K = 2 assets and other runs K = 2..4) with non-integer LGDs (e.g., 1000.5 and 2000.5), base default probabilities p0, sensitivities ρ and factor weights α. Data and artifacts made available in a public repository (QVaR on Zenodo).",
+  "experiment_input": {
+    "source": "QVaR repository (Zenodo) - public DOI referenced in paper",
+    "size": "Small toy portfolios; reported examples: K = 2 (also experiments with K = 2..4), R = 1..3 systemic factors, qubits required ranged from 7 to 13 depending on configuration",
+    "preprocessing": "Latent systemic risk factors Z encoded as truncated/discretized standard normals (Grover–Rudolph style loading). Two qubits used per Z in reported examples. For arbitrary LGDs, the sum register was removed and a piecewise linear amplitude function maps the X-register pattern to the objective qubit amplitude representing whether total loss ≤ x."
+  },
+  "experiment_process": {
+    "steps": [
+      "Define portfolio parameters (LGD, p0, ρ, α) for each asset and choose number of systemic factors R and discretization (nZ qubits per factor).",
+      "Construct quantum operator U to load uncertainty model: encode systemic latent variables Z (multi-register or multivariate encoding) and prepare per-asset default rotations controlled by Z realization(s).",
+      "Implement comparator operator C (modified): use LinearAmplitudeFunction / piecewise linear amplitude mapping to flip ancilla if total loss ≤ x, allowing real-valued LGDs without integer-weighted sum register.",
+      "Assemble Hermitian operator A so that amplitude a = P[L ≤ x].",
+      "Run Iterative Quantum Amplitude Estimation (IQAE) to estimate a to target precision ϵ and confidence 1−γ.",
+      "Perform bisection search over x using IQAE estimates to find VaRα (smallest x with P[L ≤ x] ≥ α).",
+      "Evaluate outputs (PDF/CDF of losses, expected loss, VaR) under noiseless simulation, noisy simulation (device noise models), and real QPU runs."
+    ],
+    "parameters_and_iterations": "IQAE used with example settings ε = 0.002 and 99% confidence in the noiseless example (~50,000 quantum samples reported). Additional complexity bound example: with 1−γ = 99.9% and ε = 0.05% ~28k Grover queries. Experiments varied K (2..4) and R (1..3); nZ = 2 qubits per latent variable in reported examples."
+  },
+  "experiment_output": {
+    "format": "Probability distribution function (PDF) of total loss, cumulative distribution function (CDF) of total loss, estimated expected loss, estimated VaR at chosen α (α = 0.95 in main example), and frequency distributions of the ratio estimated expected loss / maximum possible loss.",
+    "metrics_reported": [
+      "VaR (xα) at α = 0.95",
+      "Expected loss",
+      "Loss PDF and CDF",
+      "Ratio estimated expected loss / maximum possible loss",
+      "Number of quantum samples/queries used by IQAE"
+    ],
+    "baselines": "Comparison across modes: noiseless simulation vs noisy simulation (device noise models) vs real IBM QPUs. No direct numerical classical Monte Carlo baseline reported in the experiments (classical Monte Carlo discussed conceptually)."
+  },
+  "experiment_parameters": {
+    "example_qubits_used": 9,
+    "qubit_range_in_experiments": "7 to 13 (depending on K and R)",
+    "nZ_qubits_per_factor": 2,
+    "IQAE_target_precision_epsilon": 0.002,
+    "IQAE_confidence": "99% (example); another illustrative bound used 99.9%",
+    "approximate_quantum_samples_reported": 50000,
+    "alternative_query_bound_example": "with 1−γ = 99.9% and ε = 0.05% requires ~28,000 Grover operator applications",
+    "circuit_depth": "Not precisely enumerated; authors report a substantial increase in depth when using piecewise LinearAmplitudeFunction and controlled rotations (depth grows quickly with K and R)",
+    "shots": null,
+    "optimizer": null
+  },
+  "hardware_details": {
+    "simulator": "Qiskit simulator backends (statevector / noise-model-enabled simulators)",
+    "QPUs": [
+      {
+        "name": "ibm_perth",
+        "qubits": 7,
+        "quantum_volume": 32,
+        "provider": "IBM Quantum"
+      },
+      {
+        "name": "ibm_lagos",
+        "qubits": 7,
+        "quantum_volume": 32,
+        "provider": "IBM Quantum"
+      },
+      {
+        "name": "ibm_canberra",
+        "qubits": 27,
+        "quantum_volume": 32,
+        "provider": "IBM Quantum"
+      },
+      {
+        "name": "ibm_algiers",
+        "qubits": 27,
+        "quantum_volume": 128,
+        "provider": "IBM Quantum"
+      }
+    ],
+    "topology": "Device-specific connectivities reported in paper appendix (figures for 7- and 27-qubit topologies)"
+  },
+  "reproducibility_notes": "Authors state that data and code/results are publicly available in the QVaR repository on Zenodo (reference [28] in the paper). Implementations used Qiskit primitives (LinearAmplitudeFunction, WeightedAdder mentioned) and standard IQAE subroutines in Qiskit. Noise models for noisy simulation were device-specific IBM noise models. Repository DOI and code availability should be consulted for exact circuits, seeds and execution parameters to reproduce results.",
+  "key_findings": [
+    "[supported] The authors implemented and tested a multi-factor extension of the canonical credit-risk uncertainty model with two alternatives (multiple factor registers with controlled rotations, and a single multivariate normal register with a sum register) in toy examples.",
+    "[supported] They replaced the integer-weighted sum register approach for loss aggregation by using a piecewise linear amplitude-function (LinearAmplitudeFunction) to allow arbitrary (non-integer) LGD values, and implemented this in circuits.",
+    "[supported] A noiseless simulation (K=2 assets, R=2 factors) using iterative quantum amplitude estimation (IQAE) with target precision ε=0.002 and 99% confidence required ≈50,000 quantum samples and used 9 qubits, producing an expected-loss distribution and VaR as intended.",
+    "[supported] Experiments run on real IBM QPUs (7- and 27-qubit machines: ibm_perth, ibm_lagos, ibm_canberra, ibm_algiers) and corresponding noisy simulations showed that, for the tested circuits, noise and decoherence dominate and cause the estimated expected total loss to converge toward ~50% of maximum loss (i.e., effectively a 50% default-probability-like output).",
+    "[supported] In their experiments ibm_algiers (QV=128) exhibited greater variance around the central value compared to lower-QV devices in the tested configurations.",
+    "[speculative] The authors assert that IQAE (and amplitude estimation approaches in general) provide a quadratic speedup (up to logarithmic factors) over classical Monte Carlo for estimating risk metrics, but this work does not empirically demonstrate such a runtime advantage at scale on real hardware.",
+    "[speculative] The proposed multi-rotations variant and the LinearAmplitudeFunction approach increase resource requirements: in particular, the LinearAmplitudeFunction incurs an additional qubit per asset and leads to a width growth approaching O(2^K) in practice (authors' complexity argument), making large-scale implementations more demanding.",
+    "[speculative] The two multi-factor encoding alternatives present trade-offs: multiple registers require fewer qubits but many more controlled rotations (increasing gate-count/depth), while a single multivariate register plus sum register reduces controlled rotations but enforces shared factor weights across assets and requires more qubits; these are design trade-offs argued theoretically.",
+    "[speculative] Techniques such as quantum generative adversarial networks for loading distributions (QGANs) and approximate quantum compiling could reduce the resource overhead (depth/gates) required for the uncertainty-model loading in future implementations.",
+    "[supported] Overall, the experimental evidence in this work shows that current superconducting QPUs and noise levels prevent practical, large-scale execution of the proposed enhanced CRA circuits; improvements in qubit coherence and error rates are necessary."
+  ],
+  "results_summary": "The paper extends prior quantum credit-risk work by enabling (1) multi-factor systemic risk models (two circuit-design alternatives) and (2) arbitrary (non-integer) loss-given-default inputs via piecewise-linear amplitude functions. The authors implemented these changes and tested them in noiseless simulators and on IBM 7- and 27-qubit QPUs. Noiseless simulations of a small toy portfolio produced the expected VaR and loss distributions (IQAE with ε=0.002, 99% confidence, ≈50k samples, 9 qubits). Experiments with noisy simulations and real hardware showed noise/decoherence dominate: estimated expected loss collapsed towards ~50% of maximum loss, indicating current devices and circuit depths are insufficient for practical, large-scale application. The paper analyzes resource trade-offs and observes increased qubit/gate costs from the enhancements, highlighting the need for improved loading techniques and better hardware.",
+  "performance_claims": [
+    "Noiseless IQAE toy experiment: target precision ε=0.002, 99% confidence, ≈50,000 quantum samples, circuit used 9 qubits (K=2, R=2).",
+    "IQAE query bound example: with 1−γ = 99.9% and ε = 0.05% requires ~28,000 applications of the Grover operator (theoretical bound cited).",
+    "Experimental circuits tested required between 7 and 13 qubits depending on configuration (2–4 assets, 1–3 risk factors).",
+    "IBM devices used: ibm_perth and ibm_lagos (7 qubits, quantum volume 32); ibm_canberra (27 qubits, QV=32); ibm_algiers (27 qubits, QV=128).",
+    "Empirical observation: noisy executions and real-hardware runs produced estimated expected loss values concentrated near 50% of the maximum possible loss (interpreted as information loss due to decoherence)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper relies on quantum amplitude estimation (IQAE) which theoretically offers a quadratic speedup over classical Monte Carlo for estimating probabilities and VaR; however, the study does not demonstrate an empirical runtime or accuracy advantage on current noisy hardware—experiments show noise and circuit depth prevent practical gains at this scale.",
+  "limitations": [
+    "High circuit depth and width: the proposed multi-factor and arbitrary-LGD encodings substantially increase gate counts and circuit depth compared to prior single-factor implementations (author-stated).",
+    "Qubit resource scaling: using LinearAmplitudeFunction and the proposed piecewise-linear amplitude encoding increases qubit requirements (doubling per asset in some implementations), leading to an effective width growth approaching O(2K) rather than O(K) (author-stated).",
+    "Noise and decoherence on current QPUs: experiments on real hardware show decoherence drives outputs towards a central (50%) loss, preventing correct estimation of expected loss and VaR with current devices (author-stated).",
+    "IQAE/Grover query cost: iterative amplitude estimation still requires a large number of Grover-operator applications (example: ~28k queries for ϵ=0.05%, 99.9% confidence), implying significant circuit repetition and runtime (author-stated).",
+    "Trade-offs between multi-factor encodings: (a) multiple-register approach requires K*R controlled rotations and many gates; (b) single-register multivariate approach encodes factor weights in the covariance matrix but forces the same α vector across all assets, limiting per-asset flexibility (author-stated).",
+    "Arbitrary LGD encoding overhead: removing the integer-weighted sum register (S) and using amplitude-based piecewise linear functions removes integer constraints but increases circuit depth and number of controlled linear rotations (author-stated).",
+    "Limited scale of experiments: presented experiments use toy models (small K, small R, small nZ) and up to 27-qubit QPUs; results may not generalize to realistic production-scale portfolios (author-stated).",
+    "Dependence on quantum hardware maturity: meaningful application at financial scales requires substantial improvements in qubit coherence, gate fidelity, and quantum volume (author-stated).",
+    "[inferred] Potential mismatch between simulated noise models and real-device noise: although noisy simulations were used to validate behavior, differences across devices and simulated models suggest noise models may not fully capture hardware behavior (inferred from the reported experiments and validations).",
+    "[inferred] Assumption that U_Z preparation is efficient: the analysis ignores the complexity of preparing the Z-distribution (UZ) on the grounds it can be performed efficiently and independently of K — this assumption may be optimistic in larger or more complex settings (inferred).",
+    "[inferred] Bisection search / repeated A-operator evaluations overhead: computing VaR via repeated QAE calls in a bisection loop may incur additional classical/quantum overhead (many evaluations of A for different thresholds x), which could be costly in practice (inferred).",
+    "[inferred] Error mitigation and calibration needs: the presented approach lacks demonstrated, scalable error-mitigation strategies that would be required to obtain meaningful results on near-term hardware (inferred)."
+  ],
+  "open_questions": [
+    "How can circuit depth be reduced while preserving the ability to encode multiple systemic factors and arbitrary (real-valued) LGD?",
+    "Can a multi-factor encoding be designed that supports per-asset α weight vectors without incurring prohibitive gate/qubit costs?",
+    "What are the most effective error-mitigation or noise-resilient strategies to make CRA/QAE estimations reliable on near-term QPUs?",
+    "How well do noise models used in simulation match the behavior of evolving real devices, and how should simulation practices evolve to provide realistic baselines?",
+    "What is the practical end-to-end resource (qubits, gates, runtime) requirement to run meaningful VaR/EC computations on realistic portfolios (thousands of assets, tens of factors) with target precisions used in finance?",
+    "How much can alternative state-loading techniques (e.g., quantum GANs) or approximate quantum compiling reduce resource requirements for the uncertainty model?",
+    "What architectures or parallelization schemes (e.g., duplicating Z qubits w times) provide the best trade-off between depth and width for large portfolios?",
+    "How to integrate quantum CRA modules into existing financial data pipelines and risk-management infrastructures (including data pre-processing, model calibration, and validation)?",
+    "What regulatory, legal, and auditability requirements will apply when quantum algorithms are used in production CRA systems, and how should those be addressed?",
+    "How do improvements in quantum volume, qubit fidelity, and topology (connectivity) translate quantitatively into improved estimation accuracy for VaR using this approach?"
+  ],
+  "future_work": [
+    "Improve qubit coherence, gate fidelity, and overall quantum hardware to enable meaningful execution of the proposed algorithms on real QPUs (author-stated).",
+    "Investigate methods to reduce circuit depth and width, including alternative loading methods (e.g., quantum generative adversarial networks) and approximate quantum compiling techniques to lower physical operation counts (author-stated).",
+    "Develop and test scalable error-mitigation strategies tailored to the CRA/QAE workflow to obtain usable results on noisy intermediate-scale quantum devices (author-stated/in text implication).",
+    "Create realistic benchmarks using real-world financial data (enabled by arbitrary LGD encoding) to fairly compare quantum and classical CRA methods (author-stated).",
+    "Integrate the quantum CRA algorithm into end-to-end pipelines and explore the design of digital twins to evaluate production performance and operational integration (author-stated).",
+    "Collaborate with regulatory bodies and industry stakeholders to address legal, regulatory, and governance aspects for deploying quantum algorithms in finance (author-stated).",
+    "Further empirical evaluation on larger QPUs as they become available, including validating noise models and studying the impact of quantum volume and topology on algorithmic performance (author-stated)."
+  ],
+  "topic_tags": [
+    "risk-management",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "grover-search",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Uses Quantum Amplitude Estimation (IQAE) and Grover-query complexity bounds to motivate a potential quadratic speedup for estimating loss CDFs/VaR, but does not include a direct classical Monte Carlo numerical baseline in experiments.",
+    "#idea:near-term-feasibility — Empirical evaluation on noiseless simulators, noisy device-model simulators, and several IBM QPUs for toy portfolios (K=2..4) indicates the method is implementable on current devices only for very small instances and that noise and resource limits significantly impair accuracy.",
+    "#idea:hybrid-approach — Practical pipeline combines quantum loading and IQAE with classical bisection search and classical pre/post-processing; replaces integer-sum registers with a piecewise LinearAmplitudeFunction to support arbitrary (real-valued) LGDs.",
+    "#limitation:qubit-count — Toy experiments required 7–13 qubits; authors show qubit requirements grow with number of assets K and factors R, limiting applicability to realistic portfolio sizes on current hardware.",
+    "#limitation:noise — Noisy simulations and real-QPU runs reveal substantial degradation of PDF/CDF and VaR estimates; circuit depth introduced by multi-factor encodings and piecewise mappings exacerbates noise sensitivity.",
+    "#limitation:data-encoding — Encoding multivariate-normal systemic factors (discretization, 2 qubits per Z in examples) and piecewise amplitude functions for real LGDs increases circuit depth and resource consumption, trading modeling flexibility for higher quantum cost."
+  ],
+  "contradictions": [
+    "The paper demonstrates that circuit depth and qubit requirements grow quickly with the number of assets and factors, and that noise on current QPUs substantially degrades results — contradicting optimistic claims that QAE-based credit-risk analysis is currently scalable/practical for realistic portfolios."
+  ]
+}

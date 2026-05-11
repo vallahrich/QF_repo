@@ -1,0 +1,278 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2602.14827v1) and typical preprint structure (abstract, methods, results, references) but lacks journal or conference venue or publisher information, indicating an arXiv preprint rather than a peer-reviewed publication.",
+  "title": "Constrained Portfolio Optimization via Quantum Approximate Optimization Algorithm (QAOA) with XY-Mixers and Trotterized Initialization: A Hybrid Approach for Direct Indexing",
+  "authors": [
+    "Javier Mancilla",
+    "Theodoros D. Bouloumis",
+    "Frederic Goguikian"
+  ],
+  "year": "2026",
+  "journal_or_venue": "arXiv preprint (quant-ph)",
+  "doi": "",
+  "abstract_summary": "The paper proposes a constraint-preserving QAOA formulation for cardinality-constrained portfolio selection using Dicke-state initialization and an XY-mixer that preserves Hamming weight, together with a Trotterized parameter initialization to mitigate barren plateaus. In a 2025 monthly walk-forward on 10 US equities, the approach outperformed Simulated Annealing and Hierarchical Risk Parity in Sharpe ratio (1.81 vs 1.31 and 0.98) but incurred substantially higher turnover, highlighting a trade-off between selection quality and implementation costs.",
+  "methodology_description": "The study formulates cardinality-constrained portfolio selection (select exactly K assets out of N) as an Ising/QUBO-style cost and compares a constraint-preserving QAOA ansatz against classical baselines (Simulated Annealing and Hierarchical Risk Parity). The QAOA variant initializes the circuit in an N-qubit Dicke state of Hamming weight K and uses a complete-graph XY-mixer Hamiltonian (XiXj + YiYj) which preserves total excitation number, guaranteeing the evolution remains within the feasible K-subspace and removing the need for penalty terms. The cost Hamiltonian encodes linear Zi terms from annualized expected returns and ZiZj terms from annualized covariances (Ledoit–Wolf shrinkage). To mitigate barren-plateau risk, parameters (γ, β) are initialized using a Trotter-inspired linear adiabatic ramp (γ ramping up, β ramping down). Optimization is performed in simulation (PennyLane default.qubit statevector) using a gradient-based Adam optimizer (qml.AdamOptimizer) with early stopping; for each depth p∈{1..6} the full probability vector is computed, filtered to bitstrings with Hamming weight K and probability ≥1%, rescored by the classical objective, and the best candidate across depths is chosen. Selected discrete subsets are then assigned continuous weights by solving a bounded Sharpe-maximization (SLSQP) with per-asset box constraints (0.05–0.50) and full-investment. A small continuity bonus is applied to previously held assets in both QAOA and SA to reduce turnover. Simulated Annealing operates on a QUBO with an adaptive penalty scale and fixed sampling parameters (neal, num_reads=5000, num_sweeps=1000). Monthly walk-forward backtests are run on 10 U.S. large-cap equities for calendar year 2025 with a 180-trading-day lookback, transaction costs modeled as 5 bps × turnover, and performance reported via total return, annualized volatility, Sharpe ratio, max drawdown, and turnover.",
+  "algorithms_used": [
+    "Quantum Approximate Optimization Algorithm (QAOA) with XY-mixer",
+    "Dicke state initialization",
+    "Trotterized (adiabatic-inspired) parameter initialization",
+    "Simulated Annealing (neal.SimulatedAnnealingSampler)",
+    "Hierarchical Risk Parity (HRP)",
+    "Adam optimizer (qml.AdamOptimizer)",
+    "SLSQP (Sharpe-max continuous allocation)"
+  ],
+  "frameworks": [
+    "PennyLane (default.qubit statevector)",
+    "PyPortfolioOpt (HRP)",
+    "yfinance",
+    "neal (D-Wave's simulated annealer)",
+    "Ledoit–Wolf covariance (library unspecified, standard implementation used)"
+  ],
+  "experimental_setup": "Simulated on PennyLane's default.qubit statevector simulator. QAOA circuits initialized in Dicke state and evolved with XY-mixer on complete graph. Depths p = 1..6 tested. Classical simulated annealing run with neal (num_reads=5000, num_sweeps=1000). Monthly walk-forward backtest for calendar year 2025 with 180 trading day lookback windows. Full probability vectors computed (statevector), filtered by Hamming weight K and probability threshold.",
+  "dataset_used": "Auto-adjusted daily Close prices from Yahoo Finance via yfinance for 10 US large-cap equities (AAPL, MSFT, GOOGL, AMZN, JPM, V, TSLA, UNH, LLY, XOM). Out-of-sample testing: calendar year 2025 with monthly rebalances; model inputs estimated from preceding 180 trading days. Missing values forward-filled; non-trading rows dropped; returns computed from prices; expected returns and covariances annualized (×252), covariance estimated with Ledoit–Wolf shrinkage.",
+  "experiment_input": {
+    "source": "Yahoo Finance via yfinance (auto-adjusted Close prices)",
+    "assets": [
+      "AAPL",
+      "MSFT",
+      "GOOGL",
+      "AMZN",
+      "JPM",
+      "V",
+      "TSLA",
+      "UNH",
+      "LLY",
+      "XOM"
+    ],
+    "time_horizon": "Out-of-sample calendar year 2025; for each rebalance, inputs are estimated from the prior 180 trading days (lookback)",
+    "data_granularity": "Daily",
+    "preprocessing": [
+      "Forward-fill missing values",
+      "Drop non-trading rows",
+      "Compute daily returns from adjusted Close",
+      "Annualize mean returns (×252) and covariances (Ledoit–Wolf ×252)"
+    ],
+    "size": "N=10 assets; per-rebalance lookback window L=180 trading days"
+  },
+  "experiment_process": {
+    "overview": [
+      "Monthly walk-forward protocol for 2025: at each rebalance compute µ and Σ from previous 180 trading days",
+      "Construct cost Hamiltonian HC with linear Zi terms from returns and pairwise ZiZj terms from covariances; apply continuity bonus to αi for previously held assets",
+      "QAOA-XY selection: prepare Dicke state |D^K_N>, apply alternating layers of e^{-i γ_l H_C} and e^{-i β_l H_XY} for p layers, optimize (γ,β) with Adam, compute full state probabilities, filter for Hamming weight K and prob≥1%, rescore classical cost and keep best candidate across p=1..6",
+      "Simulated Annealing selection: encode QUBO with quadratic penalty P(∑x_i − K)^2 (P set adaptively), sample with neal (num_reads=5000, num_sweeps=1000), keep best feasible sample",
+      "Allocation: for chosen discrete subset solve Sharpe-maximization via SLSQP with bounds 0.05≤w_i≤0.50 and ∑w_i=1; if optimizer fails, fall back to HRP",
+      "Compute turnover = ∑|w_i,t − w_i,t-1|; apply transaction cost τ = 0.0005 × turnover to monthly gross returns; compound portfolio value"
+    ],
+    "QAOA_details": {
+      "initial_state": "Dicke state |D^K_N>",
+      "mixer": "Complete-graph XY-mixer H_XY = Σ_{(i,j)∈E} (X_i X_j + Y_i Y_j)",
+      "cost_hamiltonian": "HC = Σ α_i Z_i + Σ_{i<j} β_{ij} Z_i Z_j with α_i = −(1−q) µ_i (annualized), β_{ij}=2 q Σ_{ij} (annualized)",
+      "parameter_init": "Trotter/adiabatic-inspired linear ramp: γ_l ramping (e.g., 0.1→0.5), β_l ramping (e.g., 0.5→0.1)",
+      "depths_tested": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "measurement_filter": "keep bitstrings with Hamming weight K and probability ≥1%",
+      "optimizer": "qml.AdamOptimizer (stepsize=0.02, epsilon=1e-10), max_iter=100, early stopping"
+    },
+    "SA_details": {
+      "QUBO_penalty": "P = 2.5 × maxcoeff × N (adaptive)",
+      "sampling": "neal.SimulatedAnnealingSampler with num_reads=5000, num_sweeps=1000",
+      "continuity_bonus": "diagonal Qii reduced for previously held assets"
+    },
+    "allocation_and_costs": {
+      "continuous_solver": "SLSQP (Sharpe-maximization)",
+      "bounds": "0.05 ≤ w_i ≤ 0.50, Σ w_i = 1",
+      "continuity_bonus_value": 0.1,
+      "transaction_cost": "τ = 5 basis points (0.0005) × turnover"
+    }
+  },
+  "experiment_output": {
+    "outputs": [
+      "Monthly selected K-hot bitstrings (discrete selections) for each method",
+      "Monthly continuous weights after Sharpe-max allocation (or HRP fallback)",
+      "Portfolio value time series (net of transaction costs)",
+      "Diagnostics: QAOA final cost per depth, iteration counts, gradient norms, per-iteration compute cost"
+    ],
+    "metrics_reported": [
+      "Total return (2025)",
+      "Annualized volatility",
+      "Sharpe ratio",
+      "Maximum drawdown",
+      "Average monthly turnover"
+    ],
+    "baselines": [
+      "Simulated Annealing (SA)",
+      "Hierarchical Risk Parity (HRP)"
+    ],
+    "example_results_summary": {
+      "QAOA_total_return": "30.09%",
+      "QAOA_sharpe": 1.81,
+      "SA_total_return": "24.17%",
+      "SA_sharpe": 1.31,
+      "HRP_total_return": "10.88%",
+      "HRP_sharpe": 0.98,
+      "QAOA_turnover": "76.8%",
+      "SA_turnover": "21.0%",
+      "HRP_turnover": "21.6%"
+    }
+  },
+  "experiment_parameters": {
+    "n_qubits": 10,
+    "cardinality_K": 5,
+    "q_risk_aversion": 0.3,
+    "qaoa_depths_tested": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "qaoa_parameter_initialization": {
+      "gamma_range": [
+        0.1,
+        0.5
+      ],
+      "beta_range": [
+        0.5,
+        0.1
+      ],
+      "trotter_ramp": "linear"
+    },
+    "optimizer": {
+      "name": "Adam (qml.AdamOptimizer)",
+      "stepsize": 0.02,
+      "epsilon": 1e-10,
+      "max_iterations": 100,
+      "early_stopping": true
+    },
+    "statevector_or_shots": "Statevector simulation (full probability vector; no finite shots)",
+    "simulator": "PennyLane default.qubit (statevector)",
+    "simulated_annealing": {
+      "num_reads": 5000,
+      "num_sweeps": 1000,
+      "penalty_scale_formula": "P = 2.5 * maxcoeff * N"
+    },
+    "allocation_solver": {
+      "name": "SLSQP",
+      "bounds_per_asset": [
+        0.05,
+        0.5
+      ]
+    },
+    "transaction_cost": 0.0005,
+    "lookback_days": 180,
+    "annualization_factor": 252,
+    "continuity_bonus": 0.1,
+    "readout_probability_threshold": 0.01
+  },
+  "hardware_details": {
+    "simulator": "PennyLane default.qubit",
+    "simulator_type": "statevector simulator (full statevector access)",
+    "qpu_model": null,
+    "cloud_provider": null,
+    "notes": "No hardware/QPU execution reported; all quantum experiments run in statevector simulation via PennyLane"
+  },
+  "reproducibility_notes": "The preprint provides detailed hyperparameters, algorithmic steps, and data sources (yfinance) but does not cite or link an accompanying code repository. Data (Yahoo Finance) is publicly accessible and parameter settings (e.g., q=0.3, K=5, p up to 6, optimizer settings, SA sampling parameters, transaction cost) are enumerated, enabling reasonable reproducibility if implementation details (Dicke-state construction, exact Hamiltonian sign conventions and ordering, PennyLane circuit code) are reimplemented. No explicit code or notebooks were provided in the manuscript; reproducibility is therefore moderate but would be improved if the authors released code and exact experiment scripts.",
+  "key_findings": [
+    "[supported] A constraint-preserving QAOA ansatz using Dicke-state initialization and an XY-mixer strictly preserves the Hamming-weight-K subspace and therefore enforces the cardinality constraint without penalty terms (demonstrated in the N=10, K=5 experiments).",
+    "[supported] In the authors' 2025 monthly walk-forward backtest on a 10-stock universe (N=10, K=5), the QAOA-XY selector produced higher out-of-sample performance than Simulated Annealing (SA) and Hierarchical Risk Parity (HRP) under their pipeline and cost model.",
+    "[supported] Reported 2025 performance metrics: QAOA-XY total return 30.09%, Sharpe Ratio 1.81, volatility 18.55%, max drawdown −8.27%, and average monthly turnover 76.8% (compared to SA Sharpe 1.31 / turnover 21.0% and HRP Sharpe 0.98 / turnover 21.6%).",
+    "[supported] Increasing QAOA circuit depth (p) up to 6 generally improved the optimized cost in their experiments; the best reported final cost was −0.5355 at p=6 (for N=10, K=5).",
+    "[supported] Trotterized (AQC-inspired) parameter initialization provided a warm-start that yielded trainable optimization trajectories in their simulations; gradient norms did not vanish and were reported to increase up to p=6 in the tested regime.",
+    "[supported] The measurement/readout filter (keeping only Hamming-weight-K strings with probability ≥1%) and rescoring by the classical objective produced feasible candidate portfolios used for allocation.",
+    "[supported] Under the tested transaction-cost model (5 bps × monthly turnover), QAOA-XY maintained superior net performance relative to SA and HRP in the provided backtest.",
+    "[speculative] The paper argues that the constraint-preserving QAOA approach is a viable candidate for production FinTech solvers (Direct Indexing use-cases) — claim generalizing beyond the presented small-scale simulation.",
+    "[speculative] The authors suggest that Trotterized initialization mitigates barren plateaus more generally; while this was empirically observed at N=10, p≤6, broader mitigation at larger N or realistic noise is an open question.",
+    "[speculative] The approach will require further work to scale beyond N=10 and to assess performance/noise-sensitivity on real NISQ hardware — the paper lists scaling and noisy-hardware testing as necessary future work.",
+    "[supported] QAOA-XY exhibited substantially higher turnover than the classical baselines in the experiments, implying trade-offs between discrete selection quality and operational costs.",
+    "[supported] Depth-vs-runtime tradeoff observed: p=3 identified as a practical tradeoff between solution quality and runtime, p=6 as higher-quality but more compute-intensive option in this experimental setup."
+  ],
+  "results_summary": "The preprint implements a constraint-preserving QAOA for the K-of-N portfolio selection problem using Dicke-state initialization, a complete-graph XY-mixer, and a Trotterized parameter warm-start. In statevector simulations on a 10-stock universe with monthly 2025 walk-forward rebalancing (N=10, K=5), the QAOA-XY pipeline outperformed a Simulated Annealing QUBO solver and a Hierarchical Risk Parity baseline under the authors' Sharpe-max allocation and 5 bps × turnover transaction-cost model. The algorithm produced higher total return and Sharpe Ratio (30.09% and 1.81) but at the expense of much higher monthly turnover (76.8%). Depth scaling to p=6 yielded lower cost and non-vanishing gradients in these simulations; however, the authors note scalability, noise, and turnover-integration as open challenges.",
+  "performance_claims": [
+    "QAOA-XY Total Return (2025): 30.09% [supported]",
+    "QAOA-XY Sharpe Ratio (2025): 1.81 [supported]",
+    "QAOA-XY Annualized Volatility (2025): 18.55% [supported]",
+    "QAOA-XY Max Drawdown (2025): -8.27% [supported]",
+    "QAOA-XY Average Monthly Turnover: 76.8% [supported]",
+    "Simulated Annealing (SA) Total Return (2025): 24.17%, Sharpe Ratio: 1.31, Volatility: 19.53%, Max Drawdown: -9.26%, Turnover: 21.0% [supported]",
+    "Hierarchical Risk Parity (HRP) Total Return (2025): 10.88%, Sharpe Ratio: 0.98, Volatility: 10.65%, Max Drawdown: -8.40%, Turnover: 21.6% [supported]",
+    "QAOA depth scaling: Final cost improved from -0.1488 at p=1 to -0.5355 at p=6 (reported in Table II) [supported]",
+    "Gradient Norms (reported): p=1 -> 5.33e-3; p=6 -> 5.47e-2 (authors report gradients did not vanish up to p=6) [supported]",
+    "Simulated Annealing sampling parameters: num_reads=5000, num_sweeps=1000 used in experiments (and reported adaptive penalty P = 2.5 × maxcoeff × N) [supported]"
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors report better out-of-sample performance for their constraint-preserving QAOA pipeline relative to classical heuristics in statevector simulations on a small N=10 universe, but this is not a general demonstration of quantum advantage: experiments were classical simulations (no noisy quantum hardware), on a small problem size, and used classical optimization and full-state access. Thus the observed empirical benefit is limited in scope and does not constitute proof of a general quantum advantage; broader, hardware-based and larger-N validation is necessary.",
+  "limitations": [
+    "Experiment scale limited to N = 10 assets; results may not generalize to larger universes.",
+    "Circuit depth tested only up to p = 6; behavior and trainability at larger depths are untested.",
+    "High realized turnover (76.8% monthly) — operationally costly and may be prohibitive in less liquid markets.",
+    "Transaction-cost model is simplistic (5 bps × turnover) and does not model market impact or realistic slippage.",
+    "All QAOA experiments run on a statevector simulator (PennyLane default.qubit); algorithm performance on noisy quantum hardware was not demonstrated.",
+    "Benchmarking and backtest limited to a single year (2025) and a single 10-stock universe — limited robustness and regime coverage.",
+    "The approach uses a two-stage pipeline (discrete K-of-N selection followed by continuous Sharpe-max weighting); global optimality of the combined procedure is not guaranteed.",
+    "Readout/candidate filtering (keeping only K-hot strings with probability ≥ 1%) may discard useful low-probability solutions and bias outcomes.",
+    "Simulated Annealing baseline relies on penalty scaling and sampler hyperparameters that can affect comparison fairness.",
+    "Continuity bonus (warm-start) is a heuristic; its magnitude and effects on selection dynamics and turnover were not systematically studied.",
+    "[inferred] Preparing Dicke-state initializations and complete-graph XY-mixers on real hardware may be costly and error-prone; practical state-preparation overheads were not evaluated.",
+    "[inferred] The choice of classical optimizer (Adam) and its hyperparameters may materially affect trainability; sensitivity to optimizer choice was not explored.",
+    "[inferred] The Trotterized (adiabatic-inspired) parameter initialization was validated only for this problem size; its effectiveness across problems and larger N remains unproven.",
+    "[inferred] Sampling limitations (finite shots on real hardware) and readout noise were not modeled; reported statevector probabilities may overestimate achievable solution quality on NISQ devices."
+  ],
+  "open_questions": [
+    "How can turnover and realistic trading frictions (market impact, slippage) be incorporated directly into the discrete selection objective to produce implementable portfolios?",
+    "How does the constraint-preserving QAOA-XY ansatz scale with increasing N and K in terms of circuit depth, optimizer stability, and sampling/readout requirements?",
+    "How robust are the observed outperformance and trainability results across longer horizons, diverse market regimes, and larger or different asset universes?",
+    "How sensitive are results to noise and device-specific error on real quantum hardware (NISQ), and which hardware-aware ansatz modifications are required?",
+    "Does the Trotterized parameter initialization reliably avoid barren plateaus for larger problem sizes and deeper circuits?",
+    "What is the operational trade-off point (circuit depth vs. runtime) in production settings with strict compute/time budgets?",
+    "How much do heuristic choices (continuity bonus magnitude, readout probability threshold, optimizer settings) affect performance and turnover?",
+    "Can a single-stage formulation (joint discrete-selection-and-weighting) outperform the two-stage pipeline used here, and how could it be implemented for QAOA-like algorithms?",
+    "What is the cost/benefit of preparing Dicke states and full XY-mixers on hardware versus approximate/efficient encodings that may introduce leakage out of the K-subspace?"
+  ],
+  "future_work": [
+    "Incorporate explicit trading frictions/costs or temporal regularization (multi-period coupling) directly into the selection objective to control turnover.",
+    "Investigate scaling beyond N = 10: study circuit depth, optimizer stability, and sampling/readout policy adjustments required as problem size grows.",
+    "Conduct broader robustness evaluations across longer horizons, different market regimes, and alternative asset universes to characterize when QAOA offers the largest advantage.",
+    "Implement and test the circuit on noisy quantum hardware or under realistic noise models to assess sensitivity to NISQ limitations and guide hardware-aware ansatz design."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Constraint-preserving QAOA (Dicke-state initialization + XY-mixer) produced higher out-of-sample Sharpe (1.81) than Simulated Annealing (1.31) and HRP (0.98) on a 10-asset 2025 monthly walk-forward backtest.",
+    "#idea:hybrid-approach — The workflow is hybrid: discrete subset selection via QAOA in the K-excitation subspace, followed by classical continuous Sharpe-maximization (SLSQP) to assign weights, plus classical continuity bonuses to reduce turnover.",
+    "#idea:near-term-feasibility — NISQ-oriented design choices (XY-mixer to preserve feasibility, Trotterized parameter initialization to mitigate barren plateaus, shallow depths p=1..6) are proposed to improve trainability on near-term devices, although evaluation is on an ideal statevector simulator.",
+    "#limitation:simulation-only — All experiments were run on PennyLane default.qubit statevector simulator; no noisy-hardware experiments or noise-aware runs reported.",
+    "#limitation:no-empirical-validation — No runs on real QPU hardware; claims of practical NISQ applicability are not empirically validated on hardware.",
+    "#limitation:qubit-count — Demonstration limited to N=10 assets (10 qubits); scaling to realistic larger universes is not demonstrated and may be challenging.",
+    "#limitation:noise — Ideal (noise-free) simulation ignores real device decoherence/gate errors which could break Dicke initialisation, XY-mixer fidelity, and measurement filtering strategies.",
+    "#limitation:data-encoding — Preparing Dicke initial states and implementing complete-graph XY-mixers impose nontrivial circuit depth/overhead for real hardware, implying hidden data-encoding and state-preparation costs."
+  ],
+  "contradictions": [
+    "Internal trade-off: Although the QAOA approach yielded higher Sharpe, it incurred substantially higher turnover, increasing transaction costs and complicating claims of practical outperformance when implementation costs are considered.",
+    "Scalability concern: The reported advantage is demonstrated on a small N=10, ideal-simulator experiment; this contradicts any implicit suggestion that the method's superior performance will straightforwardly scale to larger asset universes or noisy hardware without further evidence."
+  ]
+}

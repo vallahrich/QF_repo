@@ -1,0 +1,144 @@
+## THESIS SCOPE — gate-based quantum computing ONLY
+
+This thesis covers gate-based quantum computing (universal quantum circuits on superconducting, trapped-ion, photonic, or neutral-atom hardware). Quantum annealing (D-Wave, adiabatic QA, pure QUBO-on-annealer) is OUT OF SCOPE.
+
+If the paper's only quantum solver is a quantum annealer (D-Wave, Advantage, 2000Q, adiabatic hardware), return `{{"experiments": [], "out_of_scope": true, "out_of_scope_reason": "quantum annealing (D-Wave / adiabatic) — gate-based thesis scope"}}` and stop.
+
+If the paper uses BOTH a gate-based solver (QAOA, Grover, VQE, amplitude-estimation, etc.) AND an annealer, extract ONLY the gate-based experiments and ignore the annealer runs.
+
+## Paper Text
+
+{paper_text}
+
+## Instructions
+
+You are a research assistant extracting experiment definitions AND quantum resource details from academic papers on quantum computing in finance.
+
+## Context
+
+This paper has been classified by Phase 2 of our systematic review with:
+- Problem domain (silo): {primary_silo}
+- Algorithm families detected: {methodology_tags}
+- Source type: {source_type}
+
+Phase 2 classification context:
+{p2_context}
+
+## Task
+
+Identify every distinct quantum or hybrid experiment and extract BOTH the algorithm/problem setup AND the quantum resource requirements for each. An experiment is a separate evaluation with a specific algorithm, problem configuration, and hardware setup.
+
+## Extract Per Experiment
+
+### Algorithm
+- **family**: MUST be exactly one of this closed set — do NOT invent new values: qaoa, vqe, amplitude-estimation, quantum-ml, quantum-walk, hhl, hybrid, grover, quantum-svm, quantum-simulation, classical-simulation, other-gate-based, other. `quantum-annealing` and `qubo` are NOT valid values (annealer papers are out of scope; QUBO formulations on gate-based hardware use `qaoa` or `grover`). Do NOT use Phase-2 taxonomy codes (e.g., "variational-nisq", "error-mitigation", "quantum-cryptography", "qft-phase-estimation") — map them: QAOA → qaoa; VQE/variational → vqe; QPE/QFT applications → amplitude-estimation; Shor/QKD → other-gate-based; error mitigation studies without a distinct quantum algorithm → other.
+- **variant**: specific variant name (e.g., "QAOA with warm-start", "hardware-efficient VQE")
+- **ansatz**: circuit ansatz if applicable (e.g., "RealAmplitudes", "EfficientSU2", "UCCSD")
+- **optimizer**: classical optimizer (e.g., "COBYLA", "SPSA", "Adam", "L-BFGS-B")
+- **num_layers**: QAOA depth p, VQE layers, ansatz repetitions
+- **convergence_criteria**: stopping condition (e.g., "max 1000 iterations", "gradient < 1e-6")
+- **hyperparameters**: ALL reported parameters as key-value pairs
+- **parameter_initialization**: how initial parameters are set (e.g., "random uniform [0, 2π]", "warm-start from classical solution", "TQA schedule")
+- **optimizer_settings**: max_iterations, tolerance, step_size, learning_rate_schedule, parameter_bounds if reported
+
+### Problem Formulation
+- **encoding_method**: amplitude_encoding, angle_encoding, basis_encoding, QUBO, block_encoding, qRAM. A QUBO/Ising problem encoding is in scope only when the solver is gate-based (QAOA, Grover, amplitude-estimation, etc.).
+- **encoding_details**: how variables map to qubits (e.g., "9-bit discretization per asset", "1 qubit per binary variable", "log2(N) qubits for N assets")
+- **objective_function**: mathematical formulation
+- **constraints_handling**: penalty terms, XY-mixer, feasibility filter, post-selection
+- **num_binary_variables**: number of binary variables in QUBO/Ising
+- **problem_hamiltonian**: Hamiltonian form if specified
+- **num_ancilla_qubits**: ancilla qubits required (if reported separately)
+
+### Problem Instance
+- **description**, **num_assets**, **time_steps**, **num_features**, **dataset_size**
+- **data_type**: synthetic, real_market, proprietary, public_benchmark
+- **dataset_name**, **dataset_specification**: ticker_symbols, date_range, benchmark_name, preprocessing, train_test_split
+- **data_preprocessing_details**: exact steps to prepare input data (e.g., "log returns, 252-day annualization, Shapiro test for normality, remove assets with negative expected return")
+- **evaluation_methodology**: how results are evaluated (e.g., "10-fold CV", "20 independent runs per config", "average over 100 random seeds")
+
+### Quantum Resources — CRITICAL: You MUST extract these for every experiment
+Search carefully — these often appear in tables, figures, circuit diagrams, setup sections, or appendix. For QAOA/Grover-on-QUBO problems on gate-based hardware, record the number of binary variables in `num_binary_variables` (problem-formulation block), and report `num_qubits` as the actual qubit register size of the gate-based circuit.
+- **num_qubits**: Total qubits used. Search for "qubit", "q =", "n =", register sizes, binary variables.
+- **qubit_type**: logical, physical, or not_specified
+- **circuit_depth**: Total depth. Search for "depth", "layers", "p =".
+- **circuit_depth_transpiled**: Depth after transpilation.
+- **gate_count_total**, **cnot_count**, **two_qubit_gate_count**, **t_count**, **t_depth**
+  - `two_qubit_gate_count` is the TOTAL two-qubit entangling gate count (CNOT + CZ + iSWAP + ECR + any native 2q gate). If the paper only reports CNOTs, set both `cnot_count` and `two_qubit_gate_count` to that number. If the paper reports only a generic "2-qubit gate count" or "entangling gate count", put it in `two_qubit_gate_count` and leave `cnot_count` null.
+- **num_shots**: Search for "shots", "repetitions", "samples", "measurements".
+- **num_variational_params**: Number of trainable parameters.
+- **gate_fidelity**: Single-qubit or two-qubit gate fidelity if reported (e.g., 99.5%, 0.995).
+- **readout_fidelity**: Measurement/readout fidelity if reported.
+- **error_correction**: code_type, code_distance, physical_qubits_per_logical, total_physical_qubits, logical_error_rate, physical_error_rate_assumed
+
+### Hardware — CRITICAL: You MUST identify the hardware for every experiment
+- **type**: simulator_statevector, simulator_noisy, simulator_other, real_qpu_superconducting, real_qpu_trapped_ion, real_qpu_photonic, real_qpu_neutral_atom, not_specified. `quantum_annealer` is NOT a valid value — annealer experiments are out of scope.
+- **provider**: IBM, Google, IonQ, Rigetti, Quantinuum, Pasqal, QuEra, Xanadu, etc. Do NOT list D-Wave (out of scope).
+- **device_name**: ibm_brisbane, H1-1, Aria-1, etc. (gate-based devices only).
+- **framework**: Qiskit, PennyLane, Cirq, Q#, Braket, etc. Ocean/QBSolv are annealer-stack tools and out of scope.
+
+### Noise & Implementation
+- **noise_model**: is_noisy, noise_type, error_mitigation_method
+- **noise_parameters**: T1, T2, gate error rates, readout error rates if reported for QPU experiments
+- **mitigation_details**: number of mitigation samples, extrapolation method, calibration procedure
+- **code_available**, **code_url**, **framework_version**, **transpilation_target**, **classical_solver**
+- **transpilation_settings**: optimization_level, basis_gates, routing_method if reported
+- **classical_preprocessing**, **classical_postprocessing**
+- **total_execution_time**, **quantum_execution_time**, **quantum_fraction_of_runtime**
+- **circuit_compilation_time**: time to compile/transpile the circuit if reported separately
+- **convergence_data**: iterations_to_converge, final_loss_value, loss_curve_shape, variance_across_runs, num_independent_runs
+
+### Complexity Analysis (for Hoefler assessment — search Introduction, Related Work, Discussion)
+- **quantum_complexity**: Big-O (e.g., "O(sqrt(N))")
+- **classical_complexity**: Big-O of best-known classical
+- **speedup_order**: one of exponential, cubic, quadratic, polynomial_other, logarithmic, constant, none, none_proven. Use "none" when the paper explicitly shows/claims no asymptotic speedup; use "none_proven" when the paper does not characterize the speedup order.
+- **constant_factor_quantum**, **constant_factor_classical**
+- **total_operations_quantum**, **total_operations_classical**
+- **crossover_n**: Problem size N* where quantum overtakes classical
+- **wall_clock_quantum**, **wall_clock_classical**
+
+## Output Format
+
+Return a JSON object:
+
+{{
+  "experiments": [
+    {{
+      "experiment_id": "exp_1",
+      "description": "Brief description",
+      "algorithm": {{ ... }},
+      "problem_formulation": {{ ... }},
+      "problem_instance": {{ ... }},
+      "quantum_resources": {{ ... }},
+      "hardware": {{ ... }},
+      "noise_model": {{ ... }},
+      "implementation_details": {{ ... }},
+      "complexity_analysis": {{ ... }},
+      "provenance": {{
+        "hardware_type": "paper_reported | paper_inferred",
+        "num_qubits": "paper_reported | paper_inferred",
+        "circuit_depth": "paper_reported | paper_inferred",
+        "speedup_order": "paper_reported | paper_inferred",
+        "quantum_complexity": "paper_reported",
+        "classical_complexity": "paper_reported",
+        "notes": ["Free-text explanation for any paper_inferred field"]
+      }}
+    }}
+  ]
+}}
+
+## Rules
+- Classical-only methods are BASELINES, not experiments.
+- **Classical solvers are NEVER separate quantum experiments**, even when they appear in a quantum paper's experimental section. The following artefacts are ALWAYS classical: QBSolv (classical decomposer), simulated annealing, tabu search, CPLEX, Gurobi, SCIP, MOEA/D, NSGA-II, classical SVM, random forest, logistic regression, gradient boosting, classical neural networks, Monte Carlo (when run on CPU/GPU only). Record them under `classical_baselines` of the paper's gate-based experiment, never as their own `experiments[]` entry. If the paper's ONLY solver is in this list, return `{{"experiments": [], "out_of_scope": true, "out_of_scope_reason": "no gate-based quantum experiment — only classical solver(s)"}}`.
+- If the same algorithm is tested at multiple problem sizes, it is ONE experiment with scalability data.
+- Extract ALL reported hyperparameters.
+- If the paper has more than 5 experiments, focus on the 5 most distinct/important ones.
+- Search the ENTIRE paper for resource data: methods, setup, results, appendix, figure captions.
+- For QAOA/Grover-on-QUBO problems on gate-based hardware, set `algorithm.family` to `qaoa` or `grover` and record the binary-variable count in `problem_formulation.num_binary_variables`. Do NOT use `qubo` or `quantum-annealing` as algorithm families.
+- Use null for fields not reported. Never fabricate values.
+- **Provenance tracking is mandatory.** For every experiment, populate the "provenance" object:
+  - "paper_reported": the value is explicitly stated in the text, table, or figure.
+  - "paper_inferred": the value was deduced from context (e.g., Qiskit usage implies simulator if no QPU is named; D-Wave implies quantum_annealer).
+  - If you infer a value, you MUST add an explanation to provenance.notes (e.g., "hardware.type inferred as simulator_statevector because paper uses Qiskit with no QPU device named").
+  - If a field cannot be reported or inferred, set it to null — do NOT guess.
+- Return ONLY the JSON object.

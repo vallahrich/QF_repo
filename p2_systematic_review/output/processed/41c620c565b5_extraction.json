@@ -1,0 +1,239 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes a DOI and journal name (Computational Economics), an acceptance date, structured sections (abstract, methods, experiments, results, appendices) and empirical evaluations (datasets, D-Wave experiments, comparisons with classical solvers), indicating a peer-reviewed empirical research article.",
+  "title": "Solving Multiple Discretization Portfolio Optimization Problem with Quantum-Classical Hybrid Algorithms",
+  "authors": [
+    "Haijing Wei",
+    "Yanbo J. Wang",
+    "Haoxiang Yang",
+    "Xuan Yang",
+    "Mingming Cao",
+    "Qi Xu",
+    "Minglei Cai",
+    "Yiduo Wang",
+    "Zhichao Mao",
+    "Xiaofeng Cao",
+    "Quanxin Mei",
+    "Jie Wang",
+    "Xiaojun Zhou",
+    "Lin Yao",
+    "Wending Zhao"
+  ],
+  "year": "2025",
+  "journal_or_venue": "Computational Economics",
+  "doi": "https://doi.org/10.1007/s10614-025-11061-5",
+  "abstract_summary": "The paper introduces a flexible QUBO-based model for portfolio optimization that handles multiple discretization types (continuous, fungible discrete, and non‑fungible assets) and real-world constraints. The authors implement a quantum–classical hybrid annealing algorithm (QCHA) on D‑Wave hardware, compare it to pure quantum annealing and several classical solvers, and report that QCHA yields superior return and risk-adjusted performance while demonstrating improvements as qubit counts scale.",
+  "methodology_description": "The authors formulate a multiple-discretization portfolio optimization problem by extending the Markowitz mean–variance model to include three asset types (fungible continuous, fungible discrete, non-fungible) and by encoding asset allocation decisions as binary variables. Continuous-like allocations (FC) are represented with binary fractional decompositions, FD assets as integer multiples of a unit price via binary sums, and NF assets as single binaries. Linear budget and cardinality constraints are embedded into a QUBO objective using squared penalty terms and binary-decomposed slack variables. The resulting QUBO (quadratic unconstrained binary optimization) matrix captures expected returns, covariance-based risk, budget equality and cardinality constraints. To solve the (potentially large) QUBO instances the study uses a quantum–classical hybrid annealing algorithm (QCHA): the global QUBO is partitioned into correlated subproblems using an impact-index bit-flip measure, each sub-QUBO is solved on D-Wave’s Advantage 4.1 annealer via the D-Wave cloud, sub-solutions are recombined into a global candidate and refined by classical local search (tabu or greedy), and the process iterates until convergence. Pure quantum annealing (QA) on D-Wave is also used where hardware limits permit. Classical benchmarks include Gurobi, simulated annealing (SA), tabu search (TS) and steepest descent (SD); hyperparameter tuning is performed for those solvers. Evaluation is done by backtesting static, buy-and-hold portfolios derived from solver outputs over the test periods and measuring NAV time series plus end-of-period RET (annualized), accumulated return (ACC), Sharpe ratio and Sortino ratio. Experiments vary the discretization resolution (number of binary variables/qubits per problem) to study scaling effects and impact of constraints on solver performance.",
+  "algorithms_used": [
+    "Quantum-Classical Hybrid Annealing (QCHA)",
+    "Quantum Annealing (QA) on D-Wave",
+    "Gurobi (commercial optimizer)",
+    "Simulated Annealing (SA)",
+    "Tabu Search (TS)",
+    "Steepest Descent (SD)"
+  ],
+  "frameworks": [
+    "D-Wave Advantage 4.1 / D-Wave cloud",
+    "dwave-samplers SDK (D-WAVE software)",
+    "Gurobi",
+    "Python 3.10.13"
+  ],
+  "experimental_setup": "Quantum experiments executed on D-Wave Advantage system 4.1 via D-Wave cloud. Classical computations and local search run on a quad-core Intel i5-8265U laptop (Windows 11) using Python 3.10.13. QCHA partitions the global QUBO into subQUBOs solved on the D-Wave QPU; classical solvers run locally. Backtests assume buy-and-hold (open positions at start, no intraperiod trading).",
+  "dataset_used": "Two experimental datasets: (1) Dataset-1: 10 publicly traded stocks from the Shanghai and Shenzhen exchanges, daily closing prices from 2021-09-01 to 2021-12-31 (≈4 months). (2) Dataset-2: 15 assets (5 stocks, 5 public mutual funds, 5 private equity funds) sourced from WIND and exchange data, covering January–April 2024 (≈57 trading days).",
+  "experiment_input": {
+    "sources": [
+      "Shanghai and Shenzhen exchange official price data",
+      "WIND database"
+    ],
+    "dataset_1": {
+      "n_assets": 10,
+      "period": "2021-09-01 to 2021-12-31",
+      "frequency": "daily close prices",
+      "preprocessing": [
+        "compute daily returns Rit = (Pit - Pi,t-1) / Pi,t-1",
+        "compute expected returns µi as sample mean",
+        "compute covariance matrix Σ from returns",
+        "classify assets into FC/FD/NF and set binary encoding bits per asset"
+      ]
+    },
+    "dataset_2": {
+      "n_assets": 15,
+      "composition": "5 stocks, 5 public funds, 5 private equity",
+      "period": "Jan–Apr 2024 (≈57 trading days)",
+      "frequency": "daily",
+      "preprocessing": [
+        "interpolate private equity valuations for consistency",
+        "compute daily returns, expected returns and covariance matrix",
+        "binary encoding of allocation variables per asset"
+      ]
+    },
+    "notes": "Discretization: e.g., Dataset-1 used 5 bits per asset (total 50 binary variables) in some experiments; Dataset-2 experiments used total 128 binary variables in some trials."
+  },
+  "experiment_process": [
+    "Formulate Markowitz objective (min λ ω^T Σ ω − ω^T µ) and transform variables ω to discrete-valued v via binary encodings depending on asset type (FC/FD/NF).",
+    "Build QUBO: map binary vector x to quadratic form x^T Σ̃ x − µ̃^T x plus penalty ξ*(Σ p̃i xi − B)^2 and cardinality constraint penalties using binary-decomposed slack variables.",
+    "If problem large, run HybridQUBOSolve (QCHA): compute impact index I_i for each bit, partition binary variables into correlated subgroups (subQ), send subQ to D-Wave Advantage 4.1 to solve via quantum annealing, retrieve sub-solutions, stitch into global solution.",
+    "Apply classical local search (tabu search or greedy descent) to refine the combined solution and update incumbent; iterate partition-solve-refine until convergence.",
+    "Also run baseline solvers (Gurobi, SA, TS, SD) with hyperparameter tuning (e.g., Gurobi time_limit and cuts; SA annealing beta_range; initial_states and num_reads for heuristics).",
+    "Backtest each solver’s returned allocation by simulating buy-and-hold NAV over the respective period; compute RET, ACC, Sharpe, Sortino metrics.",
+    "Vary discretization resolution (number of binary variables/qubits) to assess scaling: Dataset-1 qubits tested 20–50; Dataset-2 tested 45, 91, 128.",
+    "Record Hamiltonian (objective) values and financial metrics; compare solvers."
+  ],
+  "experiment_output": {
+    "formats": [
+      "Optimal allocation vectors (per-asset allocation proportions)",
+      "QUBO Hamiltonian / objective values",
+      "Backtested NAV time series",
+      "Scalar performance metrics: RET (annualized return), ACC (accumulated return), Sharpe ratio, Sortino ratio"
+    ],
+    "baselines": [
+      "Gurobi",
+      "Simulated Annealing (SA)",
+      "Tabu Search (TS)",
+      "Steepest Descent (SD)",
+      "Quantum Annealing (QA, where hardware permits)"
+    ],
+    "presentation": "Tables of allocation proportions, tables of Hamiltonian and performance metrics, NAV plots over time, metric-vs-qubit plots."
+  },
+  "experiment_parameters": {
+    "qubits_used": "Dataset-1 experiments: varied 20–50 (examples: 40, 50). Dataset-2: examples 45, 91, 128.",
+    "discretization_bits_per_asset": "example: 5 bits per stock in Dataset-1 -> total 50 binary variables",
+    "penalty_coefficient": "ξ (penalty coefficient used to enforce constraints) — value not numerically specified in paper",
+    "cardinality_constraints": "range example for experiments: L=4, U=8 (or 3 < N < 8 in one experiment)",
+    "SA_parameters": {
+      "beta_range_examples": [
+        "(0.1, 4.2)",
+        "(0.2, 3.8)",
+        "(0.3, 3.5)",
+        "(0.4, 3.2)",
+        "(0.5, 3.0)"
+      ],
+      "tuning_rule_of_thumb": "start with ~80% initial acceptance, cool until <1% acceptance"
+    },
+    "classical_hyperparameters": {
+      "Gurobi": [
+        "Time_limit (seconds)",
+        "cuts (level of cutting-plane aggressiveness)"
+      ],
+      "TS_SA_SD": [
+        "initial_states (number of distinct starts)",
+        "num_reads (number of independent runs)"
+      ]
+    },
+    "risk_free_rate": {
+      "Sharpe": 0.03,
+      "Sortino": 0.0
+    },
+    "other": {
+      "classical_compute": "Intel i5-8265U laptop, Python 3.10.13",
+      "QPU": "D-Wave Advantage 4.1"
+    }
+  },
+  "hardware_details": {
+    "quantum": {
+      "qpu_model": "D-Wave Advantage system 4.1",
+      "access": "D-Wave cloud (remote access)",
+      "notes": "Quantum annealing (QA) and hybrid QCHA used; QA not run for some large instances due to qubit limitations"
+    },
+    "classical": {
+      "cpu": "Intel i5-8265U (quad-core)",
+      "os": "Windows 11 64-bit",
+      "python": "Python 3.10.13"
+    }
+  },
+  "reproducibility_notes": "Data and source code are not publicly posted but are available upon request per paper statement: 'All of the data are available upon request. Source codes ... can be made available upon request.' Several key numeric settings are not fully specified in the paper (e.g., explicit values of penalty coefficient ξ, exact partitioning/group sizes, full solver hyperparameter tables, random seeds), which limits immediate reproducibility without contacting the authors.",
+  "key_findings": [
+    "[supported] The authors propose a flexible QUBO-based model that encodes portfolios with multiple asset discretization types (fungible continuous, fungible discrete, non-fungible) and linear constraints into binary variables.",
+    "[supported] The QUBO model and associated constraints can be solved by both quantum (D-Wave quantum annealer) and classical solvers (Gurobi, simulated annealing, tabu search, steepest descent) after binary encoding and penalty-term transformation.",
+    "[supported] A quantum–classical hybrid annealing algorithm (QCHA) implemented with problem decomposition on D-Wave Advantage 4.1 produces better backtested portfolio performance than several classical heuristics and (where applicable) vanilla quantum annealing on the two tested datasets.",
+    "[supported] On Dataset-1 (10 stocks, 50 discrete variables), QCHA achieved the highest end-of-period RET (0.890), ACC (1.227) and Sharpe ratio (3.130) among tested methods; QCHA also yielded competitive Sortino ratio.",
+    "[supported] On Dataset-2 (15 assets of mixed types, 128 discrete variables), QCHA produced the best Sortino ratio (4.253) and competitive RET (0.460), ACC (1.089) and Sharpe (1.976), ranking among top performers versus Gurobi and other classical algorithms.",
+    "[supported] Quantum annealing (QA) on the D-Wave device was infeasible for the larger Dataset-2 problem due to hardware qubit limitations, while QCHA (via decomposition) could solve it.",
+    "[supported] Increasing the number of binary variables/qubits in QCHA improved portfolio performance (ACC and Sharpe) in the experiments; QCHA with 40 qubits surpassed the Gurobi 50-variable benchmark on Dataset-1.",
+    "[supported] Introducing explicit constraints on the number of invested assets degraded performance for all solvers, but the relative performance drop was smaller for QCHA compared to Gurobi and Tabu Search.",
+    "[speculative] The authors argue that as quantum hardware (qubit counts and fidelities) improves, quantum or hybrid approaches like QCHA will further improve solution quality and scalability for large-scale portfolio optimization.",
+    "[speculative] The paper suggests broader applicability of quantum algorithms to combinatorial optimization across economic models (forward-looking, not empirically demonstrated here).",
+    "[supported] Heuristic classical solvers (SA, TS, SD) and the commercial solver Gurobi were used as baselines; hyperparameter tuning materially affects classical solver results (reported tuning and scatter analyses).",
+    "[supported] The hybrid algorithm workflow (partitioning QUBO into subproblems, solving subQUBOs on the quantum annealer, stitching and classical local search) is practical on current cloud-accessible D-Wave hardware."
+  ],
+  "results_summary": "The paper presents a QUBO formulation for portfolio optimization with mixed discrete asset types and implements a quantum–classical hybrid annealing algorithm (QCHA) on D-Wave hardware. Empirical backtests on two short-horizon datasets show QCHA outperformed classical heuristics (simulated annealing, tabu search, steepest descent) and, in many metrics, matched or exceeded the commercial solver Gurobi. QCHA produced the best aggregate metrics on Dataset-1 (RET 0.890, ACC 1.227, Sharpe 3.130) and the best Sortino on Dataset-2 (4.253). QA alone was limited by qubit counts for larger instances, while QCHA's decomposition enabled solving larger problems. Increasing encoded-bit precision (qubits) improved QCHA performance in the tested ranges, and QCHA proved more robust to added cardinality constraints than the classical comparators.",
+  "performance_claims": [
+    "Dataset-1 (10 stocks, 50 discrete variables): QCHA Hamiltonian -9.999647587, RET = 0.890, ACC = 1.227, Sharpe = 3.130, Sortino = 6.242.",
+    "Gurobi on Dataset-1: Hamiltonian -9.9997203, RET = 0.812, ACC = 1.211, Sharpe = 2.974, Sortino = 6.028.",
+    "Quantum Annealing (QA) on Dataset-1: RET = 0.781, ACC = 1.204, Sharpe = 2.728, Sortino = 6.246.",
+    "Dataset-2 (15 mixed assets, 128 discrete variables): QCHA Hamiltonian -1000.017372, RET = 0.460, ACC = 1.089, Sharpe = 1.976, Sortino = 4.253.",
+    "Gurobi on Dataset-2: Hamiltonian -1000.01746, RET = 0.487, ACC = 1.094, Sharpe = 1.912, Sortino = 4.051.",
+    "QCHA with 40 qubits on Dataset-1 already outperformed Gurobi with 50 discrete variables according to ACC and Sharpe in the authors' experiments.",
+    "Performance vs qubit count: Authors report roughly monotonic/approximately linear improvement in ACC and Sharpe as encoded-variable (qubit) count increased in tested ranges (Dataset-1: 20→50 qubits; Dataset-2: 45→128 qubits).",
+    "Constraint robustness: When applying a 3 < N_selected < 8 asset cardinality constraint (in Dataset-1 experiments), QCHA's performance dropped less than that of Gurobi and Tabu Search."
+  ],
+  "quantum_advantage_claim": "demonstrated",
+  "quantum_advantage_detail": "Within the experimental scope (two short-horizon datasets, D-Wave Advantage 4.1 backend, and the hybrid partition-and-iterate QCHA approach), the authors empirically demonstrate that the quantum–classical hybrid algorithm yields superior or competitive portfolio backtest performance (returns and risk-adjusted metrics) versus several classical heuristics and matches or exceeds a Gurobi benchmark at comparable discretization scales. The demonstrated advantage is instance- and hardware-limited (QA alone was not applicable for the larger instance), so claims are empirical for the tested problems rather than a general provable quantum supremacy.",
+  "limitations": [
+    "Quantum hardware constraints (qubit count) limited applicability: QA could not be applied to Dataset-2 because required qubits exceeded D-Wave capacity (author-stated).",
+    "NISQ-era device limitations — gate fidelity and qubit count restrict scaling and solution quality (author-stated).",
+    "Short time-window datasets with high volatility: both datasets cover short periods (57 trading days or 4 months), which may limit generalizability and robustness of results to other market regimes (author-stated).",
+    "Static, single-period backtest assumption: strategies are computed at the start and held without rebalancing, so dynamic trading, transaction costs and turnover effects are not modeled (author-stated/in-text implication).",
+    "Penalty-method dependence: linear constraints are enforced via squared-penalty terms and a penalty coefficient ξ that must be tuned; solution feasibility and quality depend on appropriate penalty calibration (author-stated).",
+    "Hybrid decomposition reliance: QCHA decomposes the QUBO into subproblems and recombines solutions; the partitioning strategy (impact-index grouping) may miss important global interactions and affect optimality (author-stated description implies limitation).",
+    "Limited benchmark scope: experiments compare a set of classical heuristics and Gurobi on two datasets only; broader comparisons across more classical methods, datasets, and market conditions are not provided (inferred).",
+    "Reproducibility constraints: data and code are available only upon request rather than publicly released, which limits immediate reproducibility and independent verification (author-stated).",
+    "Scalability/exponential growth of problem size: introducing constraints and increasing discretization (qubits) leads to substantial growth in variables and complexity, creating computational and embedding challenges (author-stated).",
+    "Attribution ambiguity: performance gains of QCHA arise from a quantum–classical hybrid pipeline; the relative contributions of quantum annealing vs classical components (partitioning, stitching, local search) are not isolated (inferred).",
+    "[inferred] Limited modeling of realistic market frictions and operational constraints: transaction costs, liquidity, minimum lot sizes beyond discrete encoding, market impact, and regulatory constraints are not explicitly modeled.",
+    "[inferred] Small asset universes: experiments use 10 and 15 assets; behavior and performance on large-scale universes (hundreds or thousands of assets) remains untested.",
+    "[inferred] Comparison fairness risks: classical solvers' hyperparameters and runtime budgets can greatly affect results; while tuning is discussed, it's unclear whether compute budgets and solver configurations were matched for fair wall-time/cost comparisons.",
+    "[inferred] Use of a quantum annealer (D-Wave) limits applicability of conclusions to other quantum paradigms (e.g., gate-model QAOA/QAE); cross-platform generality is untested.",
+    "[inferred] Slack-variable binary decomposition may be memory/variable intensive and could introduce numerical/embedding inefficiencies that scale poorly."
+  ],
+  "open_questions": [
+    "How does performance scale with much larger asset universes (hundreds or thousands of assets) and more realistic investment universes?",
+    "What is the relative contribution of the quantum annealing subroutine versus the classical components (partitioning, stitching, local search) to the observed performance gains of QCHA?",
+    "How sensitive are solutions to the choice of penalty coefficient ξ and other QUBO encoding design choices (e.g., discretization bits per asset)?",
+    "How robust are the results across different market regimes (bull/bear/high-volatility) and longer historical periods?",
+    "How does QCHA compare to state-of-the-art classical solvers when those solvers receive equivalent tuning and computational budgets on large-scale, realistic problem instances?",
+    "Can pure quantum methods (without classical decomposition) outperform hybrid methods given future hardware scaling, and what are the break-even points in qubit count/fidelity?",
+    "How should discretization resolution (number of binary variables per asset) be chosen to balance precision, embedding cost, and solution quality in practice?",
+    "How can multi-period (dynamic) portfolio optimization with rebalancing, transaction costs, and market impact be formulated and solved within this quantum–classical framework?",
+    "How to integrate liquidity constraints, minimum lot sizes, and other realistic trading frictions efficiently into the QUBO formulation?",
+    "How well does the partitioning (impact index grouping) preserve crucial correlations in the QUBO matrix for large, highly correlated asset sets?",
+    "What are the computational time and monetary cost trade-offs between the hybrid quantum approach and high-quality classical optimization in real production settings?",
+    "How portable are the methods and results across quantum hardware vendors/architectures (e.g., superconducting annealers vs trapped ions vs gate-model devices)?",
+    "What are best practices for hyperparameter tuning and runtime allocation to ensure fair and reproducible comparisons between quantum, hybrid, and classical methods?"
+  ],
+  "future_work": [
+    "Integrate real-time market data for dynamic portfolio optimization (author-stated).",
+    "Develop a time-series modeling framework tailored to multiple discretization levels to enable dynamic (multi-period) optimization (author-stated).",
+    "Leverage improvements in quantum hardware (increasing gate fidelity and qubit count) to optimize larger and more complex portfolios (author-stated).",
+    "Combine machine learning with quantum computing for portfolio optimization and related financial applications (author-stated).",
+    "Explore further algorithmic design and improvement of hybrid quantum–classical partitioning and stitching strategies to scale to larger problems (implied/author-suggested)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — QCHA partitions large QUBOs into correlated subproblems solved on D-Wave Advantage 4.1, recombines sub-solutions and refines them with classical local search (tabu/greedy) in an iterative loop.",
+    "#idea:quantum-advantage — Empirical backtests on two datasets (10- and 15-asset mixes) report that QCHA yields superior return and risk-adjusted performance (RET, ACC, Sharpe, Sortino) compared with pure QA and several classical baselines (Gurobi, SA, TS, SD) for the tested discretizations.",
+    "#idea:near-term-feasibility — The approach is implemented on real quantum annealing hardware (D-Wave Advantage 4.1) and experiments show performance improvements as discretization/qubit counts increase (experiments up to 128 binary variables via partitioning).",
+    "#idea:hybrid-approach — The paper presents a flexible binary-encoding scheme that handles mixed asset types (fungible continuous, fungible discrete, non-fungible) and embeds budget and cardinality constraints via penalty and slack-variable encodings into a QUBO.",
+    "#limitation:qubit-count — Large problems require partitioning into subQUBOs due to hardware embedding limits; experiments report qubit/bit counts up to 128 but rely on subproblem decomposition to fit the QPU.",
+    "#limitation:data-encoding — Binary fractional decomposition and binary slack variables substantially increase the number of binary variables per asset, raising QUBO size and qubit requirements."
+  ],
+  "contradictions": []
+}

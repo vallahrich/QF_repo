@@ -1,0 +1,223 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "The document is formatted as a paper in conference proceedings (In Proceedings of the 18th International Conference on Agents and Artificial Intelligence (ICAART 2026)) with standard sections (abstract, methods, results, references) and a DOI, indicating a conference-paper source.",
+  "title": "Improving Credit Card Transaction Fraud Detection Using CVQBoosting",
+  "authors": [
+    "Bethel Hui Ting Loke",
+    "Nirvik Sahoo",
+    "Bingyan Guan",
+    "Minrui Xu",
+    "Dev Verma",
+    "Paul R. Griffin"
+  ],
+  "year": "2026",
+  "journal_or_venue": "Proceedings of the 18th International Conference on Agents and Artificial Intelligence (ICAART 2026)",
+  "doi": "10.5220/0014628400004052",
+  "abstract_summary": "The paper presents a hybrid quantum–classical fraud detection pipeline using CVQBoost on the photonic Dirac-3 processor, integrating a heterogeneous pool of weak classifiers (KNN, LDA, logistic regression, XGBoost). Evaluated on a Kaggle credit-card fraud dataset, the quantum-enhanced ensemble achieved mean AUC-PR > 0.8 — about a 9% relative improvement over the best published classical baseline — and highlights trade-offs between training runtime and detection performance, suggesting photonic QML can improve rare-event detection in finance.",
+  "methodology_description": "The study implements a hybrid quantum-classical boosting pipeline (CVQBoost, building on QBoost) using the Dirac-3 continuous-variable photonic processor (Quantum Computing Inc.) to perform optimization of weak-classifier selection and weighting for credit-card fraud detection. The publicly available MLG-ULB Kaggle credit-card fraud dataset was preprocessed by removing rows with missing values, mapping labels to ±1, and scaling features to [0,1]. Data were split 70/30 into training and test folds; the training fold was oversampled with SMOTE while the test fold was left unchanged. A heterogeneous pool of weak classifiers (KNN, LDA, logistic regression, and shallow XGBoost) was constructed classically. For each run the weak classifiers were built, a Hamiltonian encoding the ensemble selection problem was constructed (using QCi’s eqc models / QBoostClassifier functionality), and the Hamiltonian was submitted to the Dirac-3 device which returned selection/weight samples. The returned weights were then used by a classical model for inference. Experiments used a one-factor-at-a-time (OFAT) hyperparameter design to explore weak-classifier settings; primary quantum solver knobs explored were relaxation schedule and number of samples (weak-classifier-schedule and lambda regularization were held fixed in reported experiments). Performance was averaged across N=10 independent random-seed runs, and additional repeated resampling of the fixed test fold (random splits into validation and evaluation subsets) was used to calibrate decision thresholds before final evaluation. Reported metrics include AUC-PR (primary), AUC-ROC, precision, recall, and accuracy; runtime was decomposed into weak-classifier construction, Hamiltonian construction, and Dirac-3 runtime.",
+  "algorithms_used": [
+    "CVQBoost",
+    "QBoost",
+    "SMOTE",
+    "k-Nearest Neighbours (KNN)",
+    "Linear Discriminant Analysis (LDA)",
+    "Logistic Regression",
+    "XGBoost"
+  ],
+  "frameworks": [
+    "QCi eqc models (QBoostClassifier)",
+    "XGBoost",
+    "(implied) scikit-learn / standard ML libraries for KNN, LDA, LogisticRegression",
+    "SMOTE (imbalanced-learn or equivalent)"
+  ],
+  "experimental_setup": "Dirac-3 continuous-variable photonic quantum processor (Quantum Computing Inc.) used to solve the Hamiltonian optimization for weak-classifier selection/weighting; classical preprocessing and weak-classifier training on an AMD Ryzen 5 5600G CPU. Job submission to remote Dirac-3 solver with sampling/relaxation parameters; runtimes decomposed into weak-classifier construction, Hamiltonian construction, and Dirac-3 run-time.",
+  "dataset_used": "MLG-ULB Kaggle credit-card fraud dataset (public Kaggle dataset). Highly imbalanced fraud data (fraud rate reported <0.2%).",
+  "experiment_input": {
+    "source": "https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud (MLG-ULB)",
+    "size": "not specified in paper",
+    "preprocessing": "Removed rows with missing values; labels mapped to ±1; features scaled to [0,1]; random 70/30 train/test split; training fold oversampled using SMOTE; test fold left original (no synthetic samples).",
+    "splits_and_runs": "70/30 train-test split; experiments repeated with N=10 independent random seeds; within each run the test fold was repeatedly resampled into validation and evaluation subsets for threshold calibration and final measurement."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Load and preprocess dataset (clean, label map, scale)",
+      "Split dataset 70/30 into train/test; apply SMOTE to training fold only",
+      "Construct a heterogeneous pool of weak classifiers (KNN, LDA, Logistic Regression, XGBoost) with OFAT hyperparameter exploration",
+      "Build Hamiltonian representing ensemble-selection/weighting problem via QCi eqc models (QBoostClassifier)",
+      "Submit Hamiltonian to Dirac-3 processor with specified relaxation schedule and sample count; obtain sampled low-energy configurations -> weights for weak classifiers",
+      "Assemble weighted ensemble classically and perform inference on test data",
+      "Repeat repeated resampling of test fold into validation/evaluation subsets to calibrate thresholds; aggregate metrics",
+      "Average metrics over N=10 runs"
+    ],
+    "key_parameters_and_controls": {
+      "weak_classifier_schedule": 2,
+      "lambda_regularization": 0,
+      "Dirac3_relaxation_schedule": 2,
+      "Dirac3_num_samples": 2,
+      "OFAT_hyperparameter_search": "used for weak classifier families"
+    },
+    "iterations": "N=10 independent runs; repeated resampling of test fold per run for validation/evaluation"
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "AUC-PR (primary)",
+      "AUC-ROC",
+      "Precision",
+      "Recall",
+      "Accuracy",
+      "Training runtimes (weak-classifier construction, Hamiltonian construction, Dirac-3 runtime)"
+    ],
+    "format": "Averaged metric values across 10 independent runs; runtime in seconds per weak-classifier family; comparisons versus published classical baseline (CAD, Gao et al. 2025).",
+    "baselines": [
+      "CAD (Gao et al., 2025) reported AUC-PR = 0.7423, AUC-ROC = 0.9734"
+    ],
+    "example_results": {
+      "CVQBoost-KNN": {
+        "AUC-ROC": 0.9821,
+        "AUC-PR": 0.8108,
+        "runtime_seconds_for_weak_classifier_build": 378
+      }
+    }
+  },
+  "experiment_parameters": {
+    "Dirac-3": {
+      "relaxation_schedule": 2,
+      "num_samples": 2,
+      "lambda": 0,
+      "weak_classifier_schedule": 2
+    },
+    "KNN": {
+      "n_neighbors": 15,
+      "weights": "uniform",
+      "metric": "Minkowski (Euclidean)",
+      "leaf_size": 30
+    },
+    "LDA": {
+      "solver": "lsqr",
+      "shrinkage": "auto",
+      "tol": 0.0001
+    },
+    "LogisticRegression": {
+      "penalty": "L2",
+      "max_iter": 500,
+      "solver": "lsqr",
+      "C": 10.0
+    },
+    "XGBoost": {
+      "n_estimators": 100,
+      "max_depth": 3,
+      "learning_rate": 0.1,
+      "subsample": 1.0,
+      "colsample_bytree": 0.8,
+      "min_child_weight": 1,
+      "reg_lambda": 1.0,
+      "reg_alpha": 0.0
+    },
+    "runtime_observations": {
+      "KNN_build_time_s": 378,
+      "LDA_build_time_s": 36.5,
+      "LogisticRegression_build_time_s": 77.5,
+      "XGBoost_build_time_s": 259
+    },
+    "repetitions": 10
+  },
+  "hardware_details": {
+    "quantum_processor": {
+      "name": "Dirac-3",
+      "type": "continuous-variable photonic processor (open optical system)",
+      "provider": "Quantum Computing Inc. (QCi)",
+      "description": "Room-temperature photonic device encoding optimization into coupled optical modes using dissipation/feedback/nonlinearity to relax to low-energy solutions"
+    },
+    "classical_host": {
+      "cpu": "AMD Ryzen 5 5600G",
+      "notes": "Classical preprocessing, weak-classifier training, and Hamiltonian construction performed on this CPU"
+    },
+    "access_model": "Remote solver / third-party provisioned device (job submission, queuing, sampling overheads reported qualitatively)"
+  },
+  "reproducibility_notes": "Dataset is public (Kaggle MLG-ULB); the paper reports detailed hyperparameters in the appendix (weak-classifier parameters, Dirac-3 settings) and averaged results over 10 runs. The quantum component used a customised version of QCi’s eqc models framework in collaboration with QCi; the paper does not provide public code or a repository link. Reproducibility is therefore partial: data and many classical hyperparameters are provided, but the customised QCi eqc models code and access to the Dirac-3 device (or detailed emulator specifications) are not publicly available according to the text.",
+  "key_findings": [
+    "[supported] A CVQBoost hybrid quantum-classical pipeline running on the Dirac-3 photonic processor achieved higher detection-quality on a Kaggle credit-card fraud dataset than the cited classical benchmark (CAD), with improved AUC-PR and slightly improved AUC-ROC.",
+    "[supported] The best performing configuration (CVQBoost with KNN weak learners) reached AUC-PR = 0.8108 and AUC-ROC = 0.9821 (averaged over 10 runs).",
+    "[supported] The reported improvement over the cited classical baseline (CAD) is +0.0685 AUC-PR (≈9.2% relative) and +0.0087 AUC-ROC under the authors' evaluation protocol.",
+    "[supported] Among tested weak-classifier families, KNN-based weak learners produced the highest AUC-PR but required the longest training time (378 seconds per run for the weak-classifier construction stage).",
+    "[supported] Linear Discriminant Analysis (LDA) weak learners were fastest to build (≈36.5 seconds) but yielded the lowest AUC-PR (≈0.66) among the reported variants, indicating an accuracy vs. runtime trade-off.",
+    "[supported] XGBoost weak learners produced intermediate results in both runtime and AUC-PR (AUC-PR ≈0.757, runtime ≈259 seconds).",
+    "[supported] The Dirac-3 photonic optimization step itself was reported to be fast (typically < 10 seconds for the tested relaxation schedule), with most wall-clock time spent on classical weak-classifier training and Hamiltonian construction.",
+    "[supported] Within the tested parameter ranges, varying Dirac-3 device parameters (relaxation schedule and number of samples) did not produce statistically significant changes in AUC-ROC/AUC-PR.",
+    "[supported] Experimental protocol details: dataset split 70/30 (train/test), SMOTE oversampling applied only to training, repeated resampling/seeded runs (N=10) for robustness.",
+    "[speculative] The authors posit that CV quantum resources (continuous-variable photonic processors) provide richer feature-space expressivity and sample-efficiency that enable better detection of 'thin', interaction-driven fraud signals—this is presented as motivation and interpretation but not isolated as a causal mechanism in the experiments.",
+    "[speculative] The claim that the observed AUC-PR lift will directly translate into substantial operational cost savings (e.g., preventing thousands of legitimate transactions flagged per million) is plausible but not validated within real operational deployments in the paper.",
+    "[speculative] The broader assertion that photonic QML pipelines can deliver tangible advantages across rare-event detection tasks generally (beyond the specific benchmark and configurations shown) is presented as a promising direction but remains to be validated.",
+    "[speculative] Limitations and deployment barriers (dataset generalizability, integration, data governance) are noted; these are cautions rather than empirically tested constraints in production."
+  ],
+  "results_summary": "The paper reports that a hybrid quantum-classical boosting pipeline (CVQBoost) executed with the Dirac-3 photonic processor and a heterogeneous pool of weak classifiers (KNN, LDA, logistic regression, shallow XGBoost) improved precision-recall performance on the MLG-ULB Kaggle credit card fraud benchmark. The best configuration (KNN weak learners) reached AUC-PR 0.8108 and AUC-ROC 0.9821, outperforming a cited classical baseline (CAD) by +0.0685 AUC-PR (~9.2% relative) and +0.0087 AUC-ROC. The study also characterizes a trade-off between predictive quality and training cost—KNN yields the highest detection quality at substantially higher training time, while LDA is fastest but yields weaker PR performance—and finds that tuning Dirac-3 relaxation/sample parameters within tested ranges had limited effect on AUC metrics. The authors interpret these empirical gains as evidence that quantum-assisted optimization can enhance rare-event detection, while noting limitations in generalizability and deployment readiness.",
+  "performance_claims": [
+    "AUC-PR = 0.8108 and AUC-ROC = 0.9821 for CVQBoost with KNN weak learners (averaged over N=10 runs).",
+    "Improvement over CAD baseline: +0.0685 AUC-PR (≈9.2% relative) and +0.0087 AUC-ROC.",
+    "Runtimes for weak-classifier construction: KNN ≈ 378 seconds, LDA ≈ 36.5 seconds, Logistic Regression ≈ 77.5 seconds, XGBoost ≈ 259 seconds.",
+    "Dirac-3 device parameters used for reported runs: relaxation schedule = 2, number of samples = 2; photonic optimization step typically < 10 seconds.",
+    "Experimental design: 70/30 train/test split, SMOTE oversampling on training only, repeated resampling and threshold calibration, N=10 independent experiments."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper presents empirical improvement in a benchmark AUC-PR when using a hybrid CVQBoost pipeline with the Dirac-3 photonic optimizer, which suggests potential quantum-assisted benefit for this task. However, the experiments are limited to a single public benchmark and hybrid architecture (with substantial classical preprocessing and classical weak learners); the causal contribution of the quantum device vs. ensemble construction and classical elements is not isolated. Thus a general quantum advantage is suggested but not conclusively demonstrated, and broader validation is required.",
+  "limitations": [
+    "Benchmark datasets (Kaggle MLG-ULB) may not capture the diversity and scale of real banking transactions; generalisability to production data is uncertain.",
+    "Integration challenges with existing financial IT infrastructure and the need for robust, production-grade quantum–classical workflows.",
+    "Overall computation includes substantial classical preprocessing (weak-classifier training, Hamiltonian construction) and remote solver overhead (job submission latency, queueing, repeated sampling), which can create hardware access and availability bottlenecks.",
+    "Financial deployments face strict data governance and privacy requirements that are not addressed in this study.",
+    "KNN-based ensembles, while most accurate, incur substantially higher training cost (runtime) which may limit operational applicability.",
+    "Results are obtained on the Dirac-3 photonic processor; applicability and portability of the approach to other quantum hardware platforms is not established. [inferred]",
+    "Within the tested ranges, Dirac-3 parameters (relaxation schedule, sample count) showed limited sensitivity — suggesting the device-parameter search was narrow and may be under-explored. [inferred]",
+    "Use of SMOTE oversampling on training data (with original test set) may introduce biases or affect applicability to settings where oversampling is infeasible or undesirable. [inferred]",
+    "The study evaluates a limited set of weak-classifier families (KNN, LDA, logistic regression, XGBoost); other model families and richer ensembles were not investigated. [inferred]",
+    "Number of experimental repeats and data splits (N=10) may limit statistical power and robustness claims. [inferred]",
+    "Dependence on a third-party provisioned quantum device (remote access) can limit reproducibility, latency guarantees, and operational control."
+  ],
+  "open_questions": [
+    "Do the reported AUC-PR improvements generalize to larger, more diverse, and realistic transaction streams encountered in production?",
+    "How can the ranking gains (AUC-PR improvements) be translated into operational decision policies—i.e., how to calibrate thresholds and set deployment constraints?",
+    "How robust are the CVQBoost models to distribution shift, non-stationarity, and adversarial adaptation in live fraud scenarios?",
+    "What are the practical integration pathways and engineering requirements to deploy hybrid quantum–classical fraud pipelines within existing banking infrastructures?",
+    "To what extent do observed gains arise from the quantum optimisation (Dirac-3) versus the choice and diversity of weak classifiers (i.e., what is the contribution of the quantum component vs classical ensemble design)? [inferred]",
+    "How sensitive are results to preprocessing and imbalance-handling choices (e.g., SMOTE, scaling), and would alternative strategies change outcomes? [inferred]",
+    "What are the end-to-end cost–benefit trade-offs at production scale (training latency, inference throughput, hardware access costs versus reductions in false positives)? [inferred]",
+    "Will lower-cost Dirac-3 parameter settings deliver comparable benefits on other datasets or tasks, or is the apparent insensitivity dataset-specific? [inferred]",
+    "Do the improvements persist across different fraud types, geographic markets, and transaction modalities (card-present, card-not-present, digital payments)? [inferred]",
+    "How will data governance, privacy, and regulatory constraints shape feasible quantum-assisted workflows in financial services?"
+  ],
+  "future_work": [
+    "Validate findings on larger and more realistic transaction streams.",
+    "Evaluate calibration and threshold-setting under deployment constraints to translate ranking gains into operational decision policies."
+  ],
+  "topic_tags": [
+    "fraud-detection",
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [
+    "2025_Gao_CAD"
+  ],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — CVQBoost on a Dirac-3 photonic processor achieved mean AUC-PR > 0.8, ~9% relative improvement over the reported classical baseline (CAD, Gao et al. 2025) on the Kaggle credit-card fraud dataset.",
+    "#idea:hybrid-approach — The pipeline is hybrid: classical preprocessing and weak-classifier training (KNN, LDA, Logistic Regression, XGBoost) combined with quantum Hamiltonian optimization (QCi eqc / QBoostClassifier) for ensemble selection/weighting.",
+    "#idea:near-term-feasibility — Demonstrates a NISQ-era photonic implementation (Dirac-3) applied to a real imbalanced financial dataset, highlighting trade-offs between Dirac-3 runtime and detection performance and suggesting photonic QML can aid rare-event detection in finance.",
+    "#idea:hybrid-approach — Experimental protocol used SMOTE oversampling on training fold, OFAT hyperparameter search for weak classifiers, and repeated resampling (N=10 runs) with threshold calibration to produce robust averaged metrics.",
+    "#idea:quantum-advantage — Reported runtimes decomposed (weak-classifier build, Hamiltonian construction, Dirac-3 runtime) showing practical performance considerations alongside predictive gains (example: CVQBoost-KNN AUC-PR=0.8108, build time 378s)."
+  ],
+  "contradictions": []
+}

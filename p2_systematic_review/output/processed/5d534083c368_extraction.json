@@ -1,0 +1,207 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2403.03153v1) and 'Dated' header, has research sections (abstract, methods, results, citations) and experimental demonstrations but no journal or conference venue—indicating an arXiv preprint.",
+  "title": "Solving non-native combinatorial optimization problems using hybrid quantum-classical algorithms",
+  "authors": [
+    "Jonathan Wurtz",
+    "Stefan H. Sack",
+    "Sheng-Tao Wang"
+  ],
+  "year": "2024",
+  "journal_or_venue": "arXiv preprint arXiv:2403.03153",
+  "doi": "",
+  "abstract_summary": "The paper proposes a framework called non-native hybrid algorithms (NNHA) that integrates quantum variational samplers with classical post-processing to solve combinatorial optimization problems whose solution spaces or constraints are not natively represented by quantum bitstrings. It categorizes classical co-processing into types (post-processing, expectation-based hints, distribution reservoirs, and recursive refinement) and demonstrates prototype NNHA implementations on MaxCut/Max k-Cut and maximum independent set problems using a neutral-atom quantum device, reporting cases of improved performance over a classical-only limit (termed a comparative advantage).",
+  "methodology_description": "The paper proposes and evaluates a framework called non-native hybrid algorithms (NNHA) in which a quantum variational sampler (hardware-native or emulated) generates bit-string samples P(z|α) and classical co-processing maps ensembles of these samples to valid problem solutions via a function F({z}). Classical variational optimization (over parameters α and some classical weights) is used to maximize the expected objective value ⟨C(F({z}))⟩. The framework distinguishes four classical-co-processing types: (1) post-processing individual samples (warm-start + greedy/local heuristics); (2) using expectation values and connected correlations as a ‘quantum hint’ (spectral methods); (3) using the full sample distribution as a reservoir for probabilistic updates (cluster/parallel-tempering style); (4) iterative recursive fixing (not implemented here). Implementations in the paper include: (a) a type-1 QAOA + greedy flip on ensembles of random 3-regular graphs (emulated state-vector QAOA, fixed angles for ν-regular graphs, greedy 1-local flip post-processing); (b) a type-2 spectral-clustering approach to Max k-Cut using eigenvectors of a weighted sum of connected correlation matrices produced from three Rydberg-quench ansatzes, followed by k-means clustering and greedy local post-processing; (c) type-1/type-3 approaches to Maximum Independent Set (MIS) using Rydberg adiabatic/annealing state preparation on unit-disk graphs with greedy add/remove post-processing and a cluster-update simulated-annealing that uses quantum samples as a high-temperature reservoir. Classical variational optimization used gradient-free optimizers (COBYLA) and Bayesian search for some parameters; bounded stochastic searches were used for quantum parameter exploration. Typical measurement budgets were small (order 100 shots per evaluation, ~30 optimization iterations, ~3000 total shots reported for variational runs). Comparative baselines were explicit classical-only limits (no-quantum variants) and classical heuristics to evaluate whether adding quantum sampling improved results (termed comparative advantage).",
+  "algorithms_used": [
+    "QAOA",
+    "Adiabatic quantum annealing (Rydberg annealing / quenches)",
+    "Rydberg quench dynamics (ansatz)",
+    "Spectral clustering",
+    "k-means clustering",
+    "Greedy flip heuristic (1-local greedy)",
+    "Greedy add/remove heuristic for MIS",
+    "Cluster-update simulated annealing (Metropolis-Hastings)",
+    "Parallel tempering style reservoir sampling (conceptual)",
+    "COBYLA (classical optimizer)",
+    "Bayesian optimization (for classical weights)",
+    "Bounded stochastic search"
+  ],
+  "frameworks": [
+    "QuEra Aquila (neutral-atom platform)",
+    "Amazon Braket (cloud access)",
+    "State-vector emulation (simulator; in-house / standard sv simulator not named explicitly)"
+  ],
+  "experimental_setup": "Hybrid experiments use either state-vector emulation (QAOA MaxCut experiments) or the QuEra Aquila 256-qubit neutral-atom quantum processor accessed via Amazon Braket (Max k-Cut spectral-clustering and MIS experiments). Typical measurement budgets per estimate: ~100 shots; optimization iterations reported ~30; total shots per variational run ~3000. QAOA experiments used fixed angles for ν-regular graphs; Rydberg experiments used piecewise-linear adiabatic or short quenches with tunable time and detuning.",
+  "dataset_used": "",
+  "experiment_input": {
+    "problem_instances": [
+      {
+        "name": "MaxCut ensemble",
+        "type": "random 3-regular graphs",
+        "size": "256 graphs, 16 vertices each",
+        "preprocessing": "Graphs generated as random 3-regular instances; QAOA mapping directly maps bitstrings to partitions."
+      },
+      {
+        "name": "Max k-Cut (spectral clustering)",
+        "type": "2D geometric unit-disk / King-subgraph graphs",
+        "size": "Instance(s) from King’s subgraphs with ~30% random dropout; example k=3",
+        "preprocessing": "Each graph vertex assigned 2D position; embedding scaled to neutral-atom geometry for Rydberg ansatz."
+      },
+      {
+        "name": "Maximum Independent Set (MIS)",
+        "type": "Unit-disk graphs",
+        "size": "Problem instances with tens of vertices (examples show MIS sizes in 40s–47 range)",
+        "preprocessing": "Vertices placed corresponding to atom positions; blockade radius matched to unit-disk radius; samples post-processed to maximal independent sets."
+      }
+    ],
+    "notes": "No financial datasets were used."
+  },
+  "experiment_process": {
+    "overview": "For each problem type the pipeline is: (1) choose/prepare quantum ansatz and classical parameters; (2) draw M measurement shots from the quantum device or simulator for current parameters; (3) compute classical features (e.g., sample bitstrings, expectation values, connected correlations); (4) apply classical mapping F({z}) to produce candidate solution(s) (type-1 warm-start greedy; type-2 spectral-clustering from correlation eigenvectors + k-means; type-3 reservoir cluster-update simulated annealing using Metropolis acceptance); (5) evaluate objective C(F({z})) averaged over samples; (6) update variational parameters using a classical optimizer (COBYLA / Bayesian / bounded stochastic search) and repeat until convergence.",
+    "MaxCut_details": "QAOA ansatz (p alternating layers) emulated via state-vector for ensembles of 3-regular graphs. Fixed angles for ν-regular graphs used (no variational loop in that demo). For each measurement outcome, a 1-local greedy flip heuristic is applied until local optimum is reached. Comparative baselines: base QAOA (no postprocessing) and classical p=0 limit (uniform sampling).",
+    "Max_k_Cut_details": "Three Rydberg quench ansatzes (each parameterized by time t_i ∈ [0,4] μs and detuning Δ_i ∈ [0,15] rad/μs). For each ansatz compute connected correlation matrices; form weighted sum of these correlation matrices with classical weights λ_i. Compute k largest eigenvectors of this weighted correlation matrix to build per-vertex feature vectors; apply k-means clustering to assign colors; post-process via greedy local flips to improve cut. Parameters optimized dimension-wise: for each quantum parameter set optimize λ via Bayesian search, then explore quantum parameter space with bounded stochastic search. Measurement budget M ≈ 100 per evaluation.",
+    "MIS_details": "Adiabatic / piecewise-linear Rydberg state-preparation protocols produce samples. Two-step greedy post-processing removes violations (apply greedy add on induced subgraph G[z]) then greedily add until maximal to produce valid maximal independent sets. A cluster-update simulated annealing variant (type-3) generates scale-free clusters via a sandpile-model process; for each cluster, draw a reservoir sample from the quantum device, merge cluster region with sample, enforce validity via greedy post-processing, and accept/reject via Metropolis rule. Variational parameters (e.g., t_max, Δ_min, Δ_max) are optimized; reported example optimal parameters: t_max ≈ 3.80 μs, Δ_min ≈ -13.47 rad/μs, Δ_max ≈ 41.95 rad/μs.",
+    "optimization_and_shots": "Classical optimizer COBYLA used for variational optimization in many runs (gradient-free). Bayesian optimization used for classical weight tuning in spectral-clustering experiments. Typical shots per objective estimation: ~10–100 (authors report 100 commonly), with convergence often within ~30 optimizer iterations (~3000 total shots)."
+  },
+  "experiment_output": {
+    "formats": [
+      "Distributions of objective values (histograms / probability density over solution quality)",
+      "Average approximation ratio (for MaxCut ensemble)",
+      "Per-instance best-found solution sizes (e.g., independent set sizes)",
+      "Comparisons to classical-only baselines and quantum-only baselines (probability of finding equal-or-better solution, mean performance, maximum-shot performance)"
+    ],
+    "metrics": [
+      "Average objective value across samples",
+      "Approximation ratio (observed average / optimal or classical baseline)",
+      "Probability that hybrid exceeds classical-only or quantum-only baseline",
+      "Convergence speed (epochs vs. average objective)"
+    ],
+    "baselines": [
+      "Classical-only versions (no-quantum limit: uniform sampling, greedy algorithms, greedy reservoir)",
+      "Quantum-only measurements without classical post-processing (e.g., raw QAOA samples)"
+    ]
+  },
+  "experiment_parameters": {
+    "qubits": {
+      "available_hardware": 256,
+      "used_examples": "16 (MaxCut ensemble), tens (~40–50) for MIS/unit-disk graph examples"
+    },
+    "qaoa_depth_p": "up to p≈6 in comparisons (emulated), p=0 classical limit used",
+    "rydberg_parameters": {
+      "lattice_spacing": "4.8 μm",
+      "Rabi_drive_Omega": "15.0 rad/μs",
+      "blockade_radius_Rb": "~6.7 μm",
+      "quench_time_range": "[0,4] μs",
+      "detuning_range": "[0,15] rad/μs (for Max k-Cut); example MIS Δ ranges include values like -13.47 to 41.95 rad/μs"
+    },
+    "shots_per_evaluation": 100,
+    "optimizer": [
+      "COBYLA (derivative-free)",
+      "Bayesian optimization (for classical weights λ)",
+      "Bounded stochastic search (for quantum parameters)"
+    ],
+    "optimization_iterations": "typical ~30 iterations (authors report good convergence within 30)",
+    "total_shots_per_run": "~3000 (reported typical)"
+  },
+  "hardware_details": {
+    "quantum_processor": {
+      "name": "Aquila",
+      "vendor": "QuEra Computing",
+      "type": "neutral-atom, Rydberg-atom processor",
+      "qubits": 256,
+      "access": "Amazon Braket (cloud access cited)"
+    },
+    "simulator": "state-vector emulation used for QAOA MaxCut experiments (specific simulator implementation not named)",
+    "notes": "Some experiments (MaxCut) were performed via state-vector emulation; Max k-Cut and MIS experiments ran on QuEra Aquila hardware via Amazon Braket."
+  },
+  "reproducibility_notes": {
+    "code_availability": "Authors provide example code notebooks and a GitHub repository link (reference [34]: QuEraComputing/bloqade-python-mis postprocessing_implementations).",
+    "data_availability": "Problem instance generation procedures are described (random 3-regular graphs, King’s subgraphs/unit-disk graphs with dropout). Exact instance files not explicitly attached but reproducible via described generation.",
+    "notes": "Hardware access required to fully reproduce hardware runs (QuEra Aquila via Amazon Braket). Emulated QAOA experiments are reproducible with standard state-vector simulators. Authors note the examples are reproducible via provided notebooks."
+  },
+  "key_findings": [
+    "[speculative] The paper proposes the \"non-native hybrid algorithms\" (NNHA) framework in which a quantum variational sampler produces measurement bit strings that are treated as a resource for classical routines (post-processing, spectral features, or as a sample reservoir) rather than requiring bit strings to directly encode final solutions.",
+    "[supported] In practice, using measurement outcomes as inputs to classical post-processing or clustering can improve solution quality versus the corresponding classical-only baseline in selected instances (they demonstrate this empirically for Max k-Cut spectral clustering and for a cluster-update MIS routine).",
+    "[supported] A type-1 NNHA (QAOA + greedy 1-local post-processing) increases per-shot objective values relative to raw QAOA samples and in simulation begins to outperform the p=0 classical limit around QAOA depth p ≈ 4 on their 3-regular 16-vertex graph ensemble.",
+    "[supported] A type-2 NNHA (using connected correlation matrices from short quenches on neutral-atom hardware as features for spectral clustering) was implemented on QuEra's Aquila device for Max 3-Cut on geometric/unit-disk graphs and outperformed the corresponding classical-only limit in their experiments.",
+    "[supported] A type-1 post-processing of Rydberg-annealing measurement outcomes (the Ebadi22 style greedy repair → greedy add pipeline) can be outperformed by a classical-only baseline on some instances; they report an instance where the classical-only heuristic gave a larger average MIS than the quantum-assisted pipeline.",
+    "[supported] A type-3 NNHA that uses quantum samples as a high-temperature reservoir for cluster-update simulated annealing (cluster updates chosen by a sandpile model) showed slightly faster convergence / marginally better average MIS size than the classical-only variant in their experiment (performance ratio ≈ 1.005).",
+    "[supported] Including quantum resources does not guarantee improved outcomes; hybrid/quantum resources can either help, be neutral, or hinder optimization performance depending on ansatz parameters and instance details (empirical observation in their MIS examples).",
+    "[supported] On neutral-atom hardware they used ≈100 measurement shots per objective estimate and report good convergence in their variational examples within ≈30 optimizer iterations (≈3000 total shots); they also note that few-shot estimates (they mention ~10) can sometimes be sufficient empirically on this hardware class.",
+    "[supported] They introduce a pragmatic comparative metric (compare hybrid to an explicit no-quantum/classical limit of the same algorithmic pipeline) to claim a \"comparative advantage\" when quantum resources improve performance relative to that classical limit.",
+    "[supported] Theoretical/complexity observations cited: sampling from certain QAOA distributions can be #P-hard (cited prior literature), and classical local heuristics can outperform low-depth QAOA on some problems (cited literature and their simulations).",
+    "[speculative] The authors suggest extensions (e.g., recursive/fix-and-reduce approaches, stitching subgraph quantum solves into multilevel schemes) enabling NNHA to tackle much larger problems than fit on the quantum device, but these are presented as proposals rather than demonstrated here."
+  ],
+  "results_summary": "The paper introduces non-native hybrid algorithms (NNHA), a framework where quantum variational samplers produce measurement outcomes that are fed into classical routines (post-processing, spectral clustering from connected correlations, or as a sample reservoir) to produce problem solutions even when problem structure is non-native to the hardware. The authors implement prototype NNHA instances: (i) QAOA + greedy post-processing for MaxCut (simulation), (ii) spectral clustering using connected correlations from short neutral-atom quenches for Max k-Cut (hardware on QuEra Aquila), and (iii) MIS solved via Rydberg-annealing samples plus cluster-update simulated annealing (hardware). They report empirical \"comparative advantage\" in select cases (Max k-Cut spectral clustering; cluster-update MIS shows marginal improvement), but also document instances where quantum-assisted pipelines performed worse than classical-only baselines. They emphasize that NNHA can be a practical co-processor model for optimization but does not automatically imply a general quantum advantage.",
+  "performance_claims": [
+    "MaxCut (simulation, ensemble of 256 3-regular 16-vertex graphs): hybrid (QAOA + greedy) per-shot objective distribution strictly ≥ raw QAOA; hybrid begins to exceed the p=0 classical-only limit around QAOA depth p ≈ 4 (no single numeric average reported in text).",
+    "Max k-Cut (hardware, Aquila, unit-disk/King-subgraph instances, k=3): the NNHA spectral-clustering pipeline \"outperforms the classical-only limit\" in their experiments (no precise numeric average reported in text).",
+    "MIS greedy post-processing (hardware example): classical-only algorithm average MIS size = 45.178; hybrid (quantum-assisted) average MIS size = 44.282; hybrid/classical performance ratio = 0.9801; classical finds MIS size 47 with probability 1.80% while the hybrid did not find that size in those runs.",
+    "MIS cluster-update (hardware example with variational parameters): hybrid average MIS size = 45.72; classical-only average = 45.48; hybrid/classical performance ratio ≈ 1.005; hybrid samples an equal-or-better solution with probability ≈ 83%.",
+    "Shot/optimization resource claim (hardware): used M = 100 shots per cost estimate, observed good convergence within ~30 iterations and ≈3000 total shots across experiments; they state that on neutral-atom hardware few-shot estimates (order 10) can sometimes be sufficient empirically."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The authors do not claim a general or provable quantum advantage. They introduce and empirically demonstrate \"comparative advantage\" (quantum resources improving a specific hybrid pipeline relative to its classical/no-quantum limit) in some examples, but they also show counterexamples where quantum resources reduce performance. Thus no broad quantum advantage is demonstrated or claimed.",
+  "limitations": [
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:data-encoding"
+  ],
+  "open_questions": [
+    "Under what precise conditions (problem classes, graph structure, ansatz design) does NNHA provide a reproducible and significant performance improvement over state-of-the-art classical algorithms?",
+    "Can NNHA approaches be generalized beyond the specific problem-instance constraints used in the demonstrations (e.g., beyond 2D unit-disk graphs for Rydberg encodings)?",
+    "How should one systematically design or choose the classical co-processing function F for arbitrary non-native problems to maximize hybrid benefit?",
+    "What are rigorous metrics and benchmarks for ‘comparative advantage’ that avoid dependence on arbitrary classical baselines?",
+    "How robust are NNHA methods to realistic hardware noise, limited coherence, SPAM errors, and finite-shot sampling in larger, noisier devices?",
+    "Can quantum resources in NNHA provide provable (rather than heuristic) advantages for natural optimization problems, and if so, what are the theoretical guarantees?",
+    "How effectively can samples from non-thermal or hard-to-characterize quantum distributions be used as reservoirs for classical sampling techniques like parallel tempering or cluster updates?",
+    "What are the optimal variational optimization strategies and shot allocation methods for NNHA across different hardware platforms (analog vs. digital)?",
+    "How to best integrate iterative or recursive quantum calls (Type-4/recursive schemes) into NNHA while keeping quantum resource usage practical?",
+    "To what extent can NNHA be adapted to handle complex real-world solution domains (mixed-integer, multi-objective, dynamic constraints) common in financial services?",
+    "How to scale NNHA approaches to problem sizes that exceed the native quantum device capacity — e.g., via partitioning, multilevel, or stitching methods — without losing solution quality?",
+    "Which ansatz families (hardware-native vs. problem-structured) are most promising as hybrid samplers for different classes of non-native combinatorial problems?",
+    "What is the interplay between the depth/complexity of quantum evolution and the efficacy of the classical post-processing steps (e.g., do deeper circuits always improve net hybrid performance)?"
+  ],
+  "future_work": [
+    "Investigate different problem classes, more diverse graph families, and real-world applications to test and refine NNHA templates (author-stated).",
+    "Explore and design alternative post-processing methods and richer classical co-processing routines (author-stated).",
+    "Develop and test other variational ansatzes, including hardware-native and problem-structured ansatzes, for improved hybrid performance (author-stated).",
+    "Perform systematic variational optimization studies, including examination of optimal parameters when optimizing over post-processed objectives (author-stated).",
+    "Benchmark NNHA against state-of-the-art classical optimizers and strong baselines to better quantify comparative advantage (author-stated).",
+    "Apply NNHA post-processing strategies to realistic, application-scale optimization problems in practice domains (author-stated).",
+    "Study recursive and iterative schemes (type-4 NNHA) more thoroughly, including recursive calls to quantum resources with different ansatzes (author-stated).",
+    "Design bespoke solvers that tightly integrate quantum samplers with classical algorithms (multilevel, branch-and-bound, genetic, LP-assisted, etc.) for specific applications (author-stated).",
+    "Investigate cluster-update, multilevel, and partitioning strategies to scale NNHA to much larger graphs by stitching subgraph solutions (author-stated/inferred).",
+    "Optimize state-preparation and annealing protocols (e.g., adiabatic schedules) to improve measurement-quality and hybrid outcomes (author-stated, MIS example).",
+    "Explore shot allocation strategies and optimizer choices (e.g., COBYLA alternatives, Bayesian methods) tailored to different hardware and ansatz regimes (author-stated).",
+    "Examine thermality and statistical properties of quantum sampler outputs to better understand when they can serve as effective high-temperature reservoirs (author-stated/inferred).",
+    "Develop robust methodologies for choosing and validating classical no-quantum baselines so that comparative advantage claims are meaningful across problem domains (inferred)."
+  ],
+  "topic_tags": [],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "medium",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Proposes the Non-Native Hybrid Algorithms (NNHA) framework where a quantum variational sampler produces bitstring ensembles and classical co-processing maps those ensembles into valid solutions via functions F({z}).",
+    "#idea:hybrid-approach — Classifies classical co-processing into four types: post-processing (greedy/local), expectation-based 'quantum hints' (spectral methods), distribution reservoirs (probabilistic cluster updates), and recursive refinement (iterative fixing).",
+    "#idea:quantum-advantage — Reports prototype demonstrations (QAOA emulation and Rydberg neutral-atom hardware) on MaxCut, Max k-Cut and MIS that in some cases outperform classical-only baselines (termed a 'comparative advantage').",
+    "#idea:near-term-feasibility — Demonstrates feasibility on near-term hardware (QuEra Aquila neutral-atom processor via Amazon Braket) with modest measurement budgets (~100 shots per eval, ~3k total shots) and small problem instances (tens of vertices).",
+    "#idea:hybrid-approach — Uses spectral clustering on weighted sums of connected correlation matrices from quantum samples as a type-2 classical co-processor for Max k-Cut, showing how expectation/correlation information can drive classical clustering.",
+    "#idea:hybrid-approach — Shows type-3 reservoir-style approaches where quantum samples seed high-temperature updates in cluster-update simulated annealing for MIS."
+  ],
+  "contradictions": []
+}

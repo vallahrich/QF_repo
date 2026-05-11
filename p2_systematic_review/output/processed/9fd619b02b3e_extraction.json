@@ -1,0 +1,291 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2410.20841v2) and typical academic structure (abstract, methods/results, references, appendices) but no journal or conference venue is listed, indicating an author-uploaded preprint rather than a peer-reviewed publication.",
+  "title": "Quantum Computational Insurance and Actuarial Science",
+  "authors": [
+    "Huan-Yu Liu",
+    "Xi-Ning Zhuang",
+    "Chao Wang",
+    "Qing-Song Li",
+    "Meng-Han Dou",
+    "Zhao-Yun Chen",
+    "Cheng Xue",
+    "Yu-Chun Wu",
+    "Guo-Ping Guo",
+    "Guang-Can Guo"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (quant-ph)",
+  "doi": "",
+  "abstract_summary": "This work provides a systematic exploration of applying quantum computation to insurance and actuarial science, mapping core insurance tasks (stochastic modeling, optimization, and machine learning) to quantum algorithms. It reports numerical and experimental demonstrations—including a quantum excess evaluation, variational reinsurance allocation, and a quantum Lee–Carter mortality solver on a superconducting processor—and discusses timelines, potential products, and challenges from NISQ to fault-tolerant eras.",
+  "methodology_description": "The authors provide a conceptual framework mapping insurance and actuarial problems to quantum algorithms (stochastic modeling, optimization, quantum machine learning) and then perform both numerical simulations and experimental demonstrations. They (1) design a quantum algorithm to evaluate policy excess/payments for a transformed discretized loss distribution (log-normal, µ=0, σ=1) by encoding the distribution into n qubits, applying a quantum subtractor, a sequence of controlled rotations (CCRY) and measuring an ancilla to estimate the required expectation; (2) formulate a reinsurance type allocation as a quadratic binary optimization x^T V x (variance minimization), map binary variables x_j to (I - Z_j)/2 to produce a Hamiltonian, and solve it with a problem-specific variational quantum algorithm (VQA) ansatz consisting of a constraint-preserving initialization plus repeated reconfigurable beam-splitter (RBS) layers, optimizing parameters with a classical optimizer and applying measurement-based error mitigation; (3) implement a variational quantum singular value decomposition (QSVD) to solve the Lee–Carter mortality model: prepare the vectorized data matrix |D> as a quantum state and optimize two parameterized circuits (one per subsystem) to recover dominant singular vectors, then use those vectors for further analysis. Numerical simulations use the QPanda framework; hardware experiments run on the superconducting processor \"Wukong.\" Performance is evaluated by comparison with theoretical/truncated integrals (excess evaluation), monitored loss function decrease and comparison between noisy quantum outputs and classically computed loss (reinsurance allocation), and by Frobenius norm and Kullback–Leibler divergence metrics for the Lee–Carter QSVD experiment.",
+  "algorithms_used": [
+    "Variational Quantum Algorithm (VQA)",
+    "Variational Quantum Singular Value Decomposition (QSVD)",
+    "Quantum state preparation (distribution encoding)",
+    "Quantum subtractor (QFT-based)",
+    "Controlled rotation (CCRY) sequences",
+    "Quantum Monte Carlo / expectation estimation via measurement (probabilistic estimation)",
+    "Problem-specific ansatz with Reconfigurable Beam Splitter (RBS) gates",
+    "Measurement-based error mitigation"
+  ],
+  "frameworks": [
+    "QPanda"
+  ],
+  "experimental_setup": "Experiments were executed on a superconducting quantum processor named \"Wukong\" (Origin Quantum). Reinsurance allocation used 6 physical qubits (IDs reported: q29, q28, q35, q34, q41, q40) with an ansatz of 3 RBS layers; the Lee–Carter QSVD experiment used 4 qubits and 200 optimization steps. Numerical simulations (excess evaluation) used QPanda and varied n (the number of discretization qubits) in experiments reported from n=2 up to n=10. Measurement-based error mitigation was applied in hardware runs.",
+  "dataset_used": "Synthetic datasets for non-life excess evaluation (log-normal loss distribution µ=0, σ=1 truncated to [0,10], discretized to N=2^n points) and randomly generated covariance matrices for the reinsurance allocation experiments. Real-world mortality data for the Lee–Carter experiment were obtained from the Human Mortality Database (mortality.org) limited to years 2014–2017 and ages 0–14, assembled into a 4x4 matrix.",
+  "experiment_input": {
+    "excess_evaluation": {
+      "type": "synthetic",
+      "distribution": "log-normal",
+      "parameters": {
+        "mu": 0,
+        "sigma": 1
+      },
+      "truncation_range": [
+        0,
+        10
+      ],
+      "discretization": "N = 2^n points, n varied (examples shown n in 2..10)",
+      "threshold_function": "M(x) = 0 for x<=1; M(x)=0.6(x-1)+1 for x>1"
+    },
+    "reinsurance_allocation": {
+      "type": "synthetic",
+      "input": "randomly generated covariance matrix V (elements v_jk = Cov[R_j,R_k])",
+      "problem_size": "6 qubits used in hardware experiment",
+      "constraint": "sum_j x_j = p n (p example referenced as 0.5 in text)"
+    },
+    "lee_carter_qsvd": {
+      "type": "real",
+      "source": "Human Mortality Database (mortality.org)",
+      "years": [
+        2014,
+        2015,
+        2016,
+        2017
+      ],
+      "ages": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "matrix_size_used": "4x4 (authors selected 4x4 for experiment)"
+    }
+  },
+  "experiment_process": {
+    "excess_evaluation": [
+      "Rescale continuous loss range [0,10] to integer grid represented by n qubits (|x⟩ encoding index j -> real value).",
+      "Prepare quantum amplitude-encoded state |ψ1⟩ = Σ sqrt(p_j) |j⟩ with unitary U_X where p_j ∝ f(X_j).",
+      "Apply quantum subtractor U_S to compute x - 1 (threshold) into an auxiliary qubit register, producing conditional flags for x≥1.",
+      "Apply controlled rotations: use an auxiliary qubit and n CCRY gates whose angles encode a small constant c times the integer x to rotate a measurement qubit; this produces amplitude modulated by payment value.",
+      "Measure the measurement qubit; estimate probability P_1 of |1⟩ outcome over repeated shots and invert analytic relation (Taylor expansion for small c) to recover Σ_{x≥1} p_x (x - 1) and thereby the payment estimate."
+    ],
+    "reinsurance_allocation": [
+      "Formulate cost Hamiltonian H_cost = Σ_{j,k} v_jk (I - Z_j)/2 (I - Z_k)/2 representing portfolio variance.",
+      "Construct a problem-specific ansatz: constraint-preserving initialization followed by L=3 RBS layers (reconfigurable beam splitter gates) acting on 6 qubits to explore feasible subspace without violating sum constraint.",
+      "Execute the parameterized circuit on quantum hardware, measure expectation value ⟨H_cost⟩ to obtain loss.",
+      "Use a classical optimizer to update ansatz parameters iteratively (hybrid loop).",
+      "Apply measurement-based error mitigation by benchmarking flip probabilities and excluding erroneous measurement shots in post-processing.",
+      "Monitor loss decrease and compare quantum-evaluated loss to classically computed (noiseless) loss for same parameters."
+    ],
+    "lee_carter_qsvd": [
+      "Construct data matrix D with entries D_{x,t} = ln m_{x,t} - α_x and vectorize into |D⟩.",
+      "Prepare quantum state proportional to |D⟩ (normalization factor C).",
+      "Apply two parameterized circuits U_A(θ1), V_B(θ2) on subsystems A and B with the objective that measurements of outcomes coincide; this realizes a variational QSVD that attempts to diagonalize in the computational basis.",
+      "Define loss as fraction of shots where measurement outcomes on A and B match; minimize this loss via classical optimizer over 200 optimization steps.",
+      "Extract optimized left/right vectors (β, κ) from the variational circuits and compute classical metrics (Frobenius norm of D - βκ, Kullback–Leibler divergences between estimated and target singular vectors)."
+    ]
+  },
+  "experiment_output": {
+    "excess_evaluation": {
+      "format": "scalar payment estimate R_discrete",
+      "metrics_reported": [
+        "comparison to analytical/truncated integral R_theory and R_truncate",
+        "convergence of R_discrete to R_truncate as n increases"
+      ],
+      "baselines": "R_theory and R_truncate (classical integral or truncated integral)"
+    },
+    "reinsurance_allocation": {
+      "format": "expected cost value ⟨H_cost⟩ (loss) per parameter set",
+      "metrics_reported": [
+        "loss function value vs optimization iterations (hardware-evaluated)",
+        "classical evaluation of loss for same parameters (noiseless benchmark)",
+        "target (optimal) loss value comparison"
+      ],
+      "baselines": "classical loss computed from same ansatz parameters; target (optimal) loss"
+    },
+    "lee_carter_qsvd": {
+      "format": "optimized vectors β and κ; reconstructed rank-1 approximation βκ",
+      "metrics_reported": [
+        "loss function (matching measurement outcomes) vs optimization steps",
+        "Frobenius norm ∥D - βκ∥_F",
+        "Kullback–Leibler divergence D_KL(β || β_target) and D_KL(κ || κ_target)"
+      ],
+      "baselines": "classical SVD-derived singular vectors and reconstructed matrix"
+    }
+  },
+  "experiment_parameters": {
+    "excess_evaluation": {
+      "n_qubit_discretization_range": "n varied (figures show n from 2 to 10)",
+      "total_qubits_used_formula": "n + 2 (n data qubits + auxiliary + measurement)",
+      "loss_distribution": "log-normal (mu=0, sigma=1)",
+      "truncation": "[0,10]",
+      "discretization_points": "N = 2^n",
+      "rotation_constant": "c (a small positive constant; Taylor expansion used, value unspecified)"
+    },
+    "reinsurance_allocation": {
+      "physical_qubits_used": 6,
+      "RBS_layers": 3,
+      "ansatz_parameter_count": 9,
+      "constraint": "Σ_j x_j = p n (p referenced as 0.5 example)",
+      "optimizer": "classical optimizer (unspecified type)",
+      "optimization_iterations_reported": "plots up to ~70 iterations shown",
+      "error_mitigation": "measurement-based benchmarking and exclusion of erroneous shots"
+    },
+    "lee_carter_qsvd": {
+      "physical_qubits_used": 4,
+      "optimization_steps": 200,
+      "data_matrix_size_experiment": "4x4",
+      "shots_per_circuit": "not specified",
+      "optimizer": "classical optimizer (unspecified)"
+    },
+    "hardware_characteristics": {
+      "T1_avg_us": 14.84,
+      "T2_avg_us": 1.85,
+      "single_qubit_gate_fidelity_pct": 99.7,
+      "two_qubit_gate_fidelity_pct": 96.3
+    }
+  },
+  "hardware_details": {
+    "quantum_processor": "Wukong (superconducting quantum processor)",
+    "provider": "Origin Quantum Computing (Origin QC)",
+    "used_qubits_examples": {
+      "reinsurance_allocation": [
+        "q29",
+        "q28",
+        "q35",
+        "q34",
+        "q41",
+        "q40"
+      ],
+      "lee_carter_qsvd": "4 qubits (IDs not individually listed for this run)"
+    },
+    "device_specs": {
+      "average_T1_us": 14.84,
+      "average_T2_us": 1.85,
+      "single_qubit_fidelity_percent": 99.7,
+      "two_qubit_fidelity_percent": 96.3
+    },
+    "simulator": "Numerical simulations and algorithm development performed with QPanda"
+  },
+  "reproducibility_notes": "The paper states that the data supporting findings are available from the corresponding author upon reasonable request. The mortality dataset used is publicly available from the Human Mortality Database (mortality.org). Implementation details are described (circuit structures, ansatz, gate types, parameter counts) and the QPanda framework is named for simulations. However, no public code repository or complete experiment scripts are provided in the text, optimizer types, shot counts and specific hyperparameter values (e.g., rotation constant c) are not specified; thus full reproduction would require contacting the authors for code or additional details.",
+  "key_findings": [
+    "[speculative] Quantum computation is a promising approach to address core insurance and actuarial tasks (stochastic modeling, optimization, and machine learning) by mapping these problems to quantum state preparation, stochastic simulation, quantum Monte Carlo, variational algorithms, HHL-like linear-algebra routines, and quantum annealing.",
+    "[supported] The authors developed and numerically validated a quantum excess-evaluation algorithm (policy excess / reinsurer payment modeling) via discrete encoding and circuit-based arithmetic; accuracy improves with the number of qubits and converges toward the truncated integral approximation.",
+    "[supported] An experimental variational quantum algorithm (VQA) implementation for a reinsurance-type allocation problem was executed on the superconducting quantum processor \"Wukong\" (6 qubits); optimization reduced the measured loss function and the corresponding classically-computed (noiseless) loss moved closer to the target.",
+    "[supported] The authors implemented a quantum singular value decomposition (QSVD) based solver for the Lee–Carter mortality-forecasting model on \"Wukong\" (4 qubits) with real-world mortality data; optimization reduced the reconstruction (Frobenius) error and Kullback–Leibler divergences between estimated and target singular vectors.",
+    "[supported] The paper reports device specifications and experimental parameters for the platform used: average relaxation time T1 = 14.84 µs, dephasing time T2 = 1.85 µs, single-qubit gate fidelity ≈ 99.7%, two-qubit gate fidelity ≈ 96.3%.",
+    "[speculative] Quantum stochastic modeling can yield exponential space reductions (via superposition encoding of distributions) and quadratic sample-complexity speedups in expectation estimation through amplitude estimation / quantum Monte Carlo (QMC).",
+    "[supported] Practical implementations on NISQ hardware rely on variational hybrid quantum–classical approaches, problem-specific ansatz design (e.g., RBS layers to enforce constraints), and measurement-based error mitigation to handle noise and constraints.",
+    "[speculative] In a fault-tolerant quantum computing (FTQC) era, more powerful quantum machine learning and linear-algebra-based routines (HHL, QSVD, etc.) will enable larger-scale and more realistic insurance applications (mortality forecasting, catastrophe modeling, online personalized risk evaluation).",
+    "[speculative] There are significant engineering and algorithmic challenges to widespread application: efficient state preparation for arbitrary distributions, measurement/output bottlenecks, and hardware noise; suggested remedies include QRAM, advanced encoding, shadow tomography, and error mitigation/correction.",
+    "[speculative] Quantum computing will enable new insurance products and services (online/personalized risk estimates, improved climate and mortality forecasting, quantum NLP for customer service), but also introduces new sources of uncertainty and systemic risk that need modeling."
+  ],
+  "results_summary": "This preprint presents a systematic exploration of applying quantum computing to insurance and actuarial science. The authors classify insurance tasks into stochastic modeling, optimization, and machine learning, and map these to quantum primitives (state preparation, quantum stochastic simulation, amplitude estimation, variational circuits, QSVD/HHL, and quantum annealing). They provide a numerical demonstration of a quantum excess-evaluation routine and two experimental demonstrations on a superconducting device (\"Wukong\"): a 6-qubit VQA for a reinsurance allocation problem and a 4-qubit QSVD-based Lee–Carter mortality model solver using real data. Experiments show reduction in optimization loss metrics and improved reconstruction/error measures. The paper discusses theoretical potential speedups (exponential/state-space, quadratic Monte Carlo), practical NISQ-era strategies, and challenges toward FTQC-era applications, while emphasizing both opportunities and new risks introduced by quantum technologies.",
+  "performance_claims": [
+    "Device metrics: average T1 = 14.84 µs, average T2 = 1.85 µs, single-qubit gate fidelity = 99.7%, two-qubit gate fidelity = 96.3% (reported for \"Wukong\").",
+    "Qubits used in experiments: 6 qubits for the reinsurance-type allocation VQA; 4 qubits for the Lee–Carter QSVD experiment.",
+    "QSVD optimization: 200 optimization steps were executed in the Lee–Carter experiment (reported).",
+    "Ansatz depth / structure: the reinsurance VQA used 3 layers of reconfigurable beam-splitter (RBS) interactions (reported).",
+    "The excess-evaluation algorithm uses n+2 qubits for N = 2^n discretization points (algorithmic resource statement)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper argues potential quantum advantages (exponential state-space encoding and quadratic speedup for expectation estimation via quantum Monte Carlo / amplitude estimation) as theoretical prospects; no empirical demonstration of a concrete, reproducible quantum speedup over classical methods is provided in the experiments (the presented results are proof-of-concept NISQ-era implementations showing feasibility rather than performance advantage).",
+  "limitations": [
+    "Field is in its infancy: lack of a systematic framework for quantum approaches to insurance (author-stated).",
+    "Prior to this work there were few or no experimental demonstrations on quantum hardware for insurance-specific problems (author-stated).",
+    "Limited empirical analysis on real-world insurance datasets in existing literature (author-stated).",
+    "Significant conceptual gap between traditional actuarial models (which demand interpretability and theoretical analysis) and many quantum algorithm paradigms (author-stated).",
+    "Data encoding is challenging in the NISQ era; efficient state preparation for arbitrary distributions can require exponential resources (author-stated).",
+    "Quantum input/output bottleneck: n qubits encode 2^n amplitudes but each shot yields only one n-bit sample, severely limiting sampling efficiency (author-stated).",
+    "Hardware noise and limited circuit depth (NISQ constraints) restrict the size and fidelity of realizable insurance algorithms (author-stated).",
+    "Many quantum algorithms of interest (e.g., QMC, QSVD, HHL-based ML) require fault-tolerant resources to reach full potential; current devices are insufficient (author-stated).",
+    "Need for specialized subroutines and infrastructure (QRAM, advanced encoding strategies, shadow tomography, error mitigation) which are not yet mature or widely available (author-stated).",
+    "Modeling and evaluation of new risk sources introduced by quantum computation (quantum threats) is an open and unresolved challenge that increases uncertainty for insurers (author-stated).",
+    "[inferred] Demonstrations reported are small scale (e.g., 4x4 Lee-Carter, few-qubit VQAs) and may not reflect complexity of production insurance problems.",
+    "[inferred] Use of truncation, discretization, and post-selection/error-exclusion in examples introduces approximation and potential bias that are not fully quantified.",
+    "[inferred] Variational algorithms used experimentally inherit optimization issues (e.g., local minima, barren plateaus) and their scalability/stability for large insurance problems is uncertain.",
+    "[inferred] Reliance on QRAM or similar oracles creates a single-point technological dependency that may be difficult to realize practically.",
+    "[inferred] Regulatory, auditability and explainability requirements in actuarial practice may limit direct adoption of opaque quantum models without additional methodological advances."
+  ],
+  "open_questions": [
+    "How can general continuous and high-dimensional insurance-related distributions be encoded into quantum states efficiently without exponential overhead?",
+    "Which insurance and actuarial problems will see provable and practically relevant quantum speedups (both asymptotic and constant-factor) on realistic inputs?",
+    "What are the best NISQ-era use cases in insurance where current devices can provide practical benefits?",
+    "How to design readout and sampling strategies that overcome the input/output bottleneck (limited samples per shot) for statistical insurance tasks?",
+    "How to quantify and model the new sources of uncertainty and systemic risk introduced by widespread quantum computing (the 'quantum threats' to insurance)?",
+    "When and how will fault-tolerant quantum computing (FTQC) become available at scales needed for industry-level insurance applications?",
+    "What architectures and algorithms (e.g., QRAM, advanced state preparation, shadow tomography) are most practical to deploy for insurance problems and when will they be implementable?",
+    "How to validate and empirically benchmark quantum insurance methods on large, realistic, and privacy-sensitive insurance datasets?",
+    "How to ensure interpretability, regulatory compliance, and robustness of quantum-enhanced actuarial models?",
+    "What hybrid classical-quantum workflows and error-mitigation strategies are required to make quantum insurance computations reliable in production?"
+  ],
+  "future_work": [
+    "Theoretical development and proofs of quantum speedups for insurance-specific algorithms (quantum stochastic modeling, quantum machine learning, quantum optimization).",
+    "Development of quantum stochastic modeling methods to study risk and ruin theory and collective risk processes.",
+    "Further development and application of quantum machine learning and quantum optimization to mortality forecasting, pricing, and portfolio/reinsurance optimization.",
+    "Experimental demonstrations on quantum hardware: expanded variational quantum algorithms, quantum Monte Carlo simulations, and QSVD on real datasets.",
+    "Progress toward fault-tolerant quantum computing to enable larger-scale, realistic insurance applications and online/personalized risk evaluation.",
+    "Design and implementation of supporting infrastructure: QRAM, advanced encoding strategies, improved sampling/readout (e.g., shadow tomography), and error mitigation techniques.",
+    "Empirical validation and benchmarking of quantum insurance algorithms using real-world insurance datasets and production-scale scenarios.",
+    "Interdisciplinary collaboration between quantum scientists, insurers, and regulators to develop standards, handle quantum-induced risks, and design quantum-enhanced insurance products.",
+    "Exploration of quantum-enhanced downstream services: quantum climate prediction, improved mortality forecasting, quantum NLP for customer service, and quantum pattern recognition for claims analysis.",
+    "Research into modeling and evaluating the systemic impacts and new risk classes created by the adoption of quantum technologies in finance and insurance."
+  ],
+  "topic_tags": [
+    "insurance-actuarial",
+    "quantum-ml-finance",
+    "simulation-monte-carlo",
+    "portfolio-optimization",
+    "risk-management"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical",
+    "qft-phase-estimation",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Demonstrates end-to-end quantum workflows for insurance tasks (excess/payment estimation, reinsurance allocation, Lee–Carter QSVD) including experiments on a superconducting processor (Wukong), indicating NISQ-era applicability at small scale.",
+    "#idea:hybrid-approach — Uses variational quantum algorithms (VQA, QSVD) with classical optimizers in a hybrid loop and a problem-specific constraint-preserving ansatz (RBS layers) for reinsurance allocation.",
+    "#limitation:qubit-count — Hardware demos are small-scale (6 qubits for reinsurance allocation, 4 qubits for QSVD); while simulations explore n up to 10 for discretization, real-world actuarial problems will require far larger qubit counts.",
+    "#limitation:noise — Results on hardware showed noise impact; the authors applied measurement-based error mitigation and post-processing to partially correct noisy measurement outcomes, indicating sensitivity to device errors.",
+    "#limitation:data-encoding — Methods rely on amplitude encoding of distributions and a QFT-based quantum subtractor plus multiple controlled rotations; state preparation and depth of controlled operations imply significant encoding and circuit-cost challenges for larger instances.",
+    "#idea:near-term-feasibility — Reports quantitative metrics (Frobenius norm, KL divergence, measured loss vs classical noiseless loss) from both simulations and hardware, showing feasibility of benchmarking but not demonstration of large-scale advantage."
+  ],
+  "contradictions": []
+}

@@ -1,0 +1,132 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "The document has an IEEE copyright header and IEEE-style formatting, contains abstract, methods, results, and references typical of conference proceedings, and cites IEEE QCE venues; although an arXiv copy exists, structural cues point to an IEEE conference paper.",
+  "title": "Electric Power Demand Portfolio Optimization by Fermionic QAOA with Self-Consistent Local Field Modulation",
+  "authors": [
+    "Takuya Yoshioka",
+    "Keita Sasada",
+    "Yuichiro Nakano",
+    "Keisuke Fujii"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (arXiv:2505.02282)",
+  "doi": "",
+  "abstract_summary": "The paper introduces FQAOA-SCLFM, a variant of Fermionic QAOA that incorporates a Hartree–Fock driver Hamiltonian with self-consistent local field modulation to approximately enforce procurement constraints in electric power demand (negawatt) portfolio optimization. Simulations on noiseless quantum simulators show that FQAOA-SCLFM more stably meets target procurement and achieves lower expected cost than XY-QAOA and prior FQAOA across tested time periods.",
+  "methodology_description": "The study formulates the electric power demand portfolio optimization as a constrained combinatorial optimization mapped to a fermionic representation: binary selection variables x_l become fermion number operators n_l = c_l^† c_l. The cost Hamiltonian combines a risk term (covariance of negawatt supply) and a soft-penalty term enforcing procurement of a target power amount. The authors propose FQAOA-SCLFM, a variant of Fermionic QAOA that embeds the penalty into the driver Hamiltonian via a Hartree–Fock (HF) mean-field approximation (self-consistent local field modulation, SCLFM). They construct an HF driver Hamiltonian with hopping terms (thop) and self-consistent local-field terms; the HF single-Slater-determinant ground state is found by iterative HF updates with mixing parameter α. The QAOA ansatz applies alternating phase-separation and mixing unitaries; the mixing unitary implementing the HF driver is decomposed into even/odd/BC hopping layers plus single-site Z-rotations for local fields. Variational parameters (γ, β) are optimized by a classical BFGS routine to minimize the expectation of the cost Hamiltonian; the resulting state probabilities yield metrics such as expected total negawatt, its variance, and the expected cost above the minimum (ΔE_T). The algorithm is benchmarked in noiseless statevector simulations (qulacs) against XY-QAOA and the previous FQAOA across multiple time-period instances, QAOA depths (p = 0, 1, 10), and Hartree–Fock iteration settings.",
+  "algorithms_used": [
+    "QAOA",
+    "Fermionic QAOA (FQAOA)",
+    "FQAOA-SCLFM (proposed)",
+    "XY-QAOA",
+    "Hartree–Fock (mean-field) approximation",
+    "BFGS optimizer"
+  ],
+  "frameworks": [
+    "qulacs"
+  ],
+  "experimental_setup": "Noiseless statevector simulations using the qulacs quantum circuit simulator. Problems mapped to L = 20 fermionic modes (one per DR participant). QAOA layer depths tested: p = 0, 1, 10. Variational parameters optimized classically using BFGS. Hartree–Fock driver prepared via self-consistent iterations with mixing parameter α. Comparisons made against XY-QAOA and prior FQAOA implementations.",
+  "dataset_used": "",
+  "experiment_input": {
+    "source": "Public residential energy consumption database cited in paper (http://tkkankyo.eng.niigata-u.ac.jp/HP/HP/database/index.htm) as used in Ref. [8]",
+    "size_and_scope": "Time series electricity usage from 20 residences, data for September 1-15, 2003 (used to derive per-participant expected negawatt E[pt,l] and covariances σt,l,l')",
+    "preprocessing": "Per Ref. [8] the authors estimate means E[pt,l] and covariances σt,l,l' for multiple time points; water-heater-induced midnight singular peaks were ignored. Time windows T = 3i (blocks of three consecutive times) were used (examples T = 3, 12, 18, 21). A target procurement P'_t,proc = 1.5 kWh and hard cardinality constraint MT = 5 were used in main tests."
+  },
+  "experiment_process": "1) Map the portfolio selection problem to a fermionic Hamiltonian: cost Hamiltonian H_p,T includes covariance-based risk term and squared deviation penalty (Pt - P'_t,proc)^2 averaged over time-window T; constraint operator C = Σ n_l enforces constant particle number MT. 2) Define HF driver Hamiltonian H_HF_d,T: hopping term (−thop Σ c†_{l+1} c_l + h.c.) plus linearized penalty terms obtained by HF approximation; determine the HF single-Slater-determinant ground state |ϕ_HF⟩ by self-consistent iterations (update fermion occupations n^HF_l with mixing parameter α until convergence). 3) Construct QAOA ansatz |ψ_p(γ,β)⟩ = Π_{j=1..p} U_m(β_j) U_p(γ_j) U_init |vac⟩ where U_p = exp(−i γ H_p) and U_m = exp(−i β H_HF_d,T). Decompose U_m into even/odd hopping layers, a boundary-condition hopping layer, and local-number rotations (UI). 4) Prepare initial state consistent with particle-number constraint (Slater determinant / Dicke-like). 5) Optimize variational parameters (γ,β) via BFGS to minimize expected cost E_p(γ,β) = ⟨ψ| H_p |ψ⟩. 6) Evaluate outputs: probability distribution over bitstrings, expected total negawatt Pt,tot and its variance σ^2_t,tot, cost distribution D_T(E) and expected cost above minimum ΔE_T. 7) Repeat experiments for p = 0,1,10 and for multiple time windows T; compare results to XY-QAOA and prior FQAOA baselines.",
+  "experiment_output": "Outputs reported include: expected total negawatt Pt,tot and associated standard deviation σ_t,tot (Eqs. 23–24), probability distribution over cost values D_T(E) (Eq. 25), and expected cost above the minimum ΔE_T normalized by the total cost range W_T (Eq. 26). Results are presented across time windows T and QAOA depths p, with comparative tables of ΔE_T/W_T for XY-QAOA, FQAOA, and FQAOA-SCLFM (p = 0,1,10) and plots of Pt,tot ± σ_t,tot over time. Baselines: XY-QAOA and previous FQAOA implementations.",
+  "experiment_parameters": {
+    "num_modes_qubits": 20,
+    "QAOA_depths_p_tested": [
+      0,
+      1,
+      10
+    ],
+    "shots": null,
+    "optimizer": "BFGS (classical)",
+    "target_procurement_P_prime_t_proc": "1.5 kWh (main tests)",
+    "cardinality_constraint_MT": 5,
+    "time_windows_T": "T = 3i (i = 0..7); examples include T = 3, 12, 18, 21 (each T uses three consecutive time points)",
+    "hf_mixing_parameter_alpha": "varied in experiments; stable behavior observed for α ≤ 0.6 (α = 0.6 recommended); α tested up to 0.8",
+    "thop_setting": "thop set so the cost range of hopping term in driver equals first term in cost Hamiltonian under constraints (scale-matching)",
+    "gate_count_overhead": "additional single-site rotations add p * L gates compared to prior FQAOA"
+  },
+  "hardware_details": {
+    "simulator": "qulacs",
+    "simulator_mode": "noiseless statevector simulation",
+    "qpu_model": null,
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "The paper cites the public residential energy consumption database used (URL provided). Simulations were run with the qulacs simulator and variational procedures (BFGS) with parameter values and algorithmic steps described in the text and appendices (HF iteration mixing, U_m decomposition). No code repository or implementation artifacts are referenced in the paper, so direct reproduction requires reimplementation from the described methods and parameter settings.",
+  "key_findings": [
+    "[supported] The authors introduce FQAOA-SCLFM, a variant of Fermionic QAOA that incorporates a Hartree–Fock (HF) driver Hamiltonian with self-consistent local field modulation (SCLFM) to approximately integrate a soft constraint (target procured power) into the driver.",
+    "[supported] In noiseless numerical simulations on the electric power demand portfolio problem (20 participants dataset), FQAOA-SCLFM outperforms both XY-QAOA and the previously published FQAOA across all tested time periods and QAOA depths (p = 0, 1, 10), as measured by the expected cost ∆E_T/ W_T.",
+    "[supported] FQAOA-SCLFM produces total procured-negawatt expectations (P_t,tot) that are closer to the target P'_t,proc and yields reduced variances (σ_t,tot) compared with the other tested QAOA variants, particularly in more difficult time windows (e.g., T=18 and T=21).",
+    "[supported] The HF driver provides a more favorable initial state (single Slater determinant) and the HF iteration reduces the HF energy and yields stable self-consistent local fields (demonstrated in Fig. 5), improving performance at low p.",
+    "[supported] The added circuit cost over the previous FQAOA is modest: implementation of SCLFM increases gate operations by pL (one additional single-qubit Z-rotation layer per QAOA layer) according to the authors' gate-count accounting.",
+    "[speculative] The authors claim the alternative cost function with a penalty term (using P'_t,proc = P_t,proc + δ/2) 'guarantees efficiency and feasibility within the limitations of current quantum hardware' — this is a practical assertion that is not broadly proven beyond the presented simulations.",
+    "[speculative] The paper asserts that FQAOA-SCLFM is applicable to other combinatorial optimization problems of the same form (hard constraint plus soft penalty) — this is a reasonable generalization but not empirically validated beyond the presented DR/negawatt portfolio instances.",
+    "[speculative] The background claim that quantum computation is expected to have potential to efficiently solve combinatorial optimization problems in power systems is a general expectation (not demonstrated in this work)."
+  ],
+  "results_summary": "The paper proposes FQAOA-SCLFM, which integrates a Hartree–Fock-derived self-consistent local field term into the Fermionic QAOA driver to better handle a soft procurement constraint in an electric power demand (negawatt) portfolio optimization task. Using noiseless state-vector simulations on a 20-residence dataset and comparing against XY-QAOA and the previous FQAOA, the authors report consistently lower expected cost (∆E_T normalized by cost range W_T), closer alignment of expected total negawatt to target procurement, and reduced variance—especially in challenging time windows. The HF driver provides a superior initial state and only modestly increases circuit depth (additional pL single-qubit rotations). The authors frame the approach as broadly applicable to similar constrained combinatorial problems, while noting the results are simulation-based.",
+  "performance_claims": [
+    "Table I: Expected cost ∆E_T / W_T (selected FQAOA-SCLFM values) at p=10 across T={0,3,6,9,12,15,18,21}: [0.018, 0.027, 0.017, 0.036, 0.019, 0.012, 0.007, 0.007].",
+    "Comparative claim: For all tested T and p values (0, 1, 10), FQAOA-SCLFM yields lower ∆E_T / W_T than FQAOA and XY-QAOA (numerical values reported in Table I).",
+    "Circuit-cost claim: The additional gate count required for FQAOA-SCLFM relative to previous FQAOA is pL (one additional single-qubit Z-rotation per qubit per QAOA layer).",
+    "Empirical behavior: At QAOA depth p = 10, the authors report that Pt,tot ± σ_t,tot roughly satisfy the balance condition (target procurement) across tested time points, indicating stable procurement in simulation."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper demonstrates improved performance of a new QAOA variant (FQAOA-SCLFM) over other QAOA-based approaches in noiseless simulations on a specific portfolio optimization instance, but it does not demonstrate a quantum advantage over classical algorithms nor provide hardware/experimental evidence of superiority. Therefore any claim of practical quantum advantage remains speculative.",
+  "limitations": [
+    "The inequality constraint on procured power is enforced via a penalty term and can be violated (authors state the alternative cost function may violate the inequality constraint).",
+    "Hartree–Fock (HF) approximation is used to linearize the penalty term in the driver Hamiltonian, which is an approximation and may not capture the true ground state when the exact driver contains second-order number operators (authors discuss that the exact driver ground state cannot be expressed as a single Slater determinant and therefore use an HF approximation).",
+    "Simulations were performed in a noiseless environment; effects of realistic device noise are not evaluated (authors used noiseless quantum simulation).",
+    "Convergence of the HF self-consistent iteration requires tuning of a mixing parameter α (authors show oscillations for large α and empirically select α ≤ 0.6 for stability).",
+    "[inferred] Experiments are limited to small-scale, historical residential data (20 households), so scalability to larger, real-world aggregator portfolios is untested.",
+    "[inferred] Lack of comparison to classical optimization baselines (e.g., integer programming solvers or heuristic classical methods) — only compared against other QAOA variants.",
+    "[inferred] Sensitivity to hyperparameters (thop, P'_t,proc, MT, and HF mixing parameter) may require problem-specific tuning.",
+    "[inferred] The penalty-based soft constraint formulation does not guarantee strict feasibility of the original inequality constraint, which could be problematic for practical procurement requirements.",
+    "[inferred] The HF approximation may fail in regimes with strong correlations or where the true optimal state cannot be well approximated by a single Slater determinant.",
+    "[inferred] Circuit depth, gate count and other hardware resource requirements (and their scaling with problem size L and QAOA depth p) are not fully characterized in the paper for near-term devices."
+  ],
+  "open_questions": [
+    "How does FQAOA-SCLFM perform on larger-scale and more diverse, real-world datasets (beyond the 20-house, historical dataset used)?",
+    "How robust is FQAOA-SCLFM to noise and realistic hardware errors when executed on physical quantum processors?",
+    "How does FQAOA-SCLFM compare quantitatively to state-of-the-art classical optimization methods (exact solvers and heuristics) on the same problem instances?",
+    "What are the resource and runtime scalings (qubit count, gate depth, total gates) of FQAOA-SCLFM as the number of participants L and QAOA depth p increase?",
+    "Under what conditions does the HF approximation used for the driver Hamiltonian break down, and what are the practical impacts on solution quality?",
+    "Can the inequality constraint on procured power be enforced more strictly (e.g., via other constraint-handling methods) while retaining the benefits of the HF-modulated driver?",
+    "How sensitive are results to choices of model parameters (thop, P'_t,proc, MT) and to errors in the estimated expectations/covariances E[pt,l], σt,l,l'? ",
+    "What are convergence guarantees (if any) for the self-consistent HF iteration, and can the iteration be made more robust or automated (e.g., adaptive mixing)?",
+    "How well does the algorithm map to hardware with restricted connectivity (beyond the assumed 1D cyclic hopping) and what are the implications for compilation overhead?",
+    "Can the FQAOA-SCLFM approach be generalized and validated on other constrained combinatorial optimization problems with similar hard/soft constraint structure?"
+  ],
+  "future_work": [],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — FQAOA-SCLFM achieves lower expected procurement cost (ΔE_T/W_T) and more stable satisfaction of target procurement than XY-QAOA and prior FQAOA in noiseless statevector simulations across multiple time windows and QAOA depths (p = 0,1,10) on L = 20 modes.",
+    "#idea:hybrid-approach — The method embeds a soft procurement constraint into the driver via a Hartree–Fock mean-field (self-consistent local field modulation, SCLFM), combining classical HF iterations and a classical BFGS optimizer with a variational QAOA ansatz.",
+    "#idea:near-term-feasibility — Experiments use shallow-to-moderate QAOA depths and classical variational optimization on 20 modes, suggesting potential applicability in NISQ-era settings pending noise/hardware evaluation.",
+    "#limitation:simulation-only — All results are from noiseless qulacs statevector simulations; no noisy simulations or device runs are reported.",
+    "#limitation:no-empirical-validation — No QPU experiments and no code repository are provided, so claims rest on simulation-only benchmarks and reimplementation would be required for reproduction.",
+    "#limitation:qubit-count — Benchmarks are limited to 20 fermionic modes (qubits); scalability to larger, realistic procurement pools is not demonstrated.",
+    "#limitation:noise — The paper does not evaluate robustness under device noise; performance might degrade on real hardware."
+  ],
+  "contradictions": []
+}

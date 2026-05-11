@@ -1,0 +1,135 @@
+# Phase 1 — LLM-assisted extraction prompt
+# version:    1.0
+# date:       2026-04-11
+# model:      gpt-5.1 (default; see scripts/extract_document.py)
+# temperature: 0.2
+# notes:      Provenance metadata added 2026-05-02 as part of the pre-freeze
+#             pass. The prompt body below is unchanged from 2026-04-11.
+#             Any future edit MUST bump the version + date + recompute prompt_sha.
+
+You are a research assistant performing **exploratory extraction** for a qualitative content analysis of quantum computing in financial services.
+
+Your task: Read the provided document and extract structured information that will feed an inductive coding process. You are NOT classifying against a pre-existing taxonomy — you are capturing what the document says about **financial problems** addressed and **quantum solutions** proposed, with verbatim evidence.
+
+## Extraction Rules
+
+1. **Every extracted value MUST include a verbatim quote** from the source text. Copy the exact words — do not paraphrase.
+2. **Every quote MUST include a location** (section heading, page number, paragraph, or "Abstract" / "Introduction" / "Conclusion" if that is the most precise locator available).
+3. If a field does not apply to this document, use an empty list `[]`.
+4. Do NOT invent information. If something is unclear, include it with a `"confidence": "low"` flag.
+5. Extract ALL relevant instances, not just the first one. A paper may address multiple financial problems or use multiple quantum approaches.
+
+## Fields to Extract
+
+Return a JSON object with these fields:
+
+### 1. metadata
+Basic document information.
+```json
+{
+  "title": "string",
+  "authors": ["string"],
+  "year": "string",
+  "venue": "string or null",
+  "document_type": "academic-paper | survey | industry-report | whitepaper | other"
+}
+```
+
+### 2. problem_domains
+What financial problem(s) does the document address? Extract each one separately.
+```json
+[
+  {
+    "problem": "short label — use the document's own terminology",
+    "description": "one-sentence description of how the problem is framed",
+    "quote": "verbatim text from the document",
+    "location": "section/page reference",
+    "confidence": "high | medium | low"
+  }
+]
+```
+
+### 3. solution_approaches
+What quantum computing approach(es) does the document use or propose?
+```json
+[
+  {
+    "approach": "short label — use the document's own terminology",
+    "description": "one-sentence description of how the approach is applied",
+    "quote": "verbatim text from the document",
+    "location": "section/page reference",
+    "confidence": "high | medium | low"
+  }
+]
+```
+
+### 4. problem_solution_mappings
+Which solutions are applied to which problems? Link entries from the two lists above.
+```json
+[
+  {
+    "problem": "label from problem_domains",
+    "approach": "label from solution_approaches",
+    "quote": "verbatim text showing the connection",
+    "location": "section/page reference"
+  }
+]
+```
+
+### 5. key_claims
+Important claims the document makes about quantum computing in finance. Tag each.
+```json
+[
+  {
+    "claim": "one-sentence summary of the claim",
+    "claim_type": "advantage | limitation | gap | trend | comparison",
+    "quote": "verbatim text supporting the claim",
+    "location": "section/page reference",
+    "confidence": "high | medium | low"
+  }
+]
+```
+
+### 6. maturity_indicators
+Evidence about the maturity of the work (theoretical, simulated, real hardware, production).
+```json
+[
+  {
+    "indicator": "theoretical-only | simulation | real-hardware | production | not-stated",
+    "quote": "verbatim text",
+    "location": "section/page reference"
+  }
+]
+```
+
+### 7. open_questions
+Questions or future work directions the document explicitly raises.
+```json
+[
+  {
+    "question": "the stated open question or future direction",
+    "quote": "verbatim text",
+    "location": "section/page reference"
+  }
+]
+```
+
+## Output Format
+
+Respond ONLY with valid JSON matching the structure above. Do not wrap in markdown code fences. Do not include any text before or after the JSON.
+
+```json
+{
+  "metadata": { ... },
+  "problem_domains": [ ... ],
+  "solution_approaches": [ ... ],
+  "problem_solution_mappings": [ ... ],
+  "key_claims": [ ... ],
+  "maturity_indicators": [ ... ],
+  "open_questions": [ ... ]
+}
+```
+
+Document text:
+
+{document_text}

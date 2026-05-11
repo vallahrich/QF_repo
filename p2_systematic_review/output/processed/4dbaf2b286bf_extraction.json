@@ -1,0 +1,186 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "Document bears journal header (Knowledge-Based Systems, Elsevier), DOI and received/revised/accepted dates, structured abstract, methods and numerical experiments on real financial data, statistical analyses and citations—consistent with a peer-reviewed empirical research article.",
+  "title": "A Noisy Optimization mechanism for variational quantum classifiers",
+  "authors": [
+    "Rodica Ioana Lung",
+    "Florin Sebastian Duma"
+  ],
+  "year": "2026",
+  "journal_or_venue": "Knowledge-Based Systems",
+  "doi": "10.1016/j.knosys.2026.115659",
+  "abstract_summary": "The paper proposes a noise-based optimization mechanism for variational quantum classifiers (VQCs) that mitigates barren plateaux by adding small bounded uniform noise to training data, thereby shifting the loss landscape and inducing diversity during parameter search. The method (NO-VQC) is evaluated on real financial data modeling the Romanian BET index against major global and regional indices, showing significant improvements over a baseline VQC and competitive performance relative to classical classifiers.",
+  "methodology_description": "The study proposes and empirically evaluates a noise-based optimization mechanism (NO-VQC) to mitigate barren plateaux in variational quantum classifiers (VQCs). A baseline VQC consisting of an angle-embedding (Ry per feature) followed by one or more variational layers (Rx, Ry, Rz per qubit and linear CNOT entanglement) is implemented. The loss is the mean squared error between the circuit's Pauli-Z expectation on the first qubit and the binary label; classification uses the sign of that expectation. During training, if the optimization stagnates for a specified number of epochs or with some probability, bounded uniform noise is added to the training features (X' = standardize(X + U(-ε, ε))) for a small number of optimization steps; then training resumes on the original data. Experiments compare NO-VQC against the baseline VQC (same random initial parameters) and several classical classifiers (logistic regression, decision tree, random forest, k-NN, SVM). Performance is measured via train/test accuracy, loss trajectories, number of noise shifts, and gradient statistics. Statistical tests (Wilcoxon signed-rank) and post-hoc analyses (Friedman test, Nemenyi) are used to assess significance and rank methods. Multiple independent runs (with fixed seeds for comparability) and different circuit depths (1–5 layers) and qubit counts (experiment-dependent) are reported.",
+  "algorithms_used": [
+    "Variational Quantum Classifier (VQC)",
+    "Noise-Optimization VQC (NO-VQC)",
+    "Gradient Descent optimizer (PennyLane GradientDescentOptimizer)",
+    "Classical baselines: Logistic Regression",
+    "Decision Tree",
+    "Random Forest",
+    "k-Nearest Neighbors (KNN)",
+    "Support Vector Machine (SVM)"
+  ],
+  "frameworks": [
+    "PennyLane",
+    "scikit-learn"
+  ],
+  "experimental_setup": "Implemented in PennyLane with parameterized circuits using angle embedding (Ry per feature) and variational layers (Rx,Ry,Rz + linear CNOTs). Measurements compute the expectation of Pauli-Z on the first qubit. Shot-based simulations (shot noise) are used in some illustrative experiments (1000 shots). No specific quantum hardware or cloud QPU is reported.",
+  "dataset_used": "Real financial time-series: daily values of ten indices — BET (Bucharest Exchange Trading) as target and NASDAQ, S&P500, DJIA (USA), FTSE100, CAC40, DAX (Western Europe), ATX, BUX, WIG20 (Central & Eastern Europe). Time span: January 4, 2012 to December 22, 2022. Task: binary classification predicting short-term increase/decrease of BET given other indices.",
+  "experiment_input": {
+    "source": "Authors' collected financial indices (shared via article / Mendeley Data); baseline VQC code referenced from https://github.com/neuralsorcerer/variational-quantum-classifier",
+    "size_and_splitting": "20 test intervals of 20 days used; for each interval random train/test split (seed 42). For each interval, 10 independent runs performed.",
+    "preprocessing": "Features standardized. Angle embedding uses each feature as Ry rotation angle. For NO-VQC, when applied, uniform noise U(-ε, ε) added to training features and then re-standardized."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Standardize training data",
+      "Initialize circuit parameters θ randomly (same seed for paired comparisons)",
+      "For epoch = 1..nepochs:",
+      "  If steps_without_improvement > n_stagnation OR random() < eps_noise, then:",
+      "    Generate U ~ Uniform(-ε, ε) of same shape as Xtrain; Xtrain_shifted = standardize(Xtrain + U)",
+      "    Train for n_noise epochs on shifted data",
+      "    Revert Xtrain to original",
+      "  Perform one optimization step on current Xtrain using GradientDescentOptimizer",
+      "  Compute loss (MSE) and update best θ",
+      "Stop after maximum epochs and evaluate best θ on test set using sign(expectation of Pauli-Z)"
+    ],
+    "parameters_used_in_pipeline": "Vary number of variational layers (1–5), qubits equal to number of features (experiments used 3 qubits for some settings, 9 qubits for others), paired runs with identical initial θ, 10 independent runs per split"
+  },
+  "experiment_output": {
+    "metrics": [
+      "Train accuracy",
+      "Test accuracy",
+      "Loss over epochs (MSE)",
+      "Number of data shifts (noise applications)",
+      "Gradient mean and variance over epochs"
+    ],
+    "baselines": [
+      "Baseline VQC without noise",
+      "Classical classifiers: Logistic Regression, Decision Tree, Random Forest, k-NN, SVM"
+    ],
+    "statistical_analysis": [
+      "Wilcoxon signed-rank test to compare paired VQC vs NO-VQC accuracies",
+      "Friedman test and Nemenyi post-hoc analysis to rank methods (critical distance diagrams)"
+    ]
+  },
+  "experiment_parameters": {
+    "nepochs": 100,
+    "qubits": "experiment-dependent; main testbeds used 3 qubits for first three sets and 9 qubits for the last; other illustrative experiments varied qubits (2–13)",
+    "layers_tested": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "optimizer": "PennyLane GradientDescentOptimizer (gradient descent) with step size 0.1",
+    "loss_function": "Mean squared error between Pauli-Z expectation (first qubit) and binary label",
+    "measurement_shots": "1000 shots used in visual/shot-noise illustrations (not tied to reported aggregate results explicitly)",
+    "noise_mechanism": {
+      "noise_distribution": "Uniform(-ε, ε)",
+      "epsilon (eshift)": 0.1,
+      "nstagnation": 5,
+      "nnoise": 2,
+      "eps_noise_probability": 0.1
+    },
+    "runs_per_setting": 10,
+    "random_seed_for_splits_and_initialization": 42
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "Authors reference baseline VQC code at https://github.com/neuralsorcerer/variational-quantum-classifier and state that data are shared in the article / Mendeley Data. PennyLane and scikit-learn are used. Exact simulator backend or full code for NO-VQC is not explicitly provided in the paper text, but sufficient hyperparameters and algorithm outlines (algorithms 1–3) are described to attempt reproduction.",
+  "key_findings": [
+    "[supported] The authors propose a Noise-Optimization mechanism (NO-VQC) that adds small bounded uniform noise to training data when optimization stagnates, using the shifted data for a few optimization steps and then resuming on the original data.",
+    "[supported] In empirical experiments on a financial classification task (predicting short-term BET index direction from other indices), NO-VQC produced significantly better results than the baseline VQC in aggregate (statistical tests reported; overall Wilcoxon p < 0.05).",
+    "[supported] NO-VQC reduces overfitting relative to the baseline VQC (smaller train-test accuracy gaps observed).",
+    "[supported] NO-VQC changed loss landscapes and gradient behavior (increased variability / oscillation of gradients and altered loss surfaces), enabling escape from stagnation in the tested cases.",
+    "[supported] In several experimental configurations (specific circuit depths / datasets) NO-VQC matched or was ranked among the best-performing methods alongside classical classifiers (e.g., logistic regression, SVM) according to their comparative ranking analyses.",
+    "[supported] Wilcoxon tests indicate that in about 60% of the separate experimental comparisons the NO-VQC improvements over baseline VQC were statistically significant.",
+    "[supported] Example run: NO-VQC test accuracy 0.714 vs baseline VQC test accuracy 0.571 (illustrative single-run outcome reported).",
+    "[supported] Classical baselines (logistic regression, SVM) achieved median test accuracies around 0.71 for USA and Western Europe testbeds; for Central & Eastern Europe median accuracy was ~0.64 (reported as empirical context).",
+    "[speculative] The authors claim the mechanism is general-purpose and independent of the ansatz or classical optimizer (the paper argues applicability across VQCs but does not empirically test many circuit families or optimizers).",
+    "[speculative] The paper suggests the NO-VQC approach could extend to other datasets, architectures and real quantum hardware but explicitly notes the need for further testing (future work).",
+    "[speculative] The specific choice of uniform noise (mean 0, std ≈0.577 on standardized data) is proposed as a simple initial choice; the optimal noise distribution/magnitude is left as open research.",
+    "[speculative] The method is presented as a practical mitigation for barren plateaus observed in VQCs; while empirically helpful in the studied problems, broader claims about escaping all barren plateaus or scalability to larger/qubit counts remain unproven.",
+    "[supported] The number of data shifts (noise applications) used by NO-VQC did not show a clear correlation with final accuracy across experiments in this study.",
+    "[speculative] The authors posit potential relevance of NO-VQC to advance VQC applicability in financial market analysis; this is presented as potential rather than proven advantage."
+  ],
+  "results_summary": "The paper introduces NO-VQC, a simple mechanism that applies small bounded uniform noise to training data when the variational quantum classifier's optimization stagnates, then continues optimization briefly on the shifted data before returning to the original data. On a suite of financial classification experiments (modeling short-term BET index movements versus other indices), NO-VQC produced statistically significant improvements over a baseline VQC in aggregate and in about 60% of per-experiment comparisons (Wilcoxon tests). NO-VQC altered loss landscapes and gradient behavior to help escape stagnation, reduced overfitting relative to the baseline VQC, and in some circuit-depth/configuration combinations achieved performance comparable to classical classifiers (e.g., logistic regression, SVM). The authors note limitations and call for further testing across circuits, datasets, and on real quantum hardware.",
+  "performance_claims": [
+    "Overall Wilcoxon test: NO-VQC vs VQC shows statistically significant improvement (overall p < 0.05 reported).",
+    "Approximately 60% of the separate experiments showed statistically significant improvement of NO-VQC over baseline VQC (per-experiment Wilcoxon).",
+    "Example single-run result: NO-VQC test accuracy 0.714 versus VQC test accuracy 0.571 (USA, three-layer example in paper).",
+    "Classical baselines (logistic regression and SVM) reported median test accuracy ~0.71 for USA and Western Europe testbeds; Central & Eastern Europe median ~0.64 (reported empirical baselines).",
+    "NO-VQC hyperparameters used in experiments include: stagnation threshold = 5 iterations, random-noise probability = 0.1, nnoise = 2 iterations on shifted data, nepochs = 100 (experiment configuration, not performance metric)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors report that NO-VQC improves VQC optimization and in certain simple circuit-depth settings matches classical method performance on the tested financial tasks, but they do not demonstrate a clear, general quantum advantage. Results are empirical and limited to simulated/sampling experiments and specific circuits and datasets; broader claims of quantum advantage and applicability to real quantum hardware remain speculative and unproven.",
+  "limitations": [
+    "The study focuses on improving the optimization phase rather than on end-to-end deployment on quantum hardware (i.e., proof-of-concept on simulated VQCs rather than demonstrated on real quantum devices) (author-stated).",
+    "A simple, generic variational circuit (AngleEmbedding + Rx,Ry,Rz layers + linear CNOTs) was used as a baseline rather than problem-specific / optimized ansatz designs (author-stated).",
+    "The noise mechanism and experiments were evaluated primarily in simulation (with shot-noise experiments), and the effects on real quantum hardware (including device noise and decoherence) were not studied (author-stated).",
+    "The choice of noise model is limited: a bounded uniform noise with fixed magnitude was used; the paper notes this is one of the simplest choices and that the 'appropriate noise distribution' requires further research (author-stated).",
+    "No theoretical guarantee that applying the data-shift (noise) will produce an improvement; the mechanism is heuristic and may sometimes delay the search or fail to escape wide plateaux (author-stated).",
+    "The loss minimum does not always correspond to a good classification outcome (i.e., optimizing the loss may not map to improved predictive performance) (author-stated).",
+    "Experimental evaluation is restricted to a single financial domain/data collection (BET index vs nine other indices) and a relatively small temporal sampling scheme (20 intervals of 20 days) — limiting generalizability (author-stated).",
+    "Classical baselines were run with default scikit-learn parameters (no hyperparameter tuning reported), so the comparison may not reflect best classical performance (inferred).",
+    "[inferred] The study used a single optimizer (GradientDescentOptimizer) which is known to be susceptible to barren plateaux; interactions between the noise mechanism and other optimizers were not explored.",
+    "[inferred] The approach was evaluated on modest numbers of qubits and shallow circuits (examples used 2–9 qubits and up to 5 layers in many tests); scalability to larger qubit counts and deeper circuits is untested.",
+    "[inferred] The noise magnitude, application schedule (nstagnation, nnoise), and random-noise probability were fixed in experiments; sensitivity analysis over these hyperparameters was limited.",
+    "[inferred] The method does not guarantee that the new regions reached after shifting are better; the mechanism relies on randomness and empirical acceptance, which may not be robust across tasks.",
+    "[inferred] Feature selection and circuit-data co-design were not performed; the paper itself suggests feature selection may be recommended for these financial data but did not integrate it.",
+    "[inferred] Statistical results show significance in ~60% of experiments; in ~40% there was no significant benefit, indicating the method is not universally effective across configurations."
+  ],
+  "open_questions": [
+    "What noise distributions (beyond uniform) and magnitudes are most effective for escaping barren plateaux in VQCs across different data types and circuit architectures? (author-raised)",
+    "How does the Noise-Optimization mechanism behave on real quantum hardware with realistic device noise, finite coherence times, and gate infidelities? (author-raised)",
+    "How should the noise application policy (when to apply noise, how long to optimize on shifted data, and with what probability) be adapted or learned for best performance? (author-raised / inferred)",
+    "How does the proposed data-shift mechanism interact with different classical optimizers (including gradient-free methods, natural gradient variants, adaptive optimizers)? (inferred / author context)",
+    "To what extent do circuit depth, qubit count, and ansatz design influence the effectiveness of the noise mechanism (i.e., what configurations benefit most)? (author-stated/inferred)",
+    "Can localised noise (acting on subsets of features/qubits) be more effective than global data shifts, and how to choose which features/qubits to perturb? (author-suggested)",
+    "Does the noise mechanism generalize to other problem domains beyond the tested financial datasets, and what are the robustness and generalization properties across datasets? (author-stated)",
+    "Is there a principled way to predict whether a barren plateau or other stagnation cause (saddle, local minimum) is present so as to trigger noise application selectively? (inferred)",
+    "How sensitive are results to initial parameter initialization strategies and to randomness in both initialization and noise sampling? (inferred)",
+    "Can adaptive or learned noise schemes (e.g., magnitude/schedule learned during training) outperform fixed uniform noise? (author-suggested / inferred)"
+  ],
+  "future_work": [
+    "Study the effects of the Noise-Optimization mechanism on real quantum computers, including hardware noise and decoherence (author-stated).",
+    "Investigate model design and scalability, i.e., test the approach on larger/qubit counts and deeper circuits, and explore circuit architectures tailored to data characteristics (author-stated).",
+    "Develop adaptive noise mechanisms to escape barren plateaux and improve overall classification performance (author-stated).",
+    "Test the noise-based approach across various financial datasets and alternative quantum architectures to assess robustness and generalization (author-stated).",
+    "Explore alternative noise distributions and strategies (including local noise acting on subsets of qubits/features) to identify better-performing choices (author-stated and author-suggested).",
+    "Further research on the choice of appropriate noise distribution for VQC and the interaction of noise with other mitigation strategies (author-stated).",
+    "Examine integrating feature selection or data preprocessing steps prior to VQC training, given potential benefits noted for the financial data used (inferred / author-observed).",
+    "Investigate the combination of the proposed data-shift mechanism with other BP-escaping techniques (e.g., layerwise training, local cost functions, initialization methods) to evaluate synergies (inferred)."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — NO-VQC is proposed as a practical mitigation for barren plateaux in NISQ-era variational quantum classifiers and is evaluated on small-scale (2–13 qubit) shot-based simulations using real financial index data.",
+    "#idea:hybrid-approach — The method combines classical preprocessing/standardization, classical gradient-descent optimization, and occasional bounded uniform perturbations of training data (data shifts) to diversify parameter search and escape stagnation.",
+    "#idea:near-term-feasibility — Empirical results with statistical testing (Wilcoxon, Friedman, Nemenyi) show NO-VQC significantly improves over a baseline VQC and attains competitive performance relative to several classical classifiers on the BET index prediction task.",
+    "#limitation:simulation-only — All experiments are performed in simulator backends (PennyLane); no experiments on real QPU hardware are reported.",
+    "#limitation:qubit-count — Experiments are limited to small numbers of qubits (main tests with 3 and 9 qubits, up to 13 in illustrations), indicating limited evidence for scalability to higher-dimensional, production-scale finance problems.",
+    "#limitation:data-encoding — Uses angle embedding (one Ry per feature), implying qubit-per-feature scaling and potential encoding bottlenecks for higher-dimensional financial datasets.",
+    "#limitation:simulation-only — Although hyperparameters and algorithms are described and data/code references are given, full NO-VQC code for reproduction on exact simulator backends is not explicitly provided in the paper text."
+  ],
+  "contradictions": []
+}

@@ -1,0 +1,222 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier and date (arXiv:2510.19494v1), and is formatted like a research manuscript (abstract, methods, results, references) without indication of a journal or conference publication—hallmarks of an arXiv preprint.",
+  "title": "Quantum Machine Learning methods for Fourier-based distribution estimation with application in option pricing",
+  "authors": [
+    "Fernando Alonso",
+    "Álvaro Leitao",
+    "Carlos Vázquez"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint arXiv:2510.19494",
+  "doi": "",
+  "abstract_summary": "The paper introduces two hybrid classical–quantum approaches that employ parametrized quantum circuits to learn Fourier-series representations of probability distributions (PDF or CDF) from data and use those learned coefficients, combined with analytically computed payoff coefficients, to price European options. Methods are benchmarked against Quantum Accelerated Monte Carlo (using a modified RQAE), with experiments analyzing dataset size and circuit complexity, reporting competitive accuracy and favorable sample‑efficiency trade-offs.",
+  "methodology_description": "The paper develops and empirically evaluates three hybrid classical–quantum approaches to option pricing that rely on extracting Fourier-series representations of distributions via parametrized quantum circuits (PQCs). Method I is a supervised approach: PDFs (or their evaluations and derivatives) are used as labels to train a PQC in a Sobolev/H1 empirical-risk formulation (a Differential Machine Learning style loss including a derivative term). After training the PQC (trained on data rescaled to [−π,π] but trained in [−2π,2π] to mitigate Gibbs effects), the circuit is evaluated on a grid and Discrete Fourier Transform (DFT) is used to extract Fourier coefficients; payoff Fourier coefficients are obtained analytically and the option price is computed as the sum of products of matching coefficients. Method II is self-supervised and targets the CDF: only samples of the underlying are provided, an empirical CDF is constructed, and an empirical risk combining CDF l2 terms, a proxy l2 risk for the density (using Monte Carlo approximations and a numerical integral of f^2), and boundary constraints is minimized to learn a PQC representation of the CDF; coefficients are again extracted by DFT on the trained circuit outputs and combined with analytic payoff coefficients (integration-by-parts based formulation). Method III is a QAMC-style baseline that estimates Fourier coefficients directly via (modified) quantum amplitude estimation (mRQAE) / QAE: when an exact quantum encoding of the modelled distribution is available (e.g., Black–Scholes analytic sampling), mRQAE is used to estimate signed coefficients (Monte Carlo sums realized by quantum amplitude estimation) and the coefficients are combined with analytic payoff coefficients to compute the option price. Across methods the authors study the impact of (i) dataset/sample size and (ii) PQC expressivity (schemes described as n × n: n qubits and n layers) on price estimation accuracy, comparing results to analytical Black–Scholes prices and using the QAMC/mRQAE method as an empirical benchmark of cost (shots per coefficient) vs. accuracy.",
+  "algorithms_used": [
+    "Parametrized Quantum Circuits (PQC)",
+    "Discrete Fourier Transform (DFT)",
+    "Differential Machine Learning (DML) style empirical H1 loss",
+    "Quantum Accelerated Monte Carlo (QAMC)",
+    "Quantum Amplitude Estimation (QAE) — iterative/real variants (IQAE, RQAE)",
+    "Modified Real QAE (mRQAE) (authors' variant)",
+    "Monte Carlo sampling (classical)"
+  ],
+  "frameworks": [
+    "PennyLane",
+    "JAX",
+    "Python (general)"
+  ],
+  "experimental_setup": "Experiments are numerical simulations run on a classical workstation (no QPU). The machine used: Intel Core i7-8550U CPU @ 1.80GHz, 8 GB RAM, Windows 10 (64-bit). Software: Python 3.12.7, JAX 0.4.35, PennyLane 0.40.0. PQC ansatz: repeated layers of a data-encoding rotation Rx(x) and parameterized single-qubit Ry(θ) blocks (schematic provided); circuit configurations explored as n × n (n qubits and n layers) with example schemes 4×4, 5×5, 6×6, 7×7, 8×8. Method III experiments varied the number of shots (approx. 2000–7000 shown) used by mRQAE.",
+  "dataset_used": "Synthetic data from Black–Scholes model simulations. The underlying distribution is log-normal (Black–Scholes closed-form), transformed to log-price X = log(S/K) (normal). Option parameters: S0=100, r=0.1, T=1, σ=0.25. Strike prices used: K ∈ {90, 100, 110}. Datasets consist of Monte Carlo samples of terminal prices (or exact PDFs/CDFs evaluated on grid) for the distribution; sizes varied per experiment (see experiment_input).",
+  "experiment_input": {
+    "source": "Generated synthetically from Black–Scholes closed-form (exact sampling of terminal prices / analytic PDF and CDF).",
+    "sizes": {
+      "Method_I_training_points": "250 up to 2.5e3 (varied in experiments)",
+      "Method_II_training_points": "1e3 up to 1e4 (varied)",
+      "Method_I_test_points": "100",
+      "Method_II_test_points": "1e3",
+      "Method_III_shots": "varied per coefficient (2k–7k shown); reported need ~5000 shots per coefficient for high accuracy"
+    },
+    "preprocessing": "Log-normal -> log-price transform X = log(S/K) used. Data rescaled to [−π,π] for PQC inputs, but models trained on a larger interval [−2π,2π] (to reduce Gibbs artifacts). Truncation interval [a,b] chosen to contain effective mass of distribution (per citation [33]). Fourier expansions truncated at K (number of harmonics) — K chosen to match PQC expressivity (exact K values not explicitly enumerated for each experiment)."
+  },
+  "experiment_process": {
+    "Method_I": [
+      "Generate labeled dataset: (x,f(x)) either analytic PDF evaluations or samples with labels.",
+      "Rescale inputs to [−π,π]; train PQC on interval [−2π,2π] using empirical H1 loss incorporating squared error and derivative-squared error (DML-style).",
+      "Optimization: Adam optimizer, learning rate 0.005, 300 epochs, supervised/differential weights (0.9/0.1), repetitions=10.",
+      "After training, evaluate trained PQC on a uniform grid in [−π,π], compute exponential-form Fourier coefficients via DFT, convert to real trigonometric coefficients Af_k, Bf_k.",
+      "Compute payoff Fourier coefficients Ck, Dk analytically.",
+      "Compute price: sum over k of Af_k*Ck + Bf_k*Dk (with normalization and discount factor)."
+    ],
+    "Method_II": [
+      "Generate unlabeled dataset: i.i.d. samples of terminal asset price from Black–Scholes.",
+      "Construct empirical CDF F_emp(x) = (1/I) sum 1_{xi <= x}.",
+      "Define empirical risk combining: l2 mismatch to F_emp on sample points, an l2 proxy for the density (−2 sum f(xi) + numerical integral of f^2), and boundary constraints to enforce CDF behavior.",
+      "Rescale inputs to [−π,π]; train PQC using Adam (learning rate 0.1), 300 epochs, supervised/differential weights (0.2/0.8), repetitions=10; PQC trained to represent CDF (and implicitly density via derivative), trained in [−2π,2π].",
+      "Extract Fourier coefficients via DFT on PQC outputs (period chosen 2(b−a) with specific shifted interval to suppress Gibbs), get AF_k, BF_k; compute integrals Ca_k, Da_k analytically/numerically per integration-by-parts formulation.",
+      "Compute price combining coefficients as per derived formula."
+    ],
+    "Method_III": [
+      "Assume exact quantum state preparation or exact classical sampling for Black–Scholes distribution encoding into a quantum register.",
+      "Compute Fourier coefficients Af_k and Bf_k as expectations of cos/sin observables via Monte Carlo sums implemented through amplitude encoding.",
+      "Use mRQAE (modified Real Quantum Amplitude Estimation) to estimate signed expectations (coefficients) to prescribed precision; vary number of shots/tolerances to study cost vs accuracy.",
+      "Combine estimated coefficients with analytic payoff coefficients to compute price."
+    ],
+    "common_notes": "PQC ansatz: repeated single-qubit Rx(x) data-encoding followed by Ry(θ) parameter rotations; circuit sizes n×n (n qubits, n layers). DFT used to move between exponential and trigonometric Fourier coefficient representations. Experiments study convergence with respect to dataset size and PQC size, and compare cost (shots per coefficient) for mRQAE baseline."
+  },
+  "experiment_output": {
+    "formats": "Estimated option prices (numerical scalar), estimated Fourier coefficients (Af_k, Bf_k or AF_k, BF_k), distributions (PQC output curves), and uncertainty summaries (median, 25th/75th percentiles over repetitions). Convergence plots showing estimated price vs dataset size (Methods I/II) and vs shots (Method III).",
+    "metrics": "Primary metric: absolute accuracy of estimated option price vs analytic Black–Scholes price. Secondary metrics: convergence behavior of coefficients, variability across repetitions, and empirical computational cost measured as number of circuit executions/shots per coefficient for mRQAE.",
+    "baselines": "Method III (QAMC / mRQAE) used as a benchmark for cost vs accuracy. Analytical Black–Scholes closed-form price used as ground-truth reference."
+  },
+  "experiment_parameters": {
+    "PQC_configurations_tested": [
+      "4x4 (4 qubits, 4 layers)",
+      "5x5",
+      "6x6",
+      "7x7",
+      "8x8"
+    ],
+    "optimizer": "Adam",
+    "learning_rates": {
+      "Method_I": 0.005,
+      "Method_II": 0.1
+    },
+    "epochs": 300,
+    "supervised_vs_differential_weights": {
+      "Method_I": {
+        "supervised": 0.9,
+        "differential": 0.1
+      },
+      "Method_II": {
+        "supervised": 0.2,
+        "differential": 0.8
+      }
+    },
+    "training_point_counts": {
+      "Method_I_range": "250 – 2500 (examples reported)",
+      "Method_II_range": "1000 – 10000"
+    },
+    "test_point_counts": {
+      "Method_I": 100,
+      "Method_II": 1000
+    },
+    "repetitions": 10,
+    "shots_for_Method_III": "varied 2000–7000 (plots); authors remark ~5000 shots per coefficient needed for high accuracy",
+    "model_parameters": {
+      "BlackScholes": {
+        "S0": 100,
+        "r": 0.1,
+        "T": 1,
+        "sigma": 0.25,
+        "K_values": [
+          90,
+          100,
+          110
+        ]
+      }
+    },
+    "DFT_truncation": "Fourier truncation degree K chosen to match PQC expressivity (K per experiment not explicitly enumerated)"
+  },
+  "hardware_details": {
+    "machine": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz, 8 GB RAM",
+    "os": "Windows 10 (64-bit)",
+    "python_version": "3.12.7",
+    "libraries": {
+      "JAX": "0.4.35",
+      "PennyLane": "0.40.0"
+    },
+    "QPU": "none (simulated quantum circuits on classical hardware via PennyLane)",
+    "cloud_provider": "none"
+  },
+  "reproducibility_notes": "The paper provides detailed hyperparameters (optimizer, learning rates, epochs, dataset sizes, PQC ansatz schematic, PQC configurations tested and software versions), and the Black–Scholes generative model and option parameters are fully specified. However, no code repository, seeds, explicit PQC gate-level circuits (full gate sequence per layer beyond a schematic), nor exact Fourier truncation K values per experiment are provided in the manuscript. The mRQAE implementation details are referenced to prior work but implementation code is not released here. Reproducing results should be feasible from the described parameters but would require reimplementation of PQC ansatz and mRQAE details absent from the paper.",
+  "key_findings": [
+    "[speculative] Parametrized Quantum Circuits (PQCs) can be expressed as partial Fourier series and, with appropriate encoding Hamiltonians and sufficient circuit resources, can approximate continuous functions (including PDFs and CDFs) in C0, Lp and Sobolev Hk norms (recall of theorems from prior work).",
+    "[supported] Two hybrid classical–quantum methods were implemented to price European options by learning Fourier-series coefficients of the underlying distribution: (I) supervised learning of the PDF with a PQC; (II) self-supervised learning of the CDF with a PQC.",
+    "[supported] A third approach (Method III) based on Quantum Accelerated Monte Carlo (QAMC) with a modified Real Quantum Amplitude Estimation (mRQAE) was implemented as a benchmark to extract Fourier coefficients.",
+    "[supported] Numerical experiments (Black–Scholes setting, S0=100, r=0.1, T=1, σ=0.25, strikes K∈{90,100,110}) show that both PQC-based methods (I and II) converge toward the reference option price as dataset size increases, with observable variability due to training randomness.",
+    "[supported] Empirically, PQC circuit configurations of size roughly 6×6–8×8 (Method I) and 4×4–6×6 (Method II) provided stable and accurate estimates in the experiments reported.",
+    "[supported] Method II (CDF self-supervised PQC) achieved comparable precision to the QAMC benchmark (Method III) using on the order of 10,000 classical data samples, whereas Method III required on the order of hundreds of thousands of quantum circuit shots to reach similar accuracy/low variability.",
+    "[supported] In the QAMC experiments, approximately 5000 shots per Fourier coefficient were reported as needed on average to get highly accurate coefficient estimates; summing across coefficients yields an order-of-magnitude of hundreds of thousands of shots for a full price estimate.",
+    "[speculative] The paper claims that the proposed QML-based Fourier methods are a competitive quantum alternative to QAMC for derivative valuation in practice, emphasizing Method II's practicality since it needs only sampled asset paths rather than an explicit PDF.",
+    "[speculative] Training PQCs on an enlarged window ([−2π,2π] with data scaled to [−π,π]) reduces Gibbs-like edge artifacts in Fourier reconstructions of PDF/CDF compared to training directly on [−π,π].",
+    "[speculative] Incorporating derivative information into the empirical risk (Differential Machine Learning style) helps force pointwise convergence and improves approximation performance of PQC models."
+  ],
+  "results_summary": "The paper proposes two PQC-based hybrid classical–quantum methods to price European options by learning Fourier coefficients of the underlying PDF (supervised) or CDF (self-supervised), and uses a QAMC implementation (mRQAE) as a benchmark. Numerical experiments in a Black–Scholes setting indicate that both PQC methods converge toward the reference price as data and circuit expressivity increase. Method II (CDF, self-supervised) attained accuracy comparable to QAMC while relying on ~10,000 classical sample paths; by contrast, the QAMC approach required on the order of hundreds of thousands of quantum shots to achieve similar low-variance results. The authors therefore argue that QML-based Fourier estimation is a practical and competitive alternative for derivative valuation, especially when only sampled trajectories are available.",
+  "performance_claims": [
+    "Method II achieved comparable precision to the QAMC benchmark using approximately 10,000 classical data samples.",
+    "Method III (QAMC with mRQAE) required approximately 5,000 shots per Fourier coefficient on average; aggregated across coefficients this implies hundreds of thousands of shots to compute the final option price with low variability.",
+    "PQC circuit dimensions that produced stable/accurate results in experiments: Method I: 6×6–8×8; Method II: 4×4–6×6.",
+    "Training hyperparameters used in reported experiments: Adam optimizer, learning rates reported (0.005 for Method I, 0.1 for Method II), 300 epochs, dataset sizes ranging up to 10,000 for self-supervised experiments."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper demonstrates, via simulated numerical experiments, that PQC-based Fourier estimation can match the accuracy of a QAMC benchmark while using far fewer classical sample paths than the number of quantum shots required by the QAMC implementation. However, this is shown in simulation rather than on quantum hardware, the comparison mixes different resource models (classical data samples vs. quantum shots), and no asymptotic or provable quantum speedup over classical algorithms is established; therefore any claim of practical quantum advantage remains speculative.",
+  "limitations": [
+    "QAMC approaches have known practical drawbacks (notably difficulties tied to the QAE/QPE subroutines and state-preparation), motivating use of alternative amplitude‑estimation variants (IQAE, RQAE, mRQAE) (author-stated).",
+    "Method III (QAMC + mRQAE) requires a large number of circuit executions (authors report on the order of ~5000 shots per Fourier coefficient, implying hundreds of thousands of shots to obtain a final option price), producing high empirical quantum cost (author-stated).",
+    "PQC training exhibits stochastic variability resulting in occasional outliers in estimated prices due to random initialization and optimization randomness; multiple repetitions and statistical post-analysis are required (author-stated).",
+    "Choice of training interval matters: training over [−π, π] causes Gibbs-like oscillations for the CDF and worse approximations; training over an extended interval (e.g. [−2π, 2π]) is needed to mitigate this (author-stated).",
+    "There is no single universal optimal PQC configuration — a trade-off exists between circuit complexity (number of qubits/layers, hence number of Fourier coefficients) and achievable accuracy/generalization (author-stated).",
+    "The methodology assumes the payoff Fourier coefficients (Ck, Dk) are typically available analytically and uses that fact in assembling the price formula (author-stated).",
+    "Experiments rely on exact path simulation for the Black–Scholes model (so Method III avoids numerical SDE discretization error by construction); the reported results therefore do not account for challenges introduced by numerical path-simulation error in more complex models (author-stated).",
+    "[inferred] The study is performed in a simulation environment (JAX / PennyLane) and does not report experiments on real noisy quantum hardware; noisy-device effects and error mitigation are not evaluated.",
+    "[inferred] The presented work is focused on univariate European vanilla options (Black–Scholes); applicability to American options, path-dependent payoffs, multi-asset or higher‑dimensional derivatives is not demonstrated.",
+    "[inferred] The methods rely on truncation of the domain [a,b] and a finite number K of Fourier terms; sensitivity to truncation choices and to K (bias/approximation error trade-offs) is not characterized exhaustively.",
+    "[inferred] Scalability concerns: increasing problem dimensionality or number of required Fourier coefficients will increase PQC size and training complexity, potentially exacerbating optimization issues (e.g., barren plateaus), but scalability analysis is absent.",
+    "[inferred] The resource comparison against classical approaches is empirical (shot counts and dataset sizes); no full rigorous complexity or wall‑clock runtime comparison with optimized classical Fourier/FFT or Monte Carlo methods is given."
+  ],
+  "open_questions": [
+    "How do the proposed PQC‑based Fourier estimation methods scale and perform for more complex asset dynamics (stochastic volatility models, jump processes) where exact path simulation is not available?",
+    "How robust are the PQC training procedures and resulting Fourier coefficient estimates on real noisy quantum hardware (including noise, finite sampling, and gate errors)?",
+    "What are principled procedures to choose the truncation interval [a,b] and the number of Fourier terms K adaptively for a given pricing problem and desired accuracy?",
+    "What are optimal PQC architectures, data‑encoding strategies and hyperparameter choices (qubit count, number of layers, optimizer settings) for stability and generalization in this application?",
+    "Can the shot-inefficiency of QAMC (Method III) be reduced in practice (either by algorithmic improvements, better state-preparation, or hybrid strategies) to make it more competitive with QML-based approaches?",
+    "How do the QML Fourier‑based approaches compare with state-of-the-art classical Fourier/FFT and Monte Carlo pricing methods in terms of wall‑clock time, memory, and end-to-end computational cost on realistic hardware?",
+    "How sensitive are Methods I and II to limited, noisy, or non-representative market data samples, and how can robustness be improved in realistic data regimes?",
+    "Can the approach be generalized to multivariate distributions and multi‑underlying derivatives (basket options), and if so, what are the circuit/resource implications?",
+    "How to theoretically bound generalization and estimation errors of PQC‑based Fourier coefficient learning (tighten the connection between Sobolev/Hk convergence results and finite‑sample, noisy optimization)?",
+    "Could hybrid combinations (e.g., better classical preprocessing, improved state preparation, or variance-reduction techniques) materially improve the practical efficiency of these quantum methods?"
+  ],
+  "future_work": [
+    "Scale the PQC design complexity (vary number of qubits and layers) to study how accuracy and generalization behave with circuit capacity (mentioned by authors as a design and analysis direction).",
+    "Perform a larger number of experimental repetitions and detailed statistical analysis to isolate sources of variability and quantify robustness of PQC training (authors note the need for multiple runs and post‑analysis).",
+    "Extend the methodology to handle more complex stochastic dynamics (e.g., stochastic volatility models) where exact analytic path simulation is not available, and study the effect of numerical SDE discretization errors (authors explicitly discuss the distinction).",
+    "Investigate different PQC ansaetze, encoding schemes and hyperparameter choices to identify architectures that balance expressivity and trainability for the Fourier‑coefficient learning tasks (paper explores several n×n configurations and suggests further study).",
+    "Explore trade-offs between dataset size (classical sampling) and quantum resources (shots / amplitude estimation precision), and refine empirical cost metrics for fair comparisons between QML and QAMC approaches (authors benchmarked shot counts vs dataset sizes)."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "quantum-ml-finance",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical",
+    "amplitude-estimation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach",
+    "idea:near-term-feasibility"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Hybrid PQC-based Fourier coefficient learning achieves competitive option-pricing accuracy and reports favorable sample-efficiency trade-offs versus a modified RQAE (mRQAE) benchmark in numerical experiments.",
+    "#idea:hybrid-approach — Two hybrid learning pipelines: (I) supervised PQC trained with an H1/Differential ML style loss to learn PDFs and extract Fourier coefficients via DFT; (II) self-supervised PQC trained on empirical CDFs with boundary and density-proxy terms to extract coefficients; plus (III) a QAMC-style baseline using modified RQAE to estimate coefficients directly.",
+    "#idea:near-term-feasibility — Algorithms are framed with NISQ-style PQCs (n x n ansatz, experiments up to 8 qubits/8 layers) and emphasize sample/shot trade-offs, suggesting potential near-term relevance if state preparation and noise are addressed.",
+    "#limitation:simulation-only — All experiments are classical simulations on a workstation (PennyLane/JAX); no experiments on real QPUs are reported.",
+    "#limitation:no-empirical-validation — Evaluation uses synthetic Black–Scholes data (analytic sampling); no real-market data or hardware validation to confirm practical performance.",
+    "#limitation:data-encoding — Method III assumes exact quantum state preparation/encoding of the target distribution for mRQAE coefficient estimation; the cost and feasibility of such state preparation are not demonstrated or quantified."
+  ],
+  "contradictions": [
+    "The paper claims favorable sample-efficiency and competitive accuracy compared to quantum-accelerated Monte Carlo (mRQAE) yet provides only classical-simulator results and relies in Method III on an assumed exact quantum state preparation. This creates a tension between claimed quantum advantage and the lack of demonstrated end-to-end quantum implementation on real hardware.",
+    "Although reported as sample-efficient relative to mRQAE, the experiments also indicate substantial shot requirements (order ~5k shots per coefficient for high accuracy), highlighting a trade-off that may limit practical scalability on near-term devices."
+  ]
+}

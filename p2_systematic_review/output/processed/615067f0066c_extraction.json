@@ -1,0 +1,203 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document header explicitly states it was posted on TechRxiv and notes e-Prints are preliminary and not peer reviewed. The paper has an abstract, methods, experiments and appendices typical of a research preprint rather than a peer-reviewed journal or conference publication.",
+  "title": "Hybrid Quantum-Classical Portfolio Optimization Leveraging Counterdiabatic Annealing and Quantum Risk Factors",
+  "authors": [
+    "Yalla Jnan Devi Satya Prasad"
+  ],
+  "year": "2025",
+  "journal_or_venue": "TechRxiv (preprint)",
+  "doi": "10.36227/techrxiv.175795525.59311374/v1",
+  "abstract_summary": "This preprint proposes a hybrid quantum-classical framework for portfolio optimization that augments a QUBO mean-variance formulation with an entanglement-informed quantum risk matrix and employs counterdiabatic quantum annealing to accelerate convergence. The work presents penalty parameter bounds, theoretical convergence statements, and experiments combining D-Wave annealing runs (standard schedules) with Qiskit gate-model simulations for quantum risk, reporting improved out-of-sample performance on a 10-stock dataset while noting counterdiabatic schedules were simulated rather than executed on hardware.",
+  "methodology_description": "The study proposes a hybrid quantum-classical portfolio optimization methodology. The core optimization is a QUBO that augments a classical mean-variance objective with a quantum-informed risk term: fQ(x) = x^T Q_MV x + λ x^T E x + α (B - 1^T x)^2. The classical component uses estimated expected returns µ and covariance Σ (annualized from daily log-returns). The quantum risk matrix E is built by starting from the absolute-value classical correlation matrix |C| and adding a scaled pairwise quantum mutual information term computed from two-qubit parameterized circuits (Ry rotations followed by a controlled-Z) simulated with Qiskit Aer statevector simulator; von Neumann entropies of reduced density matrices produce the mutual information S(ρ_i)+S(ρ_j)-S(ρ_ij). Small entries of E are truncated to ε = 1e-4 to ensure numerical stability. Theoretical work derives conservative bounds for penalty parameters α and λ to enforce cardinality constraints and ensure quantum risk contributions are not dominated by classical terms. Counterdiabatic (CD) annealing theory is presented to justify faster convergence; CD schedules and their effects are evaluated via high-fidelity classical simulations/emulations (not executed on the physical QPU). The optimization pipeline is iterative: build QUBO using the latest µ, Σ, E, run quantum annealing (D-Wave Advantage physical runs used standard annealing for baselines; CD-assisted annealing is simulated), repair infeasible solutions to satisfy cardinality, select best candidate(s), and update statistics until stopping criteria. Empirical evaluation used real market data (10 S&P-derived equities), parameter sweeps for penalties (α, λ), ablation studies (remove quantum risk or CD), baselines (MIQP via Gurobi and a greedy heuristic), and standard statistical tests (paired t-tests, bootstrap CIs, Cohen's d) to assess significance.",
+  "algorithms_used": [
+    "Quantum annealing (D-Wave Advantage, standard annealing for physical runs)",
+    "Simulated counterdiabatic annealing (classical emulation)",
+    "QUBO formulation (mean-variance + quantum risk + cardinality penalty)",
+    "Classical optimizer SLSQP (mentioned as classical optimizer timing reference)",
+    "MIQP (Gurobi) baseline",
+    "Greedy heuristic baseline",
+    "Hybrid quantum-classical iterative sampler (Markov-chain style with repair steps)"
+  ],
+  "frameworks": [
+    "Qiskit (Aer statevector simulator)",
+    "D-Wave tooling (minorminer embedding)",
+    "Gurobi (MIQP baseline)",
+    "yfinance (data retrieval)"
+  ],
+  "experimental_setup": "Physical quantum annealing experiments were performed on the D-Wave Advantage system1.1. Embedding was done with minorminer. Typical annealer settings: 5000 anneal reads per problem, annealing time 20 µs per read, chain strength around 1.5 (swept 1.0–2.0 in calibration), average chain length ≈5–5.5, chain break policy majority vote, 10 independent runs per parameter configuration. Quantum risk (entanglement) calculations were performed on Qiskit Aer statevector simulator using parameterized two-qubit circuits (Ry(θ) on each qubit followed by a controlled-Z), with θ sampled uniformly in [0, π].",
+  "dataset_used": "Daily adjusted close prices downloaded via yfinance for 10 equities (AAPL, MSFT, GOOGL, AMZN, TSLA, BRK-B, JPM, JNJ, V, PG) covering January 1, 2019 to December 31, 2023. Training (in-sample) used Jan 1, 2019–Dec 31, 2021; testing (out-of-sample) used Jan 1, 2022–Dec 31, 2023.",
+  "experiment_input": {
+    "source": "yfinance (daily adjusted close prices)",
+    "assets": 10,
+    "tickers": [
+      "AAPL",
+      "MSFT",
+      "GOOGL",
+      "AMZN",
+      "TSLA",
+      "BRK-B",
+      "JPM",
+      "JNJ",
+      "V",
+      "PG"
+    ],
+    "timeframe": "2019-01-01 to 2023-12-31 (train: 2019-01-01 to 2021-12-31; test: 2022-01-01 to 2023-12-31)",
+    "preprocessing": "Compute daily log returns log(p_t/p_{t-1}); annualize mean returns by multiplying by 252 and annualize covariance similarly; no shrinkage applied. Construct classical correlation |C| from returns. For each asset pair, simulate a parameterized 2-qubit circuit and compute von Neumann entropies to obtain pairwise quantum mutual information. Truncate E entries with ε = 1e-4 and normalize E by its maximum entry."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Input µ, Σ, target cardinality B, penalty parameters α and λ.",
+      "Construct classical Q_MV (from q and Σ and µ) and classical correlation |C|.",
+      "For each asset pair (i,j): build 2-qubit parameterized circuit (Ry(θ_i), Ry(θ_j), CZ), simulate with Qiskit Aer statevector simulator, compute reduced density matrices and von Neumann entropies, compute quantum mutual information term, add γ-scaled term to |C| to form E.",
+      "Truncate small E entries at ε and normalize E by its maximum.",
+      "Form QUBO fQ(x) = x^T Q_MV x + λ x^T E x + α (B - 1^T x)^2.",
+      "Embed QUBO to D-Wave using minorminer (account for embedding overhead); set chain strength and chain break policy.",
+      "Run annealing on D-Wave: 5000 reads, annealing time 20 µs per read; repeat 10 independent runs with different seeds.",
+      "Resolve chain breaks by majority vote and repair infeasible solutions to meet cardinality constraint.",
+      "Combine quantum samples and classical candidate(s); select best candidate according to objective.",
+      "Update µ, Σ, E (if iterative updates performed) and repeat until convergence or max iterations.",
+      "Perform parameter sweeps over α and λ, ablation studies disabling quantum risk or CD, and simulated CD schedule experiments via classical emulation."
+    ],
+    "iterations_and_runs": "Each (α, λ) configuration tested with 10 independent runs. Annealer sampled with 5000 reads per problem. Iterative loop repeats until stopping criteria; number of iterations not universally fixed (convergence or max iterations)."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Out-of-sample Sharpe ratio",
+      "Maximum drawdown",
+      "Portfolio volatility",
+      "Objective function value (mean ± CI)",
+      "Feasibility rates (fraction satisfying cardinality)",
+      "Statistical test outputs (paired t-test p-values, 95% bootstrap CIs, Cohen's d effect sizes)"
+    ],
+    "baselines_compared": [
+      "MIQP solved with Gurobi (exact benchmark for n=10)",
+      "Greedy heuristic (forward selection by individual Sharpe ratio)"
+    ],
+    "result_formats": "Aggregated statistics over independent runs (mean ± standard deviation and confidence intervals), feasibility heatmaps over α and λ, ablation comparison plots, tables of objective and Sharpe ratios, p-values and effect sizes."
+  },
+  "experiment_parameters": {
+    "num_assets_logical": 10,
+    "effective_physical_qubits_estimate": 50,
+    "embedding_overhead_ratio": "approx. 1:5 (logical:physical) due to Pegasus topology",
+    "anneal_reads": 5000,
+    "annealing_time_per_read_us": 20,
+    "chain_strength": "approx. 1.5 (swept 1.0–2.0 in calibration)",
+    "average_chain_length": "≈5–5.5",
+    "chain_break_policy": "majority vote",
+    "independent_runs_per_config": 10,
+    "Qiskit_theta_sampling": "θ ~ Uniform(0, π)",
+    "quantum_risk_scaling_gamma": 0.5,
+    "truncation_epsilon": 0.0001,
+    "penalty_alpha_grid": "swept on logarithmic grid (examples α={10,50,100} shown)",
+    "penalty_lambda_grid": "swept on logarithmic grid (examples λ={0,5,10} shown)"
+  },
+  "hardware_details": {
+    "qpu_model": "D-Wave Advantage system1.1",
+    "quantum_simulator": "Qiskit Aer (statevector simulator)",
+    "embedding_tool": "minorminer",
+    "classical_solver": "Gurobi (MIQP baseline), SLSQP mentioned for timing reference",
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "Authors state that raw return data and processed covariance/mean files are publicly available at an (unfilled) repository URL and that detailed random seeds and processing scripts are available in supplementary material 'upon formal request'. Counterdiabatic schedules were simulated/emulated classically and not run on the QPU. Given the paper text, code and data are not directly included in the preprint; reproducibility is partially supported but would require contacting authors to obtain scripts, seeds, and the promised repository.",
+  "key_findings": [
+    "[speculative] A novel QUBO formulation that augments the classical mean-variance objective with a quantum risk matrix E computed from two-qubit entanglement surrogates (von Neumann entropies) is presented.",
+    "[speculative] The paper derives conservative, computable penalty-parameter bounds (e.g., α > M n^2 and λ > max|Qij| / emin) that guarantee feasibility of the cardinality constraint and dominance of quantum-risk penalties in the QUBO.",
+    "[speculative] The authors state a theorem (Theorem 4.2) giving a counterdiabatic (CD) annealing diabatic-error bound showing error suppression scaling like O(1/T^2) plus a term depending on commutator norms when a bounded CD term is included.",
+    "[speculative] A convergence result for the hybrid quantum-classical iterative algorithm is given (Theorem 4.3 / Appendix C) based on ergodic Markov-chain mixing arguments, claiming O((1/ϵ) log(1/δ)) iterations for ϵ-optimality with probability ≥ 1−δ.",
+    "[supported] The quantum risk matrix E (|C| + γ · quantum mutual information) shows a reported Pearson correlation of 0.65 with realized covariance entries over the out-of-sample period, which the authors present as empirical evidence the matrix captures meaningful risk structure.",
+    "[supported] Empirical experiments were run on a 10-asset universe (AAPL, MSFT, GOOGL, AMZN, TSLA, BRK-B, JPM, JNJ, V, PG) using D-Wave Advantage (physical runs without CD schedules) together with Qiskit statevector simulations for the two-qubit entanglement terms.",
+    "[supported] Reported experimental performance claims indicate the hybrid quantum-classical method achieved higher out-of-sample objective and Sharpe ratio than classical baselines (e.g., Hybrid objective 0.72 ± 0.03 and Sharpe 1.15 vs MIQP 0.69 ± 0.04 and Sharpe 1.08), with reported p-values < 0.01.",
+    "[supported] Feasibility and penalty parameter sweeps are reported: example feasibility rates include (α=100, λ=10) → 0.98, (α=50, λ=5) → 0.93, (α=10, λ=0) → 0.71 across trials.",
+    "[supported] The authors explicitly state that counterdiabatic annealing schedules were only simulated/emulated on classical hardware and were not physically implemented on the D-Wave due to device/API limitations; physical QPU runs used standard annealing schedules.",
+    "[supported] Practical implementation details and resource estimates for the n=10 case are provided: 5000 anneal reads per problem, 20 µs anneal time per read, average chain length ≈5, embedding overhead leading to logical-to-physical qubit ratio ≈1:5, and total reported end-to-end runtime per instance ≈5 seconds.",
+    "[supported] Truncation of small E entries (ε = 1e-4) is reported to have negligible impact on dominant spectral properties, portfolio selections (Pearson correlation > 0.99 between truncated and original E outcomes), and objective/constraint metrics (within ±1%).",
+    "[speculative] The paper claims that including quantum mutual-information-based risk terms captures higher-order dependencies not captured by classical covariance and that this yields improved portfolio robustness.",
+    "[speculative] The suggested future impact: that CD schedules implemented on hardware and extension to multi-qubit entanglement modeling will meaningfully improve scalability and performance in real-world portfolio optimization."
+  ],
+  "results_summary": "The preprint proposes a hybrid quantum-classical portfolio optimizer that augments a classical mean-variance QUBO with a quantum-risk matrix constructed from two-qubit von Neumann entropies simulated in Qiskit. The authors derive conservative penalty bounds for feasibility and state theoretical results on convergence and counterdiabatic annealing error bounds. Empirical experiments on a 10-asset universe combine physical D-Wave annealer runs (without counterdiabatic schedules) and gate-model simulations for risk modeling; reported results indicate modest out-of-sample improvements in objective and Sharpe ratio versus classical MIQP and greedy baselines, with feasibility and parameter-sweep analyses. A major caveat the authors note is that counterdiabatic schedules and their claimed acceleration effects are based on classical simulations/emulations rather than physical QPU implementations.",
+  "performance_claims": [
+    "Pearson correlation between quantum risk matrix Eij and realized covarianceij: 0.65.",
+    "Feasibility rates for penalty sweeps: (α=100, λ=10) → 0.98; (α=50, λ=5) → 0.93; (α=10, λ=0) → 0.71.",
+    "Hybrid method objective (mean ± CI): 0.72 ± 0.03; Sharpe ratio: 1.15.",
+    "MIQP (Gurobi) objective (mean ± CI): 0.69 ± 0.04; Sharpe ratio: 1.08.",
+    "Reported p-values comparing hybrid to baselines: MIQP p=0.008; Greedy heuristic p=0.001.",
+    "Annealer settings: D-Wave Advantage system1.1, 5000 anneal reads per problem, annealing time 20 µs per read, average chain length ≈5, chain strength ≈1.5.",
+    "Truncation parameter for E: ε = 1e-4; authors report Pearson correlation > 0.99 between truncated and original E-driven selections and objective stability within ±1%.",
+    "Reported total runtime per optimization instance (n=10): ≈5 seconds including data processing, embedding, annealing, and evaluation."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper reports empirical improvements of its hybrid approach versus classical baselines on a small (n=10) asset universe and provides statistical metrics (p-values, CIs). However, the key quantum acceleration claim via counterdiabatic annealing is only supported by classical simulations/emulations (not executed on the QPU), and the quantum-risk modeling uses two-qubit simulated entanglement surrogates rather than hardware-native multi-qubit effects. Given the limited problem scale and the simulated nature of the CD advantage, the claimed quantum advantage is suggestive but not demonstrated on hardware and thus remains speculative.",
+  "limitations": [
+    "Counterdiabatic (CD) schedules and their reported benefits were implemented only via classical simulations and emulations, not physically deployed on the D-Wave QPU (author-stated).",
+    "Quantum risk modeling is limited to two-qubit entanglement proxies (von Neumann entropies) and does not capture multi-qubit correlations (author-stated).",
+    "Experiments are restricted to a small asset universe (n = 10); scalability beyond this tested size is not demonstrated (author-stated).",
+    "Embedding and hardware overhead (logical-to-physical qubit ratio, chain strength, chain breaks) impose scalability constraints and affect results (author-stated).",
+    "Transaction costs and turnover penalties were excluded from experiments (author-stated).",
+    "Some penalty parameter bounds provided are conservative; practical deployment relies on empirical tuning and calibration (author-stated).",
+    "Truncation of small entries in the quantum risk matrix E (ε) is introduced to stabilize bounds; this is an approximation that may affect fidelity of quantum risk signals (author-stated).",
+    "Reproducibility gaps: data/processing scripts and detailed device logs are not publicly provided in the manuscript (materials said to be available on request or pending) (author-stated).",
+    "[inferred] Statistical claims (significance, effect sizes) are based on a small number of independent runs and a small asset set, which may limit generality and statistical power.",
+    "[inferred] Entanglement surrogates are generated from randomly parameterized two-qubit circuits (random Ry angles); these may not reflect economically meaningful dependency structures.",
+    "[inferred] Majority-vote chain break policy and chosen chain-strength/embedding heuristics on the annealer may bias sampling outcomes and are not exhaustively analyzed.",
+    "[inferred] The Qiskit Aer statevector simulations ignore hardware noise; entanglement-based risk measures may be optimistic compared to noisy QPU measurements.",
+    "[inferred] Theoretical convergence and CD acceleration results rely on strong assumptions (e.g., gap lower bound, bounded commutator norms) that may not hold for larger or noisy practical systems.",
+    "[inferred] Penalty parameter selection (α, λ, γ, ε) is performed by grid sweeps; no principled or automated selection method is provided, raising concerns about sensitivity and manual tuning effort.",
+    "[inferred] Comparisons are limited to a small set of baselines (MIQP via Gurobi and a greedy heuristic); broader benchmarking versus other classical/metaheuristic methods is missing.",
+    "[inferred] Runtime and cost analyses are limited to the small-scale setting; resource trade-offs at practical portfolio sizes are not quantified."
+  ],
+  "open_questions": [
+    "Can counterdiabatic schedules be physically implemented on current D-Wave hardware or other QPUs, and will physical implementations reproduce the simulated CD benefits?",
+    "How can the quantum risk model be extended from two-qubit entanglement proxies to multi-qubit or higher-dimensional entanglement that might capture richer market dependencies?",
+    "How does the hybrid method scale in practice to larger asset universes (n >> 10) and what are the embedding, runtime, and solution-quality trade-offs at scale?",
+    "How sensitive are results to the truncation parameter ε, the quantum/classical scaling γ, and the penalty parameters α and λ, and how can these be chosen optimally rather than by grid search?",
+    "How robust are entanglement-derived risk factors and the overall optimization pipeline to realistic hardware noise and device errors when entanglement measures are estimated on QPUs instead of noiseless simulators?",
+    "Can embedding overhead be reduced or optimized (e.g., improved embedding algorithms, topology-aware formulations) to make larger problems feasible on current annealers?",
+    "Do the theoretical assumptions required for the CD acceleration bounds (spectral gap, bounded norms, commutator behavior) hold for practical, many-body Hamiltonians used in QUBO encodings of portfolio problems?",
+    "How generalizable are the empirical gains across different market regimes, asset classes, and longer evaluation periods?",
+    "What is the precise economic interpretation and empirical validation of quantum mutual information (entanglement surrogate) as a financial risk factor beyond the reported correlation with realized covariance?",
+    "Can multi-qubit entanglement measures provide incremental predictive or risk-modeling value over classical higher-moment models (skewness, kurtosis) or multivariate dependence measures?",
+    "How should transaction costs, turnover, market microstructure effects, and regulatory constraints be incorporated into the hybrid quantum-classical optimization framework?",
+    "Is it possible to automate or theoretically justify penalty parameter selection to avoid ad hoc or expensive grid searches?"
+  ],
+  "future_work": [
+    "Deploy physical counterdiabatic schedules directly on quantum hardware pending API and device support, and provide detailed device logs upon availability (author-stated).",
+    "Extend quantum risk modeling to higher-dimensional/multi-qubit entanglement to capture richer market dynamics (author-stated).",
+    "Develop hybrid methods for embedding optimization to improve scalability and reduce hardware overhead (author-stated).",
+    "Integrate transaction costs, market microstructure effects, and robust optimization frameworks to enhance real-world applicability (author-stated).",
+    "Address hardware realization of counterdiabatic schedules to validate theoretical acceleration in practice (author-stated).",
+    "Methodological refinements including extension to multi-qubit correlations, improved penalty calibration, and potentially integrating shrinkage or other classical regularization techniques (author-stated/inferred)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical",
+    "quantum-ml"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Proposes a hybrid pipeline: classical mean-variance QUBO augmented with a quantum-informed risk matrix E and solved via D-Wave quantum annealing with classical repair and iterative updates.",
+    "#idea:quantum-advantage — Reports improved out-of-sample Sharpe ratio and other risk/return metrics on a 10-asset test set versus MIQP (Gurobi) and a greedy heuristic, with statistical significance (paired t-tests, bootstrap CIs, Cohen's d).",
+    "#idea:near-term-feasibility — Demonstrates experiments on D-Wave Advantage (physical runs for standard annealing) and classical emulation for counterdiabatic (CD) schedules and quantum risk calculations, arguing practical NISQ-era relevance via hybrid approach.",
+    "#idea:quantum-advantage — Introduces an entanglement-informed quantum risk term E computed from simulated two-qubit parameterized circuits (von Neumann mutual information) that meaningfully alters the QUBO objective and empirically improves out-of-sample portfolios.",
+    "#idea:hybrid-approach — Derives conservative penalty parameter bounds (alpha, lambda) to enforce cardinality and balance classical vs quantum risk contributions, integrating classical preprocessing (returns/covariance) with quantum components.",
+    "#limitation:simulation-only — Key components (counterdiabatic annealing schedules and the quantum-risk entanglement calculations) were performed via high-fidelity classical simulation (Qiskit Aer statevector); CD was not executed on gate-model hardware and CD-assisted annealing was not run on the physical QPU.",
+    "#limitation:qubit-count — Experiments are limited to a small n=10 asset universe and suffer embedding overhead on the annealer (chain lengths, chain strength tuning), indicating limited problem-size scalability in current demonstrations.",
+    "#limitation:noise — Hardware-specific issues (chain breaks, chain strength tuning, majority-vote repair) are present in D-Wave runs and require classical postprocessing/repairs, implying noise/embedding fidelity constraints on solution quality.",
+    "#limitation:data-encoding — Building the quantum risk matrix requires per-pair two-qubit circuit simulations and truncation/normalization heuristics (epsilon floor), highlighting nontrivial classical-to-quantum data encoding/preprocessing costs and modelling choices that affect results."
+  ],
+  "contradictions": []
+}

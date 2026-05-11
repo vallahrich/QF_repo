@@ -1,0 +1,178 @@
+---
+aliases:
+- 'Financial Portfolio Optimization: A QAOA and VQE Formulation for Sharpe Ratio Maximization'
+- Financial Portfolio Optimization QAOA
+authors:
+- Naman Kaushik
+- Aryan Raj
+- Milind Srivastava
+- Md Sajidullah Ansari
+- M. Pushpalatha
+- M. Gayathri
+- L. Kavisankar
+- Sangram Deshpande
+- Raghavendra Venkatraman
+auto_detected: true
+classification: ''
+contradiction_flags: []
+doi: 10.1109/ICRTAC59277.2023.10480826
+evaluation_type: simulator
+evidence_type: ''
+has_quantitative_results: true
+idea_tags:
+- idea:quantum-advantage
+- idea:near-term-feasibility
+- idea:hybrid-approach
+journal_or_venue: 2023 6th International Conference on Recent Trends in Advance Computing
+  (ICRTAC)
+methodology_tags:
+- variational-nisq
+- hybrid-quantum-classical
+paper_type: ''
+quantum_advantage_claim: speculative
+related_papers: []
+relevance_phase1: high
+relevance_phase3: high
+source_type: conference-paper
+source_type_confidence: high
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/portfolio-optimization
+- method/variational-nisq
+- method/hybrid-quantum-classical
+- idea/quantum-advantage
+- idea/near-term-feasibility
+- idea/hybrid-approach
+title: 'Financial Portfolio Optimization: A QAOA and VQE Formulation for Sharpe Ratio
+  Maximization'
+topic_tags:
+- portfolio-optimization
+year: '2023'
+zotero_key: ''
+---
+
+## Abstract summary
+The paper formulates portfolio optimization as a Sharpe ratio maximization problem and implements hybrid quantum-classical solutions using QAOA and VQE, comparing them to a classical SLSQP benchmark. Experiments on small (10-stock) portfolios report improved Sharpe ratios for QAOA/VQE (~1.20–1.21) versus the classical solver (1.11), and the authors discuss practical constraints (qubit count, connectivity, noise) and directions for further work.
+## Methodology
+The authors formulate Sharpe-ratio maximization for portfolio optimization as a constrained quadratic optimization problem (Markowitz-style mean-variance formulation) with binary decision variables indicating asset inclusion and a budget constraint on the number of assets to pick. The constrained quadratic objective (involving expected returns vector μ and covariance matrix Σ and a risk-control coefficient q) is mapped to an unconstrained form suitable for hybrid quantum-classical variational algorithms. They implement and compare two hybrid quantum variational approaches (QAOA and VQE) against a classical continuous/discrete solver (SLSQP / branch-and-bound via SciPy). For the quantum methods the cost Hamiltonian encodes the portfolio objective and constraints; parameterized ansätze are prepared and optimized by a classical optimizer that iteratively updates parameters based on expectation values measured by a quantum backend (simulator). Experiments were performed on small portfolios (10 stocks per sample) using multiple stock sets; they varied the risk coefficient and initialization parameters, recorded resulting optimized weights, Sharpe ratios and volatility, and compared quantum results to the classical baseline.
+
+**Algorithms used:** QAOA, VQE, SLSQP (Sequential Least Squares Programming), Branch-and-bound (classical)
+**Frameworks:** Qiskit, SciPy
+
+**Experimental setup:** Experiments were run using quantum simulators (hybrid quantum-classical workflows) and classical solvers via SciPy. Small portfolios of 10 stocks were used per sample. The quantum methods mapped the portfolio objective to Hamiltonians and used parameterized ansatz circuits optimized by classical optimizers (various optimizers from Qiskit were referenced). Risk coefficient q and budget B were treated as tunable inputs. No specific quantum hardware or simulator name, circuit depths, shot counts or exact optimizer hyperparameters are given in the paper.
+
+**Dataset:** Equity price/return data for small portfolios composed of 10 stocks per sample. Two example stock sets are explicitly listed: (1) AMD, GOOGL, MSFT, NVDA, WMT, AAPL, AMZN, TSLA, JPM, JNJ; (2) META, UNH, XOM, PG, MA, HD, CVX, ABBV, MRK, AVGO. The paper does not specify data source, time period, frequency, or exact preprocessing windows.
+## Experiment details
+### Input
+{'source': 'not specified in paper', 'size': '10 assets per sample (multiple samples / two example sets reported)', 'preprocessing': 'Returns and covariance matrix computed from asset price history (expected returns μ and covariance Σ). Binary encoding of asset inclusion decisions; budget constraint B (number of assets to select); risk-control coefficient q used to weight variance penalty. Data normalization or exact lookback window not reported.'}
+
+### Process
+{'steps': ['Formulate Sharpe-ratio maximization as a constrained quadratic optimization (mean-variance) with binary selection variables and budget constraint.', 'Convert constrained problem into an unconstrained objective suitable for quantum encoding (penalty terms, risk coefficient q to control constraints).', 'Map the objective to a cost Hamiltonian / QUBO representation for quantum variational algorithms.', 'Prepare parameterized ansatz states: (a) QAOA-style alternating operators; (b) VQE parameterized circuit.', 'Use a classical optimizer (varied; Qiskit optimizers referenced) to update ansatz parameters based on expectation values measured on a quantum simulator.', 'Compare quantum-optimized portfolios (weights / selections) to classical SLSQP / branch-and-bound results from SciPy.', 'Record metrics: Sharpe ratio, volatility, optimized weights; repeat with varied risk coefficient and starting parameters.'], 'parameters_varied': ['risk coefficient q', 'initialization parameters for ansatz', 'optimizer choice'], 'notes': 'Specific quantum circuit depth (p for QAOA), number of shots, exact optimizer hyperparameters, and number of optimization iterations are not reported.'}
+
+### Output
+{'metrics': ['Sharpe ratio', 'Portfolio volatility', 'Optimized asset weights / binary selections'], 'baselines': ['Classical SLSQP / branch-and-bound solution (SciPy) with reported Sharpe ratio 1.11'], 'quantum_results': {'VQE': 'Sharpe ratio reported up to 1.20', 'QAOA': 'Sharpe ratio reported up to 1.21'}, 'format': 'Numerical metrics and plots (Sharpe ratio and volatility graphs over runs), visualizations of optimized weights'}
+
+### Parameters
+- qubits: 10
+- depth_or_p: None
+- shots: None
+- optimizer: varied (Qiskit optimizers referenced); classical baseline uses SLSQP (SciPy)
+- risk_coefficient_q: tunable (manually adjusted in experiments)
+- budget_B: tunable (number of assets to select)
+
+### Hardware
+{'quantum_backend': 'unnamed quantum simulators (no specific simulator name provided)', 'qpu_model': None, 'cloud_provider': None, 'classical_backend': 'SciPy on classical hardware (unspecified)'}
+
+### Reproducibility
+The paper does not provide code, full hyperparameters, specific data sources, time windows, or exact simulator/hardware details. Important experimental details missing for reproduction include: data provider and lookback window, exact preprocessing steps, circuit depths/p (for QAOA), number of shots, optimizer choice and hyperparameters, number of optimization iterations, and random seeds. Reproducibility is therefore limited without contacting the authors or obtaining supplemental materials.
+## Findings
+- [supported] In experiments on 10-stock portfolios, QAOA produced a Sharpe Ratio of 1.21 and VQE produced a Sharpe Ratio of 1.20, compared to a classical SLSQP baseline Sharpe Ratio of 1.11.
+- [supported] The authors ran portfolio-optimization experiments using QAOA and VQE (implemented with Qiskit) and compared results against a classical optimizer (SLSQP via SciPy).
+- [supported] The reported empirical improvement over the classical baseline is about 0.09–0.10 in Sharpe Ratio (≈60 basis points in one statement).
+- [supported] Experiments were performed on small portfolios (10 assets) and the algorithms were evaluated using quantum simulators (not large-scale error-corrected hardware).
+- [supported] The paper identifies practical near-term constraints: limited qubit counts, limited connectivity, and noise/errors in current quantum devices as challenges for scaling.
+- [speculative] The paper asserts that quantum methods (QAOA/VQE) have the potential to provide more accurate and efficient solutions than classical approaches for large and complex portfolio-optimization problems.
+- [speculative] The authors suggest that Sharpe Ratio improvements observed on small portfolios may 'compound' and become larger for bigger, real-world portfolios.
+- [speculative] The paper claims quantum computing is especially advantageous 'where probabilistic approach is required' and implies general suitability of QAOA/VQE for finance.
+- [disputed] The paper states that 'VQE is a subroutine of QAOA' (or that VQE is a component/subroutine of QAOA); this is a conceptual conflation and contradicts common distinctions in the literature where VQE and QAOA are separate, distinct variational algorithms.
+- [disputed] The paper claims near-term devices are 'restricted to a maximum of 20 qubits'; this numeric cap is inconsistent with the available device counts from multiple vendors and is therefore inaccurate in the general context.
+
+**Results summary:** The paper reports small-scale empirical experiments on 10-asset portfolios showing that hybrid quantum variational algorithms (QAOA and VQE, run via Qiskit and simulators) achieved higher Sharpe Ratios than a classical SLSQP baseline (QAOA: 1.21, VQE: 1.20, classical: 1.11). The authors highlight practical hardware limitations (qubit count, connectivity, noise) and frame the results as promising for future larger-scale applications, while noting further work needed on encoding, noise mitigation and access to improved quantum hardware. Several broader claims about general quantum advantage and algorithmic relationships (e.g., VQE as a subroutine of QAOA) are made but are either speculative or conceptually incorrect.
+
+**Performance claims:**
+- QAOA Sharpe Ratio = 1.21 (experiment on 10 stocks)
+- VQE Sharpe Ratio = 1.20 (experiment on 10 stocks)
+- Classical SLSQP Sharpe Ratio = 1.11 (experiment on 10 stocks)
+- Reported empirical improvement over classical baseline ≈ 0.09–0.10 Sharpe Ratio (≈60 basis points stated in text)
+- Experiments conducted on portfolios of 10 stocks
+## Quantum advantage claim
+**Classification:** speculative
+
+The paper presents empirical results on small, simulator-based experiments where QAOA/VQE outperformed a classical SLSQP baseline in Sharpe Ratio; however, these are limited-scale results (10 assets, simulators), and the authors' claims about broader or practical quantum advantage for real-world large portfolios remain speculative given current hardware limitations, lack of large-scale empirical validation, and some conceptual inaccuracies in the exposition.
+## Limitations
+- Restricted qubit count and limited qubit connectivity on near-term quantum devices (explicitly stated).
+- Errors and noise of current quantum hardware reduce result precision; noise impact grows with problem size and requires error correction before widespread adoption (explicitly stated).
+- Complexity of problem encoding: mapping portfolio optimization to quantum hardware can become extremely complex and qubit-intensive for larger instances (explicitly stated).
+- Experiments performed on modest/small portfolios (10 stocks), limiting generalizability to larger, real-world portfolios (explicitly stated).
+- Experiments were carried out on quantum simulators rather than (or in addition to) large-scale, low-noise quantum hardware, limiting evidence of real-device performance (explicitly stated).
+- Fixed-form QAOA ansatz may be suboptimal and there is no systematic method provided to find better problem-specific ansatze (explicitly stated).
+- [inferred] Limited statistical validation and robustness analysis: reported Sharpe Ratio gains (e.g., ~0.09–0.10) lack detailed statistical significance testing, out-of-sample/rolling-window validation, or uncertainty quantification.
+- [inferred] Potential sensitivity to choice of classical optimizer and initial variational parameters: optimization may require many runs and careful tuning, affecting reproducibility and performance.
+- [inferred] Limited set of benchmark comparisons: the study compares to one classical solver (SLSQP) and a few stock sets, so relative advantage across broader classical methods and datasets is unclear.
+- [inferred] Practical constraints and market realities (transaction costs, turnover constraints, minimum/maximum holdings, cardinality constraints, liquidity) are not fully integrated into the quantum formulations presented.
+## Open questions
+- How will quantum portfolio optimization methods (QAOA, VQE) scale in solution quality and resource requirements as the number of assets increases beyond small portfolios (e.g., >>10 assets)?
+- What are the most effective encoding/embedding strategies to reduce qubit counts and connectivity overhead for realistic portfolio problems?
+- Which QAOA/VQE ansatz structures (or problem-specific ansatze) yield the best trade-off between expressivity, circuit depth, and noise vulnerability for portfolio optimization?
+- How much of the observed Sharpe Ratio improvements will persist on real, noisy quantum hardware as opposed to simulators?
+- What error-mitigation or error-correction techniques are most effective for these financial optimization tasks, and how much do they improve results in practice?
+- How sensitive are the quantum solutions to choices of classical optimizers, initial parameters, and hyperparameters (risk coefficient, budget B, etc.)?
+- Are the reported improvements robust across varied datasets, market regimes, and with more realistic constraints (transaction costs, liquidity, cardinality)?
+- How do gate-based (QAOA/VQE) approaches compare quantitatively and qualitatively with quantum annealing (QUBO on D-Wave) across the same portfolio problems?
+- What are the trade-offs between circuit depth and noise for QAOA/VQE in order to achieve a net advantage over classical methods?
+- Can the modest Sharpe Ratio gains observed compound into economically meaningful outperformance over long horizons once scaled up, and what is the risk of overfitting to small samples?
+
+**Future work:**
+- Develop alternative problem encoding methods to reduce the number of qubits required.
+- Investigate and apply techniques for reducing noise impact, including reduced circuit depths and (where feasible) error-correcting systems.
+- Validate encodings and algorithm designs on quantum simulators before executing on quantum hardware.
+- Collaborate with quantum hardware providers to access next-generation quantum computers with improved qubit counts, connectivity, and noise characteristics.
+- Implement and evaluate error-mitigation techniques tailored to portfolio optimization tasks.
+- Formalize the portfolio optimization problem using more advanced/current methods and refine the quantum formulations.
+- Apply the proposed quantum methods to larger market sizes (larger portfolios) as suitable quantum hardware becomes available.
+- Explore improved or iterative problem-specific QAOA ansatze and methods for systematically finding better ansatze.
+## Key ideas
+- #idea:quantum-advantage — QAOA and VQE formulations for Sharpe-ratio maximization on 10-asset portfolios report higher Sharpe ratios (QAOA 1.21, VQE 1.20) versus a classical SLSQP baseline (1.11).
+- #idea:hybrid-approach — Uses a hybrid quantum-classical variational workflow: map constrained quadratic objective to cost Hamiltonian/QUBO, prepare parameterized QAOA/VQE ansätze and optimize parameters with classical optimizers (Qiskit).
+- #idea:near-term-feasibility — Experiments performed on quantum simulators and the paper explicitly discusses NISQ-era constraints (qubit count, connectivity, noise) and the need for further work to reach practical deployment.
+- #limitation:qubit-count — Experiments limited to 10 qubits/assets; authors note qubit-count and connectivity as practical constraints for scaling to realistic portfolios.
+- #limitation:noise — Work performed on simulators only; paper acknowledges noise and hardware limitations but provides no hardware experiments or noise-mitigation strategies.
+- #limitation:simulation-only — All quantum results come from unnamed simulators; no runs on real QPUs were reported.
+- #limitation:no-empirical-validation — Reproducibility is limited: dataset time windows, simulator details, circuit depth (p), shots, optimizer hyperparameters and seeds are not provided.
+- #limitation:data-encoding — Binary encoding of inclusion decisions and penalty conversions are used; paper does not evaluate encoding overhead or scaling cost for larger asset universes.
+## Contradictions
+- The paper claims a quantum advantage in Sharpe ratio but the evidence is limited to small (10-asset) simulator experiments with missing experimental details and no hardware validation, which contradicts strong practical claims of superiority on realistic problems.
+- Reported improvement is compared against a classical SLSQP baseline; lack of detailed comparison to stronger discrete/classical combinatorial solvers or exhaustive benchmarks raises doubt whether the observed advantage is due to algorithmic benefit or experimental setup/benchmark choice.
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

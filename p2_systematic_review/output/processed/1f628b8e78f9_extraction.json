@@ -1,0 +1,391 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier and date (arXiv:2601.03802v1 7 Jan 2026) and reads like an academic manuscript (abstract, methodology, experiments, references) without journal or conference proceedings metadata—consistent with an arXiv preprint rather than a peer-reviewed publication.",
+  "title": "Quantum vs. Classical Machine Learning: A Benchmark Study for Financial Prediction",
+  "authors": [
+    "Rehan Ahmad",
+    "Muhammad Kashif",
+    "Nouhaila Innan",
+    "Muhammad Shafique"
+  ],
+  "year": "2026",
+  "journal_or_venue": "arXiv preprint (arXiv:2601.03802)",
+  "doi": "",
+  "abstract_summary": "The paper introduces a reproducible benchmarking framework that systematically compares quantum machine learning (QML) models to architecture-matched classical counterparts across three financial tasks: directional return prediction, live-trading with QLSTMs on the S&P 500, and realized volatility forecasting with Quantum SVR. By standardizing data splits, features, and metrics, the study shows QML can outperform classical models in scenarios where data structure and circuit design are well aligned (notable gains on AAPL and KCHOL), while classical methods remain competitive in other regimes; QLSTM achieved higher risk-adjusted returns in two of four market regimes and QSVR produced competitive QLIKE scores.",
+  "methodology_description": "The authors develop a standardized, reproducible benchmarking framework to compare quantum machine learning (QML) models against architecture-matched classical counterparts across three financial tasks: (1) directional return classification, (2) live-trading backtests, and (3) one-step-ahead realized volatility forecasting. They assemble U.S. and Turkish equity universes using daily prices from Yahoo Finance, derive task-specific feature sets (three regimes for directional classification: 3-D technical indicators, 7-D cross-asset features, 64-D lagged/cross-asset embedding; 4-feature rolling windows for LSTM/QLSTM live trading; and lagged returns + realized-variance features for QSVR), and standardize preprocessing (min–max scaling for classification and trading; Z-score for volatility experiments). For each task they align model capacity by matching parameter budgets and use walk-forward expanding-window cross-validation (directional: 5 folds; live trading: four regime folds with 70/10/10/10 splits for train/early-stop/model-select/threshold-calibration). Quantum models are simulated (statevector, exact expectation values) via TorchQuantum; QNNs explore angle and amplitude encodings, hybrid classical preprocessing, multi/single-qubit readouts, and variational circuit depth; QLSTMs replace LSTM gates with variational quantum circuits (VQCs) and are compared to parameter-matched classical LSTMs; QSVR uses precomputed quantum-kernel matrices (statevector overlaps) and is compared against SVR (linear/poly/RBF) and GARCH(1,1). Hyperparameters are tuned (grid searches for architectures and Optuna for SVR/QSVR); model selection uses validation AUC and final selection in trading uses thresholds chosen to maximize Sharpe on a hold-out τ-slice. Evaluation reports both statistical (Accuracy, AUC, Precision, Recall, MSE, R2, QLIKE, DM tests) and economic metrics (annualized return, volatility, Sharpe, Sortino, max drawdown). Random seeds are fixed for determinism.",
+  "algorithms_used": [
+    "Quantum Neural Networks (QNN) - variational circuits (VQCs)",
+    "Hybrid QNN (classical preprocessing + quantum layer)",
+    "Quantum LSTM (QLSTM) - LSTM gates implemented with VQCs",
+    "Quantum Support Vector Regression (QSVR) - quantum kernel via statevector overlaps",
+    "Classical Artificial Neural Networks (ANN)",
+    "Classical Long Short-Term Memory (LSTM)",
+    "Support Vector Regression (SVR) - linear, polynomial, RBF kernels",
+    "GARCH(1,1)"
+  ],
+  "frameworks": [
+    "TorchQuantum",
+    "PyTorch",
+    "Keras",
+    "scikit-learn",
+    "Optuna",
+    "NumPy"
+  ],
+  "experimental_setup": "All quantum models were executed in simulation mode using the TorchQuantum library with statevector simulators producing exact expectation values and exact state overlaps for kernel computation. Classical models were implemented in PyTorch/Keras and scikit-learn. Random seeds were fixed at NumPy and PyTorch levels. No physical QPU was used; all quantum experiments were simulated deterministically (no measurement shot noise).",
+  "dataset_used": "Daily equity price data from Yahoo Finance. U.S. universe: S&P 500 index and five equities (AAPL, BA, GILD, DVN, LNC). Turkish universe: five equities (KCHOL.IS, GARAN.IS, TUPRS.IS, ULKER.IS, TCELL.IS). Targets: next-day directional label (binary up/down); one-day-ahead 5-day realized variance for volatility forecasting; rolling windows for recurrent models. Features include technical indicators (RSI-14, %K14, moving averages, MACD, etc.), lagged self-returns, and cross-asset lagged returns (various global indices).",
+  "experiment_input": {
+    "source": "Yahoo Finance (via yfinance API)",
+    "granularity": "Daily close / adjusted close",
+    "assets": {
+      "US": [
+        "S&P 500 (index)",
+        "AAPL",
+        "BA",
+        "GILD",
+        "DVN",
+        "LNC"
+      ],
+      "Turkey": [
+        "KCHOL.IS",
+        "GARAN.IS",
+        "TUPRS.IS",
+        "ULKER.IS",
+        "TCELL.IS"
+      ]
+    },
+    "feature_construction": {
+      "directional_classification": {
+        "low_dim": [
+          "RSI-14",
+          "%K14",
+          "%K14 3-day MA (3 features)"
+        ],
+        "medium_dim": [
+          "same-day log-returns of 5 non-US indices + 2 US proxies (7 features)"
+        ],
+        "high_dim": [
+          "stock's past 8 daily returns + 7-day returns of 8 major indices (64 features)"
+        ]
+      },
+      "live_trading": [
+        "previous-day return",
+        "MACD (12-26 EMA difference)",
+        "MACD signal (9-day EMA)",
+        "RSI-14"
+      ],
+      "window_length": 10,
+      "volatility": [
+        "past p returns and past q realized variances (RV)",
+        "target RV is 5-day realized variance"
+      ]
+    },
+    "preprocessing": {
+      "scaling": "min-max scaling to [0,1] for classification and trading experiments; Z-score (standard scaling) for volatility forecasting (noted exceptions where bounded indicators are left unscaled). Scaler fitted on training fold only.",
+      "missing_data": "Days with missing observations removed to align trading calendars"
+    },
+    "data_splits": {
+      "directional": "Expanding-window walk-forward CV with 5 folds (final fold train: 2009-01-07 to 2019-12-31, test: 2020-01-02 to 2021-12-31)",
+      "live_trading": "Four regime folds (F1-F4) with 70/10/10/10 splits: train / early-stop / model-selection / threshold-calibration (hold-out τ-slice)",
+      "volatility": "Expanding-window training starting from 720 days; retraining every 120 days; experiments with total training lengths L ∈ {1000,2000,3000,4000} days"
+    }
+  },
+  "experiment_process": {
+    "overview": "For each task: (1) construct features and targets; (2) split data using walk-forward expanding windows; (3) normalize features based on training fold; (4) perform hyperparameter/architecture search (grid/Optuna); (5) train candidate models; (6) select models by validation AUC (or Sharpe in trading threshold calibration); (7) evaluate on hold-out test slices with statistical and economic metrics.",
+    "directional_classification_pipeline": [
+      "Define 3 feature regimes (3-D, 7-D, 64-D).",
+      "Scale features (min-max) fit on training fold.",
+      "QNN variants: SQ, MQ, Hybrid-SQ, Hybrid-MQ. Encoding: angle encoding for 3-D & 7-D (1 qubit per feature); amplitude encoding for 64-D (embed 2^n features into n qubits; n treated as hyperparameter ∈ {2..6}).",
+      "Grid search over circuit depth L ∈ {1..6}, qubit counts as above, readout strategy (single vs multi-qubit), and hybrid preprocessing presence.",
+      "ANN baselines: shallow architectures matched by parameter count (examples: 3–11–1 for 3-D; 7–32–16–1 for 7-D; 64–32–1 for 64-D).",
+      "Training: expanding-window training; select model maximizing mean validation AUC; final evaluation on fold 5 test slice.",
+      "Metrics: Accuracy, AUC, Precision, Recall."
+    ],
+    "live_trading_pipeline": [
+      "Feature stacking into rolling windows xt ∈ R^{10×4} (T=10).",
+      "Normalize features to [0,1] on training folds.",
+      "QLSTM: replace each LSTM gate with VQC. Hyperparameters: qubit width q ∈ {3,4,5}, circuit depth L ∈ {2,3,4,5,6}. VQCs use hybrid input rotations + entanglers; multi-qubit Z-basis readout with classical postprocessing.",
+      "LSTM baseline: hidden state h ∈ {3,4,5}, stacked layers L ∈ {2..6}, matched parameter budgets.",
+      "Loss: weighted binary cross-entropy to compensate class imbalance.",
+      "Model selection: early stopping (patience 30 epochs) using ES AUC on early-stop slice; choose best model by AUC on model-selection slice.",
+      "Threshold calibration: grid search τ_long ∈ [0.5,0.9], τ_short ∈ [0.1,0.5] on hold-out τ-slice to maximize Sharpe.",
+      "Backtest: convert probabilities to positions st ∈ {−1,0,+1} using thresholds; apply 0.05% transaction cost on position changes; equity evolves via compounding; compare to buy-and-hold.",
+      "Metrics: Test AUC, annualized return (ARC), annualized standard deviation (ASD), Sharpe, Sortino, max drawdown."
+    ],
+    "volatility_forecasting_pipeline": [
+      "Target: one-step-ahead 5-day realized variance RV_{t+1}.",
+      "Features: past p returns and past q realized variances (xt ∈ R^{p+q}).",
+      "GARCH(1,1) baseline fitted via standard econometric estimation.",
+      "SVR baselines: linear, polynomial (degree ∈ {2,3}), RBF. Hyperparameters (C, epsilon, gamma, degree) tuned.",
+      "QSVR: two feature-map variants: (A) angle-encoding with layered RY/RZ rotations and CZ entanglers repeated L times; (B) amplitude-encoding (embed normalized vector into amplitudes) plus fixed random post-unitary stack. Compute kernel matrix K_{ij} = |⟨ψ(x_i)|ψ(x_j)⟩|^2 (optionally raised to exponent β ∈ {1,2,3}).",
+      "Hyperparameter search for QSVR (Optuna): qubit counts, number of layers, C, epsilon, etc. Table-driven search spaces used.",
+      "Models retrained on entire in-sample window with best hyperparameters and produce one-step-ahead forecasts.",
+      "Metrics: QLIKE (primary), MSE, R2, Directional Accuracy, Diebold–Mariano tests for forecast comparison."
+    ]
+  },
+  "experiment_output": {
+    "format": "Numerical performance tables per fold and per ticker, including classifier metrics and trading economics.",
+    "reported_metrics": [
+      "Accuracy",
+      "AUC (ROC-AUC)",
+      "Precision",
+      "Recall",
+      "Mean Squared Error (MSE)",
+      "Mean Absolute Error (MAE)",
+      "R^2",
+      "Directional Accuracy (DirAcc)",
+      "QLIKE",
+      "Annualized Return (ARC)",
+      "Annualized Standard Deviation (ASD)",
+      "Sharpe Ratio",
+      "Sortino Ratio",
+      "Maximum Drawdown (MaxDD)",
+      "Diebold–Mariano p-values"
+    ],
+    "baselines_compared": [
+      "ANN (parameter-matched)",
+      "LSTM (parameter-matched)",
+      "SVR (linear, polynomial, RBF)",
+      "GARCH(1,1)",
+      "Buy-and-hold benchmark (for trading)"
+    ]
+  },
+  "experiment_parameters": {
+    "QNN": {
+      "angle_encoding_qubits": [
+        3,
+        7
+      ],
+      "amplitude_encoding_qubits_search": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "circuit_depth_L_search": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "readout": [
+        "single-qubit",
+        "multi-qubit (with classical postprocessing)"
+      ],
+      "hybrid_preprocessing": [
+        true,
+        false
+      ]
+    },
+    "QLSTM": {
+      "qubit_width_q_search": [
+        3,
+        4,
+        5
+      ],
+      "circuit_depth_L_search": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "parameter_counts_range": "approx. 10^2 - 10^3 (matched to classical LSTMs)",
+      "loss": "weighted binary cross-entropy",
+      "transaction_cost_per_trade": 0.0005,
+      "window_length_T": 10,
+      "threshold_grids": {
+        "tau_long": [
+          0.5,
+          0.9
+        ],
+        "tau_short": [
+          0.1,
+          0.5
+        ]
+      }
+    },
+    "QSVR": {
+      "qubit_counts_tried": [
+        6,
+        8,
+        10,
+        12
+      ],
+      "post_unitary_layers": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "beta_exponents": [
+        1,
+        2,
+        3
+      ],
+      "C_search_range": [
+        0.01,
+        100.0
+      ],
+      "epsilon_search_range": [
+        0.001,
+        1
+      ],
+      "kernel_variants": [
+        "angle",
+        "amplitude"
+      ],
+      "statevector_kernel": "exact overlaps (no shots)"
+    },
+    "classical_models": {
+      "ANN_hidden_sizes_examples": {
+        "3-D": [
+          11
+        ],
+        "7-D": [
+          32,
+          16
+        ],
+        "64-D": [
+          32
+        ]
+      },
+      "LSTM_hidden_sizes": [
+        3,
+        4,
+        5
+      ],
+      "LSTM_layers_search": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "training": {
+      "early_stop_patience": 30,
+      "random_seeds_fixed": true,
+      "hyperparameter_optimizer": "Optuna (for SVR/QSVR); grid search for QNN/ANN/LSTM architectures"
+    },
+    "shots": null,
+    "optimizer": null
+  },
+  "hardware_details": {
+    "quantum_simulator": "TorchQuantum statevector simulator (exact expectation values/state overlaps)",
+    "quantum_hardware": null,
+    "cloud_provider": null,
+    "classical_frameworks": [
+      "PyTorch",
+      "Keras",
+      "scikit-learn"
+    ],
+    "note": "All quantum experiments executed in simulation (deterministic statevector), no QPU or shot-based sampling was used."
+  },
+  "reproducibility_notes": "The paper describes a reproducible benchmark design (aligned data splits, detailed feature sets, explicit cross-validation and selection procedures, and hyperparameter search spaces). Data source is publicly available (Yahoo Finance via yfinance). Quantum simulations used TorchQuantum with fixed random seeds for determinism. However, no public code repository or direct download link is provided in the manuscript text; therefore full reproducibility requires reimplementation of preprocessing, architectures, and hyperparameter settings from the descriptions. Hyperparameter ranges, model families, splits, and evaluation metrics are documented sufficiently to allow reproduction with effort.",
+  "key_findings": [
+    "[supported] A reproducible benchmark framework was developed to compare QML models with architecture-matched classical counterparts across three financial tasks (directional return prediction, live-trading, realized volatility forecasting).",
+    "[supported] Hybrid quantum neural networks (QNNs) outperformed parameter-matched ANNs on some assets: reported gains include +3.8 AUC and +3.4 percentage points accuracy on AAPL, and +4.9 AUC and +3.6 percentage points accuracy on Turkish stock KCHOL.",
+    "[supported] QLSTM achieved higher risk-adjusted returns than a classical LSTM in two of four S&P 500 historical regimes (improvements in Sharpe/ARC in those regimes were observed in simulations).",
+    "[supported] Quantum Support Vector Regression (QSVR) with angle encoding achieved the lowest QLIKE on KCHOL and remained within approximately 0.02–0.04 QLIKE of the best classical kernels on S&P 500 and AAPL in the experiments.",
+    "[supported] QML models' performance depends strongly on alignment between data structure and quantum circuit design (encoding scheme, circuit depth, hybrid classical pre/post layers, readout strategy).",
+    "[supported] Hybrid designs (classical preprocessing + quantum circuit) and multi-qubit readout often improved QNN performance, especially in higher-dimensional feature regimes.",
+    "[supported] Amplitude encoding allowed embedding of higher-dimensional inputs into fewer qubits but showed sensitivity to dimension vs. circuit depth trade-offs (best amplitude-encoding QSVR performance at moderate dimension d=32; degradation when d increased to 64).",
+    "[supported] Classical RBF kernels (in SVR) often remained the strongest single-method baseline for volatility forecasting, with QSVR typically intermediate between simple linear/poly kernels and RBF.",
+    "[speculative] The paper asserts that as quantum hardware matures, quantum approaches are expected to yield greater practical advantages in financial modeling (claimed as a future outlook).",
+    "[speculative] The authors suggest that current QML advantages are conditional and that identification of 'sweet spots' (task/data/circuit alignment) is critical for QML success, implying that QML will not universally outperform classical methods."
+  ],
+  "results_summary": "The paper presents a standardized, reproducible benchmark comparing simulated quantum machine-learning models (QNN, QLSTM, QSVR) against parameter-matched classical counterparts (ANN, LSTM, SVR/GARCH) on directional return prediction, live S&P 500 trading, and one-day-ahead realized-volatility forecasting across U.S. and Turkish equities. Empirical simulations show conditional quantum benefits: hybrid QNNs outperform matched ANNs on some equities (notably AAPL and KCHOL), QLSTM yields superior risk-adjusted returns in two of four historical S&P 500 regimes, and QSVR attains competitive QLIKE scores—best on a Turkish ticker and close to top classical kernels on other assets. At the same time, classical methods (especially RBF SVR) remain top performers in several volatility tasks; the authors emphasize that performance hinges on encoding, circuit depth, hybridization, and dataset dimensionality, and they report that amplitude encoding can compress higher-dimensional inputs but is sensitive to chosen dimensionality and circuit design.",
+  "performance_claims": [
+    "[supported] Hybrid QNNs surpass the parameter-matched ANN by +3.8 AUC and +3.4 accuracy points on AAPL.",
+    "[supported] Hybrid QNNs surpass the parameter-matched ANN by +4.9 AUC and +3.6 accuracy points on Turkish stock KCHOL.",
+    "[supported] QLSTM achieves higher risk-adjusted returns in two of four S&P 500 regimes (examples in Table XII: e.g., Fold 2 Sharpe improved from 0.4966 for LSTM to 1.2585 for QLSTM; Fold 1 Sharpe improved from −0.0477 to 0.3865).",
+    "[supported] An angle-encoded QSVR attains the lowest QLIKE on KCHOL and remains within ~0.02–0.04 QLIKE of the best classical kernels on S&P 500 and AAPL.",
+    "[supported] In amplitude-encoding experiments, best QSVR performance observed at embedding dimension d=32 (5 qubits); performance degraded when d was increased to 64."
+  ],
+  "quantum_advantage_claim": "demonstrated",
+  "quantum_advantage_detail": "The authors present simulation-based empirical evidence that quantum-model variants (hybrid QNNs, QLSTM, QSVR) can outperform or match parameter-matched classical baselines in specific tasks and data regimes (directional prediction for certain equities, risk-adjusted returns in particular market regimes, and competitive QLIKE in volatility forecasting). However, advantages are conditional (depend on encoding, circuit depth, hybridization and task) and are not universal—classical methods (notably RBF SVR) still outperform in multiple volatility settings; the reported advantages are therefore empirical, localized, and contingent on simulation assumptions and design choices rather than broad, hardware-level proofs of superiority.",
+  "limitations": [
+    "Comparisons rely on statevector simulation of quantum circuits (exact expectation values) rather than execution on noisy quantum hardware, so results do not account for realistic noise, finite-shot estimation, or state-preparation errors.",
+    "Quantum models were evaluated in simulation without measurement shot noise or hardware calibration errors, limiting practical deployability conclusions.",
+    "Amplitude encoding shows numerical instability and degraded performance as embedding dimension grows (d→64), constraining its practical use in higher-dimensional settings.",
+    "Current QML experiments are constrained by NISQ-era resource limits (qubit count, circuit depth), preventing direct scaling to very high-dimensional feature sets without compression or hybrid preprocessing.",
+    "The classical baselines (ANN, LSTM, SVR, GARCH) remain superior in several mid-dimensional tasks (e.g., 7-feature S&P experiment) and for the best absolute volatility forecasts (RBF kernel still dominates QSVR).",
+    "Live-trading results are sensitive to threshold calibration for signal conversion; QLSTM underperformed in at least one regime (post-pandemic) despite similar AUCs.",
+    "Benchmarking focused on a limited set of assets/markets (S&P 500, five U.S. equities, five Turkish equities), which may limit generalizability across asset classes, frequencies, and market microstructure differences.",
+    "Transaction costs and market impact are represented simplistically (0.05% fee on position changes); other frictions (slippage, liquidity constraints) and execution details are not fully modeled.",
+    "QSVR/kernel experiments used precomputed exact kernel matrices (statevector overlaps), which scale O(N^2) and may be computationally expensive or infeasible for very large datasets.",
+    "No experimental results on real quantum hardware were reported, so questions about training stability, parameter noise, and readout error mitigation remain unanswered.",
+    "While architectures were parameter-matched, matching parameter counts does not guarantee matched inductive biases or computational equivalence between QML and classical models.",
+    "Some design choices (feature sets, window sizes, threshold tuning, backtest rules) are specific and may bias performance comparisons toward particular models or regimes. [inferred]",
+    "The study uses daily data only; intraday, higher-frequency, or alternative data modalities were not explored, leaving performance in those settings unknown. [inferred]",
+    "QSVR performance varied by asset and encoding; the quantum kernel did not uniformly beat classical RBF kernels, indicating limited or conditional advantage. (author-stated/inferred)",
+    "Amplitude and angle encoding hyperparameters (e.g., exponent β, post-unitary choices) introduce additional complexity; optimal settings may be dataset-specific and were not exhaustively characterized. [inferred]",
+    "The study does not address model interpretability or explainability for QML models, which is important for finance applications (risk, compliance). [inferred]",
+    "Potential computational overheads (classical simulation of quantum circuits, hyperparameter search across quantum architectures) are not fully quantified versus classical training costs. [inferred]",
+    "Statistical testing was reported for some tasks (e.g., DM tests for volatility) but not comprehensively across all comparisons (e.g., directional classification economic significance tests). [inferred]",
+    "The hybrid designs and preprocessing that enable QNNs to compete require extra classical resources; the trade-off between classical preprocessing complexity and quantum benefit is not fully quantified. [inferred]"
+  ],
+  "open_questions": [
+    "Under what specific data regimes, feature dimensionalities, and market conditions do QML models reliably outperform matched classical counterparts?",
+    "Can quantum kernels or QSVRs be designed or tuned to consistently outperform the classical RBF kernel on realized-volatility forecasting across diverse assets?",
+    "How will realistic noise, finite-shot measurement, state-preparation error, and limited qubit fidelity on NISQ devices affect the empirical performance and trainability of QNNs, QLSTMs, and QSVRs?",
+    "What are the best encoding strategies (angle vs amplitude vs hybrid encodings) and their limits for different feature dimensions and sample sizes on real hardware?",
+    "How does QLSTM score calibration and threshold selection generalize across market regimes, and can we design calibration/robustness procedures that transfer better across regimes?",
+    "Is there a provable computational or statistical advantage (or an identifiable separable regime) of QML over classical ML for financial time series tasks, beyond empirical competitiveness?",
+    "How to scale QML approaches (encoding, circuit depth, number of qubits) to larger universes of assets, higher-frequency data, or richer feature sets while remaining feasible on near-term hardware?",
+    "What are the best strategies for hybrid classical–quantum architectures to balance classical preprocessing and quantum expressivity (i.e., how much classical compression is optimal)?",
+    "How sensitive are QML models to hyperparameter choices unique to quantum circuits (qubit count, entanglement topology, depth, exponent β) and what automated methods work best to tune them?",
+    "Can noise-aware training, error mitigation, or robust optimization techniques enable comparable gains on real quantum devices as observed in noiseless simulation?",
+    "How do QML-driven trading strategies perform under more realistic execution constraints (liquidity, large order sizes, market impact, asynchronous fills)?",
+    "What are the computational and sample-complexity costs of building and using quantum kernels (including kernel estimation on hardware) for large N, and are there scalable approximations?",
+    "Are there practical procedures to estimate kernel overlaps on hardware (e.g., SWAP tests) that are accurate and cheap enough for production-scale SVR training?",
+    "How transferable are QML models and encodings across markets, asset classes, and time periods—do models trained in one market generalize to others?",
+    "Can QML approaches be integrated into portfolio-level decision frameworks (optimization, risk budgeting) and deliver end-to-end economic gains beyond single-asset signals?"
+  ],
+  "future_work": [
+    "Explore more advanced quantum architectures (deeper/wider variational circuits, different entanglement topologies) and quantify their empirical benefits in finance tasks.",
+    "Develop and test noise-resilient training strategies and error-mitigation methods to evaluate QML performance on real noisy quantum hardware.",
+    "Design and evaluate hybrid classical–quantum models that optimize the trade-off between classical preprocessing (e.g., PCA, compression) and quantum encoding/expressivity.",
+    "Conduct hardware experiments (with finite shots and realistic noise) and compare against statevector-simulated baselines to assess practical deployability.",
+    "Extend the unified benchmark to broader asset universes, higher-frequency data, richer feature sets, and more realistic trading frictions to test robustness and generalization."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance",
+    "trading-execution",
+    "risk-management"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — QML models (QLSTM, QSVR, VQC-based QNNs) show measurable outperformance versus architecture-matched classical baselines on selected assets/feature regimes (notably AAPL and KCHOL), including higher risk-adjusted returns and competitive QLIKE scores.",
+    "#idea:hybrid-approach — Hybrid architectures (classical preprocessing + quantum layer) and matched parameter budgets are effective experimental design choices; QLSTM replaces LSTM gates with VQCs and hybrid QNN variants explored multi/single-qubit readouts.",
+    "#idea:near-term-feasibility — The paper presents a reproducible benchmarking framework and reports positive signals for QML in small-scale, well-aligned tasks, suggesting potential near-term applicability under idealized conditions.",
+    "#limitation:simulation-only — All quantum experiments are run with statevector simulators (exact expectation values, no shot noise) rather than on noisy QPUs.",
+    "#limitation:data-encoding — Uses angle and amplitude encodings (amplitude encoding up to n ≤ 6 qubits) and treats encoding size as a hyperparameter, highlighting practical encoding choices and their limitations."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — Although the authors report cases of QML outperforming classical models, they also find classical methods remain competitive in many regimes; combined with noiseless statevector simulation this undercuts broad claims of universal quantum superiority.",
+    "contradiction:scalability — Reported gains are on small-scale, simulated circuits (encoding sizes up to ~6 qubits, exact overlaps), so the paper's positive results conflict with expectations about scaling to realistic, noisy QPU deployments and larger feature dimensions."
+  ]
+}

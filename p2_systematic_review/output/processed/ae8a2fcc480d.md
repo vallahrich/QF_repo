@@ -1,0 +1,147 @@
+---
+aliases:
+- Improved approximation algorithms for bounded-degree local Hamiltonians
+- Improved approximation algorithms bounded
+authors:
+- Anurag Anshu
+- David Gosset
+- Karen J. Morenz Korol
+- Mehdi Soleimanifar
+auto_detected: true
+classification: ''
+contradiction_flags: []
+doi: ''
+evaluation_type: analytical
+evidence_type: ''
+has_quantitative_results: true
+idea_tags:
+- idea:quantum-advantage
+- idea:near-term-feasibility
+- idea:hybrid-approach
+journal_or_venue: arXiv preprint arXiv:2105.01193 [quant-ph]
+methodology_tags:
+- variational-nisq
+- hybrid-quantum-classical
+paper_type: ''
+quantum_advantage_claim: theoretical
+related_papers: []
+relevance_phase1: medium
+relevance_phase3: high
+source_type: preprint
+source_type_confidence: high
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/simulation-monte-carlo
+- method/variational-nisq
+- method/hybrid-quantum-classical
+- idea/quantum-advantage
+- idea/near-term-feasibility
+- idea/hybrid-approach
+title: Improved approximation algorithms for bounded-degree local Hamiltonians
+topic_tags:
+- simulation-monte-carlo
+year: '2021'
+zotero_key: ''
+---
+
+## Abstract summary
+The paper introduces a family of shallow quantum circuits that improve approximation ratios for bounded-degree two-local Hamiltonians. Starting from an n-qubit product state with mean energy e0 and variance Var, the algorithm produces a depth-(d+1) state whose energy exceeds e0 by an amount Ω(Var^2/(d^2|E|)), with stronger guarantees for locally optimal inputs; extensions to k-local Hamiltonians, bounded-depth initial states, and random product states (recovering and generalizing classical bounded-occurrence CSP results) are also provided.
+## Methodology
+This is a theoretical / algorithmic study that develops and analyzes shallow variational quantum circuits to improve the energy (approximation ratio) of given input states for k‑local Hamiltonians on bounded‑degree graphs. The authors consider two‑local (and later k‑local) Hamiltonians H = Σ_{edges} h_{ij} on a d‑regular graph and start from an n‑qubit product state |v⟩ (or more generally a bounded‑depth circuit state). They define the energy variance Var_v(H) and show that, when the variance is sufficiently large (Ω(|E|)), one can systematically improve the energy by applying a shallow commuting quantum circuit of the form V(⃗θ) = exp(i Σ_{(i,j)∈E} θ_{ij} P_i P_j) where P_i are single‑qubit Hermitian operators chosen so that ⟨v_i|P_i|v_i⟩ = 0. The methodology uses analytic expansion of conjugated local terms via nested commutators, combinatorial counting of contributing terms (bounding higher‑order terms), and careful choice of the small parameters θ_{ij} (e.g., θ ∼ α/d) to guarantee a positive first‑order energy improvement that dominates higher orders. Theoretical performance guarantees are proved (Theorems 1–4): for product states a depth-(d+1) circuit yields an energy increase Ω(Var^2/(d^2|E|)) (with stronger Ω(Var^2/(d|E|)) for locally optimal product states); extensions cover bounded‑depth input states (dependence on lightcone size ℓ), random product inputs (bounds in terms of quad(H) and improved scaling on triangle‑free graphs), and k‑local Hamiltonians (generalized circuit using products of t single‑qubit operators). The paper provides constructive (efficient) classical procedures to choose the operators P_i and parameters θ_{ij} (including randomized choices / Haar averaging for expected guarantees), and detailed proofs use algebraic identities (commutators), Pauli expansions of local terms, and probabilistic averaging arguments for random inputs and bases.
+
+**Algorithms used:** Level‑1 QAOA (as a special case of the commuting variational circuit), Shallow commuting variational quantum circuits V(⃗θ) = exp(i Σ θ_{ij} P_i P_j), Classical local update / randomized classical algorithms (for improving random product assignments)
+## Experiment details
+<!-- Step 3 output — experiment replication details -->
+
+## Findings
+- [speculative] A family of shallow (depth d+1) quantum circuits acting on an n-qubit product state |v> can provably improve its energy for two-local Hamiltonians on d-regular bounded-degree graphs.
+- [speculative] The energy improvement provided by the circuit (starting from a product state |v>) scales as Ω(Var_v(H)^2 / (d^2 |E|)) in general (Theorem 1).
+- [speculative] For product states that are locally optimal, the improvement can be strengthened to Ω(Var_v(H)^2 / (d |E|)).
+- [speculative] The circuit family contains nearest-neighbor commuting gates of the form exp(i θ_{ij} P_i P_j) (generalizes level-1 QAOA to non-classical Hamiltonians) and can be implemented in depth d+1 on a d-regular interaction graph (Theorem 2).
+- [speculative] A parameter α (edge-average commutator magnitude) controls improvement: there is an efficient classical algorithm to pick angles giving energy gain Ω(|E| α^2 / d) (Theorem 2).
+- [speculative] When applied to Haar-random product states, expected energy improvement is Ω( quad(H)^2 / (d |E|) ); for triangle-free graphs the expected improvement becomes Ω( quad(H) / sqrt(d) ) (Theorem 4).
+- [speculative] The results extend beyond product-state inputs: for any input prepared by a depth-D quantum circuit (maximum lightcone ℓ = O(2^D)), one can construct a unitary giving improvement Ω(Var(H)^2 / (ℓ^{10} d^2 |E|)) (Theorem 3).
+- [speculative] Extensions to k-local Hamiltonians exist, with provable energy improvement bounds but with worse dependence on degree d (e.g., scaling like 1/d^4 times k-dependent factors).
+- [speculative] The approach reproduces and generalizes known classical bounded-occurrence CSP guarantees when starting from random product states, matching known Ω(1/d) or Ω(1/√d) scalings in the corresponding cases.
+- [speculative] There exist matching lower-bound examples showing the stated scalings are (asymptotically) tight in general (so the bounds are, in a sense, optimal).
+
+**Results summary:** This theoretical preprint proves that shallow quantum circuits (commuting two-qubit gates applied on the interaction graph) can systematically improve the energy of given product or low-depth input states for bounded-degree local Hamiltonians. The main quantitative claims are rigorous lower bounds on the achievable energy improvement expressed in terms of the input state's Hamiltonian variance (Var(H)), a commutator-derived parameter α, the graph degree d, the number of edges |E|, and, for random inputs, the quadratic Pauli coefficient norm quad(H). Key results include general improvement bounds Ω(Var^2/(d^2|E|)), stronger bounds for locally optimal product states Ω(Var^2/(d|E|)), expected improvements for random product states scaling like Ω(quad(H)^2/(d|E|)) (and Ω(quad(H)/√d) for triangle-free graphs), and extensions to bounded-depth initial states and k-local Hamiltonians. The circuits are shallow (depth ≲ d+1) and include level-1 QAOA as a special case; the work is theoretical and provides constructive parameter selection algorithms and matching examples showing asymptotic tightness.
+
+**Performance claims:**
+- Improvement for arbitrary product state: energy increase ≥ Ω( Var_v(H)^2 / (d^2 |E|) ).
+- Improvement for locally optimal product state: energy increase ≥ Ω( Var_v(H)^2 / (d |E|) ).
+- Existence of depth-(d+1) commuting-circuit V(θ) = exp(i Σ_{edges} θ_{ij} P_i P_j) that yields energy gain Ω(|E| α^2 / d) where α = E_{edges} |⟨v_i,v_j|[P_iP_j, h_{ij}]|v_i,v_j⟩| (Theorem 2).
+- Random product state expected improvement (general graphs): E_v ⟨ψ|H|ψ⟩ ≥ E_v ⟨v|H|v⟩ + Ω( quad(H)^2 / (d |E|) ).
+- Random product state expected improvement (triangle-free graphs): E_v ⟨ψ|H|ψ⟩ ≥ E_v ⟨v|H|v⟩ + Ω( quad(H) / sqrt(d) ).
+- Bounded-depth input (max lightcone size ℓ) improvement: energy increase ≥ Ω( Var(H)^2 / (ℓ^{10} d^2 |E|) ).
+- k-local Hamiltonian extension: achievable improvement ≥ Ω( Var(H)^2 / (2^{O(k)} d^4 |E|) ) (worse dependence on d than 2-local case).
+- Circuit depth to implement V(θ) on a d-regular graph is at most d+1 (commuting nearest-neighbor gates).
+## Quantum advantage claim
+**Classification:** theoretical
+
+The paper provides rigorous, provable improvements (theoretical guarantees) showing that shallow quantum circuits can improve energies over product or bounded-depth states under mild conditions (expressed via variance or quad(H)). These are theoretical performance bounds and not empirical demonstrations on hardware; the claimed advantage is thus in the sense of provable algorithmic improvement rather than an experimentally demonstrated quantum computational advantage.
+## Limitations
+- The improvement guarantee requires two conditions: the input state must be a product state (or have bounded lightcone for extensions) and the energy variance Var_v(H) = Ω(|E|); otherwise the bound may not apply.
+- The algorithm provides no improvement for purely classical (diagonal) Hamiltonians when the input is an eigenstate (Var = 0).
+- The proven energy improvement for 2-local Hamiltonians scales as Ω(Var^2 / (d^2 |E|)), so when Var is not large (not Ω(|E|)) the absolute improvement can be small.
+- For initial states that are outputs of bounded-depth circuits, the constructed improving circuit U is not constant-depth (so total circuit depth may be large), and the guarantees degrade with the lightcone size ℓ (dependence ∝ ℓ^10 in Theorem 3).
+- For general k-local Hamiltonians the obtained dependence on degree d is worse (approximately Ω(1/d^4) or with other k-dependent factors) compared to the 2-local Ω(1/d^2) result.
+- There exist examples (e.g., certain superpositions in Max-Cut) with large variance where the approximation ratio cannot be improved by an additive constant — the variance condition alone is insufficient.
+- The improvement bounds are asymptotic and involve unspecified universal constants and higher-order combinatorial bounds; practical magnitudes on real instances/hardware are not given.
+- The approach assumes bounded-degree (regularized) interaction graphs; results may not directly extend to unbounded-degree graphs without modification.
+- [inferred] The method requires evaluation/estimation of commutators ⟨v|[PiPj, hij]|v⟩ and related quantities to choose parameters; computing these may be costly for large instances or noisy hardware.
+- [inferred] The worst-case computational complexity of finding the globally optimal parameters within the variational family is not addressed; the constructive bounds pick specific parameter choices but may not be globally optimal.
+- [inferred] The method's robustness to realistic noise and hardware errors (finite precision, decoherence) is not analyzed; practical implementation on near-term devices may be challenging.
+- [inferred] The improvement may be negligible for large-degree graphs or when d is large, because of polynomial degradation with d in denominators.
+## Open questions
+- Can the Ω(1/d^2) scaling (in degree d) that holds for 2-local Hamiltonians be recovered for general k-local Hamiltonians (instead of the current worse Ω(1/d^4) dependence)?
+- Can the technique (or variants) be used to explicitly construct new local Hamiltonian families exhibiting the (almost-linear) NLTS (No Low-energy Trivial States) property?
+- What are the ultimate limits of shallow quantum circuits and variational quantum algorithms for approximating ground energies in general local Hamiltonian problems?
+- Can one remove or relax the variance condition (Var = Ω(|E|)) and still obtain nontrivial, efficiently achievable improvements over product states for a broader class of inputs?
+- How tight are the constant factors and higher-order dependencies (e.g., ℓ10, d-dependence) in the bounds — can these be improved to be more practical?
+- What are the practical resource requirements (depth, gate fidelity, sampling complexity) to realize the proposed shallow-circuit improvements on near-term quantum hardware?
+- Can the classical selection/optimization of parameters for the variational family be made more efficient or improved to approach global optimality in practice?
+- How do noise and finite-sampling effects impact the demonstrated theoretical improvements when implemented on realistic devices?
+- For graph families with specific structure (beyond triangle-free and bounded-degree), can better approximation improvements be proven (or are there stronger impossibility results)?
+- Are there alternative shallow-circuit ansätze that give better improvements than the commuting-edge product-PiPj gates used here, while retaining efficient implementability?
+
+**Future work:**
+- Explore whether the fact that bounded-depth states with large variance cannot achieve arbitrarily good approximation ratios can be used to exhibit new local Hamiltonian systems with the almost-linear NLTS property.
+- Extend and tighten the results for k-local Hamiltonians, aiming to recover better dependence on degree d (ideally matching the 2-local Ω(1/d^2) scaling).
+- Characterize more precisely the advantage offered by shallow quantum circuits and variational quantum algorithms for general local Hamiltonian problems.
+- Investigate practical implementations: quantify constant factors, resource requirements, and robustness to noise for realizing the proposed shallow-circuit improvements on near-term quantum hardware.
+- Develop improved (possibly local) classical algorithms for selecting variational parameters more effectively and study their empirical performance.
+- Study whether the variance condition can be weakened or replaced by other, more easily verifiable quantities that still guarantee meaningful improvements.
+## Key ideas
+- #idea:quantum-advantage — Shallow commuting variational circuits (depth ~ d+1) provably increase the energy expectation for bounded-degree k-local Hamiltonians, with rigorous lower bounds like Ω(Var(H)^2/(d^2 |E|)) and stronger Ω(Var(H)^2/(d |E|)) for locally optimal product states.
+- #idea:near-term-feasibility — The circuits are shallow and include level-1 QAOA as a special case, suggesting potential NISQ-era relevance since depth scales with graph degree (d+1) rather than system size.
+- #idea:hybrid-approach — The paper provides constructive, efficient classical procedures (including randomized/Haar-averaged choices) to pick single-qubit operators P_i and angles θ_ij, implying a practical quantum-classical workflow for parameter selection.
+- #idea:quantum-advantage — Expected improvements for Haar-random product inputs are quantified (e.g., Ω(quad(H)^2/(d|E|)) and Ω(quad(H)/√d) on triangle-free graphs), showing the method generalizes and matches known classical bounded-occurrence CSP guarantees.
+- #idea:quantum-advantage — Extensions to bounded-depth input states (dependence on lightcone size ℓ) and to k-local Hamiltonians are provided with explicit scaling, and matching lower-bound examples show asymptotic tightness of the proved scalings.
+- #idea:near-term-feasibility — Limitations for practical deployment are explicit in the bounds: dependence on graph degree d and on lightcone size ℓ degrades improvements (e.g., extra poly(ℓ) factors), and the work is purely theoretical with no experimental/QPU validation.
+## Contradictions
+<!-- Step 6 output — where this paper contradicts others -->
+
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

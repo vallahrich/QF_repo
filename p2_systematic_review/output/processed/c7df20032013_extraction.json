@@ -1,0 +1,215 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document is labeled with an arXiv identifier (arXiv:2303.16585v2) and contains typical preprint structure (abstract, methods, results, references) with industry/academic coauthors; there is no journal or conference proceedings venue noted, indicating an arXiv preprint rather than a peer-reviewed publication.",
+  "title": "Quantum Deep Hedging",
+  "authors": [
+    "El Amine Cherrat",
+    "Snehal Raj",
+    "Iordanis Kerenidis",
+    "Abhishek Shekhar",
+    "Ben Wood",
+    "Jon Dee",
+    "Shouvanik Chakrabarti",
+    "Richard Chen",
+    "Dylan Herman",
+    "Shaohan Hu",
+    "Pierre Minssen",
+    "Ruslan Shaydulin",
+    "Yue Sun",
+    "Romina Yalovetzky",
+    "Marco Pistoia"
+  ],
+  "year": "2023",
+  "journal_or_venue": "arXiv preprint arXiv:2303.16585",
+  "doi": "",
+  "abstract_summary": "The paper develops quantum reinforcement learning methods for the financial hedging problem, introducing quantum neural network architectures with orthogonal and Hamming-weight-preserving compound layers and proving their trainability (gradient variance decays only polynomially). It presents policy-search and a novel distributional actor-critic approach that leverages quantum encodings of return distributions, shows via simulation that quantum models can match classical performance with fewer parameters and that distributional training improves results, and reports experimental inference on trapped-ion hardware (up to 16 qubits) with close agreement to noiseless simulation.",
+  "methodology_description": "The authors develop and evaluate quantum reinforcement learning methods for the Deep Hedging problem. They design two families of parametrized quantum neural network (QNN) layers: orthogonal layers (built from Reconfigurable Beam Splitter (RBS) gates, implemented in Pyramid / Brick / Butterfly layouts) and compound (Hamming-weight preserving) layers (built from Fermionic Beam Splitter (FBS)/RBS gates implementing exterior-algebra/compound matrices). Two solution approaches are explored: (1) use orthogonal QNN layers as drop-in replacements for classical linear layers in sequence models (Feed-forward, RNN, LSTM, Transformer) trained with a policy-search Deep Hedging algorithm (exponential utility objective); (2) construct a quantum-native formulation of the environment (quantum encoding of trajectories via transition oracles) and use compound QNNs together with actor-critic methods (expected and novel distributional actor-critic) to learn value/policy. Training is performed classically via gradient-based optimizers (Adam) using classical simulation of the circuits (exact/noiseless) for parameter updates; for inference the trained quantum parametrized circuits are evaluated on a trapped-ion device and on a hardware noise emulator. Key methodological components include (i) data encodings: unary/amplitude encoding for orthogonal layers and bitstring encodings of discrete jump paths for compound layers, (ii) loss definitions adapted to the Deep Hedging exponential utility (policy-search loss) and distributional Cramér-projection based objectives for the distributional critic, (iii) Gaussian parameter initialization (variance scaled inversely with circuit size/gate count) and Huber loss / scaling to stabilize value training, and (iv) tomography on the unary subspace to obtain classical features from orthogonal layers.",
+  "algorithms_used": [
+    "Policy-search Deep Hedging (policy gradient style using exponential utility loss)",
+    "Actor-Critic (expected value)",
+    "Distributional Actor-Critic (novel; categorical/Cramér-projection style per-Hamming-weight subsets)",
+    "Variational quantum circuits / parametrized quantum neural networks (orthogonal and compound layers)",
+    "Parameter-shift gradient (discussed as available but training done via classical simulation/gradient descent)",
+    "Classical optimizers: Adam"
+  ],
+  "frameworks": [],
+  "experimental_setup": "Three evaluation modes: (A) exact classical (noiseless) simulation of models during training and inference; (B) hardware noise emulator (Quantinuum H1-1 emulator) for inference; (C) trapped-ion quantum hardware inference on Quantinuum H1-1 and H1-2. Orthogonal-layer experiments used 16-qubit orthogonal layers (unary encoding) and classical training with batch size 256; inference emulation used 1000 shots per circuit evaluation for tomography. Compound-layer (distributional actor-critic) experiments used up to 12 qubits for compound layers, trained via classical simulation (2000 training steps, batch size 16, 3 random seeds) and inference on emulator / hardware. Architectures used Brick / Pyramid (linear-depth) and Butterfly (log-depth, all-to-all) layouts. Training used Gaussian initialization (variance scaled with gate count) and Adam optimizer; value nets used Huber loss and scaling to avoid exploding gradients.",
+  "dataset_used": "Synthetic market data generated from Geometric Brownian Motion (Black-Scholes model) and discrete Bernoulli-based approximations of Brownian motion for the quantum environment. Classical environment: GBM with µ=0, σ=0.2, dt = 1/252; time horizon typically 30 trading days. Training set: 96,000 simulated paths; test set: 24,000 paths (orthogonal-layer experiments). Quantum-environment experiments: discrete jump encoding with n=1 Bernoulli per day for some experiments, instrument maturity 10 days for compound-layer tests; batches of simulated episodes used during training.",
+  "experiment_input": {
+    "source": "Simulated (synthetic) financial data using Geometric Brownian Motion (Black-Scholes) and discrete Bernoulli random-walk approximations",
+    "training_set_size": "Orthogonal experiments: 96,000 paths; Compound experiments: training performed by episodic sampling, batch size 16 per training step (2000 steps)",
+    "test_set_size": "Orthogonal experiments: 24,000 paths; inference subsets used of size 4, 8, 16, or 32 paths in different experiments",
+    "preprocessing_and_encoding": "Classical preprocessing to embeddings; unary amplitude encoding (unary basis) for orthogonal-layer QNNs (log-depth unary data loader); bitstring encodings of per-day jumps for compound-layer QNNs (n qubits per day, concatenated for history), transition oracles created by Hadamards to create equal superpositions of future jump sequences; additional ancilla qubits (typically two) used in compound schemes for Cramér-projection support."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Simulate market trajectories (GBM or discrete Bernoulli approximation).",
+      "Preprocess and encode each state/trajectory into quantum-friendly form (unary amplitude encoding for orthogonal layers; bitstring jump encoding and transition oracles for compound layers).",
+      "Define parametrized quantum neural networks: orthogonal layers (RBS gates in Pyramid/Brick/Butterfly layouts) or compound layers (FBS/RBS implementing block-diagonal compound matrices).",
+      "Initialize parameters with Gaussian random variables (variance scaled inversely with number of gates / circuit depth).",
+      "Train models classically: for policy-search, sample N episodes per training step (N = 256 in orthogonal experiments), compute cumulative returns, compute policy loss L(ϕ) = (1/λ) log(1/N Σ exp(-λ R)), and update parameters by gradient descent (Adam).",
+      "For actor-critic: alternate updates of value network and policy. Value updates: either expected loss (mean squared between predicted Tr[O ρ] and exp(-λ R)) or distributional loss restricted to Hamming-weight subsets; policy update uses value estimates in an adapted exponential-utility policy loss. Huber loss and value-scaling used for stability.",
+      "Select best parameters across multiple seeds; perform inference using either exact simulation, noise emulator, or run circuits on Quantinuum hardware. For orthogonal layers, perform unary tomography (shots used e.g. 1000) to obtain classical feature vector from measured amplitudes; for compound layers, measure computational-basis observables Oz on the output registers.",
+      "Report utilities (exponential utility), terminal PnL, and compare against classical baselines (classical neural architectures and Black-Scholes delta-hedge)."
+    ],
+    "training_iterations_and_hyperparameters": {
+      "orthogonal_training_batch": 256,
+      "compound_training_batch": 16,
+      "compound_training_steps": 2000,
+      "random_seeds": 3,
+      "shots_for_emulator_inference": 1000,
+      "optimizer": "Adam",
+      "value_loss": "Huber loss (value scaling applied)",
+      "initialization": "Gaussian with variance inversely proportional to gate count (discussion: O(1/n^2) or O(1/L) scaling)"
+    }
+  },
+  "experiment_output": {
+    "result_format": "Reported expected utilities (exponential utility E_lambda), terminal Profit and Loss (PnL) per path, number of trainable parameters, and comparisons to classical baselines (classical linear-layer versions of same architectures and Black-Scholes delta-hedge). Results reported for both with/without transaction costs and across exact simulator, hardware emulator, and trapped-ion hardware.",
+    "metrics": [
+      "Exponential utility (E_lambda)",
+      "Terminal PnL per path",
+      "Number of trainable parameters",
+      "Robustness to hardware noise (comparing simulator vs emulator vs hardware)"
+    ],
+    "baselines": [
+      "Classical Feed-forward, Recurrent, LSTM, Transformer (linear layers)",
+      "Black-Scholes delta-hedge"
+    ]
+  },
+  "experiment_parameters": {
+    "max_qubits_used": "Orthogonal experiments up to 16 qubits; compound experiments up to 12 qubits",
+    "architectures": "Orthogonal layers (Pyramid/Brick/Butterfly), Compound layers (Brick architecture when used), Feed-forward/RNN/LSTM/Transformer topologies",
+    "circuit_depth": "Pyramid/Brick: linear depth; Butterfly: logarithmic depth (O(n log n) gates/parameters for Butterfly); total block depth O(nt log n(T-t)) for compound scheme",
+    "shots": 1000,
+    "optimizers": "Adam",
+    "batch_sizes": {
+      "orthogonal": 256,
+      "compound": 16
+    },
+    "training_steps": {
+      "compound": 2000
+    },
+    "initialization": "Gaussian parameter initialization with variance inversely proportional to gate count (discussed scalings O(1/n^2) or O(1/L))",
+    "measurement": "Computational-basis measurements and per-qubit Z observables (unary tomography for orthogonal layers); observable Oz constructed with fixed support for distributional outputs",
+    "shots_for_tomography": 1000
+  },
+  "hardware_details": {
+    "simulator": "Quantinuum H1-1 emulator (hardware noise emulator) and exact (noiseless) classical simulation",
+    "qpus_used": [
+      "Quantinuum H1-1 (trapped-ion 20 qubit)",
+      "Quantinuum H1-2 (trapped-ion 20 qubit)"
+    ],
+    "cloud_provider_or_vendor": "Quantinuum (hardware and emulator); experiments performed by authors (QC Ware / JPMorgan collaboration)"
+  },
+  "reproducibility_notes": "The authors state: 'The code for the numerical experiments in this paper is available upon request.' Training was performed with classical (exact) simulation; hyperparameters reported include batch sizes, training steps, optimizer (Adam), initialization scheme, and seeds (3 seeds reported for compound experiments). Some circuit layouts and parameter counts are provided (Tables), and specific environment parameters (GBM µ=0, σ=0.2, dt=1/252, time horizons) and dataset sizes (96k train, 24k test for orthogonal experiments) are reported, which supports reproducibility upon access to code and simulator/hardware. Additional low-level circuit generation and emulator configuration details are not bundled in the paper but could be provided by the authors upon request.",
+  "key_findings": [
+    "[speculative] Introduced Quantum Deep Hedging: a framework that adapts deep reinforcement learning for hedging using quantum neural network architectures (orthogonal and compound layers).",
+    "[supported] Quantum orthogonal-layer networks (using RBS-based architectures like Pyramid/Butterfly) achieved comparable hedging performance to classical networks while using substantially fewer trainable parameters in simulations.",
+    "[supported] Quantum compound-layer networks combined with a novel distributional actor-critic algorithm achieved better empirical performance (higher expected utility) than policy-search and expected actor-critic baselines in the tested Black–Scholes / GBM toy environments (both with and without transaction costs) in simulation.",
+    "[supported] Successfully ran inference with the proposed quantum models on trapped-ion hardware (Quantinuum H1-1 and H1-2) with up to 16 qubits (orthogonal layers) and up to 12 qubits (compound layers), observing results that align closely with noiseless classical simulation and emulator runs.",
+    "[speculative] Proved under specified assumptions (Gaussian parameter initialization with variance O(1/n^2), computational-basis measurements, and particular initial states: uniform or fixed Hamming-weight superpositions) that the variance of gradients for the proposed compound-layer QNNs decays at most polynomially with system size (i.e., avoids exponential barren-plateau scaling in that setting).",
+    "[speculative] Argues that Hamming-weight preserving (compound) layers are a natural fit for Deep Hedging when paths are encoded as bit-strings of up/down jumps, because Hamming weight captures net jumps and allows decomposing the return distribution by Hamming-weight subspaces.",
+    "[speculative] Proposed a model-based, distributional RL approach leveraging quantum states/observables to represent categorical return distributions or their Cramér projections onto fixed supports; argued this is natural for quantum devices because circuits map to (and measurement samples from) large distributions.",
+    "[speculative] Claim that in general the Quantum Deep Hedging framework can explore larger optimization spaces (via compound layers) and that orthogonal features could improve interpretability, generalization, and help avoid vanishing gradients—suggesting potential practical advantages.",
+    "[speculative] Noted that some circuit instances used in experiments are classically simulatable, but claimed that with different (still efficient-to-prepare) input encodings the framework can instantiate classically hard-to-simulate circuits.",
+    "[supported] Distributional actor-critic policies trained with quantum compound networks outperformed alternatives both in noiseless simulation and on hardware/emulator runs in the experiments reported (toy GBM/Black–Scholes setups).",
+    "[supported] Empirical robustness: certain architectures (e.g., LSTM with Butterfly orthogonal layers) showed relative robustness to realistic noise in emulator and hardware inference in their experiments.",
+    "[speculative] Claimed favorable generalization/sample-complexity properties for their compound-QNN parameterization: because each compound QNN has O(T^2) parameters for horizon T, the pseudo-dimension (hence sample complexity) is polynomial in T (citing Caro & Datta), implying polynomial-sample generalization guarantees in that parameterization."
+  ],
+  "results_summary": "The paper introduces Quantum Deep Hedging, applying quantum neural networks (orthogonal and compound Hamming-weight-preserving layers) within reinforcement learning algorithms for hedging. In simulations on GBM/Black–Scholes toy markets the authors show quantum orthogonal-layer architectures reach comparable expected-utility performance to classical networks while using fewer parameters, and that quantum compound-layer networks trained with a novel distributional actor-critic algorithm outperform policy-search and expected actor-critic baselines. They implemented inference on trapped-ion hardware (Quantinuum H1-1/H1-2), with up to 16 qubits, finding close agreement between hardware, emulator, and noiseless simulation. The paper also provides a theoretical analysis (under specific initialization/measurement assumptions) showing gradient variance avoids exponential decay (barren plateaus) for the proposed compound-layer circuits, and proposes a quantum-native, model-based distributional RL method leveraging Hamming-weight structured encodings.",
+  "performance_claims": [
+    "[supported] Example (classical environment, 30 trading days, 256 paths): Feed-forward classical utility without costs = -2.868 vs Feed-forward Butterfly orthogonal utility = -2.874, parameters 881 (classical) vs 257 (Butterfly). (Table 1)",
+    "[supported] Example (classical environment, with transaction costs): Transformer classical utility = -4.713 vs Transformer Butterfly orthogonal = -4.822, parameters 1905 (classical) vs 865 (Butterfly). (Table 1)",
+    "[supported] Example (quantum market environment, exact simulation, 10 trading days, 16 paths): Distributional actor-critic utility = -3.875 (without costs) vs Policy-search = -4.064 (without costs). (Table 4)",
+    "[supported] Example (quantum market environment, emulator runs with transaction costs): Distributional actor-critic simulator utility = -4.185 vs emulator = -4.180; Expected actor-critic simulator = -4.528 vs emulator = -4.531. (Table 5)",
+    "[supported] Hardware inference (Quantinuum H1-1/H1-2) for distributional actor-critic on 8 paths, 10 trading days with transaction costs: simulation utility = -3.309, hardware utility = -3.369; both substantially better than baseline Black–Scholes delta-hedge utility = -4.884 for these cases. (Table 6)",
+    "[supported] Hardware circuits: orthogonal-layer (Butterfly) experiments used up to 16 qubits; compound-layer experiments simulated up to 12 qubits and ran hardware inference on smaller instances.",
+    "[supported] Emulation experiment example (orthogonal-layer models, 32 paths, 30 trading days): LSTM (Butterfly) simulator utility = -4.809 vs emulator = -4.866 using 3840 emulated circuits. (Table 2)"
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper reports empirical parity or modest practical benefits (fewer parameters, comparable or better expected utilities in toy environments) and shows hardware feasibility for inference. However, it does not demonstrate a provable or empirically reproducible quantum computational advantage (speedup or superior asymptotic sample complexity); some circuits used are classically simulatable, and claims of broader quantum advantage are presented as potential or conditional (e.g., with different input encodings) rather than demonstrated.",
+  "limitations": [
+    "Experiments used short maturities (e.g., 10 trading days) due to classical-simulation limits; full-month (or longer) maturities were not trained on-hardware and hence not demonstrated end-to-end on quantum devices.",
+    "Some of the circuits and setups used (especially orthogonal-layer cases) are classically simulatable in practice, so the presented experiments do not demonstrate a clear quantum computational advantage in those configurations.",
+    "The quantum environment formulation requires model (oracle) access to transition probabilities (Up_t) and a finite-state encoding of market paths — this assumes availability of a quantum-accessible model, which may not be realistic for real-world market data.",
+    "The distributional approximation relies on fixing a finite support z (and knowing bounds omn, omax) and on Cramér projections; this requires precomputable bounds and a Lipschitz assumption on the value CDF, which may not hold in all markets.",
+    "Constructing the ideal observable O^π_t for the exact exponentiated-return distribution is impractical because its spectrum depends on the policy π which changes during training; the proposed workaround (fixed-support observables) introduces approximation error.",
+    "Training in the compound-layer setting required classical pre-training / classical simulation of the quantum circuits — full in-hardware training was not shown, limiting claims about practical near-term training workflows.",
+    "The state encoding for the quantum Black–Scholes environment uses a discrete Bernoulli random-walk approximation with small n (e.g., n=1 per day in experiments), reducing the fidelity of the Brownian-motion approximation relative to continuous models.",
+    "Hardware experiments were limited in scale (qubit counts up to 16 for orthogonal layers, up to 12 for compound layers) and depth, restricting evaluation to relatively small problem instances.",
+    "The distributional actor-critic approach requires partitioning futures by Hamming-weight and building Hamming-weight-preserving unitaries; this structure may not be natural or effective for all market models or encodings.",
+    "Error and approximation bounds (e.g., Cramér-distance bounds) scale with parameters (support size, number of partitions, m) in ways that may grow quickly and limit practical precision unless those parameters are carefully controlled.",
+    "[inferred] Practical deployment would require quantum access to model dynamics or very efficient classical-to-quantum data-loading; the paper assumes efficient data loaders or oracles which are nontrivial to realize for real market streams.",
+    "[inferred] The experiments focus on GBM / Black–Scholes-like dynamics and do not evaluate richer stochastic models (e.g., stochastic volatility, jumps), so performance in more realistic markets is untested.",
+    "[inferred] The reported robustness to noise is shown for specific small circuits and emulators / trapped-ion hardware; scalability of noise resilience to larger circuits and different architectures remains uncertain.",
+    "[inferred] The approach assumes actions have no market impact (standard Deep Hedging assumption) — this rules out use-cases with endogenous market impact unless the framework is extended.",
+    "[inferred] The use of categorical/discretized supports for continuous-valued returns and actions introduces discretization error; continuous action/value handling at scale is not fully addressed."
+  ],
+  "open_questions": [
+    "How can the trainability results for the proposed quantum neural networks (orthogonal and compound layers) be generalized to other settings and architectures?",
+    "Can the quantum environment constructed for GBM / Black–Scholes be extended to more realistic and complex market models (for example, the Heston stochastic-volatility model) while retaining efficient quantum encodings?",
+    "How to design distributional loss functions suited to Deep Hedging that leverage temporal-difference (TD) methods, and how to adapt such TD-based distributional losses to the quantum setting?",
+    "What is the best way to match higher moments (not just the expectation) of the value distribution per subspace and overall, and how should moment-matching be incorporated into quantum distributional learning?",
+    "What are practical methods to construct or learn the fixed-support observable Oz_t (and action observable Oa_t) when the true return/action ranges and distributional properties are unknown or non-stationary?",
+    "To what extent do barren-plateau phenomena arise beyond the proven settings (Gaussian initialization, computational-basis measurement, specific initial states), and can stronger guarantees be given for wider ranges of initializations and observables?",
+    "What are the sample-complexity and generalization trade-offs in realistic settings (longer horizons, richer market dynamics), and how do they scale with number of qubits and circuit depth?",
+    "How to obtain oracular (quantum) access to market transition dynamics in practice, or how to adapt the algorithms to work without idealized quantum oracles?",
+    "What are the precise resource requirements (qubits, circuit depth, shots) to reach parity with classical Deep Hedging solutions for practical hedging problems, and can quantum training be done fully on-device without classical simulation?",
+    "Which encodings and Hamming-weight partitions generalize best across different financial tasks, and can more flexible partitioning schemes be devised to capture relevant structure in other environments?"
+  ],
+  "future_work": [
+    "Expand and generalize trainability results for the proposed quantum neural networks to other settings and architectures.",
+    "Extend the quantum environment design beyond GBM / Black–Scholes to other models such as the Heston model and potentially jump-diffusion or stochastic-volatility models.",
+    "Design new distributional losses that incorporate temporal-difference methods for learning value functions in the Deep Hedging context, including moment-matching approaches.",
+    "Investigate training Quantum Deep Hedging models directly on quantum hardware (on-device training) for longer maturities and problem sizes that cannot be classically simulated.",
+    "Apply the quantum reinforcement learning framework to other financial use cases beyond hedging, for example algorithmic trading or option pricing.",
+    "Explore alternative quantum layers and encodings (beyond the orthogonal and compound layers used) that may yield improved expressivity or classical hardness.",
+    "Develop practical constructions and learning procedures for the fixed-support observables (Oz_t and Oa_t) and study error-vs.-support-size trade-offs in real market settings.",
+    "Study and improve noise resilience and error mitigation strategies for the proposed quantum circuits on larger quantum processors.",
+    "Design and analyze richer distributional approximation schemes (e.g., different projections, adaptive supports, quantile-based methods) compatible with the quantum framework.",
+    "Investigate moment-matching and other approaches to capture information beyond the expectation, both per Hamming-weight subset and globally."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "risk-management",
+    "quantum-ml-finance",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability",
+    "contradiction:classical-vs-quantum"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Parametrized quantum neural networks (orthogonal and compound layers) can match classical Deep Hedging performance in simulation while using fewer trainable parameters.",
+    "#idea:near-term-feasibility — Inference of trained circuits was executed on trapped-ion hardware (Quantinuum H1 devices) up to 16 qubits with close agreement to noiseless simulation, indicating NISQ-era feasibility for inference on small instances.",
+    "#idea:hybrid-approach — Training performed classically (exact/noiseless circuit simulation and Adam optimizer); quantum circuits primarily used as drop-in function approximators and for inference, demonstrating a practical hybrid QPU-CPU workflow.",
+    "#idea:near-term-feasibility — The paper introduces QNN layer designs (RBS/FBS-based orthogonal and Hamming-weight-preserving compound layers) with provable trainability (polynomial gradient variance decay), arguing suitability for NISQ variational training.",
+    "#idea:quantum-advantage — A novel distributional actor-critic that leverages quantum encodings of return distributions yields improved results in experiments compared to expected-value training.",
+    "#idea:hybrid-approach — Multiple data-encoding strategies (unary amplitude encoding, bitstring jump encodings, transition oracles) and tomography-based readout are used to bridge classical data and quantum models."
+  ],
+  "contradictions": [
+    "contradiction:scalability — The paper asserts near-term feasibility and provable trainability, but experiments are limited to small, synthetic GBM tasks, up to 16 qubits for inference, and training is performed via classical (exact) simulation. This leaves scalability to realistic market dimensions and full end-to-end quantum training unproven.",
+    "contradiction:classical-vs-quantum — The claimed advantage is mainly parameter efficiency (matching classical performance with fewer parameters) rather than demonstrable runtime, sample-complexity, or risk-adjusted performance gains versus classical baselines. Thus superiority over classical methods is not conclusively established."
+  ],
+  "limitation_tags": [
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:data-encoding"
+  ]
+}

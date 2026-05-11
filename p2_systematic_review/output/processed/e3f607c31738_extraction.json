@@ -1,0 +1,138 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2106.06735v4) and lacks journal/venue metadata; structure (abstract-like intro, methods, results, references) resembles a research manuscript uploaded to arXiv rather than a published peer-reviewed article.",
+  "title": "Quantum Portfolio Optimization with Investment Bands and Target Volatility",
+  "authors": [
+    "Samuel Palmer",
+    "Serkan Sahin",
+    "Rodrigo Hernández",
+    "Samuel Mugel",
+    "Román Orús"
+  ],
+  "year": "2021",
+  "journal_or_venue": "arXiv preprint (arXiv:2106.06735)",
+  "doi": "",
+  "abstract_summary": "The paper presents methods to encode realistic portfolio constraints—per-asset minimum and maximum investment bands and a fixed target volatility—into a quadratic unconstrained binary optimization (QUBO) formulation suitable for quantum annealers. By linearizing the volatility constraint to retain a quadratic form and discretizing holdings with binary encodings, the authors validate the approach using D-Wave's hybrid quantum annealer on S&P100 and S&P500 universes, demonstrating feasible optimized portfolios that meet band and risk targets and show improved risk-return trade-offs compared to random baselines.",
+  "methodology_description": "The authors formulate a discrete (integer) portfolio optimization problem as a quadratic unconstrained binary optimization (QUBO) suitable for quantum annealing. Starting from Modern Portfolio Theory (maximize expected log-returns and penalize portfolio variance via a risk-aversion parameter gamma), they enforce budget normalization with a quadratic penalty and incorporate per-asset investment bands by shifting variables (omega_n = omega_min_n + tilde{omega}_n) and encoding tilde{omega}_n with a fixed-depth binary representation per asset. To target a specific portfolio volatility they add a volatility constraint; to keep the problem quadratic they linearize the volatility constraint by replacing omega^T Sigma omega with k^T Sigma omega where k is a vector of linear weights (initialized as 1/N and optionally refined). The resulting quadratic objective (returns term, variance term, budget penalty, linearized volatility penalty) is mapped to binary variables according to the prescribed encoding (including the M correction term to enforce upper bounds) and solved with D-Wave's hybrid quantum annealing solver using the Advantage QPU. Validation experiments use real market data (S&P100 and S&P500 daily closing prices), computing logarithmic returns and covariance matrices from historical price windows, and compare optimized portfolios at different target volatilities and with investment-band constraints to random portfolios and equal-weight baselines.",
+  "algorithms_used": [
+    "QUBO formulation (quadratic binary optimization)",
+    "Quantum annealing (D-Wave Hybrid quantum-classical solver)",
+    "Binary encoding of integer holdings (fixed bit-depth per asset)",
+    "Linearization of volatility constraint (k^T Sigma omega approximation)"
+  ],
+  "frameworks": [
+    "D-Wave Hybrid (D-Wave Systems)"
+  ],
+  "experimental_setup": "Hybrid quantum annealing runs using D-Wave Hybrid with the Advantage quantum annealing processor (D-Wave Systems). Typical runs reported to take on the order of minutes per job. Example settings reported include K=100 and per-asset bit-depth N_n,q = 10 in illustrative experiments.",
+  "dataset_used": "Daily closing prices for all assets in S&P100 and S&P500. Experiments use one-day static optimizations with logarithmic returns and covariance matrices computed from historical price windows (returns computed from price series; covariance typically computed over a 3-month period prior to each optimization day). Time window example: year prior to 2021-04-23 for returns and a 3-month window for covariance in the day-by-day experiments.",
+  "experiment_input": "Source: constituent lists and daily closing prices for S&P100 and S&P500 (public market data). Size: experiments performed on the full S&P100 (~100 assets) and full S&P500 (~500 assets). Preprocessing: compute logarithmic returns vector mu and covariance matrix Sigma from historical price series; specify sector-based base portfolio composition and per-sector/asset investment bands (omega_min_n, omega_max_n); choose total invested K (example K=100); set per-asset binary encoding depth N_n,q (example 10 bits per asset); compute M correction term per asset to ensure upper bound; set target volatility(s) (e.g., daily targets 0.5%, 0.75%, 1.0% and an annual example ~10%).",
+  "experiment_process": "1) Collect daily closing price histories for target date/window and compute logarithmic returns mu and covariance matrix Sigma (covariance usually computed over a 3-month window prior to the optimization date). 2) Specify investment bands (omega_min_n, omega_max_n) per asset or sector and total budget normalization (sum omega_n = 1). 3) Apply variable shift omega_n = omega_min_n + tilde{omega}_n. 4) Encode tilde{omega}_n as a fixed-bit binary expansion: tilde{omega}_n = (1/K) * (sum_{q=0}^{Nq-1} 2^q x_{n,q} + M x_{n,Nq}), with M chosen so that upper bound is enforced and Nq selected to satisfy 2^{Nq-1}-1 <= K(omega_max_n - omega_min_n). 5) Formulate quadratic objective: H = -mu^T omega + (gamma/2) omega^T Sigma omega + rho (sum_n omega_n - 1)^2 + lambda (k^T Sigma omega - sigma_target^2)^2, where the volatility constraint is linearized using weights k (initially k_n = 1/N) to keep the problem quadratic. 6) Map to QUBO over binary variables x_{n,q}. 7) Solve the QUBO with D-Wave Hybrid (Advantage) solver; extract binary solution and reconstruct holdings omega. 8) Evaluate portfolio metrics (realized volatility, returns) and compare with baselines (random portfolios, equal-weighted index) and visualize sector compositions. Parameters such as gamma, rho, lambda, bit depth, and k can be tuned; runs reported for multiple target volatilities and investment-band configurations.",
+  "experiment_output": "Primary outputs are optimal discrete portfolio allocations (per-asset weights omega_n) satisfying investment bands and (approximately) the target volatility. Reported metrics include portfolio return and realized volatility; visual outputs include sector-wise composition plots and return-versus-volatility plots. Baselines used for comparison: random portfolios sampled from the feasible space and the S&P500 equally-weighted index (EWI). They report that optimized portfolios dominate random portfolios (for same return lower risk, or for same risk higher return) in their experiments.",
+  "experiment_parameters": {
+    "total_invested_K": 100,
+    "per_asset_bit_depth_Nn_q": 10,
+    "example_target_volatilities_daily": [
+      0.005,
+      0.0075,
+      0.01
+    ],
+    "example_target_volatility_yearly": 0.1,
+    "risk_aversion_gamma": "set per experiment (numeric, not explicitly listed in paper)",
+    "budget_penalty_rho": "set per experiment (numeric, not explicitly listed in paper)",
+    "volatility_penalty_lambda": "Lagrange multiplier for volatility constraint (numeric, not explicitly listed)",
+    "linear_weights_k_initialization": "k_n = 1/N for all n (can be refined)",
+    "investment_bands_examples": "max 10% per asset in some runs; minimum 15% for Technology and Industrials in one S&P500 run",
+    "estimated_binary_variables": "N_assets * Nn_q (e.g., S&P100 with 10 bits -> ~1000 binaries; S&P500 with 10 bits -> ~5000 binaries)"
+  },
+  "hardware_details": {
+    "provider": "D-Wave Systems",
+    "solver": "D-Wave Hybrid (hybrid quantum-classical annealing)",
+    "qpu_model": "Advantage quantum annealing processor",
+    "notes": "Runs executed via D-Wave Hybrid using the Advantage QPU; reported run times on the order of minutes per job."
+  },
+  "reproducibility_notes": "The paper describes the full mathematical formulation and encoding (QUBO mapping, binary encoding, linearized volatility constraint) and specifies the datasets used (S&P100 and S&P500 daily prices, with example windows). However, exact numeric hyperparameters for experiments (values of gamma, rho, volatility penalty multiplier, solver-specific hybrid parameters) are not fully enumerated, and no public code or data links are provided in the preprint. The experiments appear reproducible in principle using public price data and D-Wave access if parameter choices and encoding details (bit depths and M calculation) are implemented as described, but reproducing exact reported runs would require specification of solver/hybrid hyperparameters and the exact random seeds or solver configuration.",
+  "key_findings": [
+    "[supported] Investment-band constraints (per-asset min/max allocations) can be encoded while keeping the portfolio optimization as a quadratic binary optimization (QUBO) by shifting variables and binary discretization.",
+    "[supported] A target volatility constraint can be enforced approximately while preserving a quadratic objective by linearizing the covariance term with fixed linear weights.",
+    "[supported] The authors implemented the above encodings and solved portfolio optimizations on real market data (S&P100 and S&P500) using D-Wave's hybrid quantum annealing with the Advantage processor.",
+    "[supported] Portfolios obtained with the method satisfy the imposed per-asset/sector band constraints and approximately meet target volatilities (small deviations reported).",
+    "[supported] Optimized portfolios found by the hybrid quantum annealer outperform a cloud of random portfolios in the return-versus-volatility plane for the tested time window.",
+    "[supported] The implementation handled large realistic instances (full S&P100 and S&P500 universes) and runtimes reported as 'a few minutes per job' in the worst case.",
+    "[speculative] The linearization approach (using simple/initial linear weights like kn = 1/N) is broadly adequate; accuracy improves with higher diversification.",
+    "[speculative] These optimizations constitute the largest static portfolio optimizations carried out on a quantum computer (authors' claim: 'to the best of our knowledge').",
+    "[speculative] Combining the presented methods with clustering could enable replication of complex indices and practical ETF construction using quantum optimization.",
+    "[speculative] Quantum computing (and specifically quantum annealing/hybrid methods) can become a production-standard tool in quantitative finance given these results.",
+    "[speculative] Many commercial products are not much better than random portfolios (authors remark, but they note evidence 'not shown')."
+  ],
+  "results_summary": "The paper presents a practical method to encode realistic portfolio constraints—per-asset investment bands and a target volatility—into a QUBO formulation suitable for quantum annealers by (1) shifting variables and discretizing via binary encodings to enforce min/max holdings and (2) linearizing the volatility constraint to avoid higher-order terms. The authors implemented and tested the approach on real market data for S&P100 and S&P500 using D-Wave's hybrid solver with the Advantage processor. Results show that the obtained portfolios respect the bands, approximately meet target volatilities, outperform random portfolios in return-vs-risk trade-offs for the tested period, and were obtained for large universes in short runtimes (minutes). The paper also argues potential practical value for index/ETF replication when combined with clustering, though that step is not demonstrated.",
+  "performance_claims": [
+    "Solved full S&P100 and full S&P500 static portfolio optimization instances on D-Wave hybrid / Advantage.",
+    "Runtime: 'a few minutes per job' in the worst case (reported by authors).",
+    "Target daily volatilities considered in experiments: 0.5%, 0.75%, and 1.00% (daily).",
+    "Example target yearly volatility shown around 10% in Figure 1 (authors report the constraint minimum close to 10%).",
+    "Portfolio diversification parameter in one experiment: maximum 10% of total holdings allowed in a single asset.",
+    "S&P500 Equally Weighted Index (EWI) return for the period studied ~50% (used as reference in comparisons)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper demonstrates practical encoding and successful optimization runs on a D-Wave hybrid quantum annealer for large, realistic universes, but it does not provide a rigorous comparison to state-of-the-art classical solvers or show a clear computational/solution-quality advantage attributable to quantum processing. Claims toward production readiness and being the largest such quantum optimizations are stated cautiously ('to the best of our knowledge') and remain speculative without broader benchmarking against classical methods.",
+  "limitations": [
+    "The volatility-target constraint is linearized (replacing ω^T Σ ω by k^T Σ ω), which is an approximation and can cause the achieved volatility to differ slightly from the target (author-stated).",
+    "The linearization trick can introduce local minima in the optimization landscape, requiring manual mitigation via hyperparameter tuning or different initial conditions (author-stated).",
+    "Enforcing the exact volatility constraint without linearization results in a higher-order (HUBO) problem; solving HUBOs requires order-reduction techniques with significant bit overhead (author-stated).",
+    "Discrete encoding of holdings (binary encoding per asset) imposes finite resolution and requires a sufficient bit-depth per asset (Nn,q) to represent the allowed investment band; this places scalability and precision constraints (author-stated).",
+    "The chosen initial guess for linear weights k (e.g., kn = 1/N) is heuristic and may not be optimal; accuracy depends on this choice and on portfolio diversification (author-stated).",
+    "Target volatility and actual portfolio volatility can differ due to the approximations and large solution space (author-stated).",
+    "[inferred] The method focuses on static (single-period) portfolio optimization; multi-period/dynamic optimization with transaction costs and market impact is not addressed.",
+    "[inferred] No direct, detailed benchmarking is provided comparing the quantum-hybrid results against state-of-the-art classical optimization solvers for the same constrained problems.",
+    "[inferred] The approach depends on availability and characteristics of the quantum-hybrid hardware (D-Wave Hybrid + Advantage); hardware-specific limitations (connectivity, noise, embedding overhead) may affect scalability and outcomes.",
+    "[inferred] The discrete encoding (bits per asset) implies total binary-variable growth proportional to assets × bits-per-asset, which may limit scaling to much larger universes or to very fine-grained investment granularity.",
+    "[inferred] Results can be sensitive to hyperparameter choices (γ, ρ, µ) and initial conditions; systematic hyperparameter selection/robustness analysis is not detailed.",
+    "[inferred] The empirical results are for a specific market period (COVID-recovery window) and may be influenced by that regime; generalization to different market conditions is not demonstrated."
+  ],
+  "open_questions": [
+    "How to choose or learn the linear weights vector k optimally so the linearized volatility constraint closely enforces the true target volatility (e.g., methods for self-consistent or data-driven k selection)?",
+    "What is the quantitative performance gap (solution quality and runtime) between this quantum-hybrid approach and best-in-class classical solvers on the same constrained discrete portfolio problems?",
+    "How can the method be extended to multi-period (dynamic) portfolio optimization including transaction costs, market impact, and rebalancing constraints?",
+    "What are principled strategies to mitigate or avoid local minima introduced by the volatility constraint linearization, beyond manual hyperparameter tuning?",
+    "Can higher-order constraints (HUBOs) be handled more efficiently without excessive bit overhead, or can reduced-order encodings be developed to preserve fidelity while keeping QUBO form?",
+    "How sensitive are results to the choice of bit-depth per asset, and what are trade-offs between precision and scaling (number of binary variables)?",
+    "How robust is the approach across different market regimes and different asset universes beyond the tested S&P100/S&P500 and the selected time windows?",
+    "What are the effects of hardware-specific limitations (embedding, connectivity, noise) on solution quality and runtime as problem sizes grow?",
+    "How to incorporate additional practical constraints commonly used by brokers (e.g., short-selling, minimum lot sizes that vary over time, regulatory limits) into the QUBO framework efficiently?",
+    "How effective is the proposed approach when applied to the practical task of replicating complex indices or constructing ETFs in production settings, including considerations of tracking error and transaction costs?"
+  ],
+  "future_work": [
+    "Combine the presented quantum optimization methods with clustering algorithms to replicate the behavior of more complex indices (e.g., Nasdaq Composite) and to assist in building/replicating Exchange Traded Funds (ETFs) (author-stated).",
+    "Optimize the linear weights k self-consistently (e.g., using tensor-network-inspired or other iterative schemes) instead of using a uniform heuristic, to improve the fidelity of the volatility constraint (author-stated).",
+    "Fine-tune or otherwise improve the choice of linear weights k through data-driven or optimization-based approaches as an alternative to the uniform initial guess (author-stated)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Formulate realistic portfolio constraints (per-asset min/max investment bands and budget) as a QUBO and solve with D-Wave's hybrid quantum-classical annealer (Advantage) to obtain discrete optimized allocations.",
+    "#idea:near-term-feasibility — Demonstrated day-by-day experiments on real market data (S&P100 and S&P500) using the hybrid solver, with run times on the order of minutes, suggesting near-term applicability for discrete portfolio optimization tasks.",
+    "#idea:quantum-advantage — Optimized portfolios from the hybrid QUBO approach dominate random feasible portfolios and equal-weight baselines in the reported return-versus-volatility comparisons (i.e., better risk-return trade-offs in experiments).",
+    "#limitation:data-encoding — The method requires fixed-depth binary encodings per asset (e.g., 10 bits per asset), leading to large numbers of binary variables (~1000 for S&P100, ~5000 for S&P500) which increases problem size and encoding complexity.",
+    "#limitation:qubit-count — The large number of logical binary variables implies significant resource requirements (embedding/logical-to-physical mapping) and may limit direct mapping to QPUs without hybrid decomposition or reduction.",
+    "#idea:hybrid-approach — Use of linearization for the volatility constraint (replacing omega^T Sigma omega with k^T Sigma omega with tunable k) preserves quadratic form at the cost of approximation, enabling QUBO formulation while keeping problem solvable by the annealer.",
+    "#idea:near-term-feasibility — The paper supplies full mathematical formulation and reproducible encoding details (binary mapping, M-correction, penalty terms) alongside experiments on public market data, enabling replication and incremental improvements."
+  ],
+  "contradictions": []
+}

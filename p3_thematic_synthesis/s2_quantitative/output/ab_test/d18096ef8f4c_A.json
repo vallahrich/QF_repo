@@ -1,0 +1,1170 @@
+{
+  "paper_id": "d18096ef8f4c",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "model_used": "gpt-5-mini",
+    "source_file": "d18096ef8f4c_financial_portfolio_optimization_a_qubo_formulation_for_sharpe_ratio_maximizatio.md",
+    "pipeline": "5-step-cached-prefix-v1",
+    "quality_score": 0.6,
+    "validation_flagged": 5,
+    "validation_total": 80
+  },
+  "paper_metadata": {
+    "title": "Financial Portfolio Optimization: a QUBO Formulation for Sharpe Ratio Maximization",
+    "authors": [
+      "Mirko Mattesi",
+      "Luca Asproni",
+      "Christian Mattia",
+      "Simone Tufano",
+      "Giacomo Ranieri",
+      "Davide Caputo",
+      "Davide Corbelletto"
+    ],
+    "year": "2023",
+    "doi": ""
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "The paper applies two discrete QUBO encodings of portfolio Sharpe-ratio-style objectives to a real S&P500 dataset (432 assets after cleaning), yielding QUBO sizes of 3888 (Sharpe-proxy, K=9) and 5184 (proposed quadratic reformulation, H=12) binary variables; hyperparameters chosen include lambda_0 = 1.2631 / 0.7 and lambda_1 = 300, with calibration runs of 20 and 10 feasible solutions collected per selected configuration under a feasibility tolerance of 2.5e-4. The authors report that the best QUBO results came from the Proposed formulation solved with QBSolv (classical), but no numeric Sharpe Ratio values or numeric baseline PyPortfolioOpt results were extracted, so a quantitative advantage over classical methods is not demonstrated.",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Optimize the Sharpe Ratio Proxy QUBO formulation (discretized weights) solved using D-Wave Hybrid (hybrid quantum-classical) solver on S&P500 log-returns data.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "D-Wave Hybrid solving QUBO (Sharpe Ratio Proxy formulation)",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "lambda_0": 1.2631,
+          "lambda_1": 300,
+          "discretization_K": 9,
+          "discretization_dk_definition": "dk = 2^(k-1)/500 for k=1..K-1; dK = 1 - sum_{k=1..K-1} dk",
+          "discretization_granularity": 0.002,
+          "min_investment_per_asset_percent": 0.2,
+          "num_binary_variables": 3888,
+          "feasibility_tolerance_muTy": null,
+          "calibration_runs_per_lambda_pair": 20,
+          "collected_feasible_solutions_after_calibration": 10,
+          "tested_infeasible_lambda_configurations_reported": [
+            {
+              "lambda_0": 2.4,
+              "lambda_1": 200
+            },
+            {
+              "lambda_0": 2.0,
+              "lambda_1": 200
+            },
+            {
+              "lambda_0": 2.4,
+              "lambda_1": 300
+            },
+            {
+              "lambda_0": 2.6,
+              "lambda_1": 300
+            }
+          ]
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "objective_function": "Proxy linear-quadratic form: sum_i ai (sum_k dk x_{i,k}) + sum_{i<j} bij (sum_k dk x_{i,k})(sum_k dk x_{j,k}) where ai = mu_i / sigma_i, bij = rho_{ij}",
+        "constraints_handling": "Penalty term added: H1 = (sum_{i,k} dk x_{i,k} - 1)^2 weighted by lambda_1",
+        "num_binary_variables": 3888,
+        "problem_hamiltonian": "Q = lambda_0 * H0 + lambda_1 * H1 (QUBO matrix); H0 encodes objective (see above), H1 encodes equality constraint (sum weights = 1)"
+      },
+      "problem_instance": {
+        "description": "Portfolio optimization maximizing a proxy of the Sharpe Ratio on S&P500 assets using discretized portfolio weights (K=9 bins per asset).",
+        "num_assets": 432,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 432,
+        "data_type": "real_market",
+        "dataset_name": "S&P500 historical prices from Yahoo! Finance (initial 505 assets, cleaned -> 471, filtered -> 432 for log-returns)",
+        "dataset_specification": {
+          "tickers": "S&P500 constituents (initial set of 505 tickers; explicit tickers not listed)",
+          "date_range": "2013-2020",
+          "price_field": "adjusted close daily prices",
+          "returns_used": "log-returns (authors chose log-returns after Gaussianity tests)",
+          "preprocessing_steps": [
+            "Remove null values and exclude assets with consecutive nulls",
+            "Compute simple returns and log-returns; authors use log-returns",
+            "Compute sample expected returns and sample covariance matrix; annualize using 252 trading days",
+            "Remove assets with negative expected return (assumption for QUBO formulation)"
+          ],
+          "train_test_split": null
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "num_binary_variables": 3888,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "error_correction": {
+          "code_type": null,
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        },
+        "notes": "Problem represented as a QUBO with 3888 binary variables. Paper does not report mapping to physical qubits, embedding details, gate counts, or any circuit-level resources for the D-Wave/hybrid execution."
+      },
+      "hardware": {
+        "type": "quantum_annealer",
+        "provider": "D-Wave",
+        "device_name": null,
+        "framework": "D-Wave Hybrid service (D-Wave Ocean/QUBO tooling implied)",
+        "notes": "Authors state they solved the QUBO using D-Wave Hybrid (hybrid quantum-classical solver). No specific QPU model or topology reported."
+      },
+      "noise_model": {
+        "is_noisy": null,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "notes": "No discussion of noise modelling, calibrated device noise, or error mitigation for the hybrid/D-Wave runs."
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "classical_solver": "PyPortfolioOpt used as classical baseline for continuous solution (not part of this experiment). D-Wave Hybrid service (proprietary) used as solver here.",
+        "classical_preprocessing": "Preprocessing as described in dataset_specification (remove nulls, compute log-returns, compute mean and covariance, remove negative-mean assets). Discretize weights into binary variables using dk.",
+        "classical_postprocessing": "Reconstruct portfolio weights from binary solution via wi = sum_k dk x_{i,k}. Evaluate Sharpe Ratio using mu^T w / sqrt(w^T Sigma w). Feasibility determined by sum weights == 1 (within discretization).",
+        "hardware": "D-Wave Hybrid (hybrid quantum-classical service)",
+        "notes": "Feasible-solution selection: after calibration the authors collected 10 feasible solutions for statistics; feasibility defined by sum of weights = 1 for this formulation.",
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": 10,
+          "calibration_runs_per_lambda_pair": 20,
+          "feasibility_definition": "Feasible if sum of discretized weights equals 1 (exact within discretization).",
+          "notes": "Paper reports collecting 10 feasible solutions after calibration (20 runs per lambda pair during calibration). No iteration counts or optimizer traces provided."
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 432,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 2"
+        },
+        {
+          "metric_name": "num_binary_variables",
+          "value": 3888,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "lambda_0",
+          "value": 1.2631,
+          "unit": "unitless (penalty weight)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "lambda_1",
+          "value": 300,
+          "unit": "unitless (penalty weight)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "discretization_K",
+          "value": 9,
+          "unit": "bins per asset",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 3.1"
+        },
+        {
+          "metric_name": "discretization_granularity",
+          "value": 0.002,
+          "unit": "fraction of total portfolio (absolute), i.e. 0.2%",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 3.1"
+        },
+        {
+          "metric_name": "min_investment_per_asset_percent",
+          "value": 0.2,
+          "unit": "%",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 3.1"
+        },
+        {
+          "metric_name": "calibration_runs_per_lambda_pair",
+          "value": 20,
+          "unit": "runs",
+          "higher_is_better": null,
+          "data_source": "appendix",
+          "quote_id": "Appendix (Calibration Analysis)"
+        },
+        {
+          "metric_name": "collected_feasible_solutions_after_calibration",
+          "value": 10,
+          "unit": "solutions",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "feasibility_definition",
+          "value": "sum of asset weights == 1 (exact per discretized representation)",
+          "unit": null,
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "figure",
+          "quote_id": "Figure 2"
+        },
+        {
+          "metric_name": "feasibility_percentage_for_tested_lambda_configurations",
+          "value": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "figure",
+          "quote_id": "Appendix Figure 4"
+        },
+        {
+          "metric_name": "tested_infeasible_lambda_configurations_reported_count",
+          "value": 4,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "appendix",
+          "quote_id": "Appendix"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "PyPortfolioOpt (classical quadratic continuous optimizer)",
+          "metric_name": "sharpe_ratio",
+          "value": null,
+          "unit": "ratio",
+          "data_source": "figure",
+          "quote_id": "Figure 2"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "No empirical or asymptotic speedup claims reported for this experiment."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 432,
+          "num_qubits": null,
+          "metric_name": "num_binary_variables",
+          "metric_value": 3888
+        }
+      ],
+      "complexity_analysis": {
+        "problem_size_binary_variables": 3888,
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null,
+        "notes": "The paper does not provide algorithmic Big-O or runtime complexity comparisons for the hybrid/D-Wave approach. No resource-overhead estimates (embedding overhead, physical qubit counts, or error-correction overhead) are provided."
+      },
+      "advantage_assessment": {
+        "advantage_status": "advantage_claimed_not_demonstrated",
+        "hoefler_viable": null,
+        "maturity_level": "L4_qpu_scale",
+        "crossover_size": null,
+        "resources_for_advantage": "Would likely require a fault-tolerant device with many logical qubits (orders of magnitude more than current devices) or major algorithmic improvements in encoding/decomposition to reduce binary-variable count from 3888; not achievable with current hybrid/QPU setups.",
+        "data_loading_bottleneck": true,
+        "feasibility_horizon": "requires_fault_tolerance",
+        "limiting_factors": [
+          "data_encoding_overhead",
+          "qubit_count",
+          "noise",
+          "classical_competition",
+          "error_correction_overhead",
+          "connectivity"
+        ]
+      }
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Optimize the Sharpe Ratio Proxy QUBO formulation (discretized weights) solved using D-Wave QBSolv classical QUBO solver on S&P500 log-returns data.",
+      "algorithm": {
+        "family": "qubo",
+        "variant": "QBSolv classical QUBO decomposition/solver (Sharpe Ratio Proxy formulation)",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "lambda_0": 1.2631,
+          "lambda_1": 300,
+          "discretization_K": 9,
+          "discretization_dk_definition": "dk = 2^(k-1)/500 for k=1..K-1; dK = 1 - sum_{k=1..K-1} dk",
+          "discretization_granularity": 0.002,
+          "min_investment_per_asset_percent": 0.2,
+          "num_binary_variables": 3888,
+          "calibration_runs_per_lambda_pair": 20,
+          "collected_feasible_solutions_after_calibration": 10,
+          "tested_infeasible_lambda_configurations_reported": [
+            {
+              "lambda_0": 3.5,
+              "lambda_1": 300
+            },
+            {
+              "lambda_0": 2.6,
+              "lambda_1": 300
+            }
+          ]
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "objective_function": "Proxy linear-quadratic form as in exp_1: sum_i ai (sum_k dk x_{i,k}) + sum_{i<j} bij (sum_k dk x_{i,k})(sum_k dk x_{j,k})",
+        "constraints_handling": "Penalty term H1 = (sum_{i,k} dk x_{i,k} - 1)^2 weighted by lambda_1",
+        "num_binary_variables": 3888,
+        "problem_hamiltonian": "Q = lambda_0 * H0 + lambda_1 * H1 (QUBO matrix)"
+      },
+      "problem_instance": {
+        "description": "Same Sharpe Ratio Proxy QUBO on S&P500 log-returns, solved with classical QBSolv. Used to compare solver performance.",
+        "num_assets": 432,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 432,
+        "data_type": "real_market",
+        "dataset_name": "S&P500 historical prices from Yahoo! Finance (2013-2020), log-returns variant",
+        "dataset_specification": {
+          "tickers": "S&P500 constituents (exact tickers not listed)",
+          "date_range": "2013-2020",
+          "price_field": "adjusted close daily prices",
+          "returns_used": "log-returns",
+          "preprocessing_steps": [
+            "Remove nulls and assets with consecutive nulls",
+            "Compute returns and log-returns",
+            "Compute sample mean and covariance; annualize by 252",
+            "Remove assets with negative expected return"
+          ],
+          "train_test_split": null
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "num_binary_variables": 3888,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "error_correction": {
+          "code_type": null,
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        },
+        "notes": "This experiment used a classical QUBO solver (QBSolv) on the same 3888-variable QUBO. No quantum circuit/QPU resources apply."
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": "D-Wave",
+        "device_name": "QBSolv (classical solver / decomposer)",
+        "framework": "D-Wave QBSolv (classical decomposition/solver)",
+        "notes": "QBSolv is a classical solver/decomposer provided by D-Wave; no QPU was required or specified."
+      },
+      "noise_model": {
+        "is_noisy": null,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "notes": "As a classical solver run, hardware noise modelling is not applicable and not discussed."
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "classical_solver": "D-Wave QBSolv (classical solver/decomposer) used for solving the QUBO",
+        "classical_preprocessing": "Same discretization/preprocessing as exp_1",
+        "classical_postprocessing": "Reconstruct weights wi = sum_k dk x_{i,k}. Evaluate Sharpe Ratio. Feasibility as sum weights = 1.",
+        "hardware": "QBSolv (classical decomposition/solver)",
+        "notes": "Calibration performed to select lambda values; after calibration 10 feasible solutions were collected for statistics.",
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": 10,
+          "calibration_runs_per_lambda_pair": 20,
+          "feasibility_definition": "Feasible if sum of discretized weights equals 1 (exact within discretization).",
+          "notes": "Calibration used 20 runs per lambda pair; 10 feasible solutions were collected for statistics. No further optimizer iteration data reported."
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 432,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 2"
+        },
+        {
+          "metric_name": "num_binary_variables",
+          "value": 3888,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "lambda_0",
+          "value": 1.2631,
+          "unit": "unitless (penalty weight)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "lambda_1",
+          "value": 300,
+          "unit": "unitless (penalty weight)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "discretization_K",
+          "value": 9,
+          "unit": "bins per asset",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 3.1"
+        },
+        {
+          "metric_name": "discretization_granularity",
+          "value": 0.002,
+          "unit": "fraction of total portfolio (absolute), i.e. 0.2%",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 3.1"
+        },
+        {
+          "metric_name": "calibration_runs_per_lambda_pair",
+          "value": 20,
+          "unit": "runs",
+          "higher_is_better": null,
+          "data_source": "appendix",
+          "quote_id": "Appendix (Calibration Analysis)"
+        },
+        {
+          "metric_name": "collected_feasible_solutions_after_calibration",
+          "value": 10,
+          "unit": "solutions",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "feasibility_definition",
+          "value": "sum of asset weights == 1 (exact per discretized representation)",
+          "unit": null,
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "figure",
+          "quote_id": "Figure 2"
+        },
+        {
+          "metric_name": "tested_infeasible_lambda_configurations_reported_count",
+          "value": 2,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "appendix",
+          "quote_id": "Appendix"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "PyPortfolioOpt (classical quadratic continuous optimizer)",
+          "metric_name": "sharpe_ratio",
+          "value": null,
+          "unit": "ratio",
+          "data_source": "figure",
+          "quote_id": "Figure 2"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "No speedup claims demonstrated for QBSolv runs in the paper."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 432,
+          "num_qubits": null,
+          "metric_name": "num_binary_variables",
+          "metric_value": 3888
+        }
+      ],
+      "complexity_analysis": {
+        "problem_size_binary_variables": 3888,
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null,
+        "notes": "No explicit complexity analysis or classical runtime scaling reported for QBSolv. The paper qualitatively compares solver output quality but does not provide asymptotic runtime or operation counts."
+      },
+      "advantage_assessment": {
+        "advantage_status": "parity_with_classical",
+        "hoefler_viable": null,
+        "maturity_level": "L4_qpu_scale",
+        "crossover_size": null,
+        "resources_for_advantage": "N/A for QBSolv (classical solver); any quantum advantage would require mapping to a scalable quantum device and overcoming encoding overhead from 3888 binary variables.",
+        "data_loading_bottleneck": true,
+        "feasibility_horizon": "requires_fault_tolerance",
+        "limiting_factors": [
+          "classical_competition",
+          "data_encoding_overhead",
+          "connectivity",
+          "compilation_overhead"
+        ]
+      }
+    },
+    {
+      "experiment_id": "exp_3",
+      "description": "Optimize the Proposed (faithful quadratic) Sharpe Ratio QUBO formulation (discretized y variables) solved using D-Wave Hybrid (hybrid quantum-classical) solver on S&P500 log-returns data.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "D-Wave Hybrid solving QUBO (Proposed quadratic formulation per Cornuejols & Tütüncü reformulation)",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "lambda_0": 0.7,
+          "lambda_1": 300,
+          "discretization_H": 12,
+          "discretization_ck_definition": "ck = 2^(k-1)/10 for k=1..H-1; cH = 1/mu_min - sum_{k=1..H-1} ck",
+          "mu_min": 0.00245,
+          "one_over_mu_min": 408.1019,
+          "discretization_step": 0.1,
+          "num_binary_variables": 5184,
+          "feasibility_tolerance_muTy": 0.00025,
+          "calibration_runs_per_lambda_pair": 20,
+          "collected_feasible_solutions_after_calibration": 10,
+          "tested_infeasible_lambda_configurations_reported": [
+            {
+              "lambda_0": 2.6,
+              "lambda_1": 300
+            }
+          ]
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "objective_function": "Quadratic faithful reformulation: minimize y^T Sigma y subject to mu^T y = 1 with discretized y variables; final portfolio weights w = y / (e^T y).",
+        "constraints_handling": "Penalty term H1 = (mu^T y - 1)^2 weighted by lambda_1 (discretized y variables turned into binary representation via ck)",
+        "num_binary_variables": 5184,
+        "problem_hamiltonian": "Q = lambda_0 * H0 + lambda_1 * H1 (QUBO matrix); H0 encodes y^T Sigma y with discretized y, H1 encodes (mu^T y - 1)^2"
+      },
+      "problem_instance": {
+        "description": "Sharpe Ratio maximization using the quadratic reformulation (min y^T Sigma y s.t. mu^T y = 1) discretized and encoded as QUBO; solved with D-Wave Hybrid.",
+        "num_assets": 432,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 432,
+        "data_type": "real_market",
+        "dataset_name": "S&P500 historical prices from Yahoo! Finance (2013-2020), log-returns used",
+        "dataset_specification": {
+          "tickers": "S&P500 constituents (exact tickers not listed)",
+          "date_range": "2013-2020",
+          "price_field": "adjusted close daily prices",
+          "returns_used": "log-returns (chosen based on Gaussianity tests)",
+          "preprocessing_steps": [
+            "Remove nulls and assets with consecutive nulls",
+            "Compute simple and log-returns; use log-returns",
+            "Compute sample expected returns and covariance matrix; annualize by 252",
+            "Remove assets with negative expected return (assumption for proposed formulation)"
+          ],
+          "train_test_split": null
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "num_binary_variables": 5184,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "error_correction": {
+          "code_type": null,
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        },
+        "notes": "Problem encoded as a QUBO with 5184 binary variables (discretized y variables). No mapping to physical qubits, embedding details, or circuit metrics are reported for the D-Wave Hybrid execution."
+      },
+      "hardware": {
+        "type": "quantum_annealer",
+        "provider": "D-Wave",
+        "device_name": null,
+        "framework": "D-Wave Hybrid service (D-Wave Ocean/QUBO tooling implied)",
+        "notes": "Authors used D-Wave Hybrid to solve the proposed (faithful quadratic) QUBO. No specific QPU model or hybrid configuration details provided."
+      },
+      "noise_model": {
+        "is_noisy": null,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "notes": "No discussion of noise modelling, device calibration, or mitigation techniques for hybrid runs."
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "classical_solver": "PyPortfolioOpt used as classical baseline for continuous solution; D-Wave Hybrid service used here.",
+        "classical_preprocessing": "Computation of mu and Sigma, removal of negative-mean assets, discretization of y using ck set",
+        "classical_postprocessing": "Recover y* from binary variables, compute k* = e^T y*, compute final weights w* = y* / k*, evaluate Sharpe Ratio. Feasibility considered when mu^T y is within 2.5e-4 of 1.",
+        "hardware": "D-Wave Hybrid (hybrid quantum-classical service)",
+        "notes": "Authors report that best QUBO results overall came from Proposed Formulation solved with QBSolv, but this experiment collects hybrid results for Proposed formulation.",
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": 10,
+          "calibration_runs_per_lambda_pair": 20,
+          "feasibility_definition": "Feasible if mu^T y is within 2.5e-4 of 1 (tolerance derived from discretization).",
+          "notes": "Calibration reported 20 runs per lambda pair; after calibration 10 feasible solutions were collected. No optimizer iteration counts or detailed convergence traces provided."
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 432,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 2"
+        },
+        {
+          "metric_name": "num_binary_variables",
+          "value": 5184,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "lambda_0",
+          "value": 0.7,
+          "unit": "unitless (penalty weight)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "lambda_1",
+          "value": 300,
+          "unit": "unitless (penalty weight)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "discretization_H",
+          "value": 12,
+          "unit": "bins per asset (for y variable)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 3.2"
+        },
+        {
+          "metric_name": "mu_min",
+          "value": 0.00245,
+          "unit": "annualized expected return (fraction)",
+          "higher_is_better": false,
+          "data_source": "text",
+          "quote_id": "Section 3.2"
+        },
+        {
+          "metric_name": "one_over_mu_min",
+          "value": 408.1019,
+          "unit": "unitless (upper bound for y variables)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 3.2"
+        },
+        {
+          "metric_name": "discretization_step",
+          "value": 0.1,
+          "unit": "absolute units for y discretization",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 3.2"
+        },
+        {
+          "metric_name": "feasibility_tolerance_muTy",
+          "value": 0.00025,
+          "unit": "absolute difference (mu^T y - 1)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "calibration_runs_per_lambda_pair",
+          "value": 20,
+          "unit": "runs",
+          "higher_is_better": null,
+          "data_source": "appendix",
+          "quote_id": "Appendix (Calibration Analysis)"
+        },
+        {
+          "metric_name": "collected_feasible_solutions_after_calibration",
+          "value": 10,
+          "unit": "solutions",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "figure",
+          "quote_id": "Figure 2"
+        },
+        {
+          "metric_name": "feasibility_percentage_for_tested_lambda_configurations",
+          "value": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "figure",
+          "quote_id": "Appendix Figure 4"
+        },
+        {
+          "metric_name": "tested_infeasible_lambda_configurations_reported_count",
+          "value": 1,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "appendix",
+          "quote_id": "Appendix"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "PyPortfolioOpt (classical quadratic continuous optimizer)",
+          "metric_name": "sharpe_ratio",
+          "value": null,
+          "unit": "ratio",
+          "data_source": "figure",
+          "quote_id": "Figure 2"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "No speedup claims demonstrated for D-Wave Hybrid runs in the paper; authors discuss solution-quality differences across solvers but do not claim runtime speedups."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 432,
+          "num_qubits": null,
+          "metric_name": "num_binary_variables",
+          "metric_value": 5184
+        }
+      ],
+      "complexity_analysis": {
+        "problem_size_binary_variables": 5184,
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null,
+        "notes": "The paper does not present Big-O or operation-count complexity for the hybrid quantum approach. No embedding overhead or physical-qubit estimates are provided despite the large binary-variable counts."
+      },
+      "advantage_assessment": {
+        "advantage_status": "advantage_claimed_not_demonstrated",
+        "hoefler_viable": null,
+        "maturity_level": "L4_qpu_scale",
+        "crossover_size": null,
+        "resources_for_advantage": "Would require a large fault-tolerant quantum computer to represent 5184 binary variables as logical qubits (or much improved hybrid decomposition); current D-Wave Hybrid runs are insufficient to claim practical advantage.",
+        "data_loading_bottleneck": true,
+        "feasibility_horizon": "requires_fault_tolerance",
+        "limiting_factors": [
+          "data_encoding_overhead",
+          "qubit_count",
+          "noise",
+          "classical_competition",
+          "error_correction_overhead"
+        ]
+      }
+    },
+    {
+      "experiment_id": "exp_4",
+      "description": "Optimize the Proposed (faithful quadratic) Sharpe Ratio QUBO formulation (discretized y variables) solved using D-Wave QBSolv classical QUBO solver on S&P500 log-returns data.",
+      "algorithm": {
+        "family": "qubo",
+        "variant": "QBSolv classical QUBO decomposition/solver (Proposed quadratic formulation)",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "lambda_0": 0.7,
+          "lambda_1": 300,
+          "discretization_H": 12,
+          "discretization_ck_definition": "ck = 2^(k-1)/10 for k=1..H-1; cH = 1/mu_min - sum_{k=1..H-1} ck",
+          "mu_min": 0.00245,
+          "one_over_mu_min": 408.1019,
+          "discretization_step": 0.1,
+          "num_binary_variables": 5184,
+          "feasibility_tolerance_muTy": 0.00025,
+          "calibration_runs_per_lambda_pair": 20,
+          "collected_feasible_solutions_after_calibration": 10,
+          "tested_infeasible_lambda_configurations_reported": [
+            {
+              "lambda_0": 50,
+              "lambda_1": 500
+            },
+            {
+              "lambda_0": 20,
+              "lambda_1": 500
+            },
+            {
+              "lambda_0": 20,
+              "lambda_1": 700
+            },
+            {
+              "lambda_0": 20,
+              "lambda_1": 1000
+            },
+            {
+              "lambda_0": 0.9474,
+              "lambda_1": 300
+            }
+          ]
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "objective_function": "Quadratic faithful reformulation as in exp_3: minimize y^T Sigma y s.t. mu^T y = 1, discretized into binary variables representing y via ck",
+        "constraints_handling": "Penalty term H1 = (mu^T y - 1)^2 weighted by lambda_1; discretized y variables via binary representation",
+        "num_binary_variables": 5184,
+        "problem_hamiltonian": "Q = lambda_0 * H0 + lambda_1 * H1 (QUBO matrix) with H0 encoding y^T Sigma y and H1 encoding (mu^T y - 1)^2"
+      },
+      "problem_instance": {
+        "description": "Same Proposed quadratic Sharpe Ratio QUBO as exp_3, solved with classical QBSolv for comparison; reported best QUBO results in paper were obtained with this combination.",
+        "num_assets": 432,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 432,
+        "data_type": "real_market",
+        "dataset_name": "S&P500 historical prices from Yahoo! Finance (2013-2020), log-returns",
+        "dataset_specification": {
+          "tickers": "S&P500 constituents (exact tickers not provided)",
+          "date_range": "2013-2020",
+          "price_field": "adjusted close daily prices",
+          "returns_used": "log-returns",
+          "preprocessing_steps": [
+            "Remove nulls and assets with consecutive nulls",
+            "Compute returns and log-returns and annualize",
+            "Compute sample mean and covariance; remove assets with negative expected return"
+          ],
+          "train_test_split": null
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "num_binary_variables": 5184,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "error_correction": {
+          "code_type": null,
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        },
+        "notes": "Classical QBSolv solved the 5184-variable QUBO. No quantum circuit/QPU resources apply."
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": "D-Wave",
+        "device_name": "QBSolv (classical solver / decomposer)",
+        "framework": "D-Wave QBSolv (classical decomposition/solver)",
+        "notes": "Authors report the best QUBO solution was obtained with the Proposed Formulation solved by QBSolv (classical)."
+      },
+      "noise_model": {
+        "is_noisy": null,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "notes": "Not applicable for the classical solver; no noise discussion given."
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "classical_solver": "D-Wave QBSolv (classical solver/decomposer) used here; PyPortfolioOpt used as classical continuous baseline in comparisons.",
+        "classical_preprocessing": "Same preprocessing and discretization as exp_3",
+        "classical_postprocessing": "Reconstruct y and compute final weights w = y / (e^T y). Evaluate Sharpe Ratio; feasibility defined by mu^T y within 2.5e-4 of 1.",
+        "hardware": "QBSolv (classical decomposition/solver)",
+        "notes": "Paper reports this combination (Proposed formulation + QBSolv) as achieving the best QUBO results. Statistics collected over 10 feasible solutions per chosen lambda pair after calibration.",
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": 10,
+          "calibration_runs_per_lambda_pair": 20,
+          "feasibility_definition": "Feasible if mu^T y is within 2.5e-4 of 1.",
+          "notes": "Calibration included several lambda configurations (some reported as infeasible). Authors collected 10 feasible solutions per chosen lambda pair for statistics. No further convergence metrics provided."
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 432,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 2"
+        },
+        {
+          "metric_name": "num_binary_variables",
+          "value": 5184,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "lambda_0",
+          "value": 0.7,
+          "unit": "unitless (penalty weight)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "lambda_1",
+          "value": 300,
+          "unit": "unitless (penalty weight)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "discretization_H",
+          "value": 12,
+          "unit": "bins per asset (for y variable)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 3.2"
+        },
+        {
+          "metric_name": "mu_min",
+          "value": 0.00245,
+          "unit": "annualized expected return (fraction)",
+          "higher_is_better": false,
+          "data_source": "text",
+          "quote_id": "Section 3.2"
+        },
+        {
+          "metric_name": "one_over_mu_min",
+          "value": 408.1019,
+          "unit": "unitless (upper bound for y variables)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 3.2"
+        },
+        {
+          "metric_name": "discretization_step",
+          "value": 0.1,
+          "unit": "absolute units for y discretization",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 3.2"
+        },
+        {
+          "metric_name": "feasibility_tolerance_muTy",
+          "value": 0.00025,
+          "unit": "absolute difference (mu^T y - 1)",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "calibration_runs_per_lambda_pair",
+          "value": 20,
+          "unit": "runs",
+          "higher_is_better": null,
+          "data_source": "appendix",
+          "quote_id": "Appendix (Calibration Analysis)"
+        },
+        {
+          "metric_name": "collected_feasible_solutions_after_calibration",
+          "value": 10,
+          "unit": "solutions",
+          "higher_is_better": null,
+          "data_source": "text",
+          "quote_id": "Section 4"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "figure",
+          "quote_id": "Figure 2"
+        },
+        {
+          "metric_name": "tested_infeasible_lambda_configurations_reported_count",
+          "value": 5,
+          "unit": "count",
+          "higher_is_better": null,
+          "data_source": "appendix",
+          "quote_id": "Appendix"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "PyPortfolioOpt (classical quadratic continuous optimizer)",
+          "metric_name": "sharpe_ratio",
+          "value": null,
+          "unit": "ratio",
+          "data_source": "figure",
+          "quote_id": "Figure 2"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "No empirical speedup or runtime comparison reported for Proposed+QBSolv beyond solution-quality statements."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 432,
+          "num_qubits": null,
+          "metric_name": "num_binary_variables",
+          "metric_value": 5184
+        }
+      ],
+      "complexity_analysis": {
+        "problem_size_binary_variables": 5184,
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null,
+        "notes": "No asymptotic complexity or operation count comparisons are provided between QBSolv and classical continuous baselines. The paper focuses on empirical solution quality rather than formal complexity analysis."
+      },
+      "advantage_assessment": {
+        "experiment_id": "exp_4",
+        "advantage_status": "parity_with_classical",
+        "hoefler_viable": null,
+        "maturity_level": "L4_qpu_scale",
+        "crossover_size": null,
+        "resources_for_advantage": "QBSolv is a classical decomposer/solver; any claimed quantum advantage would require replacement by a scalable quantum backend and solutions to the 5184-variable encoding overhead.",
+        "data_loading_bottleneck": true,
+        "feasibility_horizon": "requires_fault_tolerance",
+        "limiting_factors": [
+          "classical_competition",
+          "data_encoding_overhead",
+          "connectivity",
+          "compilation_overhead"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,211 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "Document contains an abstract, structured methods and results sections, references, and explicit venue and DOI metadata indicating '2025 International Conference on Networks and Cryptology (NETCRYPT)' and IEEE copyright—typical of a peer-reviewed conference paper.",
+  "title": "QEA-FAD: Quantum Enhanced Autoencoders For Anomaly Detection in Finance and Healthcare",
+  "authors": [
+    "Sourodeep Kundu",
+    "Deepti Mishra",
+    "Nachiketa Tarasia",
+    "Rakesh Kumar Lenka",
+    "Rabindra K Barik"
+  ],
+  "year": "2025",
+  "journal_or_venue": "2025 International Conference on Networks and Cryptology (NETCRYPT)",
+  "doi": "10.1109/NETCRYPT65877.2025.11102801",
+  "abstract_summary": "This paper introduces QEA-FAD, a quantum enhanced autoencoder framework that leverages entanglement and variational quantum circuits for unsupervised anomaly detection in healthcare (breast cancer) and finance (credit card fraud). The authors evaluate reconstruction fidelity via simulations and SWAP tests on real QPUs, report improved detection accuracy and efficiency compared to classical autoencoders, and demonstrate feasibility on IBM and Amazon quantum hardware.",
+  "methodology_description": "The authors propose QEA-FAD, a quantum-enhanced autoencoder framework for anomaly detection that trains quantum autoencoders (QAEs) exclusively on non-anomalous data and flags low-fidelity reconstructions as anomalies. Classical input is embedded into quantum states using amplitude encoding and angle embedding (both used in different encoder branches). The core QAE uses variational quantum circuits as the encoder; the decoder is taken as the conjugate transpose (E†) of the encoder. During encoding some qubits are designated as \"trash\" (measured and discarded) while the remaining latent qubits are passed to the decoder which is initialized with fresh |0...0> qubits. Reconstruction quality is evaluated by computing fidelity in simulation and by a SWAP-test circuit (ancilla-based) on hardware. The authors experiment with entanglement-enhanced designs: pre-shared Bell states and architectures where encoder qubits interact with entangled qubits, as well as a dual-encoder design (one branch using amplitude embedding and the other using angle embedding) with inter-encoder CNOT connections between latent and trash qubits to improve coordination. Training optimizes the variational encoder (and effectively the autoencoder) to maximize reconstruction fidelity on normal data; after training, histograms of fidelity values and thresholding (split values) are used to classify anomalies. The methodology is validated on healthcare (Breast Cancer Wisconsin Diagnostic) and financial (Kaggle Credit Card Fraud) datasets, and experiments are run both in classical simulators and on real QPUs (IBM Guadalupe and Rigetti Aspen-11 via Amazon Braket).",
+  "algorithms_used": [
+    "Quantum Autoencoder (variational QAE)",
+    "Variational Quantum Circuits (VQC)",
+    "Amplitude Encoding",
+    "Angle Embedding",
+    "SWAP Test (fidelity estimation)",
+    "Bell-state entanglement (pre-shared entanglement)"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "Amazon Braket (Rigetti access)",
+    "Rigetti (Aspen-11)",
+    "IBM QPU (Guadalupe)",
+    "JAX (for accelerated optimization mentioned)"
+  ],
+  "experimental_setup": "Simulations with direct fidelity computation and Qiskit simulator; hardware experiments using IBM 16-qubit Guadalupe QPU accessed via Qiskit and Rigetti Aspen-11 QPU accessed via Amazon Braket. Fidelity in simulation computed directly; on-device fidelity approximated using SWAP-test circuits and measurement histograms.",
+  "dataset_used": "Credit Card Fraud Detection dataset (Kaggle): 284,807 transactions, 492 labeled fraudulent; 30 PCA-derived features plus Time and Amount. (Also evaluated on Breast Cancer Wisconsin (Diagnostic) Dataset: 569 samples, originally 30 features, augmented to 32 features in experiments.)",
+  "experiment_input": {
+    "financial_dataset_source": "Kaggle (Credit Card Fraud Detection)",
+    "size": 284807,
+    "class_distribution": "492 fraudulent, remainder non-fraudulent (highly imbalanced)",
+    "features": "30 PCA features (provided), plus 'Time' and 'Amount' columns",
+    "preprocessing": "Used the dataset as provided (PCA-based features). Data embedded into quantum states using amplitude and/or angle encoding for the quantum circuits. Paper does not detail additional normalization/scaling steps explicitly for the quantum embedding, but amplitude encoding implies normalization to unit norm."
+  },
+  "experiment_process": {
+    "steps": [
+      "State preparation: classical vector → quantum state via amplitude encoding and/or angle embedding.",
+      "Encoding: apply variational quantum circuit (encoder E) to compress information; designate trash qubits and latent qubits.",
+      "Optional entanglement setup: prepare Bell pairs or pre-shared entanglement before encoding; in some designs encoder qubits interact with entangled qubits.",
+      "Inter-encoder coordination (in dual-encoder ansatz): connect branches with CNOTs between latent and trash qubits.",
+      "Decoding: apply decoder D = E† to latent qubits plus fresh |0...0> ancilla qubits to reconstruct the original state.",
+      "Evaluation: compute fidelity between reconstructed and original states. In simulation compute fidelity directly; on hardware use SWAP-test circuits and ancilla measurement statistics.",
+      "Training: optimize encoder variational parameters to maximize fidelity on normal (non-anomalous) training data (monitor compression fidelity and loss over epochs).",
+      "Inference/classification: produce fidelity histograms for test samples and apply a threshold (split value) to classify anomalies (low fidelity) vs normal (high fidelity)."
+    ],
+    "parameters_and_iterations_notes": "The paper reports training over multiple epochs (plots of fidelity/loss vs epochs) and uses threshold split values derived from fidelity histograms. Exact optimizer type, learning rate, number of epochs, ansatz depth, and number of shots for hardware runs are not specified. JAX-accelerated optimization is mentioned to reduce training time for financial datasets."
+  },
+  "experiment_output": {
+    "result_types": [
+      "Compression fidelity distributions (histograms) for normal vs anomalous classes",
+      "Compression loss and fidelity over training epochs",
+      "Classification performance via thresholding on fidelity (split value)",
+      "Comparison plots between simulator and hardware results"
+    ],
+    "reported_metrics": {
+      "Breast_cancer_case": {
+        "proposed_ansatz_accuracy_malign": 0.9,
+        "split_threshold_used": 0.845
+      },
+      "baseline_ansatzes": {
+        "second_ansatz_accuracy_malign": 0.24,
+        "second_split_threshold": 0.99,
+        "third_ansatz_accuracy_malign": 0.81,
+        "third_split_threshold": 0.96
+      },
+      "credit_card_fraud_case": {
+        "simulator_compression_fidelity_non_fraud": 0.89,
+        "simulator_compression_fidelity_fraud": 0.66,
+        "hardware_result_note": "IBM Guadalupe hardware showed histogram structure but with overlap; reported classification accuracy for non-fraud class was 0.992 in the discussed hardware run (overlap negatively impacts overall classification performance)."
+      }
+    },
+    "baselines": "Comparisons against two prior QAE circuit designs (cited Romero et al. 2017 and Bravo-Prieto 2021) and reference to classical autoencoders (no explicit classical metric values given in text)."
+  },
+  "experiment_parameters": {
+    "qubits": {
+      "examples_in_paper": "4-qubit example and 7-qubit architecture discussed; hardware runs executed on devices with up to 16 physical qubits (IBM Guadalupe) and 11 qubits (Rigetti Aspen-11).",
+      "explicit_values_used_in_experiments": {
+        "example_architecture": 7,
+        "small_example": 4,
+        "IBM_QPU": 16,
+        "Rigetti_QPU": 11
+      }
+    },
+    "ansatz_depth": null,
+    "shots": null,
+    "optimizer": "JAX-accelerated optimization mentioned (optimizer type and hyperparameters not specified)",
+    "epochs": "multiple (plots show training over epochs) but exact count not provided"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit simulator (direct fidelity computation in simulation)",
+    "qpu_models": [
+      {
+        "name": "Guadalupe",
+        "vendor": "IBM",
+        "qubits": 16,
+        "accessed_via": "Qiskit"
+      },
+      {
+        "name": "Aspen-11",
+        "vendor": "Rigetti",
+        "qubits": 11,
+        "accessed_via": "Amazon Braket"
+      }
+    ],
+    "cloud_providers": [
+      "IBM Quantum (via Qiskit)",
+      "Amazon Braket (Rigetti access)"
+    ]
+  },
+  "reproducibility_notes": "The paper does not provide links to code repositories or detailed hyperparameter settings. Datasets used are publicly available (Kaggle Credit Card Fraud dataset; UCI / Breast Cancer Wisconsin Diagnostic dataset). Key implementation details such as exact variational ansatz circuits, optimizer type and hyperparameters, number of shots for hardware runs, and full training hyperparameters are not specified, which limits immediate reproducibility without contacting the authors or reimplementing from the described high-level methodology.",
+  "key_findings": [
+    "[supported] QEA-FAD: a novel Quantum Enhanced Autoencoder framework that incorporates entanglement and encoder–decoder coordination was proposed and implemented.",
+    "[supported] A hybrid evaluation methodology combining fidelity calculations in simulators and SWAP-test based evaluations on QPUs was used to assess reconstruction quality.",
+    "[supported] On the Breast Cancer Wisconsin (Diagnostic) dataset the proposed QAE design achieved approximately 0.90 (90%) malignancy detection accuracy using a fidelity split threshold of 0.845.",
+    "[supported] Two quantum ansatz from prior works were reimplemented for comparison: one produced low malignancy classification accuracy (≈0.24) and another produced ≈0.81, with the proposed ansatz outperforming both on the breast cancer task.",
+    "[supported] For the Credit Card Fraud dataset the trained encoder produced compression fidelities of ≈0.89 on non-fraudulent transactions and ≈0.66 on fraudulent transactions in simulation, indicating separability of classes in fidelity space.",
+    "[supported] Hardware runs exhibited degraded separation relative to simulators: IBM Guadalupe and Rigetti Aspen-11 QPUs show increased overlap between fraudulent and non-fraudulent fidelity histograms, reducing classification separability.",
+    "[supported] A reported non-fraud classification accuracy of 0.992 was observed in one hardware evaluation (IBM Guadalupe) using the trained parameters, despite histogram overlap and noise effects.",
+    "[supported] Experiments exploring entanglement usage showed that simple pre-encoding entanglement (direct interaction with Bell pairs) was restrictive and performed worse, while introducing interconnections between encoders (CNOT links) improved performance.",
+    "[speculative] The authors claim QEA-FAD can achieve comparable or better anomaly detection performance than classical autoencoders while using fewer parameters and training iterations (no detailed classical baseline numbers shown in the paper excerpt).",
+    "[speculative] The paper asserts MNIST benchmarking validates scalability of the approach (no MNIST results were presented in the provided text).",
+    "[speculative] The authors claim JAX-accelerated optimization reduces training time on financial datasets (no timing or benchmark numbers provided in the provided text).",
+    "[speculative] The authors suggest that entanglement can serve as a coordinator or enable quantum teleportation to reduce quantum transmission requirements in future designs; this is presented as a hypothesis and direction for future work."
+  ],
+  "results_summary": "The paper introduces QEA-FAD, an entanglement-aware quantum autoencoder framework evaluated on breast cancer and credit-card fraud datasets. In simulation the proposed QAE achieves strong separability between normal and anomalous examples (≈0.90 accuracy on breast cancer; compression fidelities ≈0.89 vs 0.66 for non-fraud vs fraud). Hardware experiments on IBM and Rigetti devices confirm feasibility but show degraded performance due to noise and overlap in fidelity distributions. Comparative experiments with two prior quantum ansatz indicate the proposed encoder design yields improved performance on the medical dataset. Exploratory experiments with entanglement indicate naive pre-encoding entanglement can harm performance, whereas inter-encoder interactions (CNOT links) can improve outcomes. Several claimed broader benefits (advantages over classical autoencoders, MNIST scalability, JAX training speedups) are asserted but not fully quantified in the presented text.",
+  "performance_claims": [
+    "Breast cancer malignancy detection accuracy ≈ 0.90 using fidelity threshold 0.845 (proposed ansatz, simulation results).",
+    "Second prior ansatz reproduced: malignancy classification accuracy ≈ 0.24.",
+    "Third prior ansatz reproduced: malignancy classification accuracy ≈ 0.81.",
+    "Credit card fraud compression fidelity (simulator): non-fraud ≈ 0.89, fraud ≈ 0.66.",
+    "Hardware (IBM Guadalupe) reported non-fraud classification accuracy ≈ 0.992 using trained parameters (but with noted histogram overlap)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors claim computational and accuracy advantages (fewer parameters, fewer iterations, superior detection) for QEA-FAD over classical autoencoders, and present promising simulation results. However, direct quantitative comparisons to classical baselines and detailed scalability/benchmark metrics are not provided in the supplied text, and hardware results are constrained by NISQ noise—therefore any asserted quantum advantage remains speculative based on the presented evidence.",
+  "limitations": [
+    "Entanglement integration did not produce consistent improvements in the tested configurations; in some encodings it performed worse than the non-entangled baseline.",
+    "Real quantum hardware (IBM, Rigetti) produced reduced separation between fidelity distributions compared to simulators, leading to degraded classification performance on QPUs.",
+    "The entanglement-enabled encoder design that directly interacted data qubits with entangled qubits was too restrictive and underperformed.",
+    "[inferred] Experiments are limited to a small set of benchmarks (Breast Cancer, Credit Card Fraud, MNIST) and small/quasi-NISQ-scale circuits, which limits claims about generalizability and scalability to larger, production-scale financial tasks.",
+    "[inferred] Amplitude/angle state preparation and encoding for classical data (e.g., amplitude encoding) may be resource- and depth-intensive on real devices, posing practical barriers for higher-dimensional inputs.",
+    "[inferred] Fidelity and SWAP-test based evaluation can be measurement- and ancilla-intensive and is highly sensitive to noise, making reliable anomaly scoring on noisy hardware challenging.",
+    "[inferred] Exploiting entanglement as a coordinator requires mid-circuit measurements and classical control, increasing circuit/control complexity and classical-quantum orchestration burden on NISQ devices.",
+    "[inferred] The results appear ansatz-dependent; the study did not exhaustively explore ansatz/hyperparameter search space, so performance may vary substantially with alternative circuit designs.",
+    "[inferred] While claims are made about parameter/training efficiency versus classical autoencoders, the paper provides limited systematic quantitative comparisons across a broad set of classical baselines and metrics (e.g., runtime, parameter counts, statistical significance)."
+  ],
+  "open_questions": [
+    "Under what conditions and for which data distributions does entanglement genuinely improve compression and reconstruction fidelity in quantum autoencoders?",
+    "What specific ansatz or circuit design patterns can harness entanglement (e.g., shared Bell pairs) to produce robust gains over non-entangled QAEs?",
+    "How can mid-circuit measurements and classical control be practically and efficiently integrated into QAE training and inference on current QPUs?",
+    "How can hardware noise be mitigated or accounted for so that fidelity/SWAP-test based anomaly scores retain discriminative power on NISQ devices?",
+    "What are the scalability limits of QEA-FAD (in qubit count, circuit depth, and dataset size) before practical and performance trade-offs negate advantages over classical methods?",
+    "Which real-world financial services tasks (beyond credit card fraud) are suitable for QAE-based anomaly detection and can benefit from quantum advantages?",
+    "How should encoding strategies (amplitude vs angle vs hybrid) be chosen or adapted for high-dimensional financial feature sets to balance resource cost and representation quality?",
+    "Can classical side-information or hybrid classical-quantum architectures meaningfully amplify the benefit of entanglement in QAE frameworks (e.g., via teleportation or coordinated encoding)?",
+    "What are efficient, low-overhead alternatives to SWAP/fidelity tests for evaluating reconstruction quality on hardware?",
+    "How do QAEs compare to state-of-the-art classical anomaly detectors across broader benchmarks and operational metrics (false positive rate, latency, interpretability) in finance?"
+  ],
+  "future_work": [
+    "Optimize the use of entanglement in QAE and identify scenarios/datasets where entanglement enhances compression and recovery.",
+    "Investigate and design encoder-decoder interconnections (including mid-circuit measurements and classical control gates) that exploit entanglement without excessive restrictions.",
+    "Test the framework on datasets specifically chosen to challenge classical and standard QAE schemes—cases where standard compression/decompression fails.",
+    "Advance anomaly detection techniques within the QAE framework and extend benchmarking across more diverse and larger financial/healthcare datasets.",
+    "Move towards more extensive real-hardware validation and improve NISQ-era compatibility (noise mitigation, circuit depth reduction, efficient measurement strategies).",
+    "Explore hybrid approaches (classical+quantum resources) such as using entanglement to coordinate encoding/decoding or enabling teleportation to reduce quantum transmission requirements."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance",
+    "fraud-detection"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [
+    "2017_Romero_QuantumAutoencoders",
+    "2021_Bravo-Prieto_QAE"
+  ],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — QEA-FAD (variational quantum autoencoder with entanglement and dual-encoder designs) is reported to achieve improved anomaly detection metrics (e.g., breast-cancer malignant accuracy 0.90; simulator non-fraud fidelity ~0.89) and is claimed to outperform classical autoencoders and prior QAE designs.",
+    "#idea:near-term-feasibility — The approach is demonstrated both in simulators and on real QPUs (IBM Guadalupe and Rigetti Aspen-11 via Amazon Braket) using SWAP-test fidelity estimation, showing feasibility of on-device fidelity-based anomaly detection despite noisy outputs.",
+    "#idea:hybrid-approach — Training is hybrid: classical optimization (JAX-accelerated) tunes variational encoder circuits; decoder implemented as the conjugate transpose of the encoder and classical thresholding on fidelity histograms is used for classification.",
+    "#limitation:qubit-count — Experiments use small circuit instances (4- and 7-qubit examples discussed) though hardware devices with up to 16 physical qubits were accessed; scaling to higher-dimensional financial feature spaces is not demonstrated.",
+    "#limitation:noise — Hardware SWAP-test histograms show class overlap and degraded reconstruction fidelity on QPUs, indicating noise significantly impacts on-device classification performance.",
+    "#limitation:data-encoding — Uses amplitude and angle embeddings but provides limited detail on preprocessing/normalization and does not address the practical cost of amplitude state preparation for large financial vectors."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — The paper claims improved detection accuracy versus classical autoencoders but does not provide explicit classical baseline metric values in the text; furthermore, on-device hardware results show overlap and degraded separation, which undermines the claimed practical advantage on current QPUs.",
+    "contradiction:scalability — Although the authors demonstrate feasibility on existing QPUs, experiments are limited to small-qubit instances and noisy hardware; this contradicts any implicit claim that the method is ready to scale to production-sized financial datasets without substantial advances in qubit counts and noise reduction."
+  ]
+}

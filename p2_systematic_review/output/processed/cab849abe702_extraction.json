@@ -1,0 +1,236 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes an arXiv identifier and date (arXiv:2511.18804v2), typical preprint formatting (author/email, abstract, sections, appendix, references) and no journal or conference venue, indicating it is an arXiv preprint rather than a peer-reviewed publication.",
+  "title": "Diagram-to-Circuit QNLP for Financial Sentiment Analysis",
+  "authors": [
+    "Takayuki Sakuma"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (arXiv:2511.18804)",
+  "doi": "",
+  "abstract_summary": "The paper proposes a QDisCoCirc-inspired, chunked diagram-to-circuit quantum natural language processing model for three-way sentiment classification of financial texts, evaluated via classical simulation. Sentences are split into short CCG-derived chunks, each mapped to a shallow quantum circuit producing Bloch vectors that are pooled (and optionally fed through a small Transformer with CCG type embeddings) to capture order and syntactic roles; the work emphasizes interpretability via axis-wise and intervention-based attribution metrics and discusses limitations of chunking and directions for device-level implementation.",
+  "methodology_description": "The authors implement a QDisCoCirc-inspired, chunked diagram-to-circuit QNLP model and evaluate it via classical simulation on a financial sentiment classification task. Sentences are syntactically parsed with CCG (BobcatParser) and deterministically split into contiguous chunks (maximum chunk length = 5 words) using rule-based preprocessing and a set of financial-domain rewrite rules that normalize lexical, phrasal and syntactic variants. Each valid chunk (those whose CCG type reduces to an s-typed output) is mapped to a shallow parametric quantum circuit (one physical qubit per chunk) using an IQP ansatz (depth D = 4, implemented via lambeq's IQPAnsatz). From each chunk circuit the Bloch vector (expectation values of Pauli X/Y/Z) is extracted and lifted to a 2×2 density matrix. The baseline sentence representation is the uniform convex combination (mean) of chunk density matrices. Class prototypes (per class Kc = 3) are selected from training chunks via a farthest-first rule (choose representative Bloch vectors that are far apart), then converted to density matrices. Similarity between a sentence and prototypes is computed using the normalized Hilbert–Schmidt inner product (and cosine-normalized Bloch vectors at evaluation); scores are aggregated (temperature-scaled log-sum-exp with τ = 0.1) to form class logits and softmax probabilities. Training uses class-weighted cross-entropy, and class-specific thresholds are optimized on the dev set. To recover order and long-range dependencies lost by mean pooling, the authors also evaluate a hybrid model: chunk Bloch vectors are linearly projected, concatenated with learned CCG type embeddings, augmented with positional encodings and fed to a single-layer Transformer encoder (d_model = 128, 4 heads, FFN dim = 256, dropout 0.2). Transformer outputs are masked-mean pooled and passed to a 3-way linear classifier; this sequence model is trained with AdamW. The pipeline includes parameter sharing by mapping post-rewrite word labels × CCG type to shared variational parameters, and various interpretability / intervention analyses (axis ablations, attribution by attention-weighted readout, and causal intervention metrics like Directional Consistency, Proportional Response and Monotonicity Violation Rate).",
+  "algorithms_used": [
+    "IQP ansatz (variational quantum circuit)",
+    "Combinatory Categorial Grammar (CCG) parsing",
+    "Farthest-first prototype selection",
+    "Hilbert–Schmidt inner product / cosine-normalized Bloch similarity",
+    "Transformer encoder (self-attention)",
+    "Adam optimizer",
+    "AdamW optimizer",
+    "ReduceLROnPlateau learning-rate scheduler",
+    "Grid search for threshold optimization"
+  ],
+  "frameworks": [
+    "lambeq (IQPAnsatz)",
+    "BobcatParser (CCG)",
+    "PyTorch"
+  ],
+  "experimental_setup": "Classical simulation of shallow chunk-level quantum circuits. Sentences are parsed with CCG (BobcatParser), chunked, rewritten via financial-domain rules, compiled to single-qubit IQP circuits (depth D=4) using lambeq, simulated classically to obtain Bloch vectors per chunk, which are then aggregated or passed to a small Transformer encoder. No physical QPU execution was performed.",
+  "dataset_used": "Financial PhraseBank (100% agreement subset). Original size 2,264 sentences; after preprocessing 2,263 sentences retained. Splits: Train=1,448, Dev=361, Test=454 (preserving label distribution among three classes: negative/neutral/positive).",
+  "experiment_input": {
+    "source": "Financial PhraseBank (100% agreement subset)",
+    "original_size": 2264,
+    "post_processing_size": 2263,
+    "splits": {
+      "train": 1448,
+      "dev": 361,
+      "test": 454
+    },
+    "preprocessing_steps": [
+      "CCG parsing (BobcatParser)",
+      "Rule-based rewrite of frequent financial expressions (lexical, phrase, syntactic levels)",
+      "Chunking into contiguous units, max chunk length 5 words; special handling for passive constructions, compound prepositions, proper nouns, URLs, discourse markers, infinitival phrases",
+      "Vocabulary rewriting: grouping semantically similar verbs/nouns into shared labels (e.g., rise/increase → upward movement)",
+      "Parameter sharing mapping: (post-rewrite word label, CCG type) → shared parameter set",
+      "Exclusion of chunks that reduce to tensor identity (no s-typed output)"
+    ]
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Parse sentence with CCG and apply rewrite rules to normalize tokens and produce chunk boundaries",
+      "For each valid chunk: assign a one-qubit parametric circuit (IQP ansatz, depth D=4) based on chunk label and CCG type; simulate circuit to obtain Bloch vector r_j (⟨σx⟩, ⟨σy⟩, ⟨σz⟩) and lift to density matrix ρ(r_j)",
+      "Aggregate chunk density matrices into sentence representation ρ_doc = (1/M) Σ_j ρ(r_j) (skip sentences with M=0)",
+      "Construct class prototype density matrices σ_c,j by selecting K_c = 3 representative chunk density matrices per class using farthest-first selection (start with largest-norm Bloch vector, iteratively add most distant)",
+      "Compute normalized Hilbert–Schmidt similarity scores s(ρ_doc, σ_c,j); aggregate per class via temperature-scaled log-sum-exp (τ = 0.1) to produce class scores S_c; softmax over classes to get probabilities",
+      "Train using class-weighted cross-entropy (weights inverse to class frequencies) with Adam (initial lr = 5e-4), batch size = 9, ReduceLROnPlateau (factor=0.5, patience=2, threshold=2e-3, cooldown=1, min_lr=1e-5); early stopping with burn-in 2 epochs and max 20 epochs",
+      "After training, perform dev-set grid search to find optimal per-class thresholds τ_k for calibration",
+      "Alternate sequence model: map each Bloch vector r_t → linear projection Wr (R^3→R^d_model), concatenate type embedding e_t, add positional embedding, feed to single-layer Transformer encoder (d_model=128, 4 heads, FFN=256, dropout=0.2), masked mean pooling, 3-way linear output; train with AdamW (lr=1e-3, weight_decay=1e-4) and ReduceLROnPlateau (factor=0.6, patience=2); tune thresholds on dev set"
+    ],
+    "training_iterations_and_criteria": "Up to 20 epochs, early stopping with dev macro-F1-based ReduceLROnPlateau; batch size 9 for baseline, unspecified batching for sequence model training but trained until dev macro-F1 convergence per scheduler.",
+    "loss_and_metrics": "Class-weighted cross-entropy loss during training; evaluation uses accuracy and macro-F1; additional interpretability metrics (p_max, probability margin, normalized entropy, axis-wise sufficiency/comprehensiveness, Top20Share of attribution mass, Cohen's d comparisons, intervention metrics DC/PR/MVR)"
+  },
+  "experiment_output": {
+    "format": "Classification metrics and interpretability analyses",
+    "reported_metrics": {
+      "baseline_test_accuracy": 0.696,
+      "baseline_test_macro_F1": 0.551,
+      "sequence_model_test_accuracy": 0.6916,
+      "sequence_model_test_macro_F1": 0.5857,
+      "model_parameter_count": "≈2.2e4",
+      "classwise_test_F1_sequence_model": {
+        "class0": 0.42,
+        "class1": 0.83,
+        "class2": 0.5
+      },
+      "prototype_and_attribution_stats": {
+        "Top20Share": "≈0.583 (train/dev/test ~0.580/0.585/0.583)",
+        "absolute_contribution_shares": {
+          "Bloch_all_axes": "40.5%",
+          "CCG_structure": "27.2%",
+          "type_gate": "32.2%"
+        }
+      },
+      "interpretability_stats": "Table of p_max, prob_margin, entropy_norm, sufficiency/comprehensiveness per axis and Cohen's d values (see paper)"
+    },
+    "baselines": [
+      "Mean-pooled Bloch-vector model (baseline)",
+      "FinBERT results quoted for context (FinBERT accuracy 0.97, macro-F1 0.95) — not directly comparable"
+    ]
+  },
+  "experiment_parameters": {
+    "qubits_per_chunk": 1,
+    "IQP_depth": 4,
+    "batch_size": 9,
+    "optimizer_baseline": "Adam (initial_lr=5e-4)",
+    "optimizer_sequence_model": "AdamW (lr=1e-3, weight_decay=1e-4)",
+    "training_epochs": "max 20 (early stopping with burn-in 2)",
+    "ReduceLROnPlateau_baseline": {
+      "monitor": "dev macro-F1",
+      "factor": 0.5,
+      "patience": 2,
+      "threshold": 0.002,
+      "cooldown": 1,
+      "min_lr": 1e-05
+    },
+    "ReduceLROnPlateau_sequence": {
+      "factor": 0.6,
+      "patience": 2
+    },
+    "transformer": {
+      "d_model": 128,
+      "num_heads": 4,
+      "ffn_dim": 256,
+      "dropout": 0.2,
+      "layers": 1
+    },
+    "label_prototypes_per_class": 3,
+    "prototype_temperature_tau": 0.1,
+    "class_thresholds_on_dev": {
+      "tau0": 0.32,
+      "tau1": 0.372,
+      "tau2": 0.3
+    },
+    "model_parameter_count": 22000
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "The paper specifies the public dataset (Financial PhraseBank 100% agreement subset) and the main software components used (lambeq IQPAnsatz, BobcatParser, PyTorch), and provides many hyperparameter values (IQP depth, optimizer settings, transformer dimensions, scheduler parameters, threshold values). However, no code repository, seeds, or exact simulation backend implementation details (e.g., statevector vs. shot-based simulator, random seeds, exact lambeq/torch versions) are provided in the text. Reproducing results should be feasible given public tools and the dataset but would require implementing the preprocessing rewrite rules, chunking heuristics, prototype selection, and exact circuit templates; authors do not state a public code release.",
+  "key_findings": [
+    "[supported] A QDisCoCirc-inspired, chunked diagram-to-circuit QNLP model can be classically simulated for three-class financial sentiment classification by decomposing sentences into short contiguous chunks, mapping each chunk to a shallow quantum circuit, and aggregating chunk density matrices.",
+    "[supported] Using a simple uniform convex combination (mean pooling) of chunk-level density matrices yields a baseline model with test accuracy 0.696 and test macro-F1 0.551 on the Financial PhraseBank (100% agreement subset).",
+    "[supported] Augmenting the chunked quantum representation with a small Transformer encoder over the sequence of Bloch vectors plus CCG type embeddings improves performance: dev macro-F1 increased from 0.5266 to 0.6131 and test macro-F1 increased from 0.5514 to 0.5857 (small but measurable gain).",
+    "[supported] Attribution analysis shows strong sparsity in evidential mass: the top 20% of chunks account for about 58–59% of the absolute evidential mass (train/dev/test: 0.580/0.585/0.583).",
+    "[supported] Sentence-level attribution decomposed into channels shows approximate contribution shares on the test split of Bloch (semantic axes) 40.5%, CCG-structure (syntactic label) 27.2%, and type-gate (syntactic gate) 32.2%, and correctly classified sentences tend to concentrate evidence more than incorrectly classified ones (Table 5 statistics).",
+    "[supported] Several proposed sentence-level intervention-derived metrics (Directional Consistency, Proportional Response, Monotonicity Violation Rate) are presented as operational ways to evaluate causal validity of explanations through diagram-surgery-style interventions.",
+    "[supported] The model implemented in this study uses roughly 2.2 × 10^4 learnable parameters and is therefore orders of magnitude smaller than FinBERT (quoted 110M parameters), but yields substantially lower accuracy (FinBERT reported 0.97 accuracy and 0.95 macro-F1 on the dataset quoted).",
+    "[supported (cited prior work)] Prior work (Duneau et al. 2024) implemented QDisCoCirc on Quantinuum's H1-1 trapped-ion processor and reported fitting circuits with many logical qubits into 20 physical qubits without significant loss of accuracy for certain tasks (cited as evidence of scalability in hardware demonstrations).",
+    "[supported] The paper shows concrete hyperparameters, calibration thresholds, and prototype selection procedures used in the experiments (e.g., final per-class thresholds τ0=0.320, τ1=0.372, τ2=0.300; Kc=3 label prototypes per class).",
+    "[speculative] Chunking (processing short chunks independently and convexly combining them) is a feasible strategy to keep circuit width manageable, but it may fail to capture long-range syntactic and pragmatic dependencies that cross chunk boundaries and thus limit predictive accuracy.",
+    "[speculative] QNLP approaches (e.g., QDisCoCirc) may offer long-run energy-efficiency advantages over large classical LLMs, motivating exploration despite current hardware limits.",
+    "[speculative] Future necessary developments for practical financial QNLP include circuit designs that avoid chunking, inter-chunk fusion layers, circuit-compression techniques (e.g., XZ reduction), and integration with dynamic circuits and error-mitigation to run longer chunks on-device.",
+    "[supported] The experiments reported here are classical simulations; no on-device quantum advantage or on-device evaluation is presented in this paper."
+  ],
+  "results_summary": "This preprint presents a QDisCoCirc-inspired, chunked diagram-to-circuit QNLP pipeline evaluated via classical simulation on the Financial PhraseBank (100% agreement subset). Sentences are split into short CCG-derived chunks, each chunk is mapped to a shallow parameterized quantum circuit and summarized by a Bloch vector (density matrix). A baseline that mean-pools chunk density matrices achieved test accuracy 0.696 and macro-F1 0.551. Adding a small Transformer encoder over the Bloch-vector sequence with CCG type embeddings improved dev macro-F1 from 0.5266 to 0.6131 and test macro-F1 from 0.5514 to 0.5857. Attribution analyses indicate that evidential mass is concentrate d in a small fraction of chunks (top 20% capture ≈58–59% of mass) and that semantic and syntactic channels both contribute meaningfully. The model has ≈2.2×10^4 parameters—far fewer than large classical models like FinBERT—yet yields lower predictive performance. The work is explicit about classical-simulation constraints, treats claims of hardware scalability as drawn from prior literature, and frames quantum energy-efficiency and full-text quantum circuitization as future, speculative directions.",
+  "performance_claims": [
+    "Test accuracy (baseline mean-pooled chunk model): 0.696",
+    "Test macro-F1 (baseline): 0.5514",
+    "Test accuracy (sequence model with Transformer + CCG type embeddings): 0.6916",
+    "Test macro-F1 (sequence model): 0.5857",
+    "Dev macro-F1 (baseline): 0.5266",
+    "Dev macro-F1 (sequence model): 0.6131",
+    "Model parameter count: ≈2.2 × 10^4",
+    "FinBERT benchmark cited: accuracy 0.97 and macro-F1 0.95 with 110M parameters (quoted for comparison)",
+    "Class-wise test F1 reported for sequence model: class 0 (negative) F1=0.42, class 1 (neutral) F1=0.83, class 2 (positive) F1=0.50",
+    "Top-20%-chunks share of absolute evidential mass (train/dev/test): 0.580 / 0.585 / 0.583",
+    "Test attribution shares across channels: Bloch 40.5%, CCG-structure 27.2%, type-gate 32.2%",
+    "Per-class decision thresholds tuned on dev: τ0=0.320, τ1=0.372, τ2=0.300",
+    "Label prototypes per class used in similarity aggregation: Kc = 3; temperature τ (aggregation) = 0.1"
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "No on-device quantum advantage is demonstrated in this work; all reported experiments are classical simulations of chunked quantum circuits. The paper cites prior trapped-ion implementations showing scalability for certain setups (Duneau et al. 2024), and it argues (speculatively) that quantum models might offer long-run energy-efficiency or scalability benefits, but does not provide empirical evidence of quantum advantage for financial NLP tasks.",
+  "limitations": [
+    "Classical-simulation only evaluation; no experiments on quantum hardware (author-stated).",
+    "Chunking of sentences into short contiguous chunks to keep circuit width manageable, which may fail to capture long-range syntactic and pragmatic dependencies that cross chunk boundaries (author-stated).",
+    "Sentence-level representation built by simple convex (uniform mean) combination of chunk density matrices, which dilutes contextual information across chunks (author-stated).",
+    "Lower predictive accuracy compared with large pretrained LLMs (e.g., FinBERT), partly attributable to far fewer parameters and chunking/pooling design (author-stated).",
+    "Circuit design restricted to shallow per-chunk circuits (IQP ansatz, depth D=4) due to classical-simulation/resource constraints (author-stated).",
+    "Preprocessing rewrite rules and parameter-sharing heuristics may lose lexical nuance by mapping diverse tokens to shared labels and frozen parameters for unseen words (author-stated).",
+    "Use of fixed chunk size (max length 5) and rule-based chunking heuristics can lead to brittle circuit construction and may not generalize across varied financial text styles (author-stated).",
+    "Label prototype construction via farthest-first on chunk density matrices is heuristic and may not optimally represent class variance (inferred).",
+    "Dependence on Bloch-vector axes (X/Y/Z) as semantic axes is an imposed inductive bias that may not capture richer semantic geometry (inferred).",
+    "Potential robustness issues on real quantum devices not evaluated: shot noise, measurement error, gate fidelity, and error mitigation costs are not assessed (author-stated/inferred).",
+    "[inferred] The chunked hybrid (quantum chunks + classical Transformer) design moves much modeling burden to classical components, limiting conclusions about quantum advantage.",
+    "[inferred] The dataset is relatively small (Financial PhraseBank 100% agreement subset) and results may not generalize to larger/more diverse financial corpora.",
+    "[inferred] The intervention/explanation metrics (DC, PR, MVR) are proposed but their empirical reliability and sensitivity to hyperparameters/implementation choices are not fully validated.",
+    "[inferred] The parameter-count and architecture choices (e.g., number of prototypes per class, τ temperature) are tuned heuristically and may not be optimal."
+  ],
+  "open_questions": [
+    "How can circuit designs be developed that avoid chunking while keeping Hilbert-space dimension and circuit depth manageable?",
+    "How should inter-chunk fusion layers be designed at the quantum level to capture long-range dependencies across chunks?",
+    "What compositional rules or compilation strategies would allow end-to-end sentence (or multi-sentence) circuits in the QDisCoCirc/DisCoCirc framework on near-term devices?",
+    "How well will the proposed QDisCoCirc-inspired models perform on real quantum hardware (e.g., superconducting or trapped-ion processors) when accounting for noise, limited shots, and error mitigation overhead?",
+    "Can circuit-compression techniques (e.g., XZ reduction) and dynamic circuits realistically scale up text circuits without compromising interpretability?",
+    "How to integrate quantum computation subnetworks capable of numerical operations and state retention needed for generation, regression, or optimization tasks in finance (e.g., forecasting, portfolio optimization)?",
+    "To what extent do the Bloch-vector semantic axes and CCG type embeddings correspond to linguistically meaningful or causally relevant features across varied financial texts?",
+    "How generalizable are the rewrites, chunking heuristics, and parameter-sharing schemes to other financial domains, languages, or more noisy real-world data?",
+    "Can the proposed intervention-based explanation metrics (Directional Consistency, Proportional Response, Monotonicity Violation Rate) be standardized and validated as robust measures of causal interpretability in QNLP?",
+    "Is there a practical energy or carbon-emissions advantage to quantum NLP pipelines compared with large classical models once hardware and error-mitigation costs are included?"
+  ],
+  "future_work": [
+    "Develop circuit designs that avoid chunking and enable quantum-level fusion across longer text spans.",
+    "Design inter-chunk fusion layers to combine information between chunks at the quantum level.",
+    "Explore and incorporate circuit-compression techniques such as XZ reduction to reduce resource requirements.",
+    "Implement and evaluate the proposed models on actual quantum devices (e.g., superconducting quantum processors and trapped-ion hardware).",
+    "Extend the approach to multi-sentence reasoning tasks in finance (e.g., FinQA, ConvFinQA) and other datasets in FinBench.",
+    "Develop quantum computation subnetworks for numerical reasoning and mechanisms for retaining state between inference steps to handle generation, regression, or optimization tasks.",
+    "Incorporate dynamic circuits, measurement-error mitigation, and probabilistic error-reduction methods to improve shot efficiency and robustness on device.",
+    "Further validate and operationalize the proposed intervention-based explanation metrics (DC, PR, MVR) and perform causal intervention studies (diagram surgery, no-influence tests, rewrite invariance).",
+    "Investigate better pooling/aggregation schemes and sequence models that preserve the physically interpretable semantic axes while modeling long-range dependencies classically or quantumly.",
+    "Explore scaling studies and comparisons with larger pretrained classical models to assess trade-offs between interpretability, accuracy, and resource efficiency."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Proposes a shallow, chunked QNLP architecture (single-qubit IQP circuits per chunk, depth D=4) intended to be NISQ-friendly and amenable to near-term device-level implementation.",
+    "#idea:hybrid-approach — Uses a hybrid pipeline: classical CCG parsing and rewrite rules + single-qubit quantum circuit simulation to produce Bloch vectors, with an optional small Transformer encoder to recover order and long-range dependencies.",
+    "#idea:near-term-feasibility — Aggregates chunk-level Bloch vectors into density-matrix sentence representations and uses prototype-based classification (farthest-first selection + Hilbert–Schmidt similarity) to reduce circuit complexity and reliance on deep quantum processing.",
+    "#idea:hybrid-approach — Employs parameter sharing by mapping (post-rewrite word label, CCG type) to shared variational parameters to limit parameter count and improve generalization across chunks.",
+    "#idea:near-term-feasibility — Emphasises interpretability for QNLP via axis-wise ablations and causal intervention metrics (Directional Consistency, Proportional Response, Monotonicity Violation Rate) to understand quantum circuit contributions.",
+    "#idea:near-term-feasibility — Evaluated on a financial sentiment dataset (Financial PhraseBank) via classical simulation, demonstrating an end-to-end pipeline but stopping short of QPU experiments."
+  ],
+  "contradictions": [],
+  "limitation_tags": [
+    "limitation:simulation-only",
+    "limitation:no-empirical-validation",
+    "limitation:data-encoding",
+    "limitation:qubit-count",
+    "limitation:noise"
+  ]
+}

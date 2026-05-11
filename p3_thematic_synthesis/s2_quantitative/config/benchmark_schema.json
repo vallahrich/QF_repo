@@ -1,0 +1,412 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "benchmark_extraction_v1.0",
+  "title": "Quantum Finance Benchmark Extraction",
+  "description": "Structured extraction of quantitative benchmark data from quantum finance papers.",
+  "type": "object",
+  "required": ["paper_id", "paper_metadata", "has_quantitative_results", "experiments"],
+  "properties": {
+    "paper_id": {
+      "type": "string",
+      "description": "Unique identifier derived from the source filename."
+    },
+    "extraction_metadata": {
+      "type": "object",
+      "properties": {
+        "extraction_date": { "type": "string" },
+        "model_used": { "type": "string" },
+        "source_file": { "type": "string" },
+        "extraction_confidence": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "validation_errors": { "type": "integer" },
+        "validation_warnings": { "type": "integer" },
+        "validation_passed": { "type": ["boolean", "null"], "description": "True when validation_errors == 0. Downstream consumers should filter on this." },
+        "notes": { "type": ["string", "null"] }
+      }
+    },
+    "paper_metadata": {
+      "type": "object",
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string" },
+        "authors": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "year": { "type": ["integer", "null"] },
+        "venue": { "type": ["string", "null"] },
+        "doi": { "type": ["string", "null"] },
+        "arxiv_id": { "type": ["string", "null"] },
+        "scope": {
+          "type": "string",
+          "enum": ["gate_based"],
+          "description": "Thesis scope. Must be 'gate_based'. Quantum annealing, adiabatic, and pure QUBO-on-annealer work is out of scope."
+        }
+      }
+    },
+    "finance_domain": {
+      "type": "object",
+      "properties": {
+        "primary_silo": {
+          "type": ["string", "null"],
+          "description": "Primary problem domain silo from Phase 1 taxonomy (PD-01..PD-10).",
+          "enum": [
+            "portfolio-optimization", "derivative-pricing", "risk-management",
+            "quantum-ml-finance", "fraud-detection", "trading-execution",
+            "credit-lending", "cryptography-security", "simulation-monte-carlo",
+            "insurance-actuarial", "other", null
+          ]
+        },
+        "secondary_silos": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "has_quantitative_results": {
+      "type": "boolean",
+      "description": "Whether the paper reports any quantitative experimental results."
+    },
+    "summary": {
+      "type": ["string", "null"],
+      "description": "1-3 sentence narrative summarizing the key quantitative finding and comparison to classical baselines."
+    },
+    "experiments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/experiment" }
+    }
+  },
+  "$defs": {
+    "experiment": {
+      "type": "object",
+      "required": ["experiment_id", "algorithm"],
+      "properties": {
+        "experiment_id": {
+          "type": "string",
+          "description": "Short identifier: exp_1, exp_2, etc."
+        },
+        "description": { "type": ["string", "null"] },
+        "algorithm": {
+          "type": "object",
+          "required": ["family"],
+          "properties": {
+            "family": {
+              "type": "string",
+              "description": "Gate-based algorithm family. Quantum annealing and pure-QUBO-on-annealer are out of scope; use 'qaoa' or 'grover' for QUBO formulations solved on gate-based hardware.",
+              "enum": [
+                "qaoa", "vqe", "amplitude-estimation", "quantum-ml",
+                "quantum-walk", "hhl", "hybrid", "grover",
+                "quantum-svm",
+                "quantum-simulation", "classical-simulation",
+                "other-gate-based", "other"
+              ]
+            },
+            "variant": { "type": ["string", "null"] },
+            "ansatz": { "type": ["string", "null"] },
+            "optimizer": { "type": ["string", "null"] },
+            "num_layers": { "type": ["integer", "null"], "description": "QAOA depth p, VQE layers, ansatz repetitions." },
+            "convergence_criteria": { "type": ["string", "null"], "description": "When does the algorithm stop? E.g. 'max 1000 iterations', 'gradient < 1e-6'." },
+            "hyperparameters": {
+              "type": ["object", "null"],
+              "description": "Key hyperparameters as key-value pairs. E.g. learning_rate, alpha (CVaR), penalty_weight.",
+              "additionalProperties": true
+            }
+          }
+        },
+        "problem_formulation": {
+          "type": "object",
+          "description": "How the finance problem is mapped to a quantum problem.",
+          "properties": {
+            "encoding_method": {
+              "type": ["string", "null"],
+              "description": "How classical data is encoded into quantum states. E.g. 'amplitude_encoding', 'angle_encoding', 'basis_encoding', 'QUBO', 'block_encoding', 'qRAM'."
+            },
+            "objective_function": {
+              "type": ["string", "null"],
+              "description": "Mathematical formulation of the objective. E.g. 'minimize x^T Sigma x - mu^T x', 'QUBO with penalty terms'."
+            },
+            "constraints_handling": {
+              "type": ["string", "null"],
+              "description": "How constraints are handled. E.g. 'penalty terms', 'XY-mixer', 'feasibility filter', 'Grover oracle'."
+            },
+            "num_binary_variables": { "type": ["integer", "null"], "description": "Number of binary/qubit variables in the QUBO/Ising formulation when solved on gate-based hardware (QAOA, Grover-on-QUBO, amplitude-estimation). Annealer papers are out of scope." },
+            "problem_hamiltonian": { "type": ["string", "null"], "description": "Hamiltonian form if specified. E.g. 'Ising with ZZ and Z terms'." }
+          }
+        },
+        "problem_instance": {
+          "type": "object",
+          "properties": {
+            "description": { "type": ["string", "null"] },
+            "num_assets": { "type": ["integer", "null"] },
+            "time_steps": { "type": ["integer", "null"] },
+            "num_features": { "type": ["integer", "null"] },
+            "dataset_size": { "type": ["integer", "null"] },
+            "data_type": {
+              "type": ["string", "null"],
+              "enum": ["synthetic", "real_market", "proprietary", "public_benchmark", null]
+            },
+            "dataset_name": { "type": ["string", "null"] },
+            "dataset_specification": {
+              "type": ["object", "null"],
+              "description": "Detailed dataset info needed to replicate the experiment.",
+              "properties": {
+                "description": { "type": ["string", "null"], "description": "Free-text dataset description when structured fields are not available." },
+                "ticker_symbols": { "type": ["array", "null"], "items": { "type": "string" }, "description": "Exact assets/tickers used. E.g. ['AAPL', 'MSFT', 'GOOGL']." },
+                "date_range": { "type": ["string", "null"], "description": "Date range of market data. E.g. '2015-01-01 to 2020-12-31'." },
+                "benchmark_name": { "type": ["string", "null"], "description": "Named benchmark. E.g. 'S&P 500 daily returns', 'MNIST', 'UCI Credit'." },
+                "preprocessing": { "type": ["string", "null"], "description": "Data preprocessing steps. E.g. 'log returns, 252 trading days, z-score normalisation'." },
+                "train_test_split": { "type": ["string", "null"], "description": "How data was split. E.g. '80/20 train/test', '5-fold CV'." }
+              }
+            }
+          }
+        },
+        "quantum_resources": {
+          "type": "object",
+          "properties": {
+            "num_qubits": { "type": ["integer", "null"] },
+            "qubit_type": {
+              "type": ["string", "null"],
+              "enum": ["logical", "physical", "not_specified", null]
+            },
+            "circuit_depth": { "type": ["integer", "null"] },
+            "circuit_depth_transpiled": { "type": ["integer", "null"] },
+            "gate_count_total": { "type": ["integer", "null"] },
+            "cnot_count": { "type": ["integer", "null"] },
+            "two_qubit_gate_count": { "type": ["integer", "null"], "description": "Total two-qubit entangling gate count (CNOT + CZ + iSWAP + ECR + native 2q gates). Superset of cnot_count. Used by P4 as a circuit-depth proxy for resource estimation. Prefer the paper's reported total; fall back to cnot_count if only CNOTs are listed." },
+            "t_count": { "type": ["integer", "null"] },
+            "t_depth": { "type": ["integer", "null"] },
+            "num_shots": { "type": ["integer", "null"] },
+            "num_variational_params": { "type": ["integer", "null"] },
+            "error_correction": {
+              "type": ["object", "null"],
+              "description": "Error correction parameters if fault-tolerant analysis is discussed. Null when not applicable (the norm for NISQ experiments).",
+              "properties": {
+                "code_type": { "type": ["string", "null"], "description": "E.g. 'surface_code', 'color_code', 'none'." },
+                "code_distance": { "type": ["integer", "null"] },
+                "physical_qubits_per_logical": { "type": ["integer", "null"] },
+                "total_physical_qubits": { "type": ["integer", "null"] },
+                "logical_error_rate": { "type": ["number", "null"] },
+                "physical_error_rate_assumed": { "type": ["number", "null"] }
+              }
+            }
+          }
+        },
+        "hardware": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": ["string", "null"],
+              "description": "Hardware platform. Quantum annealers (D-Wave, adiabatic) are out of scope for this thesis.",
+              "enum": [
+                "simulator_statevector", "simulator_noisy",
+                "simulator_other", "real_qpu_superconducting",
+                "real_qpu_trapped_ion", "real_qpu_photonic",
+                "real_qpu_neutral_atom",
+                "not_specified", null
+              ]
+            },
+            "provider": { "type": ["string", "null"] },
+            "device_name": { "type": ["string", "null"] },
+            "framework": { "type": ["string", "null"] }
+          }
+        },
+        "noise_model": {
+          "type": ["object", "null"],
+          "properties": {
+            "is_noisy": { "type": ["boolean", "null"] },
+            "noise_type": { "type": ["string", "null"] },
+            "noise_description": { "type": ["string", "null"], "description": "Free-text noise description preserved from LLM output during cleanup." },
+            "error_mitigation_method": { "type": ["string", "null"] },
+            "single_qubit_error_rate": { "type": ["number", "null"], "description": "Single-qubit gate error rate. E.g. 0.001 for 0.1%. Search for 'single-qubit error', 'gate fidelity', '1-F_1q'." },
+            "two_qubit_error_rate": { "type": ["number", "null"], "description": "Two-qubit gate error rate. E.g. 0.005 for 0.5%. Search for 'two-qubit error', 'CNOT error', 'CX fidelity', '1-F_2q'." },
+            "readout_error_rate": { "type": ["number", "null"], "description": "Measurement/readout error rate. Search for 'readout error', 'measurement fidelity'." },
+            "t1_time_us": { "type": ["number", "null"], "description": "T1 relaxation time in microseconds if reported." },
+            "t2_time_us": { "type": ["number", "null"], "description": "T2 dephasing time in microseconds if reported." }
+          }
+        },
+        "implementation_details": {
+          "type": "object",
+          "description": "Details needed to replicate or build upon this experiment.",
+          "properties": {
+            "code_available": { "type": ["boolean", "null"], "description": "Is source code publicly available?" },
+            "code_url": { "type": ["string", "null"], "description": "URL to code repository if available." },
+            "framework_version": { "type": ["string", "null"], "description": "Exact framework/SDK version. E.g. 'Qiskit 1.2.3', 'PennyLane 0.35'." },
+            "transpilation_target": { "type": ["string", "null"], "description": "Backend the circuit was transpiled for. E.g. 'ibm_brisbane', 'H1-1'." },
+            "classical_solver": { "type": ["string", "null"], "description": "Classical solver used for comparison/hybrid loop. E.g. 'Gurobi 11.0', 'CPLEX 22.1', 'scipy.optimize'." },
+            "classical_preprocessing": { "type": ["string", "null"], "description": "Classical steps before quantum circuit. E.g. 'PCA dimensionality reduction', 'feature selection', 'covariance matrix computation'." },
+            "classical_postprocessing": { "type": ["string", "null"], "description": "Classical steps after quantum circuit. E.g. 'COBYLA optimization loop', 'majority voting', 'statistical aggregation'." },
+            "total_execution_time": { "type": ["string", "number", "null"], "description": "End-to-end wall clock time including classical pre/post processing." },
+            "quantum_execution_time": { "type": ["string", "number", "null"], "description": "Wall clock time for quantum portion only." },
+            "quantum_fraction_of_runtime": { "type": ["string", "number", "null"], "description": "What fraction of total runtime is quantum? E.g. 0.1 means 10% quantum, 90% classical." },
+            "convergence_data": {
+              "type": ["object", "null"],
+              "description": "Optimisation convergence behaviour.",
+              "properties": {
+                "iterations_to_converge": { "type": ["integer", "null"] },
+                "final_loss_value": { "type": ["number", "null"] },
+                "loss_curve_shape": { "type": ["string", "null"], "description": "E.g. 'rapid descent then plateau', 'monotonic decrease', 'oscillating'." },
+                "variance_across_runs": { "type": ["number", "null"], "description": "Std dev or variance across independent runs." },
+                "num_independent_runs": { "type": ["integer", "null"], "description": "How many independent runs/seeds were averaged." }
+              }
+            },
+            "num_layers": { "type": ["integer", "null"], "description": "Variational ansatz layers/repetitions or QAOA p. Mirror of algorithm.num_layers for implementation context." },
+            "ansatz_depth": { "type": ["integer", "null"], "description": "Ansatz circuit depth per layer, distinct from total circuit_depth." },
+            "p_rounds": { "type": ["integer", "null"], "description": "QAOA p parameter (number of alternating operator rounds) if applicable." },
+            "classical_mc_samples": { "type": ["integer", "null"], "description": "Number of classical Monte Carlo samples used as baseline. Search for 'MC samples', 'paths', 'classical shots'." },
+            "parameter_selection": { "type": ["string", "null"], "description": "How variational/annealing parameters were chosen. E.g. 'grid search', 'optimized per size', 'fixed', 'random initialization'." },
+            "instance_selection": { "type": ["string", "null"], "description": "How problem instances were selected. E.g. 'random', 'worst-case', 'adversarial', 'hand-crafted', 'real market data'." },
+            "classical_hardware": { "type": ["string", "null"], "description": "Classical hardware used for comparison. E.g. 'Intel Xeon E5-2680 single core', 'NVIDIA A100', 'MacBook Pro M1'." }
+          }
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["metric_name"],
+            "properties": {
+              "metric_name": { "type": "string" },
+              "value": { "type": ["number", "string", "boolean", "null"] },
+              "unit": { "type": ["string", "null"] },
+              "higher_is_better": { "type": ["boolean", "null"] },
+              "data_source": {
+                "type": ["string", "null"],
+                "enum": ["table", "figure", "text", "computed", null]
+              }
+            }
+          }
+        },
+        "classical_baselines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["method_name", "metric_name"],
+            "properties": {
+              "method_name": { "type": "string" },
+              "metric_name": { "type": "string" },
+              "value": { "type": ["number", "string", "null"] },
+              "unit": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "speedup_claims": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["asymptotic", "empirical", "theoretical", "projected", "none"]
+              },
+              "factor": { "type": ["string", "number", "null"] },
+              "baseline_method": { "type": ["string", "null"] },
+              "conditions": { "type": ["string", "null"] },
+              "is_demonstrated": { "type": ["boolean", "null"] },
+              "caveats": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "scalability_data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "problem_size": { "type": ["number", "null"] },
+              "num_qubits": { "type": ["integer", "null"] },
+              "metric_name": { "type": ["string", "null"] },
+              "metric_value": { "type": ["number", "null"] }
+            }
+          }
+        },
+        "complexity_analysis": {
+          "type": ["object", "null"],
+          "description": "Computational complexity comparison for Hoefler et al. (2023) quantum advantage assessment.",
+          "properties": {
+            "quantum_complexity": { "type": ["string", "null"], "description": "Big-O complexity of the quantum algorithm. E.g. 'O(sqrt(N))', 'O(N^2 polylog(N))'." },
+            "classical_complexity": { "type": ["string", "null"], "description": "Big-O of best-known classical algorithm for same problem. E.g. 'O(N log N)', 'O(2^N)'." },
+            "speedup_order": {
+              "type": ["string", "null"],
+              "enum": ["exponential", "cubic", "quadratic", "polynomial_other", "logarithmic", "constant", "none", "none_proven", null],
+              "description": "Order of quantum speedup relative to classical. 'none' = paper reports no speedup found. 'none_proven' = no proven asymptotic speedup exists for this algorithm family (theoretical status from literature)."
+            },
+            "constant_factor_quantum": { "type": ["number", "string", "null"], "description": "Prefactor/overhead per quantum operation. E.g. error correction overhead ~1000x." },
+            "constant_factor_classical": { "type": ["number", "string", "null"], "description": "Prefactor for classical baseline. E.g. 'highly optimised, <1ns per operation'." },
+            "total_operations_quantum": { "type": ["string", "number", "null"], "description": "Total operation count for the reported problem size. E.g. '1.2e9 T-gates', '3.4e12 total gates'." },
+            "total_operations_classical": { "type": ["string", "number", "null"], "description": "Total classical operations for same problem size." },
+            "crossover_n": { "type": ["string", "number", "null"], "description": "Problem size N* at which quantum overtakes classical after accounting for constant factors." },
+            "wall_clock_quantum": { "type": ["string", "number", "null"], "description": "Reported or estimated quantum wall-clock time." },
+            "wall_clock_classical": { "type": ["string", "number", "null"], "description": "Reported or estimated classical wall-clock time for same problem." },
+            "hoefler_viable": { "type": ["boolean", "null"], "description": "Does the speedup survive constant-factor overhead per Hoefler et al. analysis? null if insufficient data." }
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "description": "Tracks data origin for key fields. Values: 'paper_reported' (explicitly stated), 'paper_inferred' (deduced from context by extractor), 'figure_estimated' (read from figure), 'derived' (computed from theory by compute_derived_fields), 'bridged' (copied from another field by extraction_loader bridge).",
+          "properties": {
+            "hardware_type": { "type": ["string", "null"], "enum": ["paper_reported", "paper_inferred", null] },
+            "num_qubits": { "type": ["string", "null"], "enum": ["paper_reported", "paper_inferred", "derived", null] },
+            "circuit_depth": { "type": ["string", "null"], "enum": ["paper_reported", "paper_inferred", "derived", null] },
+            "speedup_order": { "type": ["string", "null"], "enum": ["paper_reported", "paper_inferred", "derived", null] },
+            "quantum_complexity": { "type": ["string", "null"], "enum": ["paper_reported", "derived", null] },
+            "classical_complexity": { "type": ["string", "null"], "enum": ["paper_reported", "derived", null] },
+            "advantage_status": { "type": ["string", "null"], "enum": ["paper_reported", "paper_inferred", null] },
+            "notes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Free-text notes on inference decisions, e.g. 'hardware.type inferred as simulator_statevector because paper uses Qiskit with no QPU named'."
+            }
+          },
+          "additionalProperties": { "type": ["string", "null"] }
+        },
+        "advantage_assessment": {
+          "type": "object",
+          "description": "Assessment of quantum advantage for this experiment.",
+          "properties": {
+            "advantage_status": {
+              "type": ["string", "null"],
+              "enum": [
+                "advantage_demonstrated",
+                "advantage_claimed_not_demonstrated",
+                "parity_with_classical",
+                "classical_still_better",
+                "theoretical_only",
+                "not_assessed",
+                null
+              ],
+              "description": "Current status of quantum advantage for this experiment."
+            },
+            "crossover_size": {
+              "type": ["string", "number", "null"],
+              "description": "Problem size at which quantum is expected to beat classical (if discussed). E.g. '100 assets', '10^6 paths', or a number."
+            },
+            "resources_for_advantage": {
+              "type": ["string", "null"],
+              "description": "Estimated quantum resources needed for practical advantage. E.g. '10000 logical qubits', '1M physical qubits', 'error rate < 10^-4'."
+            },
+            "data_loading_bottleneck": {
+              "type": ["boolean", "null"],
+              "description": "Whether the paper identifies data loading/encoding as a bottleneck to advantage."
+            },
+            "feasibility_horizon": {
+              "type": ["string", "null"],
+              "enum": ["current_nisq", "near_term_2_5_years", "medium_term_5_10_years", "far_future_10_plus_years", "requires_fault_tolerance", null],
+              "description": "When this approach could become practically useful."
+            },
+            "limiting_factors": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Key barriers to advantage. E.g. 'qubit count', 'noise', 'circuit depth', 'data encoding overhead', 'classical competition'."
+            },
+            "maturity_level": {
+              "type": ["string", "null"],
+              "enum": ["L0_theory", "L1_noiseless_sim", "L2_noisy_sim", "L3_qpu_small", "L4_qpu_scale", "L5_production", null],
+              "description": "Experimental maturity: L0=theory only, L1=noiseless sim, L2=noisy sim, L3=QPU ≤20 qubits, L4=QPU meaningful scale, L5=production-relevant."
+            }
+          }
+        }
+      }
+    }
+  }
+}

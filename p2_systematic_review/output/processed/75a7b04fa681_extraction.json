@@ -1,0 +1,182 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document header includes an arXiv identifier (arXiv:2411.11660v1) and date; layout follows academic paper structure (abstract, methods, results, references) but no journal or conference venue is listed and authors are industry-affiliated, indicating an unrefereed preprint version.",
+  "title": "Encoding of Probability Distributions for Quantum Monte Carlo Using Tensor Networks",
+  "authors": [
+    "António Pereira",
+    "Alba Villarino",
+    "Aser Cortines",
+    "Samuel Mugel",
+    "Román Orús",
+    "Victor Leme Beltran",
+    "J.V.S. Scursulim",
+    "Samuraí Brito"
+  ],
+  "year": "2024",
+  "journal_or_venue": "arXiv preprint (arXiv:2411.11660, quant-ph)",
+  "doi": "",
+  "abstract_summary": "The paper proposes using the tensor-train cross (TT-cross) algorithm to represent probability distributions in tensor-train (MPS) form and map them to quantum circuits to address the state-preparation bottleneck in Quantum Monte Carlo. Applied to financial (log-normal and multivariate) distributions, the TT-cross approach yields more scalable circuit depths and logarithmic training complexity compared with standard Grover–Rudolph loading, while maintaining good approximation accuracy in simulation; hardware noise remains a limitation for current quantum processors.",
+  "methodology_description": "The study proposes and evaluates a classical-to-quantum data-loading pipeline for Quantum Monte Carlo (QMC) based on tensor-network compression. Continuous financial probability distributions (primarily log-normal distributions calibrated from Itaú Unibanco market data) are first discretized (QTT/quantization) into vectors/tensors on a binary grid. The tensor-train cross-approximation (TT-cross) algorithm is used to learn a low-rank TT/MPS representation of the discrete probability tensor. Three quantization orderings for multivariate data are explored (sequential, mirroring for 2D, and interleaving) to improve TT expressivity. The TT cores are then mapped to a quantum circuit by reshaping each core, performing SVD, truncating singular values to control bond dimension, and using the left-unitary from the SVD as a multi-qubit unitary W_k; the ΣV* factors are absorbed into the next core and the procedure iterates from one end of the TT to the other. A postprocessing step merges consecutive unitaries when possible to reduce circuit depth. Implementations were written in Python and circuits built with Qiskit (v0.45.0). Experiments measure approximation accuracy (KS distance for univariate, KL divergence for multivariate), training time, and resulting circuit depth, comparing the TT-cross approach against Qiskit’s standard Grover–Rudolph style state-preparation baseline. Selected circuits were executed on an IBM Eagle R3 quantum processor (5-qubit test) and extensively on simulators to evaluate scaling and noise effects.",
+  "algorithms_used": [
+    "TT-cross (tensor-train cross approximation)",
+    "Quantics Tensor Train (QTT) quantization (sequential, mirroring, interleaving orderings)",
+    "SVD-based TT-to-circuit mapping (per-core SVD and truncation)",
+    "Unitary merging / depth-reduction heuristic",
+    "Grover–Rudolph (used as baseline/comparison)",
+    "Qiskit UnitaryGate (circuit construction)"
+  ],
+  "frameworks": [
+    "Qiskit (v0.45.0)"
+  ],
+  "experimental_setup": "Classical training and TT-cross performed in Python; circuits constructed with Qiskit v0.45.0. Most evaluations run on simulators; a 5-qubit experiment deployed on IBM Eagle R3 hardware. Experiments sweep number of qubits (reported 2–25 in figures for univariate tests) and bond dimensions (tested values 2, 4, 8, 16). For the hardware run the circuit was executed with 10,000 shots and compiler optimization levels compared (level 1 vs level 3).",
+  "dataset_used": "Financial probability distributions (log-normal) calibrated from real market data provided by Itaú Unibanco for pricing financial instruments. No public dataset link provided; data described as compliant with Brazilian General Data Protection Law.",
+  "experiment_input": {
+    "source": "Itaú Unibanco (industrial/market-calibrated financial distributions)",
+    "types": "Univariate and multivariate log-normal probability distributions (up to 5 dimensions in experiments)",
+    "discretization": "Quantized to binary grids (QTT) with number of qubits varied per experiment; univariate sweeps shown from 2 to 25 qubits; multivariate experiments used interleaving quantization and up to 10 qubits per dimension in reported tests",
+    "preprocessing": "Discretization/quantization of continuous PDFs into vectors of size 2^d (binary encoding); choice of quantization ordering (sequential, mirroring, interleaving); TT-cross sampling to build TT cores; SVD truncation applied during mapping."
+  },
+  "experiment_process": {
+    "steps": [
+      "1) Discretize continuous distribution p(x) on a binary grid appropriate to chosen number of qubits (QTT).",
+      "2) For multivariate cases, select quantization ordering: sequential, mirroring (2D), or interleaving (recommended for multivariate).",
+      "3) Apply TT-cross algorithm to approximate the full discrete tensor in TT/MPS format; select/adjust bond dimensions (tested 2,4,8,16).",
+      "4) Map TT cores to quantum circuit: for each core reshape to matrix, perform SVD → M = U Σ V*, truncate small singular values, set unitary W_k = U (acting on corresponding qubits), pass ΣV* into next core.",
+      "5) Optionally merge/compose consecutive unitaries when they act on overlapping qubits to reduce circuit depth.",
+      "6) Implement resulting unitaries in Qiskit using UnitaryGate; measure resulting circuits on simulator and (for a selected 5-qubit case) on IBM Eagle R3 hardware.",
+      "7) Evaluate metrics (KS for univariate, KL divergence for multivariate), training time, and circuit depth; compare to Grover–Rudolph (Qiskit built-in) baseline."
+    ],
+    "parameters_tuned": [
+      "number of qubits (discretization precision)",
+      "TT bond dimension / truncation threshold (ranks tested: 2, 4, 8, 16)",
+      "SVD truncation (implicit via chosen bond dimension)",
+      "compiler optimization level for hardware runs (levels 1 and 3)",
+      "shots for hardware run (10,000)"
+    ],
+    "iterations": "TT-cross iterative index-set refinement as per algorithm; experiments sweep over qubit counts and bond dimensions—no optimizer hyperparameters (e.g., gradient-based) reported."
+  },
+  "experiment_output": {
+    "metrics": [
+      "Kolmogorov–Smirnov distance (KS) for univariate approximations",
+      "Kullback–Leibler (KL) divergence for multivariate approximations",
+      "Training time (wall-clock) as function of number of qubits / points",
+      "Circuit depth (number of sequential gate layers)",
+      "Empirical output distributions from simulator and IBM hardware"
+    ],
+    "baselines": [
+      "Qiskit built-in Grover–Rudolph style state preparation (used for circuit depth and training-time comparisons)"
+    ],
+    "formats": "Numeric plots and empirical histograms (simulator and hardware counts); reported values and curves across sweeps of qubits and bond dimensions."
+  },
+  "experiment_parameters": {
+    "qubits_range_univariate": "2–25 (reported sweep in figures)",
+    "qubits_per_dimension_multivariate": "up to 10 qubits per dimension reported for experiments (5 dimensions tested)",
+    "bond_dimensions_tested": [
+      2,
+      4,
+      8,
+      16
+    ],
+    "shots_hardware": 10000,
+    "compiler_optimization_levels_tested": [
+      1,
+      3
+    ],
+    "qiskit_version": "0.45.0"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit simulator (unspecified backend; classical simulator used for bulk experiments)",
+    "quantum_processor": "IBM Eagle R3 (Eagle family; 5-qubit subset used for a hardware experiment)",
+    "cloud_provider": "IBM Quantum"
+  },
+  "reproducibility_notes": "Implementation was done in Python with Qiskit v0.45.0 and TT-cross for classical TT learning; however, the paper does not provide a public code repository or explicit scripts/configuration files. Datasets originate from Itaú Unibanco and are not published alongside the paper. Therefore full reproduction would require reimplementation of the pipeline and access to similar calibrated financial distributions; the paper documents key parameters (qubit counts, bond dimensions, shots, optimization levels) but does not include code or data links.",
+  "key_findings": [
+    "[supported] The TT-cross algorithm can approximate univariate log-normal distributions with high fidelity: the authors report a Kolmogorov–Smirnov (KS) distance of 7.2e-5 for a 16-qubit (65,536-point) discretization.",
+    "[supported] Training time for the TT-cross approximation empirically scales logarithmically with the number of discretization points (i.e., qubits) in the authors' experiments.",
+    "[supported] Mapping a TT (MPS) to a quantum circuit using the presented SVD-based procedure produces circuits whose depth scales much more favorably (empirically near-linear in qubit number) than Qiskit's Grover–Rudolph-based state-preparation implementation (empirically exponential in qubit number in their comparison).",
+    "[supported] For multivariate log-normal distributions up to 5 dimensions (authors' experiments), the TT-cross + interleaving quantization yields reasonably low approximation error (reported worst-case KL divergence ~1e-2) while training time remains empirically favorable (logarithmic scaling).",
+    "[supported] Different quantization/orderings matter: interleaving was found most effective for multivariate data, while mirroring worked well in 2D.",
+    "[supported] Increasing bond dimension beyond certain values (authors observed >8) caused convergence issues past roughly 15 qubits in their experiments, limiting further accuracy gains for those settings.",
+    "[supported] Small-scale real-hardware (IBM Eagle R3, 5 qubits) runs (10,000 shots) show that some distribution structure survives noise at moderate compiler optimization, but higher optimization/noise settings can degrade results substantially.",
+    "[supported] The whole training and TT→circuit mapping workflow is performed classically (TT-cross on classical hardware) and then converted to an explicit unitary/circuit representation (implemented in Qiskit) — i.e., the method does not require a quantum-in-the-loop training stage in the presented work.",
+    "[speculative] The authors claim the TT-cross approach 'mitigates the curse of dimensionality' in a general sense; while supported by experiments up to 5D, the broad claim for arbitrarily high dimensions is not proven by the presented experiments.",
+    "[speculative] The paper asserts that the TT-cross method 'offers a more efficient pathway for implementing QMC on near-term quantum hardware' — this is forward-looking: improved state preparation scaling is demonstrated in simulation/small hardware tests, but an end-to-end QMC speedup or practical near-term advantage is not demonstrated.",
+    "[speculative] The authors state that fully practical deployment will require significant hardware and algorithmic advances (error mitigation, etc.). This is a reasoned projection rather than an empirically tested result in the paper.",
+    "[supported] The authors reiterate, consistent with prior literature, that claimed quadratic QMC speedups can be undermined by state-preparation and other overheads (they cite Herbert 2021)."
+  ],
+  "results_summary": "The paper demonstrates that the TT-cross tensor-train approximation can be used to represent financial probability distributions (univariate and multivariate log-normal examples) and be mapped to explicit quantum circuits. Empirical results (simulations and a small 5-qubit hardware run) show that the TT-based approach attains high-fidelity approximations (e.g., KS = 7.2e-5 at 16 qubits for a univariate log-normal), has training time that scales approximately logarithmically with discretization size, and yields circuits whose depth scales far more favorably than a standard Grover–Rudolph-based state-preparation implementation used in Qiskit. For multivariate cases up to 5 dimensions, KL divergence remained modest (~1e-2 worst) using interleaving quantization. The authors note practical limitations (bond-dimension convergence issues beyond certain sizes and hardware noise) and position the method as a promising classical preprocessing + mapping route to reduce state-preparation overheads in quantum Monte Carlo workflows, while acknowledging that full practical deployment requires further hardware/algorithmic progress.",
+  "performance_claims": [
+    "KS distance = 7.2e-5 for a univariate log-normal approximation with 16 qubits (65,536 discretization points).",
+    "Multivariate experiments up to 5 dimensions reported worst-case KL divergence on the order of 1e-2 using interleaving quantization.",
+    "Training time empirically scales logarithmically with the number of discretization points (as reported in authors' timing plots).",
+    "Circuit depth for TT-based mapping empirically scales near-linearly with number of qubits in the authors' comparisons, while Qiskit/Grover–Rudolph method scales exponentially in their benchmarks.",
+    "A 5-qubit hardware experiment was executed with 10,000 shots on IBM Eagle R3 to probe noise effects; results preserved some distribution structure at lower optimization levels but degraded under higher optimization/noise."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper does not demonstrate a net end-to-end quantum computational speedup for QMC. It presents improvements in classical preprocessing (TT-cross) and in the resulting state-preparation circuit scaling (depth/size) based on simulations and small hardware tests. While these improvements reduce an important overhead for quantum Monte Carlo, the authors do not claim or empirically show that a full QMC pipeline using these circuits achieves a practical quantum advantage over classical Monte Carlo.",
+  "limitations": [
+    "Precision of the TT-cross approximation degrades beyond a certain discretization: authors observe KS error improves up to ~16 qubits (65,536 points) but then precision decreases due to accumulation of small errors across the domain.",
+    "Convergence issues with large bond dimensions: bond dimensions greater than ~8 lead to convergence problems when the number of qubits exceeds ~15.",
+    "Limited hardware validation: experiments on real quantum hardware were restricted to a 5‑qubit test; larger/more realistic multi-qubit circuits were evaluated only in simulation because current hardware noise would obscure meaningful assessment.",
+    "Noise and compiler/optimization sensitivity on current quantum processors: encoding fidelity on IBM Eagle R3 degraded significantly under different compiler optimization levels and due to device noise.",
+    "Quantization method limitations: mirroring (bit-reversal) encoding works well for 2D but does not generalize straightforwardly to higher dimensions; different quantization choices affect representational quality.",
+    "Assumption of power-of-two bond/virtual dimensions: the mapping algorithm assumes bond dimensions of the form 2^{l_k}, requiring augmentation of dimensions when necessary.",
+    "TT-cross is a classical preprocessing step: the approach requires classical construction/approximation of the full TT representation prior to circuit construction, introducing classical computational overhead and dependency on classical resources.",
+    "KL divergence in higher dimensions is non-negligible: for multivariate (up to 5D) approximations KL divergence rises (worst-case ~1e-2), meaning imperfect approximation in higher-dimensional settings.",
+    "Mapping-to-circuit practicalities: construction of the required unitary blocks (and subsequent decomposition into native 1- and 2-qubit gates) and the resource cost of those decompositions on real hardware are not fully characterized in the paper.",
+    "[inferred] Potential numerical stability and scalability limits: SVD truncation and iterative TT-cross steps may become numerically fragile or costly at very large numbers of qubits / high bond dimensions.",
+    "[inferred] Classical memory and CPU costs for TT-cross in very high-dimensional problems: although reported training time scales favorably in the studied regime, the classical cost may become large for more complex or higher-dimensional distributions than those tested.",
+    "[inferred] Trade-offs between merging gates to reduce depth and the complexity of resulting large unitaries: merged unitaries may require expensive decompositions into native gates, potentially increasing overall gate count or error sensitivity."
+  ],
+  "open_questions": [
+    "How will the TT-cross encoding perform end-to-end when integrated with the full QMC pipeline (state preparation + amplitude estimation + postprocessing) in terms of total complexity and practical speedup?",
+    "What error-mitigation strategies or compiler/decomposition techniques are most effective to preserve the TT-encoded distribution fidelity on noisy intermediate-scale quantum (NISQ) devices?",
+    "Can mirroring quantization (or other quantization heuristics) be generalized effectively to higher-dimensional distributions to improve representational efficiency?",
+    "How can convergence issues for large bond dimensions and high qubit counts be alleviated in practice (e.g., algorithmic improvements, regularization, better initialization)?",
+    "What are the best choices and trade-offs of quantization (sequential, mirroring, interleaving) for various classes of multivariate financial distributions?",
+    "How does the classical precomputation time and memory (TT-cross) scale for very large realistic financial models (more assets, more complex correlations), and at what point does it negate quantum advantages?",
+    "How expensive (in terms of native gate count and error accumulation) is the decomposition of the mapped unitaries into 1- and 2-qubit gates on real hardware, after applying the merging/depth-reduction strategies?",
+    "Could analytical forms for particular distributions be exploited to construct exact (or better) TT representations without TT-cross, and for which financial distributions is this practical?",
+    "How robust is the TT-cross + mapping approach across a broader set of realistic, possibly non-smooth, or multimodal financial distributions?",
+    "Given concerns about the claimed quadratic speedup when including state preparation overheads, under what realistic assumptions (including TT-cross cost) does a quantum advantage remain?"
+  ],
+  "future_work": [
+    "Explore other methods for approximating distributions in a tensor-train format (alternative TT/functional TT algorithms cited in the paper).",
+    "Investigate use of analytical formulas for some distributions to directly encode them in a tensor-train format, potentially avoiding approximation errors from TT-cross.",
+    "Develop and integrate improved error-mitigation techniques and circuit optimization/decomposition methods to make TT-encoded circuits practical on near-term hardware.",
+    "Study and improve quantization strategies (sequential, mirroring, interleaving) for higher-dimensional problems to enhance TT representational power.",
+    "Further algorithmic work to address convergence issues for larger bond dimensions and higher numbers of qubits."
+  ],
+  "topic_tags": [
+    "simulation-monte-carlo",
+    "derivative-pricing"
+  ],
+  "methodology_tags": [
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Proposes a classical-to-quantum pipeline using TT-cross (tensor-train) compression to learn low-rank MPS representations of discretized financial PDFs and map TT cores to quantum circuits.",
+    "#idea:quantum-advantage — TT-cross-based state preparation yields lower circuit depths and (empirically) logarithmic training complexity compared with Grover–Rudolph style loading in simulations while maintaining good KS/KL approximation accuracy.",
+    "#idea:near-term-feasibility — Demonstrates circuits constructed from TT-cores on simulators up to 25 qubits (univariate) and multivariate cases (up to 5 dims), and includes a 5-qubit IBM Eagle R3 hardware run to probe noise effects.",
+    "#idea:hybrid-approach — Uses SVD truncation of TT cores and unitary-merging heuristics to control bond dimension and reduce resulting quantum circuit depth.",
+    "#idea:near-term-feasibility — Explores quantization orderings (sequential, mirroring, interleaving) and recommends interleaving for multivariate expressivity to improve compression-to-circuit fidelity trade-offs.",
+    "#idea:quantum-advantage — Reports concrete quantitative metrics (KS, KL, training time, circuit depth) and shows favorable simulator-based comparisons against Qiskit's Grover–Rudolph baseline."
+  ],
+  "contradictions": [
+    "contradiction:scalability — The paper's claims of scalable circuit depths and logarithmic training complexity are supported in classical simulation benchmarks but are contradicted by empirical hardware limitations: noise and very limited qubit/processor availability (only a 5-qubit IBM run) prevent demonstrating the same scaling on current devices."
+  ]
+}

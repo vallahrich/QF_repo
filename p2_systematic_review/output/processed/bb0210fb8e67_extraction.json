@@ -1,0 +1,229 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an abstract, methods, experiments/results, references and a DOI, and explicitly cites the venue '2025 62nd ACM/IEEE Design Automation Conference (DAC)' and IEEE/ACM copyright—clear indicators of a peer-reviewed conference paper.",
+  "title": "SAPO: Improving the Scalability and Accuracy of Quantum Linear Solver for Portfolio Optimization",
+  "authors": [
+    "Tianze Zhu",
+    "Liqiang Lu",
+    "Jiajun Chen",
+    "Yuhang Chen",
+    "Hengrui Chen",
+    "Meng Xi",
+    "Jinshan Zhang",
+    "Xiaoming Sun",
+    "Jianwei Yin"
+  ],
+  "year": "2025",
+  "journal_or_venue": "62nd ACM/IEEE Design Automation Conference (DAC)",
+  "doi": "10.1109/DAC63849.2025.11133130",
+  "abstract_summary": "This paper proposes SAPO, an HHL-based quantum circuit design for portfolio optimization that integrates mean-variance financial theory and historical data characteristics. SAPO introduces an equivalent constraint-scaling transformation to reduce the condition number (improving scalability) and a min-max eigenvalue predictor to set HHL hyperparameters (improving accuracy), demonstrating substantial complexity reduction and improved allocation accuracy in market-data experiments.",
+  "methodology_description": "The paper proposes SAPO, a quantum portfolio optimization method that extends the HHL algorithm by integrating financial theory (Black's model / mean-variance) and dataset-driven parameterization. Method highlights: (1) Equivalent constraint scaling — introduce two scalar factors (s1, s2) multiplying the equality constraints of Black's model to obtain an equivalent Lagrange matrix with a greatly reduced condition number; an iterative Nelder–Mead-inspired simplex search is run offline per dataset to find static scaling factors that minimize the average condition number across the dataset. (2) Min-max eigenvalue modeling — train an offline predictor (support vector regression, SVR) on historical datasets to predict the minimum and maximum eigenvalues of the scaled Lagrange matrix; only min/max eigenvalues are used to set HHL hyperparameters. (3) Quantum circuit parameterization — standardize the Lagrange matrix by dividing by |λ|max and a chosen factor l (l=0.5), set Hamiltonian simulation time Ht=π, set the normalization constant Const = |λ|min, and choose the number of QPE qubits according to a derived bound based on the condition number and the target absolute error ϵ. Implementation is performed in Qiskit (simulation) with PhaseEstimation and uniformly controlled RY (UCRY) and compared to basic HHL, Qiskit HHL, and a hybrid HHL baseline. Performance is evaluated by a complexity metric combining qubits, CNOT count and depth, and an accuracy metric based on cosine similarity between computed and optimal allocations.",
+  "algorithms_used": [
+    "HHL (Harrow-Hassidim-Lloyd) linear system solver",
+    "Quantum Phase Estimation (QPE)",
+    "Uniformly controlled RY gate (UCRY)",
+    "Support Vector Regression (SVR) for eigenvalue prediction",
+    "Nelder–Mead simplex-inspired iterative search (for scaling factors)"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "SciPy",
+    "Scikit-learn",
+    "NumPy"
+  ],
+  "experimental_setup": "Simulated quantum experiments implemented in Qiskit. QPE module and uniformly controlled RY implemented via Qiskit's PhaseEstimation and UCRYGate primitives. Qiskit transpiler optimization level set to 0. Classical processing and predictor training performed with SciPy (optimization) and Scikit-learn (SVR). Experiments consider portfolio sizes from 2 to 6 assets and evaluate HHL circuits with QPE qubit budgets; absolute error bounds ϵ tested include 1/16, 1/8, and 1/4.",
+  "dataset_used": "Historical stock market data from three exchanges: Nasdaq, NYSE and AMEX. For Nasdaq: 3100 stocks sampled over 251 trading days (used to form many random portfolios). NYSE: 400 stocks, AMEX: 40 stocks. For each random portfolio (selecting n assets), daily price increments are computed to form return series; expected return vector R and covariance matrix Σ are estimated from the return series and used to build the Lagrange matrix for Black's model. Matrices are padded to power-of-two sizes for HHL.",
+  "experiment_input": {
+    "sources": [
+      "Nasdaq (3100 stocks, 251 days)",
+      "NYSE (400 stocks, unspecified days as in paper)",
+      "AMEX (40 stocks, unspecified days as in paper)"
+    ],
+    "portfolio_sizes": "randomly sampled portfolios of size 2 to 6 assets",
+    "preprocessing": [
+      "Compute daily increments (returns) from price series",
+      "Estimate expected return vector R (sample mean) and covariance Σ (sample covariance)",
+      "Construct Lagrange matrix for Black's mean-variance equality-constrained formulation",
+      "Apply scaling factors (s1, s2) during search",
+      "Pad matrix to nearest power-of-two dimension by adding scaled identity / zeros as needed",
+      "Standardize matrix by dividing by |λ|max and factor l (l=0.5)"
+    ]
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Construct many portfolio problems by random asset selection from source exchanges; compute R and Σ, form Lagrange matrix for each portfolio.",
+      "Offline scaling-factor search: run an iterative Nelder–Mead-style simplex algorithm (initialized with three candidate (s1,s2) vertices) to minimize the average condition number across the training set; select a static (s1,s2) per dataset.",
+      "Scale Lagrange matrices using the chosen (s1,s2). Compute or label min/max eigenvalues for training data (NumPy used to compute exact eigenvalues for labels).",
+      "Train SVR model (features: concatenation of s1R and the upper-triangular entries of Σ; labels: |λ|min and |λ|max adjusted by a tunable parameter α) offline per dataset.",
+      "At inference, predict |λ|min and |λ|max with the SVR for a given portfolio problem; standardize the matrix by |λ|max*l (l=0.5).",
+      "Set quantum circuit hyperparameters: Ht = π, normalization constant Const = predicted |λ|min, and choose nQPE according to derived bound based on condition number and target absolute error ϵ.",
+      "Build HHL circuit in Qiskit using PhaseEstimation and UCRYGate, transpile (opt level 0) and simulate to obtain the post-selected quantum state. Postprocess to extract allocation vector ˜w.",
+      "Compute evaluation metrics: complexity Θ (Nq + log2(N_CNOT) + log2(N_d)) and accuracy ∆ = 0.5*(1 + cosine_similarity(w, ˜w)).",
+      "Compare SAPO results to baselines: basic HHL (theoretical), Qiskit HHL (Ht=2π, ExactReciprocal for reciprocal), and hybrid HHL (mid-circuit measurements hybridization)."
+    ],
+    "iterations_and_training": {
+      "scaling_search_iterations": {
+        "Nasdaq": 119,
+        "NYSE": 152,
+        "AMEX": 125
+      },
+      "SVR_training": "trained offline on labeled Lagrange matrices derived from the historical datasets; training set built by enumerating random portfolios (features: s1R concat upper-triangular Σ)",
+      "padding": "Lagrange matrices padded to power-of-two sizes before eigenvalue calculation / circuit construction"
+    }
+  },
+  "experiment_output": {
+    "metrics_reported": {
+      "complexity": "Θ = Nq + log2(N_CNOT) + log2(N_d) (where Nq = nv + nQPE + na)",
+      "accuracy": "∆ = 0.5*(1 + (w^T ˜w) / (||w|| ||˜w||)) (cosine similarity scaled to [0,1])"
+    },
+    "baselines": [
+      "basic HHL",
+      "Qiskit HHL",
+      "hybrid HHL"
+    ],
+    "key_results": {
+      "complexity_reduction": "SAPO achieved ~34.64%–36.94% reduction in the defined complexity Θ versus basic HHL across tested absolute error bounds (ϵ ∈ {1/16,1/8,1/4}).",
+      "accuracy_improvement_fixed_qubits": "SAPO improved accuracy on average by 1.52× vs Qiskit HHL and 1.46× vs hybrid HHL under fixed QPE qubit budgets.",
+      "accuracy_improvement_fixed_assets": "SAPO improved accuracy on average by 1.28× vs Qiskit HHL and 1.39× vs hybrid HHL under fixed asset number (e.g., 5 assets)."
+    },
+    "result_format": "Per-problem complexity numbers (Nq, N_CNOT, depth) and accuracy ∆; aggregated reductions/factors reported as percentages or multiplicative improvements"
+  },
+  "experiment_parameters": {
+    "quantum": {
+      "Hamiltonian_simulation_time_Ht": "π (set deterministically)",
+      "normalization_constant_Const": "set to predicted |λ|min",
+      "standardization_factor_l": 0.5,
+      "absolute_error_bounds_tested_ϵ": [
+        "1/16",
+        "1/8",
+        "1/4"
+      ],
+      "QPE_qubit_selection": "nQPE chosen according to derived bound dependent on condition number κ and target ϵ (paper provides inequality for minimum nQPE)",
+      "UCRY": "uniformly controlled RY used for reciprocal rotations"
+    },
+    "classical": {
+      "scaling_search_method": "Nelder–Mead-style iterative simplex; initial triangle of three (s1,s2) points; number of iterations per dataset reported in Table III",
+      "eigenvalue_predictor": "Support Vector Regression (SVR) trained offline; feature vector = [s1R concatenated with upper-triangular Σ]; labels = exact |λ|min and |λ|max scaled by α - |λ| (α values per dataset in Table III)",
+      "SVR_label_tuning_parameters_α_minus_lambda": {
+        "Nasdaq": {
+          "α_minus_|λ|min": 3000,
+          "α_minus_|λ|max": 100
+        },
+        "NYSE": {
+          "α_minus_|λ|min": 5000,
+          "α_minus_|λ|max": 800
+        },
+        "AMEX": {
+          "α_minus_|λ|min": 4000,
+          "α_minus_|λ|max": 400
+        }
+      },
+      "transpiler_optimization_level": 0
+    }
+  },
+  "hardware_details": {
+    "quantum_simulator": "Qiskit (simulated execution; specific backend not explicitly listed, implemented using Qiskit PhaseEstimation and UCRYGate primitives)",
+    "transpiler_optimization_level": 0,
+    "classical_libraries": [
+      "SciPy (optimization / Nelder–Mead variant)",
+      "Scikit-learn (SVR)",
+      "NumPy (eigen computations and matrix ops)"
+    ],
+    "QPU": "No physical QPU used; all experiments simulated"
+  },
+  "reproducibility_notes": "The paper describes implementation details (Qiskit primitives, SVR features, scaling-search algorithm) and provides dataset provenance (Nasdaq/NYSE/AMEX stock data). However, no public code repository or exact random seeds are provided. Key reproducibility ingredients available: (1) dataset source (public exchanges), (2) preprocessing steps (daily increments, R and Σ computation, padding), (3) algorithm hyperparameters (Ht=π, l=0.5, Const=|λ|min, transpiler opt level 0, ϵ values), and (4) SVR labeling strategy and scaling-search iteration counts in Table III. Full reproduction would require access to the exact historical snapshots used, SVR hyperparameters (kernel, C, epsilon) and initial simplex vertices/seeds for the scaling search, which are not specified in the paper.",
+  "key_findings": [
+    "[supported] SAPO (the proposed method) integrates financial theory (Black's model / mean-variance) and historical data characteristics into the HHL-based quantum linear solver workflow to improve performance for portfolio optimization.",
+    "[supported] Applying a two-parameter equivalent constraint scaling (s1, s2) to Black's model can substantially reduce the condition number of the Lagrange matrix used in the HHL formulation.",
+    "[supported] An iterative (Nelder–Mead-like) search over scaling factors per dataset yields static scaling factors that on average reduce condition numbers across problem instances in that dataset.",
+    "[supported] Using the scaling technique, the authors report reducing typical condition numbers from order 1e5 down to roughly O(10) for their datasets.",
+    "[supported] SAPO achieves an empirical end-to-end complexity reduction (per their defined metric) of about 34.64%–36.94% compared to a basic HHL baseline under tested error settings.",
+    "[supported] SAPO yields empirical accuracy improvements over two other HHL implementations: on average ~1.52× vs Qiskit HHL and ~1.46× vs hybrid HHL when QPE qubit count is fixed; and ~1.28× and ~1.39× respectively when asset count is fixed.",
+    "[supported] The authors propose a min–max eigenvalue approach: predicting only the minimum and maximum eigenvalues of the Lagrange matrix (via an offline SVR model) is sufficient to set HHL hyperparameters (Hamiltonian simulation time, QPE qubit count, and normalization constant) to improve practical accuracy.",
+    "[supported] The SVR-based min/max eigenvalue predictor trained on historical data shows most relative prediction errors within ~50% on their test cases, and the worst-case accuracy gap (using predicted vs true eigenvalues) reported is 7.21% for #assets=2.",
+    "[supported] Setting Hamiltonian simulation time Ht = π (and standardizing matrix by |λ|max with a chosen scaling l=0.5) gives a one-to-one phase-to-eigenvalue mapping which the authors argue improves eigenvalue extraction accuracy for HHL in their experiments.",
+    "[supported] The normalization constant used in the uniformly controlled rotation is chosen as Const = |λ|min in SAPO, balancing success probability and validity of the controlled rotation.",
+    "[supported] Significant concrete resource reductions are reported in specific metrics (e.g., very large reductions in estimated CNOT count for small instances; authors report up to 99.996% reduction in N_CNOT for a 2-asset example compared to basic HHL compilation estimate).",
+    "[speculative] The paper suggests that combining domain knowledge (financial theory) and dataset-driven static predictors is a generally effective design principle for quantum algorithms applied to finance.",
+    "[speculative] The claim that the scaling factors found on historical datasets will be broadly static and transferable across time or markets is suggested but not proven beyond the tested datasets.",
+    "[speculative] The suggestion that SAPO's improvements imply a practical quantum advantage for portfolio optimization (in real hardware or asymptotic regimes) is implied but not demonstrated experimentally on quantum hardware nor proved asymptotically."
+  ],
+  "results_summary": "The paper introduces SAPO, an HHL-based quantum linear solver tailored for portfolio optimization that leverages an equivalent constraint-scaling transformation (two scaling factors) and a dataset-trained min–max eigenvalue predictor (SVR) to reduce the matrix condition number and to set HHL hyperparameters. Empirical evaluations on constructed datasets from stock exchanges (Nasdaq, NYSE, AMEX) and Qiskit-based simulations show SAPO reduces the end-to-end complexity metric by ~34.6%–36.9% versus a basic HHL baseline and improves solution accuracy relative to Qiskit HHL and a hybrid HHL approach (reported average gains ~1.3–1.5× under various settings). The paper also reports large reductions in estimated CNOT counts for small instances and shows the eigenvalue predictor yields usable estimates with modest errors in their experiments.",
+  "performance_claims": [
+    "34.64%–36.94% complexity reduction of SAPO compared to basic HHL across tested absolute error settings [supported]",
+    "Accuracy improvements: on average 1.52× vs Qiskit HHL and 1.46× vs hybrid HHL under fixed QPE qubit count; 1.28× and 1.39× respectively under fixed asset count [supported]",
+    "Reported reduction of condition number from ~1e5 down to ~10 for certain Lagrange matrices after applying the scaling technique on tested datasets [supported]",
+    "Reported up to 99.996% reduction in estimated number of CNOT gates for a 2-asset portfolio example compared to basic HHL estimates after compilation [supported]",
+    "The scaling-factor search yields condition-number reductions of at least 98.59% (reported) using a fixed dataset-level scaling factor [supported]",
+    "SVR predictor relative error: most predicted min/max eigenvalues have relative error within ~50%; maximum observed accuracy gap (predicted vs true eigenvalues) leads to 7.21% difference in solution accuracy for #assets=2 [supported]",
+    "Quantitative QPE qubit lower bound provided: n_QPE >= 2 + ceil( log2(|λ|max / (|λ|min * ε)) ) (paper gives a variant formula using l and ε) to bound absolute error ϵ [supported (theoretical derivation + used empirically)]"
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper demonstrates empirical reductions in a simulated/compiled-resource metric and improved accuracy versus HHL variants on constructed historical datasets, but it does not demonstrate an experimentally realized quantum speedup on real quantum hardware nor provide a formal asymptotic proof of quantum advantage for practical portfolio optimization. Thus any claim toward practical quantum advantage remains speculative based on the presented evidence.",
+  "limitations": [
+    "Author-stated: The HHL algorithm's complexity is fundamentally bounded by the condition number of the Lagrange matrix; large condition numbers (order 10^5) lead to overwhelming circuit complexity.",
+    "Author-stated: Existing hybrid HHL reductions (middle measurements) do not mitigate the large condition-number-induced complexity and depend on eigenvalue characteristics, making qubit needs hard to estimate.",
+    "Author-stated: SAPO's experiments are limited to small problem sizes (2–6 assets) due to simulation complexity and HHL circuit resource demands.",
+    "Author-stated: The min-max eigenvalue predictor (SVR) exhibits non-negligible relative errors (often within 50%, sometimes >100%), especially for small asset counts where |λ|min can be extremely close to zero.",
+    "Author-stated: The scaling-factor search is performed offline on the target dataset (pre-obtained) — i.e., SAPO requires a pre-computation step specific to the dataset to ensure quantum speedup.",
+    "Author-stated: To fit HHL constraints, Lagrange matrices are padded to power-of-two sizes (with zeros and scaled identity), which is a preprocessing artifact that may affect the matrix and eigenstructure.",
+    "[inferred] The evaluation is performed in simulation (Qiskit) rather than on noisy quantum hardware; real-device noise, gate errors and readout errors are not accounted for in reported accuracy and complexity metrics.",
+    "[inferred] The paper assumes (for simplicity) the ability to 'directly obtain the quantum state vector after executing the circuit' rather than modeling sampling/postselection overheads and finite-shot measurement statistics.",
+    "[inferred] The chosen standardization constant l (set to 0.5) and Hamiltonian simulation time Ht = π are design choices validated empirically in the paper but may not be optimal or robust for other datasets or noise regimes.",
+    "[inferred] The static scaling factor approach shows a substantial gap versus the optimal scaling factor for very small asset counts (e.g., gap up to 8.56× for 2-asset problems), indicating limited generality in some cases.",
+    "[inferred] The SVR-based eigenvalue predictor is trained on specific exchanges (Nasdaq, NYSE, AMEX) and may not generalize to other markets, different time periods, or different return dynamics without retraining.",
+    "[inferred] The success probability of the HHL post-selection (measurement of the auxiliary qubit) and its scaling with Const = |λ|min is discussed but not thoroughly analyzed under realistic noise and finite-shot conditions.",
+    "[inferred] Classical overhead (time and resources) for scaling-factor search and training the eigenvalue predictor is not included in the quantum complexity comparison and may reduce end-to-end advantage.",
+    "[inferred] The complexity metric mixes qubit count, log(CNOT), and log(depth) into a single scalar (Θ); this abstraction may hide practical trade-offs relevant on near-term hardware (connectivity, native gates, error rates).",
+    "[inferred] The method is demonstrated for Black's mean-variance equality-constrained model; extension to other portfolio formulations (inequality constraints, transaction costs, integer constraints) is not shown."
+  ],
+  "open_questions": [
+    "How robust is SAPO (scaling-factor transformation + eigenvalue predictor) when executed on noisy intermediate-scale quantum (NISQ) hardware, considering gate errors, decoherence, and finite-shot measurement statistics?",
+    "How does SAPO scale in practice to larger portfolios (tens to hundreds of assets)? Does the condition-number reduction and eigenvalue prediction remain effective as problem dimension grows?",
+    "How transferable/generalizable are the static scaling factors and the trained eigenvalue predictor across different markets, time periods, asset universes, or changing market regimes?",
+    "What is the end-to-end wall-clock performance and classical-quantum resource tradeoff when including the classical preprocessing: scaling-factor optimization and eigenvalue predictor training/prediction?",
+    "What is the sensitivity of SAPO's accuracy and success probability to errors in the predicted |λ|min and |λ|max, especially in cases where |λ|min is near zero?",
+    "Can the scaling-factor search be made adaptive or performed online without destroying the quantum speedup, and how expensive would that be classically?",
+    "How does the padding to power-of-two sizes (adding zeros/identity blocks) affect eigenvalue distributions and the ultimate solution quality for realistic portfolio matrices?",
+    "What are the practical success probabilities (post-selection rates) for the HHL measurement with Const = |λ|min across real datasets, and how many repetitions (shots) are needed to reconstruct the solution with desired accuracy?",
+    "Are there better or more robust predictors (beyond SVR) or feature representations that can more reliably predict min/max eigenvalues for small-asset problems where eigenvalues concentrate near zero?",
+    "How well does the choice Ht = π and l = 0.5 generalize? Could other choices or adaptive selection improve mapping between QPE phase and eigenvalues under noise?",
+    "Can the SAPO ideas (constraint scaling and min-max eigenvalue parametrization) be adapted to other quantum linear-system algorithms or variational/annealing approaches for portfolio optimization?",
+    "How does SAPO perform when extending from Black's equality-constrained framework to more complex financial models (e.g., transaction costs, cardinality constraints, non-Gaussian returns)?"
+  ],
+  "future_work": [],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-linear-systems",
+    "qft-phase-estimation",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach",
+    "idea:near-term-feasibility"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — SAPO extends HHL with an equivalent constraint-scaling transform that substantially reduces the condition number of the Lagrange matrix, and reports ~34.6%–36.9% reduction in a combined complexity metric versus basic HHL and measurable accuracy gains versus Qiskit/HHL baselines.",
+    "#idea:hybrid-approach — Uses classical offline procedures (Nelder–Mead-inspired search for static scaling factors and an SVR predictor for min/max eigenvalues) to set HHL hyperparameters, reducing online quantum resource requirements and avoiding costly eigen-decompositions at runtime.",
+    "#idea:near-term-feasibility — Provides concrete parameter-selection rules (standardization by predicted |λ|max, choice of normalization constant = |λ|min, bound-based selection of QPE qubits) and evaluates on Qiskit for small portfolio sizes (2–6 assets), showing potential practicality for very small instances.",
+    "#idea:quantum-advantage — Min-max eigenvalue prediction (SVR trained on historical portfolios) is used to set normalization and QPE precision, which the authors show improves allocation cosine-similarity versus baseline HHL variants in simulation.",
+    "#idea:hybrid-approach — The proposed pipeline (classical preprocessing + predicted eigenvalues + HHL circuit construction) standardizes matrices and reduces CNOT/depth counts according to the paper's complexity metric."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — The paper claims complexity and accuracy improvements relative to other HHL variants but does not compare SAPO to classical quadratic-program/QP solvers or state-of-the-art classical portfolio optimizers; therefore claimed 'advantage' is only against quantum baselines, not classical methods.",
+    "contradiction:scalability — SAPO is presented as improving scalability by reducing the condition number and qubit/CNOT budgets, yet experimental validation is limited to simulated small portfolios (2–6 assets) with padded matrices; scalability to realistic portfolio sizes (tens/hundreds of assets) or noisy hardware remains unproven."
+  ]
+}

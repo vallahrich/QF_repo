@@ -1,0 +1,212 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document is presented as a Research Square posting (DOI with rs.../v1, 'Posted Date'), labeled as a preprint and explicitly notes a later Version of Record published in Scientific Reports. The structure (abstract, methods, results, citations) matches an academic manuscript but the platform and metadata indicate a preprint.",
+  "title": "Best practices for portfolio optimization by quantum computing, experimented on real quantum devices",
+  "authors": [
+    "Giuseppe Buonaiuto",
+    "Francesco Gargiulo",
+    "Giuseppe De Pietro",
+    "Massimo Esposito",
+    "Marco Pota"
+  ],
+  "year": "2023",
+  "journal_or_venue": "Research Square (preprint); version of record published in Scientific Reports",
+  "doi": "https://doi.org/10.21203/rs.3.rs-2601946/v1",
+  "abstract_summary": "The paper investigates solving portfolio optimization via the Variational Quantum Eigensolver (VQE). It maps the constrained integer quadratic problem to a QUBO and Ising Hamiltonian using binary encoding and penalty terms, empirically evaluates hyperparameters (ansatz, optimizer, penalty λ) on simulators and IBM NISQ devices, and identifies best practices (e.g., COBYLA optimizer, specific ansatz choices and λ in a moderate range) that yield solutions close to classical optima on sufficiently capable hardware without error mitigation.",
+  "methodology_description": "The authors translate a constrained integer quadratic Portfolio Optimization (PO) problem into a QUBO and then into an Ising Hamiltonian whose ground state corresponds to the optimal portfolio. Integer asset holdings n are binary-encoded (per-asset binary digits di based on nmax_i = floor(B/Pi)) to produce a binary vector b (n = C b). Budget equality constraints are enforced by adding a penalty term lambda*(P''^T b - 1)^2 to the objective, yielding the QUBO. The QUBO is transformed into an Ising Hamiltonian via bi -> (1 + si)/2 and mapped to Pauli-Z operators (H = sum hi Zi + sum Jij Zi Zj + lambda (sum pi Zi - beta)^2). The Variational Quantum Eigensolver (VQE) is used to approximate the ground state: parameterized ansatz circuits (several types/entanglement patterns tested) are executed on simulators and IBM superconducting QPUs; expectation values of Pauli strings are measured and a classical optimizer updates parameters to minimize the estimated energy. Experiments compare different ansatzes, entanglement patterns and classical optimizers, study the effect of the penalty coefficient lambda, and benchmark quantum results against a classical branch-and-bound solution (CPLEX). Both noiseless and noisy (hardware noise model) simulations are used, and runs are performed on a set of IBM real quantum devices to evaluate device-size/topology/noise effects.",
+  "algorithms_used": [
+    "Variational Quantum Eigensolver (VQE)",
+    "Quadratic Unconstrained Binary Optimization (QUBO) formulation",
+    "Ising Hamiltonian mapping",
+    "Classical branch-and-bound (CPLEX) for benchmarking"
+  ],
+  "frameworks": [
+    "Qiskit",
+    "IBM QASM simulator"
+  ],
+  "experimental_setup": "Simulators: IBM QASM simulator (noiseless) and QASM with imported noise model from IBM Cairo. Real hardware: IBM superconducting quantum processors (ibmq_guadalupe, ibmq_toronto, ibm_geneva, ibm_cairo, ibm_auckland, ibmq_montreal, ibmq_mumbai, ibmq_kolkata, ibm_hanoi). Experiments ran both on simulators and on these IBM cloud QPUs. Quantum circuits encoded the Ising Hamiltonian as Pauli strings and used VQE ansatz circuits (various types and entanglement patterns). No error-mitigation techniques were applied in the reported hardware runs.",
+  "dataset_used": "Historical daily closing prices for up to N=4 assets (Apple, IBM, Netflix, Tesla) obtained from Yahoo! Finance via the yfinance Python package. Time range: 2011-12-23 to 2022-10-21 (sub-intervals used for examples). Supplementary CSV 'datafinance.csv' provided with the preprint.",
+  "experiment_input": {
+    "source": "Yahoo! Finance via yfinance Python package",
+    "assets": [
+      "AAPL",
+      "IBM",
+      "NFLX",
+      "TSLA"
+    ],
+    "time_range": "2011-12-23 to 2022-10-21 (examples use sub-intervals shown in paper)",
+    "preprocessing": "Compute current prices Pi = p_Ti (last closing price). Compute daily returns rt_i = (p_ti - p_{t-1,i})/p_{t-1,i}. Estimate expected returns mu_i as sample mean of returns. Compute covariance matrix Sigma (sample covariance). Set total budget B (experiments used B=2000). Compute per-asset nmax_i = floor(B/Pi); di = floor(log2(nmax_i)) and build binary encoding matrix C to represent integer holdings via binary variables b. Transform mu and Sigma via C into mu'' and Sigma''; transform prices P into P'' for the budget constraint. Form QUBO by adding penalty lambda*(P''^T b - 1)^2."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Load historical price data and compute returns, expected returns (mu) and covariance (Sigma).",
+      "Set budget B and risk aversion parameter q (experiments used q = 0.5).",
+      "Compute integer bounds nmax_i and binary-encode holdings: n = C b, produce mu'', Sigma'', P''.",
+      "Formulate QUBO objective: maximize mu''^T b - q b^T Sigma'' b - lambda (P''^T b - 1)^2.",
+      "Map QUBO to Ising Hamiltonian via bi -> (1+si)/2 and Pauli-Z operators (generate Pauli-string decomposition).",
+      "Select VQE ansatz (tested: TwoLocal, RealAmplitude, PauliTwo with entanglement variants: full, linear, circular, pairwise).",
+      "Select classical optimizer (tested: COBYLA, SPSA, NFT).",
+      "Run VQE: initialize ansatz parameters, evaluate expectation values of Hamiltonian terms on simulator or device, aggregate into energy, update parameters via classical optimizer.",
+      "Repeat for a number of epochs/iterations until convergence (experiments used 100, 200, and 250 epochs in different tests).",
+      "Collect final energy Emin, decode measured basis solution to portfolio (integer holdings), compute expected return and volatility, compare against classical branch-and-bound solution (CPLEX) and Markowitz frontier."
+    ],
+    "notable_variations": [
+      "Penalty coefficient lambda swept across orders of magnitude (0, 1, 10, 1e2, 1e3, 1e4) to identify a 'Goldilocks' region; lambda ~ 1-10 worked best, lambda=10 used for hardware experiments.",
+      "Simulations performed both noiseless and with imported hardware noise model (IBM Cairo).",
+      "Multiple ansatz and optimizer combinations tested to evaluate robustness to noise and convergence speed."
+    ]
+  },
+  "experiment_output": {
+    "outputs_collected": [
+      "Emin (minimum energy found by VQE)",
+      "Decoded portfolio allocations (integer holdings n)",
+      "Expected portfolio return and volatility (for plotting against Markowitz frontier)",
+      "Ratio E_classical / E_vqe (comparison metric)",
+      "Convergence traces (energy vs epoch) per ansatz/optimizer"
+    ],
+    "metrics_and_baselines": {
+      "primary_metric": "Approximate ground-state energy (Emin) and closeness to classical optimal energy",
+      "financial_metrics": [
+        "Expected return",
+        "Portfolio volatility (sqrt of variance)"
+      ],
+      "baseline_methods": [
+        "Classical branch-and-bound integer quadratic solver (CPLEX)",
+        "Random sampling and Markowitz efficient frontier (continuous relaxation)"
+      ]
+    },
+    "result_format": "Numerical tables/plots of energy vs epoch, return vs volatility scatter with solutions marked, boxplots of E_classical/E_vqe across devices and ansatz variants"
+  },
+  "experiment_parameters": {
+    "qubits": 12,
+    "budget_B": 2000,
+    "risk_aversion_q": 0.5,
+    "penalty_lambda": 10,
+    "ansatz_types_tested": [
+      "TwoLocal (variants: linear, full, circular, pairwise)",
+      "RealAmplitude (variants: linear, full, circular, pairwise)",
+      "PauliTwo"
+    ],
+    "optimizers_tested": [
+      "COBYLA",
+      "SPSA",
+      "NFT (sequential minimal optimization variant)"
+    ],
+    "epochs_used": {
+      "noisy_and_noiseless_simulations": 100,
+      "lambda_study": 250,
+      "hardware_runs": 200
+    },
+    "simulator": "IBM QASM simulator (noiseless and noisy with imported Cairo noise model)",
+    "shots": "not specified in paper",
+    "circuit_depth/layers": "not explicitly specified",
+    "measurement_and_error_mitigation": "no error mitigation applied on real-device runs"
+  },
+  "hardware_details": {
+    "simulator_name": "IBM QASM simulator",
+    "noise_model": "Imported noise model from IBM Cairo for noisy simulations",
+    "qpu_models": [
+      "ibmq_guadalupe",
+      "ibmq_toronto",
+      "ibm_geneva",
+      "ibm_cairo",
+      "ibm_auckland",
+      "ibmq_montreal",
+      "ibmq_mumbai",
+      "ibmq_kolkata",
+      "ibm_hanoi"
+    ],
+    "provider": "IBM Quantum Experience",
+    "note_on_qpu_specs": "Devices used have 16 or 27 qubits, varying quantum volumes and CLOPS; topology and quantum volume reported to impact results"
+  },
+  "reproducibility_notes": "The paper states that all data analyzed are included in the article and its supplementary files (supplementary 'datafinance.csv'). The methodology uses Qiskit and IBM backends/simulators. The preprint does not provide an explicit code repository or scripts. Reproduction should be feasible given the provided dataset and a Qiskit-based implementation that follows the described pipeline (binary encoding, QUBO -> Ising mapping, VQE ansatz/optimizer choices, lambda values), but exact circuit/measurement settings (shots, ansatz layer counts, gate parameter initialization seeds) are not detailed and may affect exact reproducibility.",
+  "key_findings": [
+    "[supported] VQE can be used to solve small portfolio optimization instances (binary-encoded integer formulation) on both simulators and real IBM NISQ devices, producing solutions close to the classical optimum for the tested small problem.",
+    "[supported] The choice of classical optimizer and ansatz strongly affects VQE performance: the Cobyla optimizer was the most stable in these experiments; PauliTwo ansatz converged fastest; TwoLocal and RealAmplitude ansatzes with linear or pairwise entanglement provided the best final solutions under noise.",
+    "[supported] Quantum and measurement noise degrades convergence and can shift the final energy (solution quality); appropriate hyperparameter selection (ansatz + optimizer + penalty) mitigates but does not eliminate noise effects.",
+    "[supported] The penalty coefficient λ (used to embed the budget constraint into the QUBO) requires tuning: the authors empirically identified a workable 'Goldilocks' range roughly 1 ≤ λ ≤ 10 for their problem instance; too-small λ leads to constraint violations and too-large λ dominates the objective producing sub-optimal results.",
+    "[supported] The authors used a custom binary encoding (matrix C) to represent integer holdings; this reduces the required number of qubits versus a straightforward encoding and was used to implement the problem with 12 qubits in their experiments.",
+    "[supported] Experiments on multiple real IBM devices showed a correlation between solution quality and hardware characteristics (quantum volume, topology); some devices (ibmq_toronto, ibmq_kolkata, ibm_auckland) produced solutions that matched the classical benchmark for the small tested instance.",
+    "[supported] The experiments were performed without any error-mitigation techniques; nevertheless, with correct hyperparameter choices, VQE on some real devices achieved solutions very close to the exact classical solution for the small instance.",
+    "[supported] Classical continuous Markowitz portfolio optimization has polynomial (≈O(N^3)) cost and integer/binary formulations are NP-hard / combinatorial — the paper cites these standard complexity facts.",
+    "[speculative] The paper claims that VQE (and gate-based quantum computing) has the potential to scale to larger portfolio optimization problems and outperform classical methods as quantum hardware size/quality increases.",
+    "[speculative] The authors argue VQE is a more general / preferable approach for portfolio optimization compared to quantum annealers (statement motivated by generality rather than proven empirical superiority).",
+    "[supported] Ansätze that better match hardware connectivity/topology map more efficiently and incur less circuit depth overhead, improving performance on current NISQ devices (empirical observation in their experiments).",
+    "[speculative] Future improvements in hardware (higher quantum volume, larger qubit counts, better topology) combined with topology-aware ansatz design will enable practical quantum advantage on realistic portfolio optimization instances."
+  ],
+  "results_summary": "The study translated a constrained integer quadratic portfolio optimization into a QUBO / Ising Hamiltonian using a compact binary encoding and solved small instances via VQE on simulators (noiseless and noisy) and multiple IBM NISQ devices. Key empirical findings: optimizer and ansatz choice strongly affect outcomes (Cobyla + certain ansatzes worked best), noise degrades but does not preclude finding near-classical solutions, and tuning the penalty parameter λ is critical (empirically ~1–10). On selected real devices (e.g., ibmq_toronto, ibmq_kolkata, ibm_auckland) the VQE solutions for the small test problem matched the classical branch-and-bound result, all experiments performed without error-mitigation.",
+  "performance_claims": [
+    "[supported] Problem encoding for experiments used 12 qubits.",
+    "[supported] Budget B used in experiments: 2000; risk aversion parameter q = 0.5 (experiment setting).",
+    "[supported] Empirical 'Goldilocks' range for the penalty coefficient λ found to be approximately 1 ≤ λ ≤ 10 for this problem; λ = 0 can violate budget, very large λ (e.g., 10^3–10^4) yields suboptimal solutions.",
+    "[supported] Training/optimization was performed with O(200–250) epochs in reported experiments (examples: 200 epochs for hardware runs, 250 epochs in some simulations).",
+    "[supported] In the tested small instance, ibmq_toronto, ibm_kolkata, and ibm_auckland produced solutions matching the classical benchmark (branch-and-bound).",
+    "[supported] No error-mitigation techniques were applied in the experiments."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper does not demonstrate a quantum computational advantage for portfolio optimization; it reports parity with classical solutions on small instances and presents empirical evidence that correct hyperparameters and larger/higher-quality hardware improve VQE performance. Claims that quantum computing will solve larger realistic instances more efficiently are forward-looking and speculative, pending larger, less noisy hardware.",
+  "limitations": [
+    "Experiments use very small problem instances (at most N = 4 assets) and thus do not match realistic portfolio sizes (author-stated).",
+    "All experiments were performed on NISQ hardware that is noisy and not fault-tolerant; results are therefore affected by decoherence, gate infidelity, and readout errors (author-stated).",
+    "No error‑mitigation techniques were applied in the reported runs (author-stated), so reported performance reflects raw NISQ behavior rather than mitigated results.",
+    "The QUBO formulation requires choosing a penalty coefficient λ to embed constraints; solution quality is highly sensitive to this choice (author-stated).",
+    "The study uses a particular binary encoding that reduces qubit count but it is not evaluated how different encoding strategies scale or compare (author-stated/inferred).",
+    "Ansatz and optimizer exploration is limited to a subset available in Qiskit (TwoLocal, RealAmplitude, PauliTwo) and a few optimizers (Cobyla, SPSA, NFT); other ansatz families and optimizers were not explored in depth (inferred).",
+    "Mapping between ansatz entanglement structure and hardware topology was highlighted as important, implying sensitivity to device connectivity; this makes results hardware-dependent (author-stated).",
+    "Benchmarks are limited to a classical branch‑and‑bound solver (CPLEX); no head‑to‑head comparison was provided with other classical heuristics at larger scales or with quantum annealers (inferred/author-stated partial).",
+    "Scalability to larger, realistic instances (many assets, larger bit-precision per asset) is unclear — both in terms of required qubits and circuit depth and in terms of noise accumulation (author-stated/inferred).",
+    "Using a penalty method for constraints can alter the Hamiltonian spectrum (if λ is too large), producing suboptimal results — the approach may become harder to tune for other problems or larger scales (author-stated/inferred).",
+    "[inferred] Experiments are restricted to IBM superconducting hardware; cross-vendor variability (trapped ions, photonics, other superconducting devices) was not assessed.",
+    "[inferred] The study does not evaluate or provide automated procedures for selecting hyperparameters (ansatz depth, λ, optimizer settings) for new problems.",
+    "[inferred] Possible effects of alternative constraint encodings (e.g., different penalty schemes, Lagrangian multipliers adaptive schemes, or hard-constraint constructions) were not investigated."
+  ],
+  "open_questions": [
+    "How do VQE-based approaches for portfolio optimization scale in practice to realistic problem sizes (many assets and greater precision per asset)?",
+    "When and under what device specifications (qubit count, gate fidelities, quantum volume) will quantum devices provide an advantage over classical solvers for realistic portfolio optimization?",
+    "Can the penalty coefficient λ be chosen or tuned automatically and robustly across different instances so that constraints are enforced without degrading the objective landscape?",
+    "How can the ansatz be designed or adapted to balance expressibility and trainability (avoid barren plateaus) while mapping efficiently to specific hardware topologies?",
+    "What is the impact of applying standard or advanced error‑mitigation techniques on the solution quality for VQE portfolio optimization on NISQ devices?",
+    "How do different binary/integer encoding strategies (binary, unary, domain-wall, etc.) affect qubit requirements, circuit depth, noise sensitivity, and solution quality for PO?",
+    "How do results compare between gate-model VQE approaches and quantum annealing approaches (or other quantum optimization paradigms) on the same portfolio instances?",
+    "How sensitive are the conclusions to the choice of optimizer (beyond the small set tested), and can optimization strategies be tailored to noisy quantum hardware to improve convergence?",
+    "How do more realistic constraints (transaction costs, cardinality constraints, min/max holdings, integer lot sizes) affect the QUBO mapping and VQE performance?",
+    "What formal problem formulations or reformulations could improve the performance or scalability of quantum variational algorithms for financial optimization?"
+  ],
+  "future_work": [
+    "Solve real‑life portfolio optimization problems with higher market size as soon as quantum devices with appropriate characteristics become available (author-stated).",
+    "Formalize the problem in more advanced ways (improve or extend the mathematical/problem formulation) to better suit quantum algorithms (author-stated).",
+    "Investigate the effect of hardware topology on quantum variational algorithms (mapping ansatz to device connectivity) in a follow-up study (author-stated)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — VQE applied to a QUBO/Ising formulation of integer-constrained portfolio optimization can recover solutions close to classical optima on small instances (N up to 4 assets) when run on current IBM superconducting QPUs.",
+    "#idea:hybrid-approach — The study uses a hybrid quantum-classical VQE workflow (parameterized ansatz on QPU + classical optimizers like COBYLA/SPSA) and identifies classical optimizer and ansatz choices as critical hyperparameters.",
+    "#idea:near-term-feasibility — Empirical best practices reported: COBYLA optimizer, particular ansatz/entanglement patterns, and a moderate penalty coefficient lambda (~1–10, hardware runs used lambda=10) yield the most reliable results without applying error mitigation.",
+    "#limitation:qubit-count — Integer-to-binary encoding of asset holdings (n = C b) inflates qubit requirements (experiments used up to 12 qubits) and constrains problem size to very small portfolios.",
+    "#limitation:noise — Hardware noise and device topology materially affect VQE performance; noisy simulations and multiple IBM backends show device-dependent degradation and variance in results.",
+    "#limitation:data-encoding — Binary encoding and penalty-term enforcement produce many Pauli-string terms and increase circuit/measurement overhead, highlighting overheads in encoding classical financial data onto qubits."
+  ],
+  "contradictions": [
+    "The paper promotes near-term applicability of VQE for portfolio optimization but only demonstrates results on very small problem sizes (N=4, 12 qubits) with binary encoding that scales poorly—this contrasts optimistic near-term-readiness implications and raises scalability concerns (contradiction:scalability)."
+  ]
+}

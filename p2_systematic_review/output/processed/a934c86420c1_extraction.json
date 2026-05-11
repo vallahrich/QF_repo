@@ -1,0 +1,203 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "The document is published in the journal 'Quantum Machine Intelligence' with a DOI and received/accepted/published dates, contains Abstract, Methods, Experimental setup, Results, and References, and reports empirical experiments (simulator and real-hardware evaluations) — all indicating a peer-reviewed empirical research article.",
+  "title": "Applying quantum autoencoders for time series anomaly detection",
+  "authors": [
+    "Robin Frehner",
+    "Kurt Stockinger"
+  ],
+  "year": "2025",
+  "journal_or_venue": "Quantum Machine Intelligence",
+  "doi": "10.1007/s42484-025-00285-1",
+  "abstract_summary": "This paper investigates the use of quantum autoencoders for anomaly detection in time series, proposing two classification methods based on reconstruction error and latent-space (Swap-Test) measurements. Simulated experiments on UCR benchmark datasets show quantum autoencoders outperform classical deep-learning autoencoders while using substantially fewer parameters and fewer training iterations, and the authors demonstrate a comparable implementation on real IBM quantum hardware despite NISQ noise.",
+  "methodology_description": "The authors evaluate quantum autoencoders (QAEs) for time-series anomaly detection using both simulation and real NISQ hardware. They convert univariate time-series into overlapping sliding windows (size 128, stride 1) and encode each window into a quantum state. In simulation they use exact amplitude encoding; on hardware they approximate amplitude encoding with a quasi-amplitude encoding procedure (EfﬁcientSU2 variational circuit) optimized classically. The QAE implementation follows Romero et al./Bravo-Prieto: a 7-qubit encoder (qubit 0–5 latent, qubit 6 trash) with a training circuit that uses two extra qubits (reference and ancilla) for a Swap-Test (9 qubits total during training). Two anomaly-detection strategies are compared: (1) reconstruct the input via encoder† and compute reconstruction MSE; (2) avoid decoding and use the Swap-Test measurement (minimize ancilla 1s for benign data) to distinguish anomalies. Multiple ansatz families (PauliTwoDesign and RealAmplitudes with several entanglement patterns) and depths (repetitions) are explored. Quantum training uses COBYLA (45 iterations) on the statevector simulator (Qiskit Aer) and on IBM Torino hardware (Sampler primitive with integrated mitigation). A classical deep-learning autoencoder (PyTorch) is trained as baseline (ADAM, batch size 150, 250 epochs). Postprocessing applies a moving average (window size 128) and classifies anomalies by thresholding / selecting maximum post-processed score in the valid detection range. Results are averaged across multiple runs per ansatz.",
+  "algorithms_used": [
+    "Quantum Autoencoder (Romero et al. / Bravo-Prieto style)",
+    "Swap-Test",
+    "Amplitude encoding",
+    "Quasi-amplitude encoding (EfficientSU2 approximation)",
+    "PauliTwoDesign ansatz",
+    "RealAmplitudes ansatz (various entanglement patterns: circular, full, linear, SCA)",
+    "Classical deep-learning autoencoder (PyTorch)",
+    "COBYLA optimizer",
+    "ADAM optimizer",
+    "SPSA (used in quasi-amplitude encoding inner loop)"
+  ],
+  "frameworks": [
+    "Qiskit (1.0.0)",
+    "Qiskit Aer (0.13.1) statevector simulator",
+    "PyTorch",
+    "IBM Quantum Sampler primitive / IBM cloud"
+  ],
+  "experimental_setup": "Simulation: Qiskit Aer statevector simulator (Qiskit 1.0.0, Aer 0.13.1). Hardware: IBM Torino 133-qubit system (IBM Quantum), Sampler primitive with built-in error mitigation. Simulated training used 5000 shots for measurement calls; hardware runs used 8192 shots. Quantum autoencoder training used COBYLA with 45 iterations/epochs; classical baseline trained with ADAM, batch size 150, 250 epochs.",
+  "dataset_used": "",
+  "experiment_input": {
+    "source": "UCR Time Series Anomaly Archive (University of California, Riverside)",
+    "data_type": "Univariate time-series (benchmark anomaly datasets; authors used a subset of datasets from the UCR anomaly archive)",
+    "windowing": "Sliding windows of size 128 (2^7) with stride 1",
+    "train_test_split_notes": "Training sets contain only benign data (per UCR anomaly benchmark). For hardware experiment a reduced training subset was used: 150 training windows (ts=400 to te=677). Test subsets chosen to include the anomalous range plus surrounding windows (example hardware test: 497 time steps from ts=2993 to te=3363+127).",
+    "preprocessing": "No classical normalization prior to windowing for quantum experiments (encoding routines normalize amplitudes); for hardware quasi-amplitude encoding circuits were classically optimized (100 trials per window, best MSE chosen)."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Preprocessing: construct sliding windows (size 128, stride 1).",
+      "State preparation: amplitude encoding of each window for simulation; quasi-amplitude encoding (EfficientSU2 variational circuit optimized classically with SPSA) for hardware.",
+      "Autoencoding: apply variational encoder (7-qubit encoder; latent space 6 qubits, trash qubit reset). During training use extended circuit with reference and ancilla for Swap-Test (9-qubit circuit).",
+      "Training objective: minimize Swap-Test ancilla 1-count (i.e., make trash qubit equal to |0>) across benign training windows; optimizer COBYLA used for variational parameters.",
+      "Two detection modes evaluated: (a) Decode via encoder† and compute reconstruction MSE between input and reconstructed output; (b) Use Swap-Test measurements directly as anomaly score without decoding.",
+      "Postprocessing: apply moving average (window size 128) to per-window anomaly scores.",
+      "Classification: thresholding / mark time step with largest post-processed score as anomalous within the valid detection range.",
+      "Baseline: classical autoencoder (PyTorch) trained on same (or quasi-encoded) data; anomaly score = reconstruction MSE."
+    ],
+    "parameter_sweeps": "Multiple ansatz families and depths explored (PauliTwoDesign and RealAmplitudes with entanglement patterns; depths/repetitions yielding 21–77 trainable parameters). Simulation runs: average of 5 executions per ansatz/depth. Hardware experiments: focused on PauliTwoDesign with 2 repetitions (21 parameters) and used 4 executions for aggregation."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Anomaly detection rate (fraction of runs correctly identifying anomaly)",
+      "Mean Squared Error (MSE) between input and reconstructed output",
+      "Swap-Test measurement (ancilla 1 probability) as anomaly score",
+      "Training loss (variational training objective)",
+      "Distribution overlap measure between benign and anomalous score distributions",
+      "Training convergence curves (loss per epoch)"
+    ],
+    "baselines": "Classical deep-learning autoencoder (PyTorch) with 4686 trainable parameters, ADAM optimizer, batch size 150, 250 epochs.",
+    "result_format": "Per-dataset & per-ansatz detection rates averaged over multiple runs; tables comparing MSE-based vs Swap-based detection; plots of loss curves and score distributions; statistical overlap fractions; comparisons between simulator and real-hardware runs."
+  },
+  "experiment_parameters": {
+    "encoding_qubits": 7,
+    "training_qubits_total": 9,
+    "latent_qubits": 6,
+    "trash_qubits": 1,
+    "ansatz_families": [
+      "PauliTwoDesign",
+      "RealAmplitudes (circular, full, linear, SCA)"
+    ],
+    "ansatz_depths_repetitions": "2–10 repetitions studied (yielding 21–77 trainable parameters)",
+    "trainable_parameters_range": [
+      21,
+      28,
+      35,
+      42,
+      49,
+      56,
+      63,
+      70,
+      77
+    ],
+    "shots_simulator": 5000,
+    "shots_hardware": 8192,
+    "quantum_optimizer": "COBYLA (default settings), 45 iterations/epochs",
+    "classical_baseline_optimizer": "ADAM (default settings), 250 epochs",
+    "batch_size_classical": 150,
+    "simulator_runs_average": 5,
+    "hardware_runs_average": 4,
+    "quasi_amplitude_trials_per_window": 100,
+    "quasi_amplitude_repetitions": 2
+  },
+  "hardware_details": {
+    "simulator": "Qiskit Aer statevector simulator (Qiskit Aer 0.13.1) using Qiskit 1.0.0",
+    "qpu_model": "IBM Torino (133-qubit) quantum processor",
+    "cloud_provider": "IBM Quantum",
+    "hardware_interface": "Sampler primitive with integrated error mitigation (IBM Quantum)"
+  },
+  "reproducibility_notes": "Authors state: 'Data sets generated during the current study are available from the corresponding author on reasonable request.' Software stack and key settings are described (Qiskit versions, COBYLA, ADAM, PyTorch, shots, epoch counts, ansatz types and depths). No public code repository or direct code link is provided in the paper; reproduction would require (1) access to the UCR anomaly datasets, (2) replication of quasi-amplitude encoding inner-loop optimization (100 trials per window), and (3) the specified Qiskit / IBM hardware settings. ",
+  "key_findings": [
+    "[supported] Quantum autoencoders (QAEs) consistently outperformed a classical deep-learning autoencoder baseline on every employed UCR benchmark dataset in the authors' simulated experiments.",
+    "[supported] QAEs achieved anomaly detection while using far fewer trainable parameters (experimental range 21–77) compared to the classical autoencoder baseline (4686 parameters).",
+    "[supported] The authors report QAEs requiring fewer training iterations (45 optimization iterations for QAEs vs. 250 epochs for the classical baseline) to reach competitive performance on the evaluated tasks.",
+    "[supported] The paper quantifies the parameter reduction as roughly 60–230× fewer parameters for QAEs versus the classical baseline (empirical claim based on the tested configurations).",
+    "[supported] Swap-Test–based anomaly classification (measuring how well inputs are encoded) can outperform reconstruction-error (MSE)-based classification for certain datasets, and is more robust when reconstruction is difficult.",
+    "[supported] Amplitude encoding is qubit-efficient for representing long 1D windows (log(N) qubits for N datapoints) but is hardware-inefficient on current NISQ devices after transpilation due to a large increase in operations.",
+    "[supported] Quasi-amplitude encoding (an approximate, hardware-efficient encoding) can be used to run QAEs on real hardware; it preserves overall series shape but introduces approximation residuals that must be checked (e.g., via statistical tests).",
+    "[supported] The choice of ansatz strongly affects QAE performance; e.g., the PauliTwoDesign ansatz showed near-constant training loss across parameter counts, and a RealAmplitudes + SCA entanglement with 35 parameters performed particularly well in some cases.",
+    "[supported] In the real-hardware experiment (IBM Torino), a QAE trained with quasi-amplitude encoding and Swap-Test classification identified the anomaly for the selected dataset, with separability (distribution overlap) metrics indicating better separation than the classical baseline for that case.",
+    "[supported] QAEs trained on real hardware exhibited larger training loss than simulator-trained QAEs, but in the presented experiment still achieved comparable or better anomaly separability on the evaluated dataset.",
+    "[supported] Training QAEs on real quantum hardware is time- and resource-intensive: the authors report per-epoch quantum runtime of minutes, multi-hour total runtimes per experiment, aggregate multi-experiment runtime, and a cost estimate based on cloud pricing.",
+    "[speculative] The authors propose that QAEs and advanced encoding/ansatz designs have the potential to extend to multivariate time series and multi-resolution processing, contingent on future hardware and algorithmic improvements.",
+    "[speculative] The paper suggests that improved ansatz design and scalable encoding methods are required to fully harness quantum computing for practical anomaly detection applications."
+  ],
+  "results_summary": "The study empirically evaluates quantum autoencoders for univariate time-series anomaly detection on challenging UCR benchmark datasets. In simulation, QAEs (using amplitude encoding) outperformed a classical deep autoencoder across the tested datasets while using far fewer trainable parameters (21–77 vs. 4686) and fewer training iterations (45 vs. 250). Swap-Test–based classification (encoding quality) often outperformed reconstruction-error (MSE)–based classification, especially when reconstruction is difficult. On real hardware (IBM Torino) the authors used quasi-amplitude encoding and a PauliTwoDesign encoder (21 trainable parameters) and demonstrated successful anomaly identification for the selected dataset; despite higher training loss on hardware, the QAE achieved separability of anomalous vs. benign windows superior to the classical baseline in that experiment. The paper also documents practical constraints: amplitude encoding is hardware-inefficient after transpilation on current NISQ devices, quasi-amplitude encoding incurs approximation noise, and training on real devices is time- and cost-intensive.",
+  "performance_claims": [
+    "QAEs used 60–230× fewer parameters than the classical autoencoder (empirical claim derived from tested configurations).",
+    "QAEs required 5× fewer training iterations than the classical baseline (45 iterations vs. 250 epochs in the experiments).",
+    "Quantum encoder configurations in experiments had 21–77 trainable parameters; classical baseline had 4686 parameters.",
+    "In simulated experiments, QAEs outperformed the classical baseline on every employed dataset (averaged over five executions per ansatz/configuration).",
+    "Swap-Test–based classification produced higher detection rates than MSE-based classification for several datasets (notably datasets 118 and 176) under the tested ansatz/loss regimes.",
+    "In the IBM Torino hardware run (dataset 54), the QAE achieved zero distribution overlap for time windows fully encompassing the anomaly (as reported in Table 3), whereas the classical baseline showed ~70% overlap for the same condition.",
+    "Each hardware epoch required approximately minutes of quantum runtime (authors report ~7 minutes of quantum computing time per epoch and multi-hour total experiment runtimes); aggregate quantum runtime across experiments reported as ~21 hours with an estimated cloud cost of $120,960 based on $1.6/s pricing."
+  ],
+  "quantum_advantage_claim": "demonstrated",
+  "quantum_advantage_detail": "The authors present empirical evidence (simulator and a targeted real-hardware experiment) that, for the evaluated UCR benchmark datasets and the chosen classical autoencoder baseline, quantum autoencoders achieved superior anomaly detection performance while using far fewer trainable parameters and fewer training iterations. These results demonstrate a practical advantage in the specific experimental settings, though they are contingent on the selected baselines, ansatz choices, encoding methods, and datasets.",
+  "limitations": [
+    "Amplitude encoding is hardware-inefficient on current NISQ devices due to large transpilation overhead and many additional operations required by target hardware (author-stated).",
+    "Quasi-amplitude encoding is an approximation that introduces noise and only preserves overall shape; it is feasible only for relatively small quantum systems (author-stated).",
+    "Quantum autoencoder performance is highly dependent on the chosen ansatz; different ansaetze give widely varying results and there is no single best choice identified (author-stated).",
+    "Quantum experiments on real hardware required substantial quantum compute time and monetary cost (authors report ~21 hours of quantum time and estimated cost ~120,960 USD) (author-stated).",
+    "Simulation vs. hardware differences: quantum autoencoders trained on real hardware exhibited substantially larger loss but similar or slightly better separability in the single experiment; this observation needs broader verification (author-stated).",
+    "The study used a limited subset of datasets from the UCR benchmark and concentrated hardware experiments on a single dataset (no. 54), limiting generalizability (author-stated).",
+    "Hyperparameter choices (optimizer, learning rate) were not systematically optimized; COBYLA with default settings was used throughout, so results may depend on non-optimized training choices (author-stated).",
+    "Training used relatively few epochs for quantum models (45) compared to classical baseline (250), which may affect comparability and convergence behavior (author-stated).",
+    "Swap-Test vs. reconstruction (MSE) detection approaches show different strengths (Swap-Test more robust at higher loss, MSE better at low loss); applicability across anomaly types is not fully characterized (author-stated).",
+    "The amplitude-encoded state-preparation may lead to mismatch between quantum state signs and measurable probabilities, complicating reconstruction-based detection (author-stated).",
+    "[inferred] The approach was demonstrated for univariate time series only (7 qubits -> windows of length 128); scalability and applicability to realistic multivariate financial time series were not demonstrated.",
+    "[inferred] Small training/test sample sizes for hardware experiments (150 training windows) may limit statistical robustness of conclusions from hardware runs.",
+    "[inferred] Limited number of repeated runs (simulator: averages over 5 executions; hardware: 4 executions) may limit reliability of variance estimates and robustness claims.",
+    "[inferred] The observed counterintuitive increase in training loss with increasing ansatz complexity (for many ansaetze) is unexplained in the study and indicates potential issues with the training paradigm or optimizer choice.",
+    "[inferred] The quasi-amplitude encoding validation (Mann–Whitney U test p=0.09) is borderline; residual differences between quasi-encoded and original series may affect anomaly detection performance but were not fully resolved."
+  ],
+  "open_questions": [
+    "Which ansatz architectures (and entanglement schemes) are optimal for time series anomaly detection across different datasets and anomaly types?",
+    "Why does training loss tend to increase with the number of trainable parameters for many ansaetze in this setup; is this due to the optimizer, barren plateaus, or other training dynamics?",
+    "How generalizable are the observed quantum autoencoder advantages across larger and more diverse time series benchmarks, including real-world financial datasets?",
+    "Can quasi-amplitude encoding be scaled up (or improved) to preserve fidelity while remaining hardware-efficient for larger systems?",
+    "Under what conditions is Swap-Test-based anomaly detection preferable to reconstruction (MSE)-based detection, and how do these relate to anomaly subtlety/type?",
+    "Does the observation that hardware-trained quantum autoencoders sometimes separate anomalies as well as or better than simulators hold consistently across datasets and hardware platforms?",
+    "What are the best practices (optimizers, learning rates, number of epochs, shot counts) for training variational quantum autoencoders for anomaly detection on NISQ devices?",
+    "How can encoding and ansatz design be made more robust to noise and transpilation overhead to enable practical deployment on current quantum hardware?",
+    "What are the cost/benefit trade-offs for running such quantum anomaly detection workloads on commercial quantum hardware for practical applications?",
+    "How to extend the method to multivariate time series and to process multiple resolutions/window sizes simultaneously in a scalable manner?"
+  ],
+  "future_work": [
+    "Develop more efficient ansatz designs and scalable encoding techniques to better exploit quantum resources and reduce sensitivity to ansatz choice (author-suggested).",
+    "Explore anomaly detection for multivariate time series by increasing qubit counts and processing 2-dimensional time series at equivalent resolution (author-suggested).",
+    "Investigate processing data at different resolutions simultaneously (multi-resolution/window-size approaches) as window size is often crucial for time series anomaly detection (author-suggested).",
+    "Systematically optimize training hyperparameters (optimizers, learning rates, epochs) and investigate their impacts on convergence and detection performance (implied/author-suggested).",
+    "Further verify whether the observed robustness of hardware-trained quantum autoencoders (despite higher loss) generalizes across more datasets and hardware backends (author-suggested).",
+    "Improve and scale quasi-amplitude encoding methods or develop alternative hardware-efficient encodings to reduce approximation error while remaining feasible on NISQ devices (author-suggested).",
+    "Investigate advanced error mitigation and transpilation-aware circuit design to reduce hardware-induced degradation of amplitude-encoded states (inferred from hardware limitations).",
+    "Study the relationship between training loss regimes and the relative performance of Swap-Test vs. MSE detection to guide method selection based on expected loss/convergence (author-observed/open).",
+    "Expand empirical evaluation to a broader set of benchmark datasets (UCR) and to real-world domains (e.g., financial time series) to assess practical applicability and generalization (author-suggested).",
+    "Research the causes of increasing training loss with larger ansatz complexity (e.g., optimizer inadequacy, barren plateaus) and develop mitigation strategies (inferred/author-noted need for further research)."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "medium",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Quantum autoencoders (QAE) outperform classical deep-learning autoencoders on selected UCR time-series anomaly benchmarks in simulation while using substantially fewer trainable parameters and fewer training iterations.",
+    "#idea:quantum-advantage — Swap-Test (latent-space measurement) can serve as an effective anomaly score and in some cases competes with reconstruction MSE without full decoding.",
+    "#idea:near-term-feasibility — The authors demonstrate a comparable implementation on IBM Torino hardware using quasi-amplitude encoding and built-in mitigation, showing NISQ-era feasibility for small instances despite noise.",
+    "#idea:hybrid-approach — Practical pipeline relies on hybrid components: classical pre/postprocessing, classical optimization of quasi-amplitude encoders (SPSA), and classical optimizers (COBYLA) for variational parameters.",
+    "#limitation:noise — Real-hardware runs are impacted by NISQ noise; mitigation was required and experiments used reduced training subsets and per-window optimization to obtain workable results.",
+    "#limitation:data-encoding — Exact amplitude encoding used in simulation is infeasible on hardware; the quasi-amplitude (EfficientSU2) approximation requires per-window classical optimization (multiple trials) which is costly and approximate.",
+    "#limitation:qubit-count — Experiments are limited to 7–9 qubits (6-qubit latent + trash + reference/ancilla), raising questions about scalability to higher-dimensional windows or multivariate time series."
+  ],
+  "contradictions": []
+}

@@ -1,0 +1,256 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier and date (arXiv:2507.19039v1) and follows a manuscript structure (abstract, methods, experiments, references) consistent with an author-uploaded preprint rather than a finalized peer-reviewed journal article or formal conference proceedings.",
+  "title": "Autocallable Options Pricing with Integration-Based Exponential Amplitude Loading",
+  "authors": [
+    "Francesca Cibrario",
+    "Ron Cohen",
+    "Emanuele Dri",
+    "Christian Mattia",
+    "Or Samimi Golan",
+    "Tamuz Danzig",
+    "Giacomo Ranieri",
+    "Hanan Rosemarin",
+    "Davide Corbelletto",
+    "Amir Naveh",
+    "Bartolomeo Montrucchio"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (quant-ph)",
+  "doi": "",
+  "abstract_summary": "The paper presents a complete quantum algorithm for pricing autocallable (path-dependent) options, introducing an improved integration-based exponential amplitude loading technique that reduces circuit depth and T-depth for the payoff component. The authors provide complexity analysis showing up to ≈50x T-depth reduction in a relevant setting, and validate the approach with end-to-end circuit implementations and simulations on HPC resources (up to 33 qubits), demonstrating empirical convergence toward classically estimated values.",
+  "methodology_description": "The paper develops and implements an end-to-end quantum algorithm for pricing single-asset autocallable options (with generalization to multi-asset). The approach combines: (1) Gaussian re-parameterization state preparation (variational Gaussian loaders) per time step to encode log-return samples; (2) quantum arithmetic (in-place adders) to accumulate log-returns across time steps and evaluate barrier crossing and binary-option conditions in log-return space using comparators; (3) an improved integration-based exponential amplitude loading method (partial exponential state preparation on a restricted interval plus a comparator/integrator) to map from log-return space to payoff amplitudes without degrading the post-processing normalization; (4) controlled Ry rotations to encode constant payoffs and to remap normalization factors; and (5) Iterative Quantum Amplitude Estimation (IQAE) to estimate the expected discounted payoff (probability of the QAE target qubit being |1>). They provide an analytical T-depth and error-budgeting analysis (truncation, discretization, approximation, arithmetic, amplitude-loading errors) and compare T-depths against a QSP-based baseline. Circuits were synthesized via the Classiq platform / Qmod and executed on statevector / shot-based simulators (Classiq default simulator, Nvidia single-GPU simulator, and Cirq+cuQuantum on the LEONARDO HPC) for a small proof-instance. They benchmark results against classical baselines: (i) traditional Monte Carlo, (ii) Monte Carlo with the same Gaussian discretization, (iii) closed-form with Gaussian discretization, and (iv) closed-form with discretization and fixed-point arithmetic precision matching the quantum model.",
+  "algorithms_used": [
+    "Iterative Quantum Amplitude Estimation (IQAE)",
+    "Grover operator / amplitude amplification (exact amplitude amplification variant)",
+    "Integration-based exponential amplitude loading (improved partial-interval method)",
+    "Variational Gaussian state preparation (pre-trained Gaussian loaders)",
+    "Quantum comparators and in-place adders (quantum arithmetic modules)"
+  ],
+  "frameworks": [
+    "Classiq platform (Qmod)",
+    "Cirq",
+    "cuQuantum",
+    "NVIDIA simulator (proprietary simulator used via Classiq toolchain)"
+  ],
+  "experimental_setup": "Circuit synthesis via Classiq (Qmod); execution on simulators: Classiq default simulator (up to ~25 qubits), Nvidia single-GPU simulator (up to ~30 qubits), and Cirq with cuQuantum on the LEONARDO pre-exascale HPC (multi-GPU) for larger circuits (experiments up to 33 qubits). Iterative QAE used with target error ϵ = 0.001 and confidence parameter α = 0.002 for validation experiments.",
+  "dataset_used": "Synthetic option-model parameters defined by the authors (single-asset autocallable instance): notional V=18, time-step dt=1 year, T=3 timesteps, annual volatility σ=0.2382, annual mean log-return µ=0.1274, put barrier b=0.7, put strike K=1, risk-free rate r=4%, binary strikes k1=k2=1.1, binary payoffs f1=2, f2=5. Gaussian truncation parameter smin=3. No external market dataset used.",
+  "experiment_input": {
+    "source": "Internal synthetic model parameters (Table II of paper)",
+    "instance_description": "Single-asset autocallable option with T=3 timesteps and two binary observations (binaries at first two monitoring points); log-return Gaussian discretization varied by number of qubits allocated.",
+    "discretization": {
+      "gaussian_qubits_tested": [
+        1,
+        2,
+        3
+      ],
+      "fixed_point_fractional_qubits_tested": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        16
+      ],
+      "arithmetic_precision": "Fixed-point precision varied (fractional bits p in experiments)."
+    },
+    "size": "Small proof instances (3 timesteps, single asset), circuits synthesized up to 33 qubits for simulation.",
+    "preprocessing": "Gaussian truncation (smin=3) and discretization performed to build k-qubit approximation of standard normal per timestep; affine transform applied to obtain desired mean/variance; accumulation of log-returns via in-place addition; partial exponential state prepared on specified interval for integration amplitude loading."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "1) For each time step prepare a discretized standard Gaussian state using variational Gaussian loaders (one register per timestep).",
+      "2) Affine-transform Gaussian samples (mean and variance) to produce per-step log-return increments and accumulate them in-place across timesteps using quantum adders to form cumulative log-returns.",
+      "3) Update barrier-crossing register (Ct) and binary-option indicator register (Bt) using comparators on the accumulated log-returns (log-space comparisons).",
+      "4) For binary payouts: apply controlled Ry rotations on the QAE target qubit conditioned on binary indicators to load constant (discounted) binary payoffs directly into amplitude.",
+      "5) For the knock-in put payoff (non-constant): prepare a partial exponential reference state on the relevant interval (restricted to [x0,x1]) and perform the integration comparator to load a mapping of exp(log-return) into the amplitude (improved integration amplitude loading).",
+      "6) Apply an Ry rotation to remap normalization so that amplitude range [0,1] corresponds to chosen payoff mapping (includes mapping zero payoff to a nonzero loaded amplitude as needed).",
+      "7) Use Iterative Quantum Amplitude Estimation (IQAE) to estimate the probability of the target qubit being |1> (the rescaled expected discounted payoff).",
+      "8) Post-process IQAE output with the inverse normalization mapping to obtain the expected payoff in monetary units.",
+      "9) Validate results by comparing to classical baselines: traditional Monte Carlo, Monte Carlo with same Gaussian discretization, closed-form with discretization, and closed-form with discretization+fixed-point arithmetic precision matching the quantum circuit."
+    ],
+    "key_parameters_driving_iterations": {
+      "IQAE_error_target": 0.001,
+      "IQAE_confidence_alpha": 0.002,
+      "Gaussian_truncation_smin": 3,
+      "Gaussian_qubits": "varied (experiments reported for 1..3 qubits per Gaussian)",
+      "Fixed_point_fractional_qubits": "varied (p from 1 up to 16 in classical comparisons)"
+    },
+    "synthesis_and_execution": "High-level Qmod model synthesized via Classiq optimizing width; circuits executed on simulators (Classiq default, Nvidia single-GPU simulator, Cirq+cuQuantum on LEONARDO HPC)."
+  },
+  "experiment_output": {
+    "primary_metrics": [
+      "Estimated expected discounted payoff (monetary units)",
+      "Convergence behavior relative to classical Monte Carlo and closed-form baselines",
+      "Circuit resource metrics: T-depth (with emphasis on amplitude-loading submodule), qubit counts"
+    ],
+    "reported_results": [
+      "Numerical expected payoffs for small instances (plotted vs. Gaussian and arithmetic precision parameters).",
+      "Demonstrated convergence of quantum-synthesized-circuit results toward classical baselines as Gaussian discretization and arithmetic precision are increased.",
+      "Complexity/T-depth comparison showing improvement in amplitude-loading T-depth from ~2.1e3 (prior integration scheme) to ~40 in a considered setting, and an overall ~50x reduction in the payoff component T-depth relative to a QSP-based approach in a relevant parameter regime."
+    ],
+    "baselines": [
+      "Classical Monte Carlo (standard)",
+      "Monte Carlo with same Gaussian discretization used in quantum model",
+      "Closed-form solution with Gaussian discretization",
+      "Closed-form with discretization plus fixed-point arithmetic precision matching quantum arithmetic"
+    ],
+    "result_format": "Estimated scalar expected payoff values with confidence intervals; T-depth and gate-count summaries for synthesized circuits; comparative plots vs. discretization / precision parameters."
+  },
+  "experiment_parameters": {
+    "qubits": {
+      "max_simulated_qubits": 33,
+      "gaussian_qubits_per_time_tested": [
+        1,
+        2,
+        3
+      ],
+      "total_qubits_examples_reported": "varied up to 33"
+    },
+    "timesteps": 3,
+    "assets": 1,
+    "IQAE": {
+      "epsilon": 0.001,
+      "alpha": 0.002,
+      "query_complexity_scaling": "N ~ 1/epsilon"
+    },
+    "precision": {
+      "fixed_point_fractional_qubits_tested": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        16
+      ]
+    },
+    "T-depth": {
+      "amplitude_loading_module": {
+        "proposed_method": 40,
+        "prior_integration_method": 2100
+      }
+    },
+    "shots": null,
+    "optimizer": null,
+    "other": {
+      "Gaussian_truncation_smin": 3,
+      "risk_free_rate_r": "4% (model parameter)",
+      "notional_V": 18
+    }
+  },
+  "hardware_details": {
+    "simulators": [
+      {
+        "name": "Classiq default simulator",
+        "role": "statevector / shot-based simulator for up to ~25 qubits",
+        "provider": "Classiq"
+      },
+      {
+        "name": "NVIDIA simulator (single GPU)",
+        "role": "simulator used for circuits up to ~30 qubits",
+        "provider": "NVIDIA (accessed via Classiq toolchain)"
+      },
+      {
+        "name": "Cirq + cuQuantum (multi-GPU) on LEONARDO HPC",
+        "role": "high-performance simulator execution for >30 qubits (up to 33 qubits reported)",
+        "provider": "CINECA / EuroHPC (LEONARDO pre-exascale supercomputer)"
+      }
+    ],
+    "real_qpu": null
+  },
+  "reproducibility_notes": {
+    "code_availability": "Authors provide an implementation link reference: a short Classiq URL for the quantum autocallable implementation (ref. [25] in paper) and indicate the use of Classiq/Qmod; Qmod reference docs available. Circuit synthesis relies on the Classiq proprietary toolchain.",
+    "data_availability": "All model parameters used in experiments are listed explicitly in Table II (synthetic, reproducible).",
+    "notes": "Reproducing the reported circuits requires access to the Classiq platform (Qmod) or ability to replicate circuit synthesis logic; large-scale experiments require high-memory GPU-based simulators or HPC resources (cuQuantum on LEONARDO). The paper provides sufficient parameter detail (Table II) and methodological description to reproduce small instances on accessible simulators; full reproduction of larger experiments may require access to the same toolchain and HPC resources."
+  },
+  "key_findings": [
+    "[speculative] Proposed an improved integration-based exponential amplitude loading technique that prepares partial exponential reference states to avoid overestimation of normalization when the input domain is a subset of the full register range.",
+    "[speculative] The improved integration amplitude loading reduces the T-depth of the payoff (amplitude-loading) subroutine significantly compared to prior integration-based and QSP-based methods; a complexity analysis in a 'relevant setting' reports about a ~50x reduction in T-depth for the payoff component.",
+    "[supported] Implemented an end-to-end quantum algorithm for pricing single-asset autocallable options (state preparation, arithmetic, payoff encoding) using the Classiq platform and the Qmod language.",
+    "[supported] Built gate-level quantum circuits and simulated them on classical quantum simulators (Classiq default simulator, Nvidia single-GPU simulator, and multi-GPU cuQuantum on the LEONARDO pre-exascale system), with experiments up to 33 qubits.",
+    "[supported] Performed empirical checks (via simulator runs and constrained classical benchmarks) showing the quantum-circuits' outputs converge toward classically estimated values as arithmetic precision and Gaussian discretization are increased.",
+    "[speculative] The algorithm leverages Quantum Amplitude Estimation (QAE) / Iterative QAE to obtain a theoretical quadratic speedup in sampling complexity over classical Monte Carlo (1/N vs 1/sqrt(M)).",
+    "[supported] Identified practical limitations: even small instances yield large circuits and current noisy quantum hardware is unsuitable; validation therefore required simulators and constrained classical benchmarking.",
+    "[speculative] The partial exponential state preparation can be implemented efficiently in some cases (interval size a power of two) and otherwise requires a single round of exact amplitude amplification.",
+    "[speculative] Because the partial exponential preparation can be parallelized with other modules, the controlled comparator dominates the amplitude-loading T-depth in the proposed scheme.",
+    "[supported] Provided a resource-oriented T-depth decomposition and tabulated T-depth expressions for key primitives (Ry, controlled-Ry, Rz, Toffoli, MCX, comparators, adders, multipliers) to support the complexity claims."
+  ],
+  "results_summary": "The paper proposes an enhancement to integration-based exponential amplitude loading for quantum pricing of autocallable options, aiming to avoid normalization overestimation by preparing partial exponential reference states. The authors provide a complexity analysis that attributes a large reduction in T-depth of the payoff-loading subroutine relative to prior approaches (they report a ∼50x reduction in a cited 'relevant setting'), present an end-to-end implementation (Classiq/Qmod), and validate behavior via gate-level simulations up to 33 qubits on classical HPC/GPU simulators. Simulator experiments, together with constrained classical benchmarks of discretization and fixed-point arithmetic, show convergence of the quantum-circuit outputs toward classical estimates as precision and discretization are increased. The work is framed as a step toward resource-efficient quantum pricing of path-dependent derivatives, while acknowledging that circuit sizes remain large and that running on real, noisy quantum hardware remains impractical today.",
+  "performance_claims": [
+    "simulated up to 33 qubits on LEONARDO (pre-exascale supercomputer) [supported]",
+    "reported reduction in amplitude-loading T-depth from ~2.1·10^3 to ~40 when parallelizing partial exponential state preparation (in their comparison) [speculative]",
+    "∼50x reduction in T-depth for the payoff component relative to previous methods in a 'relevant setting' (complexity analysis result) [speculative]",
+    "used total estimation error target ϵ = 2·10^-3 in the T-depth comparison example [supported/speculative (contextual parameter)]",
+    "classical Monte Carlo convergence rate 1/sqrt(M) vs QAE theoretical rate 1/N (restated background theoretical claim) [speculative]"
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper relies on the standard theoretical quadratic sampling speedup of Quantum Amplitude Estimation over Monte Carlo and presents resource (T-depth) reductions for a key submodule (payoff amplitude loading). However, it does not demonstrate an end-to-end, hardware-executed quantum advantage; the evidence is based on theoretical complexity analysis and classical simulator experiments constrained to small instances.",
+  "limitations": [
+    "Circuit size remains considerable even for small-scale examples, requiring use of simulators rather than real hardware (author-stated).",
+    "All experimental validation was performed on simulators (Classiq, Nvidia GPU simulator, LEONARDO HPC) — no empirical runs on quantum hardware due to coherence/fidelity limits (author-stated).",
+    "Simulator capacity forced reduction of circuit width/depth for executable instances, limiting experiments to small problem instances (single asset, T=3) and up to 33 qubits (author-stated).",
+    "Classical benchmarking was constrained by simulator limits; full classical/quantum comparisons at production-scale discretizations were impractical (author-stated).",
+    "The demonstrated improvement primarily reduces T-depth of the payoff (amplitude-loading) component; it may not substantially reduce total T-depth unless other modules are optimized as well (author-stated).",
+    "The method and complexity analysis assume parallelization of submodules (e.g., exponential state preparation in parallel with other blocks), which may be challenging to realize on actual hardware (inferred).",
+    "The implementation and experiments assume Black–Scholes log-return modeling and Gaussian discretization; applicability/accuracy under more realistic or calibrated models (stochastic/local volatility) is not validated (author-stated and inferred).",
+    "Resource and T-depth estimates rely on error-budget allocations and approximations (e.g., truncation/discretization/approximation); practical fault-tolerant resource requirements and overheads (magic-state distillation, routing, etc.) are not fully quantified (inferred).",
+    "Scalability to realistic multi-asset, many-timestep autocallables (larger d and T) is not demonstrated experimentally; generalization is discussed but not empirically validated (inferred).",
+    "The approach depends on pre-trained variational Gaussian loaders (re-parameterization) — training overhead, robustness and impact on end-to-end accuracy are not analyzed in detail (inferred).",
+    "Partial exponential state preparation for non-power-of-two intervals requires exact amplitude amplification (Grover-based), which can introduce nontrivial overheads in practice; the trade-offs are not fully explored experimentally (inferred).",
+    "Error-mitigation strategies or concrete methods to make the circuits robust on near-term noisy devices are not provided beyond a call for future testing with mitigation (author-stated)."
+  ],
+  "open_questions": [
+    "How will the proposed algorithm and its amplitude-loading improvement scale (T-depth, qubit count, wall-clock time) to production-scale autocallable contracts with many timesteps and/or multiple assets?",
+    "What are the end-to-end fault-tolerant resource requirements (logical qubits, magic-state factories, T-count/T-depth) for realistic-sized problems, and at what hardware error rates would quantum advantage become practical?",
+    "How effective are the proposed optimizations when tested on real quantum hardware with error mitigation — can meaningful results be obtained before full fault tolerance?",
+    "Can further optimizations of other modules (Gaussian preparation, arithmetic, comparators) yield comparable or larger reductions in total T-depth than the amplitude-loading improvements?",
+    "How sensitive are pricing results to modeling assumptions (Black–Scholes vs. local/stochastic volatility) and to choices in truncation/discretization/rescaling — and how should the error budget be allocated in practice?",
+    "What is the practical impact (training cost, generalization/stability) of using variationally pre-trained Gaussian loaders in the re-parameterization approach, especially for multi-asset correlated distributions?",
+    "Are there alternative amplitude-loading or payoff-encoding techniques that offer better end-to-end trade-offs (T-depth, qubits, approximation error) than the proposed integration-based exponential loading?",
+    "How does the proposed method compare to QSP-based approaches across multiple metrics (not only T-depth of payoff component but also total resources, qubit count, and runtime) for a range of realistic instances?",
+    "How to best handle calibration (parameter estimation) and model risk in a quantum pricing workflow, and what are the implications for quantum algorithm design?"
+  ],
+  "future_work": [
+    "Further optimization aimed at reducing circuit size (depth and width) to make the approach more practical.",
+    "Initiate a campaign of tests on real quantum hardware that leverages error mitigation techniques to preserve the output.",
+    "Extend the methodology to more complex volatility models (e.g., local or stochastic volatility) and explore impacts of calibration."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "variational-nisq",
+    "grover-search",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Integration-based exponential amplitude loading reduces T-depth (authors report up to ≤50x T-depth reduction versus a QSP-based baseline) in their analytical resource comparison for the payoff-loading component.",
+    "#idea:hybrid-approach — Practical pipeline combines variational Gaussian state-preparation (pre-trained/loaders) with quantum arithmetic and IQAE, relying on classical pre/post-processing and circuit synthesis via Classiq (Qmod) — a hybrid QPU-CPU workflow.",
+    "#idea:near-term-feasibility — End-to-end circuits synthesized and simulated (statevector and shot-based) up to 33 qubits, with empirical convergence to classically estimated payoffs on small proof instances (single-asset, T=3) demonstrating a simulation-level proof-of-concept.",
+    "#limitation:simulation-only — All experimental validation is on classical simulators (Classiq simulator, Nvidia GPU simulator, Cirq+cuQuantum on HPC); no experiments on noisy quantum hardware are reported.",
+    "#limitation:qubit-count — Demonstrations are limited to small problem instances (single-asset, 3 timesteps) and circuits up to 33 qubits; this leaves open whether the approach scales to production-size, multi-asset or longer-maturity autocallable contracts.",
+    "#limitation:data-encoding — The method requires discretization and Gaussian truncation (smin=3) plus partial-interval exponential amplitude loading; the paper analyses truncation/discretization and amplitude-loading errors but these encoding costs remain significant.",
+    "#limitation:noise — Resource and T-depth analysis emphasizes fault-tolerant metrics (T-depth) but the lack of noisy-hardware experiments means the impact of realistic noise and error-correction/mitigation demands is not empirically assessed."
+  ],
+  "contradictions": [
+    "The paper asserts substantial T-depth reductions (≤50x) relative to a QSP-based baseline based on analytical comparison, but the empirical validation is limited to small, simulator-only instances (single-asset, T=3, up to 33 qubits). This creates a tension between claimed resource savings and their demonstrated scalability to production-sized problems.",
+    "The authors emphasize elements that suggest near-term practicality (variational Gaussian loaders, small-qubit simulations), while the core estimation step relies on Iterative Quantum Amplitude Estimation (IQAE) and T-depth-focused resource metrics that are more consistent with fault-tolerant regime assumptions—producing an internal tension about near-term feasibility versus long-term, fault-tolerant applicability."
+  ]
+}

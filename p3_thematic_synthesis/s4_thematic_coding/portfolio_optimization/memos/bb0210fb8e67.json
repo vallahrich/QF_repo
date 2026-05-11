@@ -1,0 +1,141 @@
+{
+  "paper_id": "bb0210fb8e67",
+  "dimension_1_problem_framing": {
+    "text": "The paper tackles portfolio optimization, i.e., finding asset allocations that balance risk and return, and notes that this task faces significant computational bottlenecks when formulated from real market data (large, ill‑conditioned linear systems) in Black’s equality‑constrained model. The authors position quantum computing as an alternative approach for solving this formulation, focusing on quantum linear solvers applied to the Lagrange system derived from Black’s model.",
+    "support_codes": [
+      "C-006",
+      "C-007",
+      "C-008",
+      "C-020"
+    ],
+    "support_type": "direct_quote"
+  },
+  "dimension_2_quantum_method": {
+    "text": "The work extends the HHL quantum linear solver to a portfolio optimization setting, modifying the circuit design to incorporate mean‑variance/Black’s model structure and introducing equivalent scaling of the Lagrange equations via two factors s1 and s2 so as to reduce the condition number while preserving model structure. It adds a min–max eigenvalue model: the Lagrange matrix is standardized, Hamiltonian evolution time is set to π to obtain a more convenient mapping between QPE phases and eigenvalues, the normalization constant is set to the minimum eigenvalue, and a support vector regression model predicts only the minimum and maximum eigenvalues needed to set HHL hyperparameters; the overall SAPO system is implemented in Qiskit with SciPy and scikit‑learn on classical side. Complexity and accuracy are defined via custom metrics: a composite complexity metric combining qubit count, CNOT count and depth, and an accuracy metric based on cosine similarity between quantum and reference weight vectors.",
+    "support_codes": [
+      "C-002",
+      "C-003",
+      "C-010",
+      "C-017",
+      "C-018",
+      "C-021",
+      "C-022",
+      "C-024",
+      "C-025",
+      "C-027",
+      "C-028",
+      "C-029",
+      "C-030",
+      "C-031",
+      "C-032",
+      "C-033",
+      "C-035",
+      "C-036",
+      "C-037"
+    ],
+    "support_type": "direct_quote"
+  },
+  "dimension_3_key_results": {
+    "text": "The authors report that SAPO reduces their composite complexity metric by about 34.64–36.94% compared to basic HHL while maintaining specified error tolerances, with particularly large reductions in CNOT count (up to 99.996% in a 2‑asset case), largely attributed to a substantial decrease in the Lagrange matrix condition number by at least 98.59%. On accuracy, SAPO achieves on average 1.52× higher cosine‑similarity accuracy than Qiskit HHL and 1.46× higher than hybrid HHL under fixed 5‑qubit QPE or fixed asset settings; ablation analysis shows the scaling factor is the dominant contributor, improving accuracy by roughly 1.74–1.96×, while the eigenvalue predictor yields smaller but still positive gains (roughly 1.05–1.54×). The eigenvalue predictor itself typically attains relative errors within 50% on predicted eigenvalues, and the authors observe that static scaling factors optimized per dataset cluster in a small region, supporting the claim that a fixed factor can, on average, achieve strong condition‑number reduction.",
+    "support_codes": [
+      "C-005",
+      "C-023",
+      "C-038",
+      "C-039",
+      "C-040",
+      "C-041",
+      "C-042",
+      "C-043",
+      "C-044",
+      "C-045",
+      "C-046"
+    ],
+    "support_type": "author_claim"
+  },
+  "dimension_4_classical_comparison": {
+    "text": "Within the quantum‑algorithm landscape, SAPO is compared primarily to basic HHL, Qiskit’s HHL implementation, hybrid HHL and a quantum Ising‑model‑based solver: the Ising solver can only output binary buy/no‑buy decisions, whereas HHL‑based approaches including SAPO yield concrete portfolio weights. Basic HHL is described as offering these concrete weights but suffering from overwhelming circuit‑scale complexity, and hybrid HHL is said to reduce some numerical burden yet still require many qubits to resolve eigenvalues precisely; SAPO’s reported ~35% complexity reduction and 1.46–1.52× accuracy gains are measured relative to these HHL‑family baselines using the composite complexity and cosine‑similarity metrics. The work does not provide a detailed empirical comparison against a fully classical portfolio optimizer; rather, it focuses on improving quantum linear solvers that operate on a classical Black’s‑model formulation built from historical financial data.",
+    "support_codes": [
+      "C-005",
+      "C-009",
+      "C-010",
+      "C-011",
+      "C-037",
+      "C-038",
+      "C-039",
+      "C-041"
+    ],
+    "support_type": "model_inference"
+  },
+  "dimension_5_stated_limitations": {
+    "text": "The authors identify that existing quantum methods for portfolio optimization face a fundamental trade‑off between scalability and accuracy, arising from either poor scalability (e.g., large condition numbers in realistic Lagrange matrices) or insufficient solution precision. They attribute several limitations of prior HHL and hybrid HHL approaches to their neglect of financial theory and historical financial information, which leaves numerical properties (such as ill‑conditioning) unaddressed and forces the use of many qubits for accurate eigenvalue estimation. For SAPO itself, the eigenvalue predictor exhibits notable challenges: some eigenvalues lie close to zero, making them difficult to predict and leading to relatively large percentage errors even when absolute errors are small, an issue the authors explicitly connect to the observed prediction‑error behavior.",
+    "support_codes": [
+      "C-001",
+      "C-011",
+      "C-012",
+      "C-020",
+      "C-047"
+    ],
+    "support_type": "direct_quote"
+  },
+  "dimension_6_future_work": {
+    "text": "Not addressed in this paper.",
+    "support_codes": [],
+    "support_type": "model_inference"
+  },
+  "dimension_7_novelty_claim": {
+    "text": "The claimed contribution is a SAPO framework that integrates financial theory and historical data characteristics directly into the design of a quantum HHL‑based portfolio solver, thereby addressing both scalability and accuracy. Novel elements include: an equivalent scaling transformation of Black’s model using static, dataset‑level scaling factors that substantially reduce the condition number while preserving the model structure; a min–max eigenvalue model that uses standardized Lagrange matrices and historical data to refine HHL hyperparameters; and an SVR‑based eigenvalue predictor chosen to balance predictive performance with limited classical training cost so as to preserve the intended quantum advantages.",
+    "support_codes": [
+      "C-001",
+      "C-002",
+      "C-003",
+      "C-004",
+      "C-014",
+      "C-015",
+      "C-016",
+      "C-019",
+      "C-021",
+      "C-022",
+      "C-024",
+      "C-025",
+      "C-027",
+      "C-031",
+      "C-034",
+      "C-035"
+    ],
+    "support_type": "author_claim"
+  },
+  "dimension_8_methodological_notes": {
+    "text": "Methodologically, SAPO is evaluated on portfolio instances built from real historical stock‑market data: the authors construct a dataset by collecting thousands of stocks over 251 days, computing returns, and deriving expected returns and covariance matrices to form Lagrange matrices, which are then padded to power‑of‑two size for HHL compatibility. They explicitly define evaluation metrics—a composite complexity metric based on qubits, CNOT count and depth, and an accuracy metric based on cosine similarity—and conduct ablation studies to isolate the contributions of the scaling factor and eigenvalue predictor, as well as an offline comparison of SVR against more complex models, ultimately selecting SVR to avoid heavy classical training that could undermine quantum advantage. However, the model is described as a static, dataset‑dependent construction grounded in historical financial data, which may limit its direct generalization beyond the studied datasets; the authors also emphasize that their complexity gains come from condition‑number reduction and are reported via the bespoke complexity metric rather than end‑to‑end wall‑clock benchmarks.",
+    "support_codes": [
+      "C-016",
+      "C-017",
+      "C-018",
+      "C-019",
+      "C-020",
+      "C-024",
+      "C-027",
+      "C-031",
+      "C-032",
+      "C-033",
+      "C-034",
+      "C-035",
+      "C-036",
+      "C-037",
+      "C-042",
+      "C-043",
+      "C-044",
+      "C-046"
+    ],
+    "support_type": "model_inference"
+  },
+  "dimension_9_miscellaneous": {
+    "text": "The paper notes that SAPO’s resource savings, particularly in the number of QPE qubits and CNOT gates, arise from its scaling technique that shrinks the condition number, thereby reducing the minimum QPE qubits required to meet a given error tolerance; this links financial‑theory‑driven preprocessing directly to quantum resource estimates. It also highlights that leveraging both financial theory and historical data is central to the design philosophy of SAPO, in contrast to prior approaches that treat the Lagrange system purely as a numerical linear algebra object.",
+    "support_codes": [
+      "C-014",
+      "C-019",
+      "C-029",
+      "C-040"
+    ],
+    "support_type": "model_inference"
+  }
+}

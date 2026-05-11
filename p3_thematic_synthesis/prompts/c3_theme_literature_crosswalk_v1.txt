@@ -1,0 +1,83 @@
+## Instructions
+
+You are positioning this thesis' analytical themes against prior review articles on quantum computing in finance. For each of the shortlisted analytical themes below, identify 2–3 prior review articles (from the provided pool) that the theme relates to, and classify the relationship precisely.
+
+Your output will feed a "theme-to-literature crosswalk" in the thesis. The target is to strengthen literature positioning — showing examiners that the thesis engages with what prior reviews have claimed, not just with primary papers.
+
+## Inputs
+
+### Shortlisted analytical themes (to be positioned)
+{themes_json}
+
+### Prior review pool (P2 review/survey articles, with structured extractions)
+{reviews_json}
+
+## Relationship definitions
+
+Pick **exactly one** per crosswalk entry:
+
+- **confirms** — the prior review states essentially the same claim as the theme's interpretation. The theme re-observes something the review has already surfaced, supporting robustness across syntheses.
+- **extends** — the prior review touches the claim but this theme adds specificity (a new financial domain, a sharper causal mechanism, a quantitative layer, or a newer evidence base). Use when your theme goes beyond what the review says.
+- **contradicts** — the prior review asserts the opposite claim, or its reported evidence points against this theme's interpretation. Use where there is a genuine disagreement that the thesis must engage.
+- **complements** — the prior review addresses a related aspect without direct overlap. Use sparingly; a chapter full of `complements` is weak literature positioning.
+
+## Output format
+
+Return a JSON object. ONLY the JSON object — no markdown fences, no prose, no reasoning traces.
+
+```json
+{{
+  "crosswalk": [
+    {{
+      "theme_id": "AT-TE-001",
+      "theme_label": "<copy from input>",
+      "silo_code": "TE",
+      "entries": [
+        {{
+          "review_paper_id": "<paper_id from pool>",
+          "review_title_short": "<first 8-10 words of review title>",
+          "relationship": "confirms" | "extends" | "contradicts" | "complements",
+          "stance_confidence": "high" | "medium" | "low",
+          "rationale": "<2-4 sentences: how the theme relates to this review; cite the exact section (e.g., 'Findings', 'Key ideas', 'Contradictions') you drew on>",
+          "quoted_claim": "<VERBATIM quote from the review's extracted sections, <=40 words. Must appear literally in the provided review content.>"
+        }}
+      ]
+    }}
+  ]
+}}
+```
+
+## Hard rules
+
+1. **Coverage**: every theme in the input MUST appear exactly once in the output `crosswalk` array. Do not skip themes.
+2. **Entries per theme**: 2 or 3 entries. Never 0, never 1, never more than 3.
+3. **No hallucinated reviews**: `review_paper_id` MUST be a `paper_id` from the provided review pool. Do not invent.
+4. **Verbatim quotes**: `quoted_claim` must be a literal substring of the review's extracted sections. Max 40 words. If you cannot find a ≤40 word verbatim quote supporting your stance, pick a different review or change the relationship.
+5. **Stance discrimination**: across all 16 themes, use each of `confirms`, `extends`, `contradicts` at least twice. A crosswalk with only `complements` will be rejected. If you cannot honestly use `contradicts` twice, use it zero times; never fabricate disagreement.
+6. **Silo awareness**: prefer reviews that address the theme's silo. If no review addresses the silo directly, cross-silo reviews are acceptable — state this in the rationale ("the review addresses derivative pricing more than risk management, but the reasoning transfers…").
+7. **Output JSON only** — no markdown code fences, no commentary before or after.
+
+## Example (calibration)
+
+**Good entry for AT-TE-001 "The hybridization imperative: quantum as component, not system"**:
+
+```json
+{{
+  "review_paper_id": "67f83161d410",
+  "review_title_short": "A Survey of Quantum Computing for Finance",
+  "relationship": "confirms",
+  "stance_confidence": "high",
+  "rationale": "The survey's 'Findings' and 'Key ideas' sections explicitly frame near-term quantum contribution as subroutines embedded in classical pipelines, consistent with AT-TE-001's 'quantum as component' claim. The survey does not extend the hybridization discussion to the trading-execution silo specifically, so the theme adds domain specificity but not a new architectural claim.",
+  "quoted_claim": "NISQ-era hardware is noisy and qubit-limited; nonetheless, small-scale experiments and hybrid classical-quantum algorithms can demonstrate useful prototypes"
+}}
+```
+
+**Bad** (fails rule 4 — quote is paraphrased, not verbatim):
+> "quoted_claim": "The survey says hybrid approaches are necessary for near-term hardware."
+
+**Bad** (fails rule 5 — all `complements`, no discrimination):
+> All 16 themes use `complements` for every entry.
+
+## Reminder
+
+Be precise. Every quoted claim must survive a Ctrl-F search against the review's extracted text. Every relationship must be defensible in a thesis defence. When in doubt between `confirms` and `extends`, prefer `extends` — it is the stronger positioning claim for a thesis contribution.

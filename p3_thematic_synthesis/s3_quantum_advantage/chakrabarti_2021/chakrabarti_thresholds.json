@@ -1,0 +1,100 @@
+{
+  "_citation": "Chakrabarti, Krishnakumar, Mazzola, Stamatopoulos, Woerner, Zeng. 'A threshold for quantum advantage in derivative pricing.' Quantum 5, 463 (2021). arXiv:2012.03819",
+
+  "_methodology": "End-to-end resource estimation for QAE-based derivative pricing using the re-parameterization method (QSP-polished). Gives a (logical_qubits, T-depth, T-count) envelope that a device must reach to beat classical Monte Carlo on production-relevant derivatives. Finance-specific framework; emits not_applicable outside derivative-pricing/risk-management/Monte Carlo silos.",
+
+  "_benchmarks": {
+    "autocallable": {
+      "description": "Basket autocallable: 3 underlyings, 5 payment dates, knock-in put with 20 barrier dates",
+      "parameters": {"d": 3, "T": 20},
+      "target_error": 0.002,
+      "methods": {
+        "riemann_sum": {
+          "t_count": 1e43,
+          "t_depth": 1e43,
+          "logical_qubits": null,
+          "note": "Infeasible — exponential resources"
+        },
+        "riemann_sum_no_norm": {
+          "t_count": 1.6e11,
+          "t_depth": 1.5e8,
+          "logical_qubits": 23000
+        },
+        "re_parameterization": {
+          "t_count": 1.2e10,
+          "t_depth": 5.4e7,
+          "logical_qubits": 8000
+        }
+      }
+    },
+    "tarf": {
+      "description": "Target Accrual Redemption Forward: 1 underlying, 26 payment dates",
+      "parameters": {"d": 1, "T": 26},
+      "target_error": 0.002,
+      "methods": {
+        "riemann_sum": {
+          "t_count": 1e18,
+          "t_depth": 1e18,
+          "logical_qubits": null,
+          "note": "Infeasible"
+        },
+        "riemann_sum_no_norm": {
+          "t_count": 5.5e10,
+          "t_depth": 1.6e8,
+          "logical_qubits": 17000
+        },
+        "re_parameterization": {
+          "t_count": 9.8e9,
+          "t_depth": 8.2e7,
+          "logical_qubits": 11500
+        }
+      }
+    }
+  },
+
+  "_hardware_targets": {
+    "t_gate_rate_hz": 1e7,
+    "t_gate_rate_label": "10 MHz T-gate rate for 1-second pricing wallclock",
+    "current_state_of_art_hz": 1e4,
+    "current_gap_factor": 1000,
+    "min_code_distance_ops": 1e10,
+    "min_code_distance_note": "Code distance must support 10^10 error-free logical operations",
+    "classical_mc_time_seconds": 10,
+    "classical_mc_samples": 40000
+  },
+
+  "advantage_envelope": {
+    "_note": "The (qubits, T-depth) envelope from Table 1 re-parameterization row. An experiment claims are WITHIN the Chakrabarti threshold if its resources are in the same ballpark or lower than these numbers (achievable). If resource estimates are orders of magnitude higher, the experiment is ABOVE the envelope (less likely to be viable). If below, the experiment hasn't reached the complexity floor needed for QAE advantage.",
+    "min_logical_qubits": 8000,
+    "min_t_depth": 5.4e7,
+    "min_t_count": 9.8e9,
+    "max_logical_qubits": 23000,
+    "max_t_depth": 1.6e8,
+    "max_t_count": 1.6e11,
+    "explanation": "The 'min' row is re-parameterization (best known). The 'max' row is Riemann sum no-norm (feasible but worse). Anything above max is essentially infeasible. Anything below min hasn't reached derivative-pricing complexity."
+  },
+
+  "applicable_silos": [
+    "derivative-pricing",
+    "risk-management",
+    "simulation-monte-carlo",
+    "insurance-actuarial",
+    "PD-02",
+    "PD-03",
+    "PD-09",
+    "PD-10"
+  ],
+
+  "applicable_algorithm_families": [
+    "amplitude_estimation", "amplitude-estimation",
+    "quantum_monte_carlo", "quantum-monte-carlo",
+    "quantum_walk", "quantum-walk",
+    "grover",
+    "amplitude_amplification", "amplitude-amplification",
+    "qft-phase-estimation"
+  ],
+
+  "_verdict_rules": {
+    "_guidance": "Chakrabarti gives a specific (qubits, T-depth, T-count) floor for derivative pricing via QAE. Logic: (1) If silo not in applicable list → not_applicable. (2) If algorithm not QAE-based AND silo is applicable → conditional (Chakrabarti's analysis assumes QAE; other algorithms may have different thresholds). (3) Compare reported resources against the envelope. Resources at or near the re-parameterization numbers → potentially_viable. Resources far above max → fails. Resources below min → fails (classically trivial). No resources → insufficient_data. (4) Also check: does the experiment's target error match? Chakrabarti uses epsilon=2e-3."
+  }
+}

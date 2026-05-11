@@ -1,0 +1,174 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes conference metadata (2024 International Conference on Trends in Quantum Computing and Emerging Business Technologies), IEEE DOI/copyright, structured sections (Abstract, Methods, Results), and references typical of a conference paper.",
+  "title": "Portfolio Optimization using Accelerated Quantum Simulation",
+  "authors": [
+    "Gaurang Belekar",
+    "Manish Modani",
+    "Anindita Banerjee"
+  ],
+  "year": "2024",
+  "journal_or_venue": "2024 International Conference on Trends in Quantum Computing and Emerging Business Technologies (TQCEBT)",
+  "doi": "10.1109/TQCEBT59414.2024.10545076",
+  "abstract_summary": "This paper implements portfolio optimization by formulating a mean-variance problem as a QUBO and solving it with quantum algorithms (QAOA/VQE) using NVIDIA's CUDA Quantum/cuQuantum GPU-accelerated simulators. Empirical results on up to 30 assets show that GPU simulation significantly outperforms CPU (notably beyond ~15 assets) and exhibits consistent performance up to about 27 qubits/assets before computational time increases sharply, highlighting the benefits and scalability limits of GPU-accelerated quantum simulation for financial optimization.",
+  "methodology_description": "The study formulates the mean-variance portfolio optimization problem as a QUBO and maps it to an Ising Hamiltonian to be solved with quantum variational algorithms. Adjusted closing prices for a set of 30 tickers were downloaded from Yahoo Finance for the period 2020-12-25 to 2022-12-25. Log returns were computed and the mean return vector (μ) and covariance matrix (Σ) were derived. A binary variable xi represents inclusion/exclusion of asset i, producing a QUBO objective H(x)=x^T Q x - λ ∑ μ_i x_i which is converted to an Ising form via σ_i = 2 x_i - 1. The cost Hamiltonian HC encodes the covariance (risk) and expected-return term; the mixer Hamiltonian HM is a sum of Pauli-X operators. They implement a QAOA ansatz (alternating cost and mixer unitaries with parameters {γ_k, β_k} for p layers) and use the QAOA circuit as the variational ansatz within a VQE-style hybrid loop: evaluate expectation ⟨H⟩ on a quantum state, then update parameters with a classical optimizer. The classical optimizer used is COBYLA. Simulations were run using NVIDIA’s CUDA Quantum / cuQuantum (GPU-accelerated statevector simulation) and compared against a CPU implementation (64 threads). Experiments varied the number of assets/qubits up to 30 and measured execution time (runtime) and scalability, with particular attention to GPU vs CPU performance and scaling behavior (noting a CPU runtime blow-up after ~15 assets and a GPU runtime inflection around 27 assets).",
+  "algorithms_used": [
+    "QAOA",
+    "VQE",
+    "QUBO formulation",
+    "Ising model mapping",
+    "COBYLA (classical optimizer)"
+  ],
+  "frameworks": [
+    "CUDA Quantum",
+    "cuQuantum SDK",
+    "Yahoo Finance API (data acquisition)"
+  ],
+  "experimental_setup": "GPU-accelerated statevector simulations using NVIDIA cuQuantum (CUDA Quantum). Hardware: NVIDIA A100 80GB Tensor Core GPU; dual AMD Rome 7742 CPUs (128 cores); system memory 2 TB. CPU comparisons used 64 threads. COBYLA used as the classical optimizer. Simulations ran up to 30 qubits/assets.",
+  "dataset_used": "Adjusted closing prices for 30 equity tickers (diverse industries) from Yahoo Finance for the period 2020-12-25 to 2022-12-25. Log returns were computed and used to derive per-asset mean returns (μ) and the covariance matrix (Σ).",
+  "experiment_input": {
+    "source": "Yahoo Finance API",
+    "tickers_count": 30,
+    "time_range": "2020-12-25 to 2022-12-25 (2 years)",
+    "raw_feature": "Adjusted closing price (daily)",
+    "preprocessing": "Compute logarithmic returns from adjusted close prices; compute mean return vector μ and covariance matrix Σ; form binary inclusion variables per asset for QUBO encoding"
+  },
+  "experiment_process": {
+    "steps": [
+      "Acquire adjusted close prices from Yahoo Finance for chosen tickers and time range",
+      "Compute log returns, mean returns μ and covariance Σ",
+      "Formulate QUBO objective H(x) = x^T Q x - λ ∑ μ_i x_i (binary xi ∈ {0,1})",
+      "Map QUBO to Ising Hamiltonian via σ_i = 2 x_i - 1 and build cost Hamiltonian HC and mixer HM (sum of Pauli-X)",
+      "Construct QAOA ansatz with alternating unitaries U(HC, γ) and U(HM, β) for p layers",
+      "Use the QAOA circuit as the variational ansatz and run VQE-style optimization: evaluate expectation ⟨H⟩ using the cuQuantum statevector simulator, then update {γ,β} using COBYLA",
+      "Repeat until convergence and record results (primary metric: runtime) across varying numbers of assets/qubits"
+    ],
+    "parameters_tuned": [
+      "{γ_k, β_k} (QAOA layer parameters) via COBYLA",
+      "number of layers p (not explicitly specified)",
+      "regularization λ (trade-off risk/return, not explicitly specified)"
+    ],
+    "iterations": "Classical optimizer iterations until COBYLA convergence (number unspecified)"
+  },
+  "experiment_output": {
+    "primary_metrics": [
+      "Wall-clock runtime (execution time) for optimization",
+      "Scalability behavior (runtime vs number of assets/qubits)"
+    ],
+    "secondary_outputs": [
+      "Observed runtime comparison curves (CPU 64 threads vs GPU A100)",
+      "Identification of asset-count thresholds where runtime increases sharply (CPU ~15 assets; GPU ~27 assets)"
+    ],
+    "baselines": "CPU (64-thread) statevector simulation implementation",
+    "solution_outputs": "Not reported in detail (paper focuses on runtime performance rather than reported optimal portfolio allocations or objective values)"
+  },
+  "experiment_parameters": {
+    "num_qubits": "equal to number of assets (experimented up to 30)",
+    "num_layers_p": "not specified",
+    "optimizer": "COBYLA (classical)",
+    "shots": "statevector simulation (no measurement-shot sampling)",
+    "regularization_lambda": "not specified",
+    "classical_threads_for_cpu_baseline": 64,
+    "simulator": "cuQuantum (CUDA Quantum) statevector simulator"
+  },
+  "hardware_details": {
+    "simulator": "NVIDIA cuQuantum (CUDA Quantum) statevector simulator",
+    "gpu_model": "NVIDIA A100 80GB Tensor Core",
+    "cpu_model": "Dual AMD Rome 7742 (128 cores)",
+    "system_memory": "2 TB",
+    "cloud_provider": null,
+    "qpu_model": null
+  },
+  "reproducibility_notes": "The paper describes the data source (Yahoo Finance) and high-level processing steps but does not provide code, parameter values (e.g., λ, p), exact list of tickers in full, or run scripts. cuQuantum and the raw data are publicly accessible, so partial reproduction is possible, but exact reproduction of timings and convergence would require additional implementation details and parameter settings that are not provided.",
+  "key_findings": [
+    "[supported] GPU-accelerated quantum simulation using CUDA Quantum / cuQuantum on an NVIDIA A100 (80GB) outperforms a 64-thread CPU implementation for portfolio-optimization simulations.",
+    "[supported] CPU simulation time remains relatively stable up to ~15 assets and then exhibits a dramatic increase beyond 15 assets in the experiments reported.",
+    "[supported] GPU simulation time increases only modestly as asset count grows and remains significantly lower than CPU until an observed inflection point.",
+    "[supported] GPU simulation time remains relatively flat up to about 27 assets/qubits, with a sharp spike in runtime beyond that point in the reported experiments.",
+    "[supported] The authors implemented portfolio-optimization workflows (QUBO formation, QUBO→Ising conversion, QAOA/VQE ansätze) and ran simulations up to 30 assets.",
+    "[supported] The implementation used a hybrid variational approach (VQE with a QAOA-style ansatz) and the COBYLA classical optimizer in the CUDA Quantum environment.",
+    "[supported] The study observed anomalies (irregularities) in execution time for certain asset counts and recommends further analysis to understand causes.",
+    "[speculative] Quantum algorithms (QAOA, VQE) are promising for exploring large asset-pool portfolio-optimization problems and could provide advantages over classical methods (general claim, not demonstrated here).",
+    "[speculative] Integrating quantum algorithms with GPU-accelerated simulation platforms (like CUDA Quantum) has transformative potential for financial modeling and scalability to larger asset pools.",
+    "[speculative] The paper references the potential for exponential speedups from quantum algorithms for large combinatorial problems (general theoretical claim, not demonstrated empirically in this work)."
+  ],
+  "results_summary": "This conference paper reports an empirical comparison of CPU versus GPU quantum-statevector simulations for a portfolio-optimization workflow implemented in the CUDA Quantum (cuQuantum) framework. Using an NVIDIA A100 (80GB) system and a 128-core AMD CPU, the authors converted a mean-variance portfolio problem into QUBO/Ising form, implemented a QAOA/VQE-style ansatz with COBYLA optimization, and ran simulations up to 30 assets. They found that GPU-accelerated simulation significantly outperforms a 64-thread CPU implementation: CPU runtimes grow dramatically after ~15 assets, while GPU runtimes remain relatively flat until ~27 assets, after which runtimes spike. The work demonstrates scalability limits of statevector simulation on the tested hardware and highlights GPU acceleration benefits; it does not present evidence of quantum algorithmic advantage in solution quality or asymptotic quantum speedup on real quantum hardware.",
+  "performance_claims": [
+    "[supported] The authors ran simulations up to 30 assets on GPU hardware (NVIDIA A100 80GB).",
+    "[supported] CPU (64 threads) simulation time shows a dramatic increase after ~15 assets in the reported experiments.",
+    "[supported] GPU simulation time remains relatively flat up to ~27 assets and then exhibits a sharp increase beyond that point.",
+    "[supported] The experiments were executed on a system with Dual AMD Rome 7742 (128 cores), 2 TB RAM, and an NVIDIA A100 80GB GPU; the classical optimizer used was COBYLA."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper demonstrates performance improvements from GPU-accelerated classical simulation (cuQuantum) of quantum circuits, not a provable or demonstrated quantum computational advantage on quantum hardware. While it argues that quantum algorithms (QAOA/VQE) are promising for portfolio optimization, no empirical evidence is provided that the quantum algorithms outperform classical optimization methods or that a genuine quantum advantage has been achieved.",
+  "limitations": [
+    "Access to real quantum hardware with higher qubit counts and deeper gate configurations without significant noise remains challenging (author-stated).",
+    "Statevector quantum simulation scales exponentially with qubit count, creating scaling and resource limitations for larger problems (author-stated).",
+    "Observed performance is consistent up to ~27 qubits/assets but shows an exponential increase in execution time beyond that, indicating scalability constraints (author-stated).",
+    "The current implementation has not been rigorously tested across diverse market scenarios and datasets; robustness and generalizability remain unvalidated (author-stated).",
+    "Anomalies in execution time for certain asset counts were observed and remain unexplained, indicating reproducibility/performance-variability issues that need investigation (author-stated).",
+    "[inferred] Results are based on GPU-accelerated classical simulation (CUDA Quantum / cuQuantum) rather than experiments on real quantum hardware, so quantum-hardware-specific effects (noise, calibration, connectivity) are not evaluated.",
+    "[inferred] The study focuses on runtime/performance comparisons (CPU vs GPU) but provides limited quantitative evaluation of solution quality (optimality, portfolio metrics) relative to classical optimization methods.",
+    "[inferred] The implementation was tested up to 30 assets; applicability and performance for substantially larger, production-scale portfolios (>30 assets) is unknown.",
+    "[inferred] Use of a single classical optimizer (COBYLA) is reported without comparison to other optimizers; optimizer choice may limit convergence speed or solution quality.",
+    "[inferred] The experimental setup is specific to a high-end single-node system (NVIDIA A100 80GB, large CPU/memory); results may not generalize to more modest hardware configurations.",
+    "[inferred] The paper provides limited detail on QAOA/VQE hyperparameters (depth p, ansatz structure, lambda tuning), making it hard to replicate or assess sensitivity to these design choices.",
+    "[inferred] Dataset choices (30 tickers, 2-year adjusted-close returns) may limit generalizability across different timeframes, markets, or asset universes."
+  ],
+  "open_questions": [
+    "What are the root causes of the execution-time anomalies observed at certain asset counts?",
+    "How will the GPU-accelerated simulation performance scale on multi-GPU systems and across multi-node distributed architectures?",
+    "How does CUDA Quantum/cuQuantum performance and scaling compare to alternative simulation frameworks such as TensorNet in practice?",
+    "How does the solution quality (optimality, risk-return tradeoff) from the quantum-simulated QAOA/VQE compare against classical portfolio optimization solvers and heuristics?",
+    "What are the practical limits (in assets/qubits) for GPU-accelerated statevector simulation before it becomes infeasible for real-world portfolio sizes?",
+    "How sensitive are results to choices of QAOA/VQE hyperparameters (number of layers p, ansatz design) and the regularization parameter lambda?",
+    "How do different classical optimizers (gradient-based, gradient-free) affect convergence speed, stability, and final portfolio quality in this hybrid workflow?",
+    "To what extent do simulator-only results translate to real quantum hardware performance given noise, limited qubit connectivity, and gate errors?",
+    "What are the optimal hardware and software system configurations (GPU memory, node counts, memory bandwidth) required to efficiently handle larger asset pools?",
+    "How robust are the findings across different market conditions, longer/shorter historical windows, or alternative asset universes?"
+  ],
+  "future_work": [
+    "Rigorously test the implementation across diverse scenarios to assess robustness and versatility.",
+    "Analyze performance on systems with multiple GPUs and extend experiments to multi-node architectures to evaluate distributed scalability.",
+    "Identify optimal system configurations required to handle computational demands of larger asset pools efficiently.",
+    "Perform further analysis using TensorNet to compare alternative quantum simulation frameworks and trade-offs.",
+    "Investigate and explain the anomalies observed in execution time for certain asset counts to improve predictability and reliability.",
+    "Extend experiments toward larger asset pools beyond the current 30-asset scope to empirically chart scalability limits and behavior."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — GPU-accelerated statevector simulation (NVIDIA cuQuantum on an A100) gives substantially lower runtimes than a 64-thread CPU baseline for the QUBO/QAOA-VQE portfolio optimization workflow up to ~27 qubits/assets.",
+    "#idea:near-term-feasibility — The authors successfully implement a QUBO → Ising mapping and a variational QAOA/VQE hybrid loop and simulate instances up to 30 assets, indicating feasibility of small-scale (NISQ-scale) portfolio experiments in simulation.",
+    "#idea:hybrid-approach — Uses a hybrid variational pipeline: QAOA ansatz circuits evaluated on a simulator with classical parameter updates (COBYLA) in a VQE-style loop.",
+    "#limitation:simulation-only — Experiments are performed on a GPU-accelerated statevector simulator only; no experiments on physical QPUs are reported.",
+    "#limitation:qubit-count — Experiments are limited to up to 30 qubits/assets, with observed runtime blow-ups (CPU ~15 assets, GPU ~27 assets), highlighting practical scaling limits at those instance sizes.",
+    "#limitation:no-empirical-validation — The study focuses on wall-clock runtime and scalability of simulators; it does not report solution quality (final portfolio allocations, objective values) or comparisons to classical optimization algorithms for solution quality.",
+    "#limitation:data-encoding — The work uses a binary QUBO inclusion model and Ising mapping but does not deeply analyse encoding overheads or how the encoding impacts effective problem size and solver performance."
+  ],
+  "contradictions": [
+    "The reported 'quantum advantage' is limited to faster GPU-accelerated classical simulation (cuQuantum on an A100) versus a CPU statevector baseline; this does not demonstrate algorithmic or hardware quantum speedup on real QPUs.",
+    "Although the paper highlights improved simulator scalability on GPU, it also reports a sharp runtime inflection around 27 qubits and CPU blow-up after ~15 qubits, contradicting any claim that the variational QAOA/VQE approach scales smoothly to substantially larger, practical portfolio sizes."
+  ]
+}

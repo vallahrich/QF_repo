@@ -1,0 +1,226 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "medium",
+  "reasoning": "Document has abstract, methods, results, appendices and full references and is dated (common in arXiv submissions) but no journal or conference venue is indicated. Authors are industry/IBM affiliated and the informal formatting/typos suggest a submitted or circulated preprint rather than a polished peer-reviewed publication.",
+  "title": "Quantum-enhanced Markov Chain Monte Carlo for Combinatorial Optimization",
+  "authors": [
+    "Kate V. Marshall",
+    "Daniel J. Egger",
+    "Michael Garn",
+    "Francesca Schiavello",
+    "Sebastian Brandhofer",
+    "Christa Zoufal",
+    "Stefan Woerner"
+  ],
+  "year": "2026",
+  "journal_or_venue": "arXiv preprint",
+  "doi": "",
+  "abstract_summary": "The paper presents a heuristic quantum-classical workflow that combines quantum-enhanced Markov Chain Monte Carlo (QeMCMC) proposals, warm-started QAOA-like circuits, and parallel tempering to solve combinatorial optimization problems. The authors demonstrate empirical recovery of global optima for Maximum Independent Set instances up to 117 variables on IBM superconducting hardware and report early evidence of improved scaling compared to comparable classical MCMC and tensor-network simulations, while noting the approach is heuristic and lacks provable convergence guarantees.",
+  "methodology_description": "The authors develop and empirically evaluate a heuristic quantum-classical optimization workflow that combines quantum-enhanced Markov chain Monte Carlo (QeMCMC) proposals implemented by short QAOA-like circuits, warm-started QAOA initial states, and classical parallel tempering (replica-exchange) with Metropolis–Hastings acceptance. They map Maximum Independent Set (MIS) instances to Ising/QUBO Hamiltonians with penalty (Lagrange multiplier A) terms, construct p=2, first-order-Trotter QAOA-like proposal circuits (with reduced cost Hamiltonians by dropping Pauli terms that would require excessive SWAPs), and run a replica ladder of Markov chains at different temperatures. Each iteration: (1) sample many shots from each replica’s parametrized circuit (parameters pre-trained classically using the QAOA training pipeline and COBYLA/transition-state continuation), (2) filter/select low-energy bitstrings (optionally subsample from the best-10), (3) evaluate the MH acceptance probability and accept/reject, (4) perform replica-exchange swaps periodically, and (5) warm-start the next proposal circuit from the accepted bitstring using a softened initial state controlled by epsilon. Experiments compare classical replica-exchange MCMC baselines, MPS (Qiskit Aer MPS) simulations of the quantum proposals (with truncation thresholds 1e-6..1e-10), and executions on IBM Quantum superconducting devices (Heron family). Key algorithmic knobs tuned include number of replicas (typically 5), temperature ladder (geometric spacing, T_low clipped ~0.01, T_high derived from Hcost spectrum), swap regularity (k between 1 and 5), shots per iteration (1 and 10,000 tested; hardware used 10,000), SWAP-layer budget for ansatz construction, warm-start regularization epsilon, and Lagrange multiplier A. Performance was measured by iterations and total shots to reach the global optimum, approximation ratios, Hamming distance traces, and success rates across repeated trials.",
+  "algorithms_used": [
+    "Quantum-enhanced Markov chain Monte Carlo (QeMCMC)",
+    "Quantum Approximate Optimization Algorithm (QAOA, p=2, first-order Trotter)",
+    "Warm-started QAOA",
+    "Metropolis–Hastings (MH) acceptance",
+    "Parallel tempering / Replica exchange MCMC",
+    "Classical replica-exchange MCMC (bitflip proposals)",
+    "Matrix Product State (MPS) simulation"
+  ],
+  "frameworks": [
+    "Qiskit (Qiskit Aer MPS simulator)",
+    "QAOA Training Pipeline (qiskit-community/qaoa_training_pipeline)",
+    "IBM Quantum Runtime Session mode"
+  ],
+  "experimental_setup": "Experiments used MIS graph instances from the Network Repository (animal social interaction networks) with node counts {17, 39, 52, 80, 117}. Setups compared: (a) classical replica-exchange MCMC baselines with up to 25 bitflip proposals, (b) MPS simulation of the quantum-proposal QAOA-like circuits (truncation thresholds 1e-6..1e-10) with both 1 and 10,000 shots per iteration, and (c) IBM Quantum superconducting hardware runs (Heron devices such as ibm_boston, ibm_pittsburgh, ibm_aachen, ibm_torino, ibm_fez) using multi-shot (10,000) iterations, 5 replicas, up to 200,000 iterations or convergence, and subsampling from the best-10 measured bitstrings per iteration.",
+  "dataset_used": "Graph instances from the Network Repository (real-world animal social interaction networks). Specific sizes used: 17, 39, 52, 80, 117 nodes with corresponding edge counts {91, 245, 454, 714, 1028}.",
+  "experiment_input": {
+    "source": "Network Repository (public graph datasets)",
+    "instances": [
+      {
+        "nodes": 17,
+        "edges": 91
+      },
+      {
+        "nodes": 39,
+        "edges": 245
+      },
+      {
+        "nodes": 52,
+        "edges": 454
+      },
+      {
+        "nodes": 80,
+        "edges": 714
+      },
+      {
+        "nodes": 117,
+        "edges": 1028
+      }
+    ],
+    "preprocessing": "No removal of isolated nodes (kept full graphs). For hardware feasibility, the cost Hamiltonian in the QAOA ansatz was simplified by dropping Pauli terms that would require excessive SWAP gates; subgraph / SWAP-layer-based ansatzes were constructed (varied SWAP layers to trade quality vs implementability). Lagrange multiplier A for constraint penalty was tuned; warm-start softened initial states were computed from relaxed solves and used to set single-qubit Ry angles via epsilon."
+  },
+  "experiment_process": [
+    "Map MIS to Ising / QUBO Hamiltonian Hcost = Hobjective + A * Hconstraint (choose A large enough to penalize constraint violations; tuned experimentally).",
+    "Design p=2 first-order-Trotter QAOA-like circuits: U = e^{-i β2 Hmix} e^{-i γ2 Hcost} e^{-i β1 Hmix} e^{-i γ1 Hcost}; use warm-start initialization Ry(θ_i) with θ_i derived from softened starting bitstring and regularization epsilon.",
+    "Pretrain circuit parameters classically using QAOA Training Pipeline and optimizers (COBYLA + transition-state continuation strategy).",
+    "Set up N replicas (typically 5) with geometric temperature ladder spanning [T_low, T_high] (T_low clipped ~0.01; T_high estimated from largest eigenvalue of Hcost for small instances and extrapolated), and choose swap regularity k (1..5).",
+    "Iterate until convergence or max iterations (200,000): for each replica per iteration, (a) sample the replica circuit many times (shots per iteration: tested 1 and 10,000; hardware used 10,000), (b) filter measured bitstrings by energy and optionally subsample uniformly from the best-10 low-energy strings, (c) evaluate MH acceptance probability for the proposed move and accept/reject, (d) at regular intervals attempt replica-exchange swaps between neighboring replicas using MH-exchange rule, (e) warm-start the next proposal circuit from the accepted bitstring (apply softened rotations to create initial |v(ε)⟩).",
+    "Record objective/energy of accepted solutions, Hamming distances, and statistics; repeat experiments multiple times (10 repeats for classical/MPS, 3 repeats on hardware).",
+    "Compare to classical baselines (replica-exchange MCMC with bitflip proposals up to 25 flips) and MPS simulations."
+  ],
+  "experiment_output": {
+    "formats": [
+      "Per-iteration objective (energy) traces",
+      "Median number of iterations to converge to global optimum across repeats",
+      "Total shots used and shots kept for subsampling",
+      "Approximation ratio (for ansatz-only sampling experiments)",
+      "Hamming distance sequences for accepted bitstrings",
+      "Swap acceptance rates and replica success rates",
+      "Scaling fits (exponential fit parameters) of iterations/shots vs problem size"
+    ],
+    "baselines": [
+      "Classical replica-exchange MCMC (1-shot and multi-shot settings)",
+      "MPS simulation of QeMCMC (various truncation thresholds)",
+      "Hardware runs on IBM Heron devices"
+    ],
+    "key_results": "Global optimum for all studied MIS instances (including up to 117 nodes) recovered; comparisons reported as median iterations to convergence and shots; evidence reported of favorable scaling for the quantum-enhanced approach on chosen instances and of hardware outperforming some MPS simulations under the chosen settings."
+  },
+  "experiment_parameters": {
+    "qubits": [
+      17,
+      39,
+      52,
+      80,
+      117
+    ],
+    "qaoa_depth_p": 2,
+    "trotter_order": "first-order",
+    "swaps_allowed": "varied per instance (examples tested: 13, 25, 37, 49 SWAP layers for 52-node study; SWAP-layer budgets chosen to trade implementability vs fidelity)",
+    "shots_per_iteration": [
+      1,
+      10000
+    ],
+    "replicas": 5,
+    "max_iterations": 200000,
+    "swap_regular_k": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "temperature_range": "geometric ladder between T_low (~0.01 clipped) and T_high (estimated from largest eigenvalue of Hcost; high-target acceptance ~0.5), number of replicas set to target 20-40% adjacent swap acceptance",
+    "mps_truncation_thresholds": [
+      1e-06,
+      1e-07,
+      1e-08,
+      1e-09,
+      1e-10
+    ],
+    "optimizer": "COBYLA + transition-state continuation (via QAOA Training Pipeline)",
+    "warm_start_regularization_epsilon": "ε in (0, 0.5), tuned experimentally; optionally separate ε_init and ε_mixer (typically aligned)",
+    "lagrange_multiplier_A": "tuned per instance (typical condition A ≥ 2 for constraint enforcement, tuned to balance feasibility and objective)"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit Aer MPS simulator (used with truncation thresholds 1e-6..1e-10)",
+    "qpu_models": [
+      "IBM Quantum Heron devices (examples used: ibm_boston (Heron r3), ibm_pittsburgh, ibm_aachen, ibm_torino, ibm_fez)"
+    ],
+    "cloud_provider": "IBM Quantum",
+    "circuit_resource_ranges": {
+      "two_qubit_gate_counts": "ranged up to several thousand (examples reported up to ~5532 two-qubit gates for some ansatzes)",
+      "circuit_depths": "tens to a few hundreds depending on SWAP budget (examples reported depths ~42..228 in table)",
+      "shots_per_iteration_on_hardware": 10000
+    },
+    "execution_mode": "Qiskit Runtime Session mode with parameter streaming for tight classical-quantum feedback"
+  },
+  "reproducibility_notes": "The authors reference and use open-source packages (Qiskit, QAOA Training Pipeline) and provide implementation detail in appendices. Specific GitHub repos mentioned include qaoa_training_pipeline and an independent_set_benchmarking repository. Reproducing hardware runs requires IBM Quantum access (Heron devices) and use of session/parameter-streaming features; MPS simulations require Qiskit Aer with controllable truncation thresholds and nontrivial compute resources for larger instances. Overall, the paper provides algorithmic details, parameter choices, and references to code/tooling, enabling partial reproducibility (full reproduction of hardware timing/noise-affected results requires equivalent device access and contemporaneous device calibration data).",
+  "key_findings": [
+    "[supported] The authors implemented a hybrid heuristic that combines quantum-enhanced MCMC (QeMCMC), warm-started QAOA-like circuits, and parallel tempering, and ran end-to-end experiments on IBM superconducting quantum hardware.",
+    "[supported] The workflow recovered the global optimum for Maximum Independent Set (MIS) instances with up to 117 decision variables (117 qubits) on IBM hardware.",
+    "[supported] For the 117-node instance on ibm_boston, hardware experiments (10,000 shots/iteration, subsampling) found the global optimum in 151 iterations for one reported run; hardware runs on other devices reported convergence in as few as 83 iterations in another configuration.",
+    "[supported] Classical replica-exchange MCMC baselines required substantially more iterations/samples on the chosen instances in many settings (examples: lowest reported classical 1-shot run needed 6,293 iterations; multi-shot classical runs reported minima ~5,101 iterations).",
+    "[supported] MPS (matrix product state) simulations of the quantum-enhanced algorithm showed worse convergence (median ~90,000 iterations in one 1-shot simulated run for the 117-node instance) and were sensitive to truncation thresholds, which degraded simulated performance for the largest instances.",
+    "[supported] Using many shots per iteration with subsampling (selecting from the best ranked proposals) materially improved convergence for the QAOA-based proposals in experiments.",
+    "[speculative] The authors report early empirical evidence of a scaling advantage of their quantum-enhanced algorithm over comparable classical MCMC approaches for the particular MIS instances studied.",
+    "[speculative] The paper suggests that, for these instances, real quantum hardware outperformed classical MPS simulation because truncation errors in MPS became more detrimental than hardware noise.",
+    "[speculative] The authors propose that heuristic, quantum-enhanced sampling approaches like theirs could be a practical route toward useful quantum optimization on near-term devices for industry-relevant problems (e.g., finance, biology), but acknowledge need for further testing across broader instance sets and problem classes.",
+    "[speculative] The convergence guarantees of original QeMCMC do not hold for this heuristic due to the introduction of asymmetric warm-started proposal distributions; the approach is presented as a heuristic without provable convergence."
+  ],
+  "results_summary": "The paper presents a heuristic quantum-classical optimization workflow that combines QeMCMC-style quantum proposals, warm-started QAOA-like circuits, and parallel tempering. The authors empirically solved MIS instances up to 117 variables on IBM superconducting hardware and report that hardware runs converged to global optima in far fewer iterations than some classical baselines and MPS simulations for the selected instances. They observe that MPS truncation errors can make classical simulations perform worse than hardware in these settings, and they present these findings as early, instance-limited evidence that their hybrid approach may scale favorably compared to the tested classical MCMC approaches.",
+  "performance_claims": [
+    "[supported] Global optima recovered for MIS instances up to 117 variables using 117 qubits on IBM quantum hardware.",
+    "[supported] 117-node ibm_boston hardware experiment converged to the global optimum in 151 iterations (10,000 shots/iteration with subsampling); other hardware runs reported convergence in 83 iterations for a different device/configuration.",
+    "[supported] Classical replica-exchange MCMC baseline: lowest reported 1-shot per-iteration convergence was 6,293 iterations for the 117-node instance; with 10,000 shots per iteration classical runs reported minima around 5,101 iterations.",
+    "[supported] MPS-simulated quantum-enhanced algorithm (1-shot per iteration) median convergence ~90,000 iterations for the 117-node instance across ten trials (sensitive to truncation threshold).",
+    "[supported] Subsampling from the best ranked ten proposals in multi-shot experiments improved convergence compared with single-shot sampling in their tests.",
+    "[supported] Experiments used up to 10,000 shots per iteration on hardware; reported total shot counts (per experiment) ranged into millions for larger instances (e.g., >1e6 shots in some 117-node runs as per Table IV)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors report instance-specific empirical evidence that their quantum-enhanced heuristic converges faster (in iterations) than some classical MCMC baselines and than MPS simulations on the chosen MIS instances; however, this is limited to a small set of related graph instances, depends on experimental choices (shot counts, subsampling, ansatz simplifications), and lacks broader benchmarking or theoretical guarantees. Therefore the claim of advantage is preliminary and speculative rather than demonstrated generally.",
+  "limitations": [
+    "Algorithm is heuristic and does not offer provable convergence guarantees (author-stated).",
+    "Use of asymmetric / warm-started proposal distributions breaks the convergence guarantees of the original QeMCMC formulation (author-stated).",
+    "Experiments are limited to a small set of five problem instances (17, 39, 52, 80, 117 nodes) drawn from related social-network graphs — limits generality (author-stated).",
+    "Circuit ansatzes are simplified (Pauli terms dropped) to reduce SWAP depth; the implemented Hcost is an approximation and its ground state may not coincide with the true MIS ground state (author-stated).",
+    "Device noise requires many measurement shots and classical mitigation heuristics; shot-cost and noise-mitigation are practical constraints (author-stated).",
+    "Classical MPS simulations suffer from truncation error; for some regimes truncation error harms simulation fidelity more than hardware noise (author-stated).",
+    "Circuit depth and required SWAP layers are constrained by hardware connectivity, creating a trade-off between expressiveness and noise susceptibility (author-stated).",
+    "Significant experimental tuning (temperatures, replica counts, swap frequency, warm-start parameters) is needed and was done heuristically, reducing reproducibility and requiring manual calibration (author-stated).",
+    "Classical baseline comparisons are primarily to simple replica-exchange MCMC (bitflip proposals); stronger classical heuristics/solvers were not comprehensively compared (author-stated).",
+    "Classical pre-training, parameter optimization and post-processing required nontrivial classical resources and HPC for some tasks (author-stated).",
+    "[inferred] Applicability to financial-services-specific instances is not demonstrated (paper mentions MIS relevance to finance but experiments do not include financial datasets).",
+    "[inferred] Wall-clock runtime and end-to-end throughput may be dominated by shot collection and the classical-quantum feedback loop; scalability in real operational settings is uncertain.",
+    "[inferred] Observed empirical scaling advantage is limited to the chosen instance set and hardware generation; whether it generalizes to larger/harder instances is unknown.",
+    "[inferred] Reliance on specific software/hardware features (e.g., Qiskit Runtime Session mode with parameter streaming) may affect portability of the workflow across platforms."
+  ],
+  "open_questions": [
+    "Does the observed empirical scaling advantage persist across larger and more diverse instance sets and across other combinatorial problem classes?",
+    "Can alternative circuit constructions or ansatz designs (that reduce SWAP count or improve expressiveness) reliably improve performance on larger instances?",
+    "Which concrete techniques (problem decomposition, block sampling, other hybrid strategies) are effective to scale the approach beyond current hardware limitations?",
+    "What are the theoretical convergence properties (if any) of the heuristic that combines warm-started, biased quantum proposals with MH acceptance and parallel tempering?",
+    "How should shot budgets be optimally chosen to trade off noise mitigation, wall-clock time, and solution quality in realistic hardware deployments?",
+    "How do truncation errors in classical MPS simulation affect the fidelity of simulation-based predictions, and what simulation methods best predict hardware behavior at larger scales?",
+    "How does warm-starting (and the associated explicit bias) affect exploration/exploitation balance and the ability to find global optima across diverse landscapes?",
+    "Can the approach outperform state-of-the-art classical combinatorial optimizers (beyond simple MCMC baselines) on practically relevant instances, including finance-related ones?",
+    "What are robust, transferable heuristics or automated procedures for tuning parallel tempering hyperparameters (temperatures, replica count, swap frequency) across instance families?",
+    "What is the real end-to-end runtime (including classical-quantum communication, compilation, and classical postprocessing) for production-scale problems, and is it competitive for industry use cases?"
+  ],
+  "future_work": [
+    "Run more experiments across larger sets of instances and additional problem classes to strengthen empirical conclusions (author-stated).",
+    "Investigate alternative circuit constructions and ansatz designs to improve performance and reduce SWAP-depth/noise trade-offs (author-stated).",
+    "Study approaches for scaling beyond hardware limitations such as problem decomposition and block sampling (author-stated).",
+    "Perform further experiments to validate and refine observed scaling behavior and to compare against stronger classical baselines (author-stated).",
+    "Explore improved parameter-tuning procedures and heuristics for replica temperatures, number of replicas, and swap regularity (author-stated).",
+    "Analyze the effects of MPS truncation and improve classical simulation fidelity to better predict hardware performance (author-stated/inferred).",
+    "Investigate how to reduce shot requirements and improve noise-mitigation strategies tailored to this workflow (author-stated/inferred).",
+    "Evaluate applicability to domain-specific problem instances (e.g., financial-services datasets) to assess practical utility (inferred from paper context).",
+    "Examine portability of the execution workflow across different quantum software/runtime environments and hardware backends (inferred)."
+  ],
+  "topic_tags": [],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical",
+    "quantum-annealing-qubo"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "medium",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Empirical evidence: the QeMCMC workflow (warm-started, p=2 QAOA-like proposals + parallel tempering) recovered global optima for MIS instances up to 117 variables on IBM superconducting hardware and shows early signs of improved scaling versus classical replica-exchange MCMC and MPS simulations.",
+    "#idea:near-term-feasibility — Demonstrated on NISQ devices using short-depth, first-order-Trotter QAOA-like circuits, warm-start initialization, and reduced-cost Hamiltonians (dropping Pauli terms) to respect SWAP/gate budgets; experiments used multi-shot (10k) runs on real IBM Heron devices.",
+    "#idea:hybrid-approach — The pipeline is explicitly hybrid: classical pretraining of circuit parameters (QAOA training pipeline, COBYLA + continuation), classical MH acceptance and replica-exchange, and quantum proposals sampled from parametrized ansatzes; warm-starts and classical subsampling reduce quantum resource needs.",
+    "#limitation:qubit-count — Ansatz simplifications (dropping Pauli terms, subgraph/SWAP-layer-based constructions) were required for hardware feasibility, indicating connectivity/qubit-mapping limits constrain fidelity and expressive power of the quantum proposals.",
+    "#limitation:noise — Practical implementation required trading ansatz quality for fewer SWAPs; experimental results are therefore affected by device noise and gate errors (motivating shot counts, ansatz reductions, and warm-start regularization).",
+    "#idea:quantum-advantage — Claims are heuristic and empirical: authors report improved scaling in these experiments but explicitly note lack of provable convergence guarantees and heuristic nature of the method (i.e., advantage is empirical/instance-limited)."
+  ],
+  "contradictions": []
+}

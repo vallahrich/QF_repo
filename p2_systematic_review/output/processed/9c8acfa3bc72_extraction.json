@@ -1,0 +1,202 @@
+{
+  "source_type": "technical-report",
+  "source_type_confidence": "medium",
+  "reasoning": "Document has full academic structure (abstract, TOC, methods, results, references) and a university affiliation/date at the top but no journal/conference venue or DOI. That layout and absence of publication venue indicate an institutional report/thesis-style manuscript (not clearly peer‑reviewed).",
+  "title": "Hybrid Quantum–Classical Support Vector Machines for Financial Regime Detection: Performance and Efficiency Evaluation",
+  "authors": [
+    "Tom Girard"
+  ],
+  "year": "2025",
+  "journal_or_venue": "Technical Report (University of California, Irvine)",
+  "doi": "",
+  "abstract_summary": "This technical report evaluates hybrid quantum–classical support vector machine architectures for financial regime detection using multi-asset market data. Experiments show hybrid models approach classical accuracy (~81%) while improving recall balance for extreme regimes, and retain near-linear training costs compared with the high computational burden of fully quantum models, demonstrating hybrid architectures as a practical NISQ-era bridge for quantum applications in finance.",
+  "methodology_description": "The study implements a comparative experimental pipeline to evaluate classical, quantum, and hybrid quantum–classical support vector machine (SVM) approaches for financial market regime classification. Multi-asset daily market data (SPY, VIX, 10yr & 2yr Treasury yields, ICE BofA High‑Yield credit spread, DXY) from Feb 2006 to Oct 2025 were merged, forward-filled for non-trading gaps, winsorized (1st/99th percentiles) and standardized. Feature engineering produced returns (arithmetic & log), rolling volatilities (20/60 days), z-scores, momentum (20/60), moving-average ratios, vol‑of‑vol, rolling skewness/kurtosis and a liquidity stress interaction. Dimensionality reduction via PCA retained six components (>90% variance) which were used as inputs. Classical baselines comprised Random Forest, XGBoost and SVM with RBF kernel trained on a chronological split (train 2006–2022; test 2023–2025) and evaluated with macro-averaged Accuracy, Precision, Recall and F1 plus confusion matrices. The quantum pipeline used Qiskit Machine Learning to build a Quantum SVM (QSVC) with a 6‑qubit ZZFeatureMap (phi_ij = x_i x_j), full entanglement and three repetitions; the Fidelity Statevector Kernel (squared fidelity) was computed on a noiseless statevector simulator. PCA components were mapped to qubits; class imbalance was mitigated with SMOTE (ratio 0.6). Kernel matrices were computed pairwise (O(n^2)); quantum training was performed on subsets (≈2k–3.5k samples) due to memory constraints. Hybrid ensembles combined classical SVM and QSVC predictions via deterministic hard voting and weighted voting schemes (50–50, 60–40, 70–30), with fixed random seeds for reproducibility. Computational diagnostics (training time, memory) and agreement analysis (classical vs quantum prediction overlap) were also recorded.",
+  "algorithms_used": [
+    "Random Forest",
+    "XGBoost",
+    "Support Vector Machine (RBF kernel)",
+    "Quantum Support Vector Classifier (QSVC)",
+    "ZZFeatureMap (quantum feature map)",
+    "Fidelity Statevector Kernel (quantum kernel)",
+    "Principal Component Analysis (PCA)",
+    "SMOTE (Synthetic Minority Over-sampling Technique)",
+    "Hard voting ensemble",
+    "Weighted voting ensemble"
+  ],
+  "frameworks": [
+    "Qiskit (Qiskit Machine Learning)",
+    "scikit-learn",
+    "XGBoost",
+    "imbalanced-learn (SMOTE)",
+    "pandas",
+    "seaborn"
+  ],
+  "experimental_setup": "Noiseless CPU-based Qiskit statevector simulator for quantum kernel computation; classical models trained on CPU. Memory-aware kernel computation (machines with >10GB RAM allowed ~3,000–3,500 training samples). Chronological split for classical baselines (2006–2022 train / 2023–2025 test); stratified 80/20 splits used for some quantum/hybrid experiments.",
+  "dataset_used": "Daily multi-asset U.S. market data (Feb 2006 – Oct 2025) including SPY (S&P 500 ETF), VIX, 10-year & 2-year Treasury yields (FRED DGS10, DGS2), ICE BofA High‑Yield Index (BAMLH0A0HYM2), and U.S. Dollar Index (DXY). Sources: Bloomberg and FRED.",
+  "experiment_input": {
+    "sources": [
+      "Bloomberg (SPY, VIX, DXY)",
+      "Federal Reserve FRED (10yr & 2yr yields, High-Yield Credit Spread)"
+    ],
+    "timeframe": "February 2006 – October 2025 (daily)",
+    "final_dataset_file": "df.csv (merged panel)",
+    "size": {
+      "full_raw_observations": "daily series covering 2006–2025 (exact N dependent on merged trading days)",
+      "classical_training": "training set 2006–2022; testing 2023–2025 (chronological)",
+      "quantum_training_subset": "approx. 2,000–3,500 samples (varied by run)",
+      "hybrid_classical_set": "approx. 4,600 samples (balanced via SMOTE)"
+    },
+    "preprocessing": "Forward-fill non-trading gaps; compute arithmetic & log returns; rolling volatility (20/60 days); z-scores (60-day mean/std); momentum (20/60); moving-average ratios; vol-of-vol; rolling skewness & kurtosis; liquidity stress interaction (σ20 × volume); winsorize at 1st/99th percentiles; StandardScaler normalization; PCA to 6 components (>90% variance); SMOTE oversampling ratio 0.6 for class balancing."
+  },
+  "experiment_process": "1) Data extraction and merging from Bloomberg/FRED; forward-fill and winsorize; feature engineering (returns, vol, momentum, etc.). 2) Standardize features and apply PCA retaining 6 components (>90% variance). 3) Balance classes with SMOTE (ratio=0.6). 4) Classical training: train Random Forest, XGBoost, SVM-RBF on chronological training split; evaluate on held-out test set. 5) Quantum pipeline: map 6 PCA components to 6 qubits using ZZFeatureMap (phi_ij = x_i x_j), full entanglement, repetitions=3; compute Fidelity Statevector Kernel (K(x_i,x_j)=|<φ(x_i)|φ(x_j)>|^2) on Qiskit statevector simulator; train QSVC (dual SVM using kernel matrix) on quantum training subset. 6) Hybrid: independently train classical SVM (RBF) on full balanced set and QSVC on subset; aggregate predictions via deterministic hard voting and weighted voting (50–50, 60–40, 70–30). 7) Evaluation: compute Accuracy, Precision, Recall, F1 (macro and per-class), confusion matrices, agreement statistics, and training-time/memory diagnostics. Fixed random seeds used for reproducibility; outputs exported to CSV.",
+  "experiment_output": "Evaluation metrics per model including Accuracy, Precision, Recall, F1 (macro-averaged and per-class), confusion matrices, agreement rate between classical and quantum predictions (~62%), training times, and kernel computation diagnostics. Baselines: Random Forest, XGBoost, SVM-RBF; comparisons reported for pure classical, pure quantum (QSVC), and hybrid ensembles (50–50, 60–40, 70–30). Results exported (e.g., classical_baseline_results.csv).",
+  "experiment_parameters": {
+    "quantum": {
+      "qubits": 6,
+      "feature_map": "ZZFeatureMap",
+      "repetitions": 3,
+      "entanglement": "full (fully connected)",
+      "kernel": "Fidelity Statevector Kernel (squared fidelity)",
+      "backend": "statevector simulator (noiseless)",
+      "shots": "N/A (statevector exact amplitudes)",
+      "training_subset_sizes": "≈2000 to 3500 samples (varied)",
+      "SMOTE_ratio": 0.6,
+      "PCA_components": 6
+    },
+    "classical": {
+      "models": [
+        "Random Forest",
+        "XGBoost",
+        "SVM (RBF)"
+      ],
+      "SVM_kernel": "RBF",
+      "data_split_classical": "train 2006–2022, test 2023–2025 (chronological)",
+      "hyperparameters": "regularization parameter C mentioned generically; detailed hyperparameter tuning not exhaustive"
+    },
+    "hybrid": {
+      "voting_schemes": [
+        "hard voting (50–50)",
+        "weighted voting (60–40 classical–quantum)",
+        "weighted voting (70–30 classical–quantum)"
+      ],
+      "random_seed": "fixed deterministic seeds for reproducibility"
+    },
+    "computational": {
+      "memory_threshold": ">10 GB RAM enabled ~3,000–3,500 training samples",
+      "kernel_time_complexity": "O(n^2) pairwise kernel evaluations"
+    }
+  },
+  "hardware_details": {
+    "simulator": "Qiskit statevector simulator (noiseless)",
+    "execution_host": "classical CPU (statevector simulation)",
+    "recommended_RAM": ">10 GB for larger kernel matrices",
+    "QPU_model": null,
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "Experiments used fixed random seeds and deterministic weighted voting; results and intermediate outputs were exported to CSV (e.g., classical_baseline_results.csv and df.csv for the merged dataset). The paper does not provide a public code repository or data download links, so full reproducibility would require re-implementation using described preprocessing, PCA to 6 components, SMOTE (ratio 0.6), and the Qiskit statevector ZZFeatureMap (6 qubits, 3 repetitions, full entanglement) with fidelity kernel. No explicit seed values or exact hyperparameter grids were published.",
+  "key_findings": [
+    "[speculative] Quantum feature maps can embed financial data into exponentially large Hilbert spaces where nonlinear patterns may become linearly separable, offering richer representational capacity than classical kernels.",
+    "[speculative] Under idealized assumptions (e.g., QRAM, well-conditioned matrices), Quantum SVM formulations can deliver asymptotic speedups (polylog scaling) for certain linear-algebra subroutines.",
+    "[supported] A Fidelity Statevector Quantum Kernel (6 qubits, ZZFeatureMap with 3 repetitions) can be constructed and used with a classical SVM optimizer (QSVC) to perform market-regime classification on macro-financial data.",
+    "[supported] The implemented QSVC achieved a training accuracy of 85.3% and a test accuracy of 66.0% on the described dataset, showing a substantial training–test gap (~19 percentage points).",
+    "[supported] Purely classical models (notably SVM–RBF in this study) achieved higher test accuracy than the pure QSVC; the classical SVM reported ≈80.43% test accuracy in this work.",
+    "[supported] Hybrid quantum–classical ensembles (combining classical SVM and QSVC via weighted voting) achieved intermediate results: hybrids (50–50 and 60–40) reached ≈75.9% and ≈75.4% test accuracy respectively, closing much of the gap between pure quantum and classical models.",
+    "[supported] Hybrid ensembles improved minority-regime (Bullish / +1) detection: quantum-only minority F1 ≈0.20 increased to hybrid minority F1 ≈0.53–0.56 in the best-weighted hybrids reported.",
+    "[supported] Classical and quantum components agreed on approximately 62% of predictions on the held-out test set, indicating substantial but not complete overlap in decision boundaries.",
+    "[supported] Computationally, the classical SVM trained in about 1 second on the test hardware, whereas the (statevector-simulated) QSVC required on the order of 2 hours (~120 minutes) due to kernel evaluation costs; hybrids (using quantum on a subset) required far less time than the full quantum run.",
+    "[supported] Training the quantum kernel on a subset of samples (e.g., ~2,000) while training the classical model on the full balanced set yielded favorable cost–performance trade-offs for the hybrid approach.",
+    "[supported] The quantum kernel model exhibited limited gains from increasing training sample size in these experiments (a reported plateau when scaling from 2,000 to 3,500 samples), suggesting representational or capacity limits under the chosen feature map and circuit depth.",
+    "[speculative] Hybrid quantum–classical architectures represent a practical transitional path for near-term (NISQ-era) financial applications, enabling partial quantum expressivity without full quantum computational overhead.",
+    "[disputed] The report asserts a 'quantum performance envelope' of 74% accuracy with minority F1 ≈0.20 for quantum kernels; this conflicts with the explicitly stated QSVC test accuracy of 66.0% elsewhere in the text and thus appears inconsistent within the document.",
+    "[supported] The quantum kernel (as implemented and simulated noiselessly) encodes additional structural information that can be complementary to classical kernels, especially around transitional or high-volatility regimes."
+  ],
+  "results_summary": "The report empirically compares classical SVM (RBF), a fidelity-based quantum SVM (QSVC using a 6-qubit ZZFeatureMap), and hybrid ensembles combining both. Classical SVM obtained the highest test accuracy (~80.4%). The QSVC (statevector simulator) showed a training accuracy of 85.3% but generalized at ~66.0% test accuracy, indicating overfitting. Hybrid weighted-voting ensembles (e.g., 50–50, 60–40) recovered most of the gap, achieving ~75–76% test accuracy while substantially improving minority-class (Bullish) F1 from ~0.20 (quantum-only) to ~0.53–0.56. Classical and quantum models agreed on ~62% of predictions. Computationally, pure quantum kernel evaluation on the noiseless simulator incurred large runtimes (~120 minutes), whereas classical training was trivial (~1 second); hybrids reduced the quantum cost by training quantum kernels on subsamples, delivering favorable cost–performance trade-offs.",
+  "performance_claims": [
+    "Classical SVM test accuracy ≈ 80.43%",
+    "QSVC (6 qubits, ZZFeatureMap r=3) training accuracy = 85.3%",
+    "QSVC test accuracy = 66.0%",
+    "QSVC minority-class (Bullish) F1 ≈ 0.20",
+    "Hybrid (50–50) ensemble test accuracy ≈ 75.9%",
+    "Hybrid (60–40) ensemble test accuracy ≈ 75.4%",
+    "Hybrid minority-class F1 ≈ 0.53–0.56",
+    "Classical–Quantum agreement ≈ 62.3% (models made identical predictions on ~62% of test observations)",
+    "Classical SVM training time ≈ 1 second (on standard CPU hardware used)",
+    "Quantum kernel (statevector simulator) end-to-end training ≈ 120 minutes",
+    "Quantum kernel evaluation involved on the order of 12.25 million pairwise state overlaps in one experiment (reported)",
+    "Observed quantum training–test overfitting gap ≈ 19 percentage points (85.3% train vs 66.0% test)"
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper presents evidence that quantum feature embeddings provide complementary representational information that can improve minority-regime detection when combined with classical models (hybrid ensembles). However, pure quantum models do not outperform classical baselines on overall accuracy in these experiments; claims of asymptotic quantum advantage remain theoretical and contingent on idealized assumptions (QRAM, fault-tolerant hardware). Thus, a practical quantum advantage is not demonstrated and is characterized as a speculative near-term benefit via hybridization.",
+  "limitations": [
+    "Hardware and simulation constraints: quantum components were executed on noiseless statevector simulators, so results represent an upper bound and do not capture decoherence, gate errors, sampling noise, or other hardware realities (author-stated).",
+    "Dataset size and feature dimensionality: experiments were limited to medium-sized datasets (~10^3 samples) and PCA-reduced feature spaces to keep quantum kernel estimation tractable (author-stated).",
+    "Quadratic/exponential computational scaling: quantum kernel construction requires O(n^2) pairwise state overlaps and statevector simulation memory/cost grows exponentially with qubit count, limiting scalability (author-stated).",
+    "Quantum model overfitting and capacity limits: large train/test gap (e.g., ~19 percentage points) and observed performance plateau when increasing training samples indicate capacity/regularization challenges in the chosen quantum configuration (author-stated).",
+    "Hyperparameter sensitivity and manual hybrid weighting: ensemble weightings (e.g., 80–20, 60–40) were manually set rather than optimized, making results sensitive to chosen splits (author-stated).",
+    "Interpretability vs. expressivity trade-off: quantum embeddings complicate feature attribution and existing explainability tools (SHAP/LIME) are not natively compatible with quantum feature maps (author-stated).",
+    "Temporal and economic validity: regime labels are statistical constructs (detection) rather than causal explanations; models detect statistical patterns but do not establish economic causality (author-stated).",
+    "Statevector simulator resource limits: practical sample sizes and qubit counts constrained by classical simulator memory, which restricts experimental scope (author-stated/implied throughout methods).",
+    "Trainability issues for variational circuits: VQCs and QNNs are subject to barren plateaus, shot noise, and other optimization instabilities that limit reliable training on deeper circuits (author-stated in literature review).",
+    "[inferred] Synthetic oversampling (SMOTE) may introduce artifacts: using SMOTE to balance regimes could create synthetic minority examples that distort quantum kernel geometry or inflate apparent minority-class performance.",
+    "[inferred] Geographic/asset scope limits generalizability: dataset focused on US market instruments (SPY, VIX, Treasuries, HY spreads, DXY), so external validity to other markets, asset classes, or cross-sectional universes is untested.",
+    "[inferred] Real-device noise sensitivity: performance observed on noiseless simulators may degrade substantially on physical NISQ hardware due to measurement noise and limited fidelity.",
+    "[inferred] Real-time deployment constraints: while hybrids reduce computational cost relative to full quantum approaches, latency and operational constraints for live forecasting/decision pipelines remain unclear.",
+    "[inferred] Limited exploration of alternative quantum encodings/ansätze: only a specific ZZFeatureMap (6 qubits, 3 reps) was retained as optimal; other encodings might yield different trade-offs but were not exhaustively explored."
+  ],
+  "open_questions": [
+    "How robust are the reported hybrid and quantum-model gains when executed on real NISQ devices subject to decoherence, gate and readout errors, and limited shot budgets?",
+    "Can hybrid quantum–classical architectures scale to larger datasets and higher-dimensional feature sets (e.g., many-assets portfolios) while preserving computational tractability and predictive benefit?",
+    "What is the optimal design of quantum feature maps / ansätze for financial data (which encodings, entanglement patterns, and depths best capture market structure) and how to select them systematically?",
+    "How should the classical and quantum components be combined optimally (beyond fixed weighted hard voting)—i.e., can adaptive, data-driven, or probabilistic fusion outperform manual weighting?",
+    "Does improved regime-detection performance from hybrid models translate into economically meaningful improvements in downstream tasks (portfolio performance, risk-adjusted returns, VaR estimates)?",
+    "To what extent do quantum embeddings capture genuinely complementary information versus noise-induced idiosyncrasies, given the ~62% agreement with classical SVMs?",
+    "How do hybrid models perform under distributional shifts and nonstationarity (e.g., sudden structural breaks, extreme crises not present in training data)?",
+    "What are principled approaches to provide explainability for quantum-enhanced predictions—can quantum-aware attribution or fidelity-based saliency methods be developed?",
+    "Can dynamic or automated schemes (e.g., reinforcement learning, Bayesian optimization) effectively tune the quantum contribution over time and across regimes?",
+    "Is there an operational frontier where the computational cost of quantum kernels is justified by predictive or economic gains, and how to quantify that trade-off in production settings?"
+  ],
+  "future_work": [
+    "Scalable hybrid architectures: develop designs to scale hybrid frameworks to higher-dimensional and multi-asset datasets (e.g., distributed quantum kernels, variational quantum feature maps, hierarchical architectures).",
+    "Dynamic quantum weighting: explore adaptive weighting schemes where the quantum–classical contribution is tuned dynamically via reinforcement learning, meta-optimization, or context-aware rules.",
+    "Integration with financial forecasting pipelines: embed hybrid regime predictions into downstream forecasting systems for returns, volatility, or credit spreads to assess decision-making utility.",
+    "Quantum explainability and causal insights: create quantum-compatible interpretability tools (e.g., fidelity-based saliency, hybrid SHAP extensions) and integrate causal inference to move beyond statistical detection.",
+    "Optimize quantum feature maps for finance: systematically search and tailor quantum encodings/ansätze that reflect financial domain structure and improve generalization.",
+    "Evaluate on physical hardware: replicate experiments on real NISQ devices to measure performance under noise and to test noise mitigation and error-resilient circuit designs.",
+    "Adaptive/sample-efficient quantum training: investigate methods (sparse-kernel approximations, selective quantum sampling, transfer learning) to reduce O(n^2) costs and mitigate the quantum performance plateau.",
+    "Explore real-world economic impact: quantify how hybrid regime detection affects portfolio construction, risk management, and stress-testing outcomes in operational settings."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Hybrid ensembles combining classical SVM and QSVC (hard and weighted voting) can match classical accuracy (~81%) while improving recall on extreme regimes.",
+    "#idea:quantum-advantage — QSVC-based kernels produced different decision boundaries (agreement ~62% with classical) and provided better recall balance for minority/extreme classes in this regime-detection task.",
+    "#idea:near-term-feasibility — Using a 6-qubit ZZFeatureMap and fidelity statevector kernel on a noiseless simulator, the study positions hybrid quantum-classical SVMs as a practical NISQ-era bridge with acceptable training costs.",
+    "#limitation:qubit-count — Experiments mapped PCA-reduced inputs to only 6 qubits, limiting expressivity and scalability to higher-dimensional feature sets.",
+    "#limitation:simulation-only — All quantum kernel computations were performed on a noiseless statevector simulator (Qiskit), so no noisy-hardware validation was provided.",
+    "#limitation:no-empirical-validation — Lack of experiments on real QPUs means hardware noise, circuit runtime and realistic latency/memory constraints were not empirically tested.",
+    "#limitation:data-encoding — PCA-to-qubit mapping and use of a ZZFeatureMap highlight nontrivial data-encoding and kernel-computation costs (pairwise O(n^2) kernel evaluation).",
+    "#idea:hybrid-approach — Hybrid approach reduced memory/training footprint versus attempting larger full-quantum training, but required classical subsampling (2k–3.5k) for QSVC due to memory limits."
+  ],
+  "contradictions": [
+    "The report asserts hybrid models 'retain near-linear training costs compared with the high computational burden of fully quantum models', yet the quantum kernel computation is described as pairwise O(n^2) and memory-limited, forcing QSVC training on subsets (~2k–3.5k samples) — this contradicts the near-linear/scalable training-cost claim.",
+    "The paper frames the hybrid QSVC approach as NISQ-era practical, but all quantum results come from a noiseless statevector simulator with no QPU experiments or noise analysis — claiming NISQ practicality without empirical hardware validation is inconsistent."
+  ]
+}

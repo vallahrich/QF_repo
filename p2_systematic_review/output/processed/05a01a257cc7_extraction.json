@@ -1,0 +1,205 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document has a Research Square DOI (rs...), posted date, CC-BY license, institutional authorship and standard academic sections (abstract, methods, results, references) but no journal or conference venue—typical of a preprint rather than a peer-reviewed publication.",
+  "title": "LARGE-SCALE PORTFOLIO OPTIMIZATION USING PAULI CORRELATION ENCODING",
+  "authors": [
+    "Vicente P. Soloviev",
+    "Michal Krompiec"
+  ],
+  "year": "2026",
+  "journal_or_venue": "Research Square preprint",
+  "doi": "https://doi.org/10.21203/rs.3.rs-8649790/v1",
+  "abstract_summary": "The paper applies Pauli Correlation Encoding (PCE) to enable variational, gate-based quantum portfolio optimization by encoding multiple binary variables per qubit and using an iterative market-graph bipartitioning strategy. The approach scales to real S&P 500 data instances with over 250 assets, is benchmarked against QAOA (small instances) and classical Estimation of Distribution Algorithms, and demonstrates improved scalability, competitive Sharpe ratios, and practical runtimes (≈1 hour on statevector simulation).",
+  "methodology_description": "The authors formulate portfolio optimization as a graph partitioning problem over a market graph G where nodes are assets and weighted edges encode pairwise Pearson correlations above a threshold. They apply Pauli Correlation Encoding (PCE) to map multiple binary decision variables into a reduced number of qubits: each optimization variable xi is taken as the sign of the expectation value of a chosen Pauli-string Πi (xi = sgn(<Πi>)). A hardware-efficient variational ansatz (HEA) is prepared with p layers (p = floor(m/n)) on n qubits (n chosen so that the chosen PCE order k can encode m variables). The loss combines a graph cut objective (Cut(G,x) = sum wij xi (1 − xj)) and the PCE variational correlation loss L = sum_{(i,j) in E} wij tanh(α <Πi>) tanh(α <Πj>) + L_reg with α tuned to α = n * floor(k/2). The core procedure is an iterative recursive bipartitioning (Algorithm 1): at each iteration the current subgraph is bipartitioned by (i) preparing the HEA on n qubits, (ii) evaluating Pauli-string expectations (statevector measurement), (iii) computing binary assignments via sign of expectations, and (iv) minimizing the loss with a classical optimizer (COBYLA). The graph is split nsplits times to obtain nsplits+1 clusters; from each cluster the representative asset is chosen as the asset with the highest historical return (computed on the training split). Experiments use real S&P 500 historical price data (5 years) with an 80/20 train/test split. Benchmarks compare the PCE-based variational bipartitioning against (i) QAOA (one-hot encoding) for the smallest instance (m=10, QAOA p=5) and (ii) a classical Estimation of Distribution Algorithm (EDA) for larger instances. Evaluations include portfolio value evolution (a $1000 initial investment), Sharpe ratio on train and test, gate-count comparisons, and per-iteration runtimes (statevector simulation).",
+  "algorithms_used": [
+    "Pauli Correlation Encoding (PCE)",
+    "Hardware-Efficient Ansatz (HEA)",
+    "Variational optimization (PCE loss)",
+    "Recursive bipartitioning (graph cut)",
+    "Quantum Approximate Optimization Algorithm (QAOA)",
+    "Estimation of Distribution Algorithm (EDA)",
+    "Classical optimizer: COBYLA"
+  ],
+  "frameworks": [],
+  "experimental_setup": "Statevector quantum simulator used for expectation-value measurements and runtime experiments. HEA circuits prepared with p = floor(m/n) layers; PCE orders k ∈ {2,3} evaluated; QAOA runs for a small instance with p = 5 layers. Classical optimizer: COBYLA. Train/test split 80/20 on historical S&P 500 data.",
+  "dataset_used": "Historical S&P 500 stock data (5 years) from the Kaggle dataset 'camnugent/sandp500'. The dataset columns correspond to individual S&P 500 companies; experiments use the first m columns for each tested m.",
+  "experiment_input": {
+    "source": "https://www.kaggle.com/datasets/camnugent/sandp500",
+    "assets_considered": [
+      10,
+      20,
+      30,
+      50,
+      100,
+      150,
+      200,
+      250
+    ],
+    "time_horizon": "5 years of historical data (as provided in dataset)",
+    "train_test_split": "80% training, 20% testing",
+    "preprocessing": "For an instance of size m the first m columns of the dataset were used to construct the market graph. Pairwise Pearson correlations ρ_ij computed; edges added only if |ρ_ij| > λ (threshold λ unspecified). Edge weights set to 1 − |ρ_ij| when |ρ_ij| > λ."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Construct market graph G from the training data: nodes = assets, edge weights wij = 1 − |ρ_ij| for |ρ_ij| > λ (no edge otherwise).",
+      "Set desired number of splits nsplits (for m<100: rsplits chosen from {2,4,6,9}; for m>=100: rsplits = (m/10) − 1).",
+      "For each bipartition iteration: compute minimum n such that PCE of order k encodes m variables (n selected accordingly) and set p = floor(m/n).",
+      "Prepare HEA on n qubits with p layers; evaluate Pauli-string expectations <Πi> using statevector simulation.",
+      "Derive binary assignments xi = sgn(<Πi>) and compute the loss L (PCE loss combining pairwise tanh(α <Π>) terms and regularization) or equivalently maximize Cut(G,x) objective via the variational routine.",
+      "Optimize circuit parameters with COBYLA to minimize the loss; extract split S1, S2 based on assignments.",
+      "Recursively apply bipartitioning until nsplits are performed to obtain clusters Li.",
+      "Select representative asset ri from each cluster Li as the asset with the highest historical return on the training set.",
+      "Form final portfolio r = {r1,...,r_{nsplits+1}} and evaluate on the test set.",
+      "Benchmark against QAOA (applied for m=10 with p=5) and EDA (used for larger m): compare portfolio value evolution, Sharpe ratio, gate counts, and runtimes."
+    ],
+    "measurement": "Statevector expectation values used (no shot/noise sampling reported).",
+    "optimization": "Classical optimizer COBYLA minimizes the variational loss."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Portfolio value evolution over time (initial investment $1000)",
+      "Sharpe ratio on train and test datasets",
+      "Gate counts for QAOA (p=1, p=2) and PCE (k=2, k=3)",
+      "Runtimes per single bipartition iteration (statevector simulation)"
+    ],
+    "baselines": [
+      "Unoptimized full S&P 500 (baseline aggregate of m assets)",
+      "QAOA (for m=10, p=5) as a quantum baseline",
+      "Classical EDA heuristic"
+    ],
+    "outputs": "Time-series plots of portfolio growth, bar charts of Sharpe ratios (train/test), tables of gate counts, runtime plots, and dendrogram visualizations of the recursive partitions."
+  },
+  "experiment_parameters": {
+    "qubits_n": "Computed per instance to satisfy PCE capacity; reported max n = 9 for m = 250 (paper states n up to 9)",
+    "PCE_order_k": [
+      2,
+      3
+    ],
+    "HEA_layers_p": "p = floor(m / n) (computed per instance)",
+    "QAOA_depth_p": 5,
+    "optimizer": "COBYLA",
+    "measurement_mode": "statevector (exact expectation values)",
+    "alpha": "tuned to α = n * floor(k/2) (used in PCE loss)",
+    "train_test_split": "80/20",
+    "nsplits_selection": "For m<100: rsplits chosen from {2,4,6,9}; for m>=100: rsplits = (m/10) − 1",
+    "initial_investment": 1000,
+    "dataset_sizes_tested": [
+      10,
+      20,
+      30,
+      50,
+      100,
+      150,
+      200,
+      250
+    ],
+    "shots": null,
+    "regularization": "L_reg included in loss (form given but specific weight not stated)"
+  },
+  "hardware_details": {
+    "simulator": "Statevector simulator (exact statevector measurements used)",
+    "qpu_model": null,
+    "cloud_provider": null,
+    "notes": "No specific simulator package (e.g., Qiskit, Cirq) or computing hardware vendor is reported; runtimes reported are for statevector simulation runs."
+  },
+  "reproducibility_notes": "The dataset is publicly available (Kaggle: camnugent/sandp500) and the paper provides algorithm descriptions, loss functions (Equations 6,7,9), gate-count tables, and parameter rules (p = floor(m/n), α = n*floor(k/2), optimizer=COBYLA, train/test split). However, some implementation details are not fully specified (exact procedure to compute n from m and k, threshold λ used to construct the market graph, regularization weight L_reg, exact HEA gate construction/ordering, and no code repository is provided). These omissions limit full reproducibility without contacting the authors or reconstructing implementation choices.",
+  "key_findings": [
+    "[supported] Pauli Correlation Encoding (PCE) encodes multiple optimization variables per qubit, enabling representation of m variables with far fewer qubits than one-hot encodings.",
+    "[supported] Using PCE and a variational ansatz (HEA) the authors implemented a portfolio partitioning pipeline and applied it to market-graph instances up to m = 250 assets.",
+    "[supported] In the authors' experiments (statevector simulation) PCE required far fewer quantum gates than QAOA on dense market graphs (e.g., PCE ≈ 715–730 gates vs QAOA p=2 ≈ 42,646 gates for m=250).",
+    "[supported] In the conducted experiments PCE-based portfolios outperformed the S&P 500 baseline (unoptimized full-asset baseline) and showed higher Sharpe ratios than the baseline in most cases on both training and test splits.",
+    "[supported] PCE produced stable portfolio growth trajectories across tested problem sizes, often outperforming a classical Estimation of Distribution Algorithm (EDA) baseline in these simulations.",
+    "[supported] QAOA (one-hot encoding) is limited in scalability for the dense instances studied; the authors used QAOA only for the smallest case (m=10) and show gate counts and runtime that scale unfavorably.",
+    "[supported] Runtime: on a statevector simulator a single bipartition iteration with PCE could solve instances with m ≥ 200 in about one hour (authors' reported runtime).",
+    "[speculative] The approach 'opens new possibilities for quantum-enhanced financial applications' and could be scaled further (possibly to full S&P 500) by increasing qubit count; this is suggested but not demonstrated on hardware.",
+    "[speculative] The paper asserts that PCE's circuit depth does not grow with the number of problem edges (unlike QAOA), implying better scalability for dense graphs; this is a methodological/theoretical claim supported by their design and simulation but not proven as a general speedup over classical methods.",
+    "[speculative] The authors propose that higher PCE order (k) can improve performance as m increases (citing that cubic order may outperform quadratic for larger m), a claim based on prior work and their parameter choices but not fully explored across all instances here.",
+    "[supported] The pipeline uses recursive graph bipartitioning on a correlation-based market graph, selecting one representative asset per cluster (highest historical return) to form the final portfolio.",
+    "[speculative] Future directions noted (alternative ansatz, improved representative selection, analysis of noise resilience) are proposed avenues and not evaluated in this work."
+  ],
+  "results_summary": "The paper introduces and evaluates a Pauli Correlation Encoding (PCE) based variational pipeline for graph-based portfolio optimization. By encoding multiple binary decision variables per qubit and using a hardware-efficient ansatz, the authors demonstrate statevector-simulated experiments on S&P 500-derived market graphs up to m = 250 assets. Empirically, PCE required substantially fewer quantum gates than QAOA on dense graphs, achieved faster runtimes in simulation (reportedly solving m ≥ 200 instances in ≈1 hour per bipartition step), and produced portfolios that outperformed an unoptimized S&P 500 baseline and a classical EDA heuristic in their experiments, including higher Sharpe ratios on train and test splits. The work is simulation-based and does not claim a general or provable quantum advantage on real devices or across all classical baselines.",
+  "performance_claims": [
+    "PCE gate counts (from the paper's table): for m=10 PCE=25 gates (k=2 or 3), m=20 PCE=61, m=30 PCE=91, m=50 PCE≈145–148, m=100 PCE≈295–298, m=150 PCE≈430–433, m=200 PCE≈586–595, m=250 PCE≈715–730.",
+    "QAOA gate counts (paper's table): for m=10 QAOA p=1:59 gates, p=2:108; m=100 QAOA p=1:3354, p=2:6608; m=250 QAOA p=1:20948, p=2:42646.",
+    "Reported runtime: PCE solved instances with m ≥ 200 in approximately one hour per bipartition iteration on a statevector simulator (authors' measurement).",
+    "Experimental setup: data split 80% train / 20% test; portfolios constructed by recursive bipartition (rsplits tuned by m) and selecting the highest historical-return asset from each cluster; initial investment simulated was $1000 for return trajectories.",
+    "For small instance m=10, QAOA (p=5) and PCE (k=3) produced similar asset selections in these experiments (authors' observation)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors do not claim a provable or demonstrated quantum advantage. Results are based on statevector simulations showing that PCE reduces qubit/gate requirements compared to QAOA and can produce competitive portfolios versus a classical heuristic in their specific experiments. However, these are simulation results on a particular pipeline; no general advantage over state-of-the-art classical algorithms or experiments on noisy quantum hardware is demonstrated, so any claim of practical quantum advantage remains speculative.",
+  "limitations": [
+    "Experiments limited to problem sizes up to m = 250 assets and n = 9 qubits (author-stated).",
+    "All quantum experiments were performed with a statevector simulator rather than on real noisy quantum hardware (author-stated).",
+    "QAOA benchmarking was only performed on the smallest instance (m = 10) due to qubit/encoding limits, limiting comparative conclusions versus QAOA (author-stated).",
+    "PCE implementation used a Hardware-Efficient Ansatz (HEA); alternative ansätze were not explored (author-stated).",
+    "The partitioning and representative selection procedure is based on correlation structure and then picks the single asset with highest historical return per cluster — other selection criteria were not used (author-stated).",
+    "Gate-count for QAOA scales rapidly with graph size and depth, making QAOA impractical for large dense instances tested (author-stated / evidenced by gate-count table).",
+    "[inferred] Scalability claims rely on classical simulation (statevector); performance and run-time on real quantum devices with noise, limited shots, connectivity and gate fidelity are unknown.",
+    "[inferred] The Sharpe-ratio and portfolio performance may be affected by overfitting to the training period (80/20 split) because selection of representatives uses historical returns from the training set.",
+    "[inferred] The representative selection rule (max historical return) ignores other practical portfolio constraints and risk measures, e.g., transaction costs, cardinality constraints, position limits, turnover, or drawdown control.",
+    "[inferred] The bipartition thresholding (correlation cutoff λ) and other hyperparameters (α, regularization Lreg, order k, number of layers p) are not fully specified/tuned systematically; sensitivity is not characterized.",
+    "[inferred] Use of the sign of expectation values (discretization via sgn) may produce hard-to-optimize landscapes and threshold sensitivities that were not analyzed.",
+    "[inferred] The approach was tested only on a single dataset (S&P 500 historical subset using first m columns); generalizability across markets, time periods, and different asset universes is untested.",
+    "[inferred] Classical baseline comparisons are limited: EDA was used but comparison to other state-of-the-art classical solvers for dense graph cuts / portfolio optimization is limited or absent.",
+    "[inferred] Runtime and resource analysis used statevector simulator; reported runtimes and scalability (e.g., solving m≥200 in ~1 hour) may not hold under realistic measurement (shot-based) or hardware constraints.",
+    "[inferred] Regularization term Lreg and exact loss-function hyperparameters are under-specified; potential impact on results and stability is not shown.",
+    "[inferred] The iterative partitioning strategy may produce balanced clusters in these experiments, but its behavior on different market correlation structures (e.g., sparser or differently clustered graphs) is unexamined."
+  ],
+  "open_questions": [
+    "How does PCE perform on real quantum hardware under realistic noise, limited shots, and connectivity constraints?",
+    "What is the optimal choice of PCE order k and the scaling rule for number of qubits n as m grows for different problem instances?",
+    "How sensitive are results to hyperparameters such as the correlation threshold λ, α in the loss, regularization Lreg, ansatz depth p, and classical optimizer settings (e.g., COBYLA)?",
+    "Can alternative ansätze or problem-inspired circuits improve solution quality or noise resilience compared to the HEA used here?",
+    "How robust is the bipartition + representative selection pipeline across different markets, time periods, and asset universes (generalizability)?",
+    "How to incorporate realistic portfolio constraints (cardinality, min/max positions, transaction costs, turnover) into the PCE-based pipeline effectively?",
+    "What are better criteria or algorithms for selecting representatives from each cluster that balance return and risk rather than using max historical return?",
+    "How does PCE compare against strong classical optimization and graph-partitioning algorithms on dense market graphs in terms of solution quality and runtime?",
+    "What is the impact of using shot-based measurements (versus statevector) on the binary mapping xi = sgn(<Πi>) and on overall optimization performance?",
+    "How does the PCE variational landscape behave (e.g., presence of barren plateaus, local minima) as m increases and more variables are mapped per qubit?",
+    "Can the method be scaled to the full S&P 500 (m ≈ 500) in practice on near-term or future quantum hardware, and what are the resource trade-offs?",
+    "How does partitioning strategy (balanced splits vs incremental node separation) influence final portfolio stability and performance, and can it be controlled or optimized?"
+  ],
+  "future_work": [
+    "Explore alternative quantum circuit architectures (ansätze) tailored to this problem instead of the Hardware-Efficient Ansatz.",
+    "Investigate enhanced methods for selecting representative assets from each correlated group to improve portfolio construction (beyond max historical return).",
+    "Analyze quantum noise resilience of the PCE approach (evaluate performance on noisy devices and with realistic measurement schemes).",
+    "Potentially scale the approach to the full S&P 500 or larger asset sets, accounting for trade-offs in qubit count n.",
+    "Generalize measurement strategies from statevector to shot-based measurements and real devices as suggested in PCE literature."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability",
+    "contradiction:classical-vs-quantum"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Pauli Correlation Encoding (PCE) maps multiple binary decision variables into fewer qubits enabling a variational, gate-based approach claimed to scale to S&P500-like instances (tested up to m=250) with competitive Sharpe ratios versus a classical EDA and a small QAOA baseline.",
+    "#idea:near-term-feasibility — Uses a hardware-efficient ansatz (HEA) with small qubit counts (reported max n=9) and classical optimizers (COBYLA), arguing a NISQ-era path via reduced-qubit encodings and recursive bipartitioning.",
+    "#idea:hybrid-approach — Hybrid workflow: classical recursive graph partitioning, classical optimizer (COBYLA) tuning quantum circuit parameters, and classical postselection of representative assets (highest historical return) to form final portfolios.",
+    "#limitation:qubit-count — Reported max qubit usage n up to 9 even for m=250; scalability to larger real-hardware instances depends critically on PCE compression and is not demonstrated on QPUs.",
+    "#limitation:noise — All expectation values obtained from exact statevector simulation (no shots, no noise); paper does not assess effect of hardware noise or sampling error on sign-of-expectation decoding.",
+    "#limitation:simulation-only — Experiments and runtime measurements are performed on a statevector simulator (exact measurements); no real quantum hardware experiments or shot-based benchmarking are reported.",
+    "#limitation:data-encoding — Key preprocessing choices (correlation threshold λ, edge construction) and mapping xi = sgn(<Πi>) and regularization weights are underspecified which may affect reproducibility and encoding fidelity.",
+    "#idea:quantum-advantage — Gate-count comparisons and runtimes on the simulator are provided as evidence of improved scalability relative to QAOA for the considered instances, but QAOA was only benchmarked on the smallest instance (m=10)."
+  ],
+  "contradictions": [
+    "The paper claims large-scale applicability (instances up to m=250) but all experiments are exact statevector simulations with no shot/noise model and a reported maximum of n=9 qubits; this raises a scalability contradiction because simulator runtimes and noise-free expectation values do not demonstrate viability on real NISQ devices.",
+    "The authors claim improved scalability and competitive performance versus classical heuristics, yet the quantum-vs-classical comparison is limited (QAOA only for m=10; classical EDA used as heuristic baseline) so the asserted quantum advantage is not fully substantiated by fair, wide-ranging benchmarks."
+  ]
+}

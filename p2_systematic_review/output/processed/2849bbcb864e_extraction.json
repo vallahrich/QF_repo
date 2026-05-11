@@ -1,0 +1,190 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2511.19150v1) and date, typical of a preprint server posting. It has the structure of a research article (abstract, methods, results, citations) but no journal or conference venue is listed, indicating it is an unpublished/pre-review preprint.",
+  "title": "Feature Ranking in Credit-Risk with Qudit-Based Networks",
+  "authors": [
+    "Georgios Maragkopoulos",
+    "Lazaros Chavatzoglou",
+    "Aikaterini Mandilara",
+    "Dimitris Syvridis"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint (quant-ph) arXiv:2511.19150",
+  "doi": "",
+  "abstract_summary": "The paper proposes a single-qudit quantum neural network that co-encodes classical input features and trainable parameters within a unified su(d) Hamiltonian, enabling exploration of the full Hilbert space while making feature importance directly interpretable via learned weight magnitudes. The model is benchmarked on the Taiwan credit-default dataset, showing improved macro-F1 over logistic regression and comparable performance to random forests, and introduces two interpretability metrics (edit distance to LR feature ranking and a feature-poisoning Weighted Interpretability Score) to quantify attribution and robustness.",
+  "methodology_description": "The authors propose and evaluate a single-qudit variational quantum neural network (QNN) in which classical input features and trainable parameters are co-encoded into a Hamiltonian-evolution unitary. Each input feature x_j is associated with one generator G_j of the full su(d) algebra; coefficients are the products x_j w_j that are remapped via a bounded nonlinear function h(·)=2 arctan(2·) to avoid large rotations. A layer unitary is U(x,w)=exp(-i sum_j h(x_j w_j) G_j). Multiple such layers (data re-uploading) are applied sequentially to the qudit initialized in |0>, and the final state is measured in the computational basis to obtain probabilities p_k = |⟨k|ψ_out⟩|^2. Training minimizes cross-entropy plus L2 (ridge) regularization (L_total = L_CE + λ||w||^2) using gradient-based optimization (Adam). Feature importance is inferred directly from learned weight magnitudes (small |w_j| implies negligible contribution). The su(d) generators are constructed algorithmically (symmetric, antisymmetric, diagonal sets). Empirical evaluation uses the Taiwan credit card default dataset (30,000 records, 23 features); comparisons are made to Logistic Regression (LR), Random Forest (RF) and a classical Neural Network (NN). Interpretability is quantified via (i) edit distance between model feature rankings and LR ranking and (ii) a poisoning experiment where seven randomly chosen features are replaced by Gaussian noise at inference and a Weighted Interpretability Score (WIS) is computed. Experiments were run multiple times with different random seeds to collect statistics; the QNN implementation uses PyTorch for generator construction and autodiff integration. The paper reports qudit dimension d=5 in experiments, cross-entropy training, L2 regularization, and Adam optimizer; parameter-shift rules for analytic quantum gradients are noted as not established and classical autodiff/simulation is used in practice.",
+  "algorithms_used": [
+    "Single-qudit variational quantum neural network (VQC/QNN)",
+    "Hamiltonian-based data-and-parameter encoding (su(d) generators)",
+    "Data re-uploading (multi-layer sequential unitaries)",
+    "Adam optimizer (gradient-based training)",
+    "L2 regularization (ridge)"
+  ],
+  "frameworks": [
+    "PyTorch"
+  ],
+  "experimental_setup": "Classical simulation implemented in PyTorch: su(d) generator matrices constructed in matrix form, unitary evolution computed via matrix exponentials for a single qudit (d=5). Training performed with cross-entropy loss + L2 regularization and Adam optimizer. Experiments repeated with multiple random seeds (10 runs reported). No specific QPU or quantum simulator backend is specified.",
+  "dataset_used": "Taiwan credit card default dataset (Yeh 2009, UCI Machine Learning Repository): 30,000 customer records, 23 input attributes, binary target (default/non-default), ~22.1% defaults (6,626 default cases).",
+  "experiment_input": {
+    "source": "UCI Machine Learning Repository (Yeh, Default of Credit Card Clients, 2009)",
+    "size": 30000,
+    "features": 23,
+    "class_balance": {
+      "default": 6626,
+      "non_default": 23374
+    },
+    "preprocessing": "Input features rescaled (numerical scaling not further specified). Feature-weight products remapped using h(x w) = 2 arctan(2 x w) before encoding. Qudit dimension chosen so that d^2-1 >= n (experiments used d=5). For poisoning tests, seven features were randomly selected and replaced with Gaussian noise at inference."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Rescale input features (details unspecified)",
+      "Initialize trainable weights w (one weight per input feature and per layer)",
+      "Compute mapped coefficients h(x_j * w_j) with h(·)=2 arctan(2·)",
+      "Construct layer Hamiltonian H = sum_j h(x_j w_j) G_j using full su(d) generators",
+      "Apply L sequential unitary layers U_l = exp(-i H_l) to initial state |0⟩ to obtain |ψ_out⟩",
+      "Measure in computational basis to obtain probabilities p_k",
+      "Compute cross-entropy loss against labels and add L2 regularization term λ||w||^2",
+      "Optimize weights using Adam until validation improvement saturates",
+      "Derive feature importance from magnitudes of learned weights; evaluate via edit distance to LR ranking and via poisoning tests (WIS)"
+    ],
+    "key_variants_and_hyperparams": {
+      "qudit_dimension": 5,
+      "generator_set": "full su(d) (d^2-1 generators)",
+      "remapping_function": "h(xw)=2 arctan(2 xw)",
+      "loss": "cross-entropy + L2 (ridge)",
+      "optimizer": "Adam",
+      "regularization": "L2 with coefficient λ (value not specified)",
+      "layers": "multiple (data re-uploading); exact L not specified",
+      "runs": "10 random-seed runs reported"
+    },
+    "baselines": [
+      "Logistic Regression (LR)",
+      "Random Forest (RF)",
+      "Classical Neural Network (NN)"
+    ],
+    "poisoning_protocol": "At inference, randomly select 7 features per run and replace their values with Gaussian noise; evaluate performance degradation and compute Weighted Interpretability Score (WIS)."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Macro-averaged F1-score (primary performance metric)",
+      "Edit distance between model feature ranking and LR ranking (interpretability)",
+      "Weighted Interpretability Score (WIS) from poisoning experiments",
+      "Number of trainable parameters (model size) reported for comparisons"
+    ],
+    "output_format": "Tabulated mean ± std across multiple random-seed runs; feature rankings and weight magnitudes; numerical comparison vs baselines (LR, RF, NN).",
+    "baselines_compared": [
+      "Logistic Regression",
+      "Random Forest",
+      "Classical Neural Network"
+    ]
+  },
+  "experiment_parameters": {
+    "qudits": 1,
+    "qudit_dimension_d": 5,
+    "generators_count": 24,
+    "features": 23,
+    "trainable_parameters_reported": 384,
+    "optimizer": "Adam",
+    "loss": "Cross-entropy + L2 regularization",
+    "regularization_lambda": "not specified",
+    "layers_L": "not specified (multi-layer/data re-uploading)",
+    "training_runs": 10,
+    "poisoned_features_per_run": 7,
+    "measurement_shots": "not specified (probabilities obtained from matrix simulation)"
+  },
+  "hardware_details": null,
+  "reproducibility_notes": {
+    "code_availability": "Authors provide a public GitHub repository link: https://github.com/GiorgosMaragkopoulos/Feature-ranking-in-credit-risk-with-qudit-based-net (accessed 2025-10-31).",
+    "data_availability": "Dataset is public (UCI Machine Learning Repository, 'Default of Credit Card Clients').",
+    "notes": "Implementation uses PyTorch for generator construction and autodiff; exact hyperparameter values (L, λ, batch size, learning rate, number of training epochs, random seeds) are not fully specified in the text and would need to be obtained from the repository for full reproducibility."
+  },
+  "key_findings": [
+    "[supported] A single-qudit quantum neural network (QNN) with Hamiltonian co-encoding of data and trainable parameters was implemented (simulated) and evaluated on the Taiwan credit card default dataset.",
+    "[supported] The proposed QNN achieved macro-averaged F1 = 0.667 ± 0.015 on the uncorrupted Taiwan dataset, outperforming Logistic Regression (LR, 0.601 ± 0.006) and Random Forest (RF, 0.647 ± 0.008) in the reported experiments and approaching a classical neural network (NN, 0.682 ± 0.011).",
+    "[supported] Under a controlled feature-poisoning test (7 randomly corrupted features), the QNN maintained higher robustness in predictive performance (F1 = 0.632 ± 0.040) than RF (0.614 ± 0.027) and LR (0.579 ± 0.020) in the authors' experiments.",
+    "[supported] The QNN uses far fewer trainable parameters in the reported configuration (384) than the RF baseline (3927) while producing comparable interpretability-alignment metrics with LR.",
+    "[supported] The authors introduce two interpretability evaluation methods: (i) edit distance between model feature-rankings and LR feature-ranking, and (ii) a feature-poisoning test combined with a Weighted Interpretability Score (WIS); these were used to quantify alignment and robustness.",
+    "[supported] Measured edit distances to LR were similar for QNN and RF in the experiments (QNN ≈ 20.9 ± 1.85, RF ≈ 21.10 ± 0.99), indicating comparable alignment with LR-based feature ordering.",
+    "[supported] Reported WIS values under poisoning were: RF 0.953 ± 0.026, LR 0.932 ± 0.043, QNN 0.853 ± 0.048, indicating RF best preserved LR-like feature weighting in that test, with QNN still showing meaningful alignment.",
+    "[speculative] The architecture (single qudit, full su(d) generator set, co-encoding of data and weights in the layer Hamiltonian) is claimed to provide intrinsic interpretability because learned weight magnitudes map directly to generator coefficients and thus feature importance.",
+    "[speculative] The paper claims the model is resource-efficient, low-depth, and compatible with current experimental qudit platforms (photonic, trapped ions, superconducting multi-level systems).",
+    "[speculative] The authors claim that multiple quantum layers (data re-uploading) systematically increase representational power and improve classification performance; observations in their experiments support layer-depth benefits but generalization beyond the presented setup is not proven.",
+    "[speculative] The QNN formulation is presented as one of the few quantum encodings to achieve high accuracy on a real-world financial dataset—this is an interpretive/positioning claim relative to prior literature rather than a conclusive, field-wide statement.",
+    "[supported] The implementation and experimental code were made publicly available on GitHub as referenced in the paper."
+  ],
+  "results_summary": "The preprint proposes and simulates a single-qudit QNN that co-encodes input features and trainable weights into a Hamiltonian built from the full su(d) generator set, applying multiple layers (data re-uploading). On the Taiwan credit dataset (30k records, 23 features), the simulated QNN attained a macro-F1 ≈ 0.667, outperforming LR and RF in the reported setups and coming close to a classical NN baseline, while using substantially fewer parameters than RF. The authors introduce edit distance and a poisoning-based Weighted Interpretability Score (WIS) to quantify interpretability; in these tests the QNN produced feature rankings comparably aligned to LR (edit distance ≈ 21) and showed robustness to corrupted features (poisoned F1 ≈ 0.632). The paper emphasizes interpretability via learned weight magnitudes, resource-efficiency, and claims experimental implementability on emerging qudit hardware (these latter claims are presented as informed proposals rather than hardware demonstrations).",
+  "performance_claims": [
+    "Qudit QNN macro-averaged F1 = 0.667 ± 0.015 on the uncorrupted Taiwan credit dataset (d = 5, 384 params).",
+    "Logistic Regression (LR) macro-averaged F1 = 0.6010 ± 0.006 (baseline).",
+    "Random Forest (RF) macro-averaged F1 = 0.647 ± 0.008 (3927 params).",
+    "Classical Neural Network (NN) macro-averaged F1 = 0.682 ± 0.011 (1853 params).",
+    "Edit distance to LR feature ranking: RF = 21.10 ± 0.99, QNN = 20.9 ± 1.85 (lower = more aligned with LR).",
+    "Under poisoning (7 randomly corrupted features): QNN F1 = 0.632 ± 0.040, RF F1 = 0.614 ± 0.027, LR F1 = 0.579 ± 0.020.",
+    "Weighted Interpretability Score (WIS) under poisoning: RF = 0.953 ± 0.026, LR = 0.932 ± 0.043, QNN = 0.853 ± 0.048.",
+    "Reported parameter counts for the best-performing configurations: QNN = 384, RF = 3927, NN = 1853."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper presents simulated results where a qudit-based QNN matches or exceeds some classical baselines on a single financial dataset and uses fewer parameters than RF; however, the experiments are classical simulations (no hardware quantum speedup or provable advantage is demonstrated), comparisons are limited in scope (one dataset, particular architectures and hyperparameters), and no claim of a rigorous computational or asymptotic quantum advantage is established—thus any advantage is currently speculative and empirical within a narrow tested setting.",
+  "limitations": [
+    "Parameter-shift rules for the qudit-based Hamiltonian encoding are not yet established, limiting direct on-hardware gradient estimation and making training demonstrated only in simulation.",
+    "The interpretability evaluation assumes Logistic Regression (LR) provides the ground-truth feature ranking (the LR ranking is used as a reference), which is an explicit methodological assumption.",
+    "[inferred] Experiments are limited to classical simulation and a single real-world dataset (Taiwan credit-card); there are no reported implementations or tests on physical qudit hardware or across multiple datasets, limiting claims about real-device performance and generalizability.",
+    "[inferred] The single-qudit approach requires choosing qudit dimension d such that d^2 - 1 ≥ n (number of features); this scaling requirement may become impractical for larger feature sets and could demand large d and complex hardware.",
+    "[inferred] Although weight magnitudes are used as direct feature-importance indicators, non-commuting generators produce higher-order commutator interactions that can confound a simple one-to-one interpretation between weight magnitude and feature importance.",
+    "[inferred] The mapping/assignment between input features and specific su(d) generators is not standardized or thoroughly explored; model behavior and interpretability may depend on that assignment.",
+    "[inferred] Training relied on classical gradient-based optimizers (Adam) in simulation; on-device training would face additional challenges (noisy gradients, limited access to exact gradients, potential barren plateaus) not addressed in the paper.",
+    "[inferred] The interpretability metrics used (edit distance to LR, Weighted Interpretability Score via random poisoning) depend on methodological choices (LR as reference, random selection of poisoned features) that may not fully capture human-centered or task-specific notions of explainability.",
+    "[inferred] The statistical robustness of reported results may be limited by relatively few random restarts (10 runs) and limited hyperparameter exploration reported.",
+    "[inferred] Comparisons of parameter counts between QNN and classical baselines do not directly translate to practical quantum resource estimates (e.g., circuit depth, control complexity, gate fidelity), so the resource-efficiency claims are not fully validated for physical implementations."
+  ],
+  "open_questions": [
+    "How can parameter-shift rules or other efficient gradient-evaluation techniques be derived or adapted for qudit-based Hamiltonian encodings?",
+    "How does the architecture scale in practice to multi-qudit systems and much larger feature sets, and what are the associated resource and trainability trade-offs?",
+    "[inferred] Can the proposed QNN be implemented on current or near-term physical qudit hardware, and how robust is it to realistic experimental noise and imperfections?",
+    "[inferred] To what extent do higher-order commutator terms and non-linear interactions obscure or alter the interpretation of learned weight magnitudes as direct measures of feature importance?",
+    "[inferred] How sensitive are results (predictive performance and interpretability) to the specific mapping between input features and su(d) generators?",
+    "[inferred] What are theoretical guarantees or bounds on the expressivity versus interpretability trade-off for this co-encoding Hamiltonian architecture?",
+    "[inferred] How well does the model generalize across other financial datasets, different prediction tasks, and varying degrees of class imbalance?",
+    "[inferred] Do larger or deeper qudit circuits exhibit trainability issues such as barren plateaus or vanishing gradients, and how can these be mitigated?",
+    "[inferred] How does the choice of the non-linear remapping function h(·) (e.g., arctan scaling) quantitatively affect both performance and interpretability?",
+    "[inferred] How does the proposed Weighted Interpretability Score (WIS) relate to established explainability metrics, and is it a reliable, task-agnostic measure of interpretability?"
+  ],
+  "future_work": [
+    "Extend the architecture to multi-qudit implementations.",
+    "Explore applications where accountability and interpretability are paramount (domains and tasks requiring transparent decision-making).",
+    "Develop/establish parameter-shift rules or alternative gradient-evaluation methods for the qudit Hamiltonian encoding."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance",
+    "credit-lending"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Single-qudit variational QNN (d=5) trained in simulation achieves improved macro-F1 versus logistic regression and comparable performance to random forest on the Taiwan credit-default dataset.",
+    "#idea:hybrid-approach — Model training is hybrid in practice: quantum-model structure (unitaries from su(d) Hamiltonian) combined with classical gradient-based optimization (Adam) and classical autodiff in PyTorch.",
+    "#idea:near-term-feasibility — The single-qudit design (co-encoding features and parameters into one su(d) Hamiltonian, data re-uploading) is argued as NISQ-friendly and interpretable via weight magnitudes.",
+    "#limitation:simulation-only — All experiments are matrix-exponential based classical simulations (PyTorch); no QPU experiments or noisy hardware evaluation reported.",
+    "#limitation:no-empirical-validation — Analytic parameter-shift gradient rules are not established for the proposed encoding; training and gradients were done via classical autodiff/simulation rather than on quantum hardware.",
+    "#limitation:data-encoding — Encoding scheme relies on mapping feature-weight products into rotations via h(x w)=2 arctan(2 x w) and demands constructing d^2-1 su(d) generators to represent features, which may become costly as feature counts grow.",
+    "#limitation:qubit-count — Practical scalability is limited by qudit dimension requirements (need d such that d^2-1 >= n_features); while d=5 suffices for 23 features, larger feature sets would require much larger qudit dimensions that may be impractical.",
+    "#idea:quantum-advantage — The paper introduces interpretability metrics (edit distance to LR ranking and a Weighted Interpretability Score from poisoning tests) to quantify attribution and robustness of learned feature importances.",
+    "#idea:hybrid-approach — The approach reports concrete model-size and trainable-parameter counts (384 parameters) and evaluates stability across random seeds (10 runs), supporting empirical comparison to classical baselines."
+  ],
+  "contradictions": []
+}

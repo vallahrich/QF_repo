@@ -1,0 +1,206 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "The document appears in the ICIT 2023 conference proceedings (Lecture Notes on Data Engineering and Communications Technologies), includes an abstract, methods, experiments, results, and citations, and is published by Springer as part of conference proceedings — all hallmarks of a peer-reviewed conference paper.",
+  "title": "Solving Feature Selection Problem by Quantum Optimization Algorithm",
+  "authors": [
+    "Anh Son Ta",
+    "Huy Phuc Nguyen Ha"
+  ],
+  "year": "2023",
+  "journal_or_venue": "Proceedings of The Second International Conference on Intelligence of Things (ICIT 2023), Lecture Notes on Data Engineering and Communications Technologies (LNDECT 187)",
+  "doi": "https://doi.org/10.1007/978-3-031-46573-4",
+  "abstract_summary": "The paper proposes a quantum-based approach to feature selection by formulating the problem as a QUBO and solving it with a CVaR-optimized QAOA. The authors introduce a hybrid initialization strategy combining Trotterized Quantum Annealing (TQA) and Diﬀerential Evolution (DE) to improve QAOA parameter selection and demonstrate the method on 11 benchmark datasets, showing improved classification performance over prior techniques. This paper introduces DarkMDE, a self-supervised framework for monocular depth estimation in nighttime scenes that leverages cross-domain supervision. The method uses a CycleGAN to generate synthetic nighttime images from daytime captures, employs daytime images for pose estimation and photometric loss computation, and enforces a pseudo-depth consistency constraint between paired day/night images. Experiments on the Oxford RobotCar dataset demonstrate that DarkMDE reduces artifacts common in night depth maps and achieves competitive performance versus state-of-the-art methods.",
+  "methodology_description": "The authors reformulate the feature-selection task as a Quadratic Unconstrained Binary Optimization (QUBO) / Ising problem using Pearson-correlation based Q-matrix entries (off-diagonals r(fi,fj) and diagonals -r(fi,y)) and enforce the fixed-cardinality constraint (select exactly k features) via a squared-penalty term. They map the resulting QUBO into a Hamiltonian H_f for QAOA. To overcome nonconvexity and local optima in QAOA parameter optimization, they (1) estimate a suitable Trotterized-Quantum-Annealing (TQA) time T to derive a time-step Δt = T/p and use the Trotter decomposition as a guide for initial QAOA parameters, (2) run a Differential Evolution (DE) search within ranges informed by TQA (γ_j ∈ [j/p·Δt, 2π], β_j ∈ [(1−j/p)·Δt, 2π]) to produce strong initial parameters, and (3) reﬁne those parameters with a classical optimizer (COBYLA) on the QAOA expectation. They sample bitstrings from the optimized QAOA state and apply Conditional Value-at-Risk (CVaR) as the objective (i.e., minimize the average of the lowest-α% energies) to focus on low-energy (good) solutions; the α used is very small (0.01%). The method returns the selected feature subset (from the best bitstrings) and evaluates downstream classiﬁcation performance with classical ML models (LR, XGBoost, HistGradientBoosting). Experiments are run on the Qiskit Aer matrix-product-state simulator (100 qubits) and on 11 real-world benchmark datasets to compare accuracy vs prior approaches. The provided document is a conglomeration of conference papers on topics such as human emotion and pose recognition, knee osteoarthritis diagnosis, skin disease classification, indoor positioning, smart parking with Jetson platforms, a RISC-V SoC with a DNN accelerator, a blockchain e-voting protocol employing zk-STARKs, and nighttime monocular depth estimation. It contains no research, experimental methodology, or implementation details related to quantum computing or its applications in financial services. Therefore, there is no relevant experimental design, algorithmic pipeline, dataset description, or hardware QPU/simulator setup pertaining to quantum computing in finance to extract from the supplied text.",
+  "algorithms_used": [
+    "QAOA",
+    "Trotterized Quantum Annealing (TQA) for initialization",
+    "Differential Evolution (DE) for parameter initialization",
+    "COBYLA (classical optimizer for parameter reﬁnement)",
+    "CVaR (Conditional Value-at-Risk) objective for low-tail optimization"
+  ],
+  "frameworks": [
+    "Qiskit Aer (matrix product state simulator)"
+  ],
+  "experimental_setup": "QAOA experiments were performed on the Qiskit Aer matrix-product-state simulator with capacity to emulate 100 qubits. QAOA depth p was explored (p ∈ {1..10}) and Trotterized Quantum Annealing (TQA) was used to select a suitable total time T, with Δt = T/p used to bound initial γ_j and β_j ranges. Differential Evolution (DE) searched for initial parameters within those ranges; COBYLA was used as the local classical optimizer to further optimize the QAOA expectation. CVaR α = 0.0001 (0.01%) was employed to select low-energy solutions from sampled bitstrings.",
+  "dataset_used": "Eleven real-world datasets mainly from the UCI repository and one additional dataset used in prior work: Wilt, Wireless Indoor Localization, Raisin grain, Rice, Accent, Stability, HTRU2, Occupancy, Room Occupancy Estimation, seeds, and pv fault. These datasets cover classiﬁcation tasks with varying numbers of features and classes and were used to evaluate selected feature subsets with classical ML models.",
+  "experiment_input": {
+    "source": "UCI repository and one additional published dataset(s) referenced in the paper",
+    "size": "Varied per dataset (from small to medium-sized UCI datasets; exact counts per dataset not enumerated in paper)",
+    "preprocessing": "Each dataset features were used to build the Pearson correlation matrix Q. The QUBO was formed using Q entries and a cardinality constraint penalty (ρ). Binary variables x in {0,1} represent selection, mapped to Ising spins s=2x−1. Penalty ρ chosen per referenced lemma; no further feature scaling details provided."
+  },
+  "experiment_process": {
+    "step_1": "Formulate feature selection as QUBO: minimize x^T Q x subject to sum_i x_i = k; convert to Ising form with a quadratic penalty for the cardinality constraint.",
+    "step_2": "Construct Hamiltonian H_f from Ising/QUBO coeﬃcients.",
+    "step_3": "Use Trotterized Quantum Annealing (TQA) to select a total annealing time T and derive Δt=T/p; use these to deﬁne lower bounds for QAOA parameters γ_j and β_j.",
+    "step_4": "Run Differential Evolution (DE) to search parameter ranges [j/p·Δt, 2π] for γ_j and [(1−j/p)·Δt, 2π] for β_j to produce strong initial parameters.",
+    "step_5": "Run QAOA circuit (depth p) on Qiskit Aer with the DE-initialized parameters; use COBYLA as a classical optimizer to reﬁne parameters by maximizing/minimizing the QAOA expectation.",
+    "step_6": "Sample bitstrings from the optimized QAOA state; compute corresponding objective values (energies).",
+    "step_7": "Apply CVaR with α=0.0001 (0.01%) on the empirical distribution of sampled energies to focus on the lowest-energy tail and select best-performing bitstrings / feature subsets.",
+    "step_8": "Evaluate selected feature subsets by training classical ML models (Logistic Regression, XGBoost, HistGradientBoosting) and reporting classiﬁcation accuracy.",
+    "parameters_tuned": "QAOA depth p (1..10); TQA time T -> Δt; DE search ranges for γ_j and β_j; CVaR level α=0.0001; COBYLA as optimizer."
+  },
+  "experiment_output": {
+    "format": "Selected binary feature subsets (bitstrings) and downstream classiﬁcation accuracies for LR, XGBoost, HistGradientBoosting",
+    "metrics": [
+      "Classiﬁcation accuracy on each dataset",
+      "Probability of optimal solution from QAOA sampling",
+      "Comparison (relative and absolute improvement) versus baselines"
+    ],
+    "baselines": "Prior feature-selection and QUBO/QAOA methods in literature (e.g., semideﬁnite programming approach, other QAOA initializations); classical baselines using all features"
+  },
+  "experiment_parameters": {
+    "qubits": 100,
+    "depth_p": "explored p=1..10 (chosen based on TQA guidance)",
+    "shots": "not speciﬁed",
+    "classical_optimizer": "COBYLA",
+    "CVaR_alpha": 0.0001,
+    "TQA_time_T": "determined per instance (found by search to minimize energy in TQA)",
+    "DE": "Used to initialize γ_j, β_j within ranges informed by TQA (γ_j ∈ [j/p·Δt, 2π], β_j ∈ [(1−j/p)·Δt, 2π])"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit Aer (matrix-product-state backend)",
+    "qpu_model": null,
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "The paper reports use of Qiskit Aer (matrix-product-state) simulator, datasets from UCI and one additional dataset, and classical ML baselines. However, no code repository or parameter-ﬁles/seed values are provided in the text. Exact DE and COBYLA hyperparameters, random seeds, and full dataset preprocessing scripts are not included, which will hinder full reproducibility without contacting the authors.",
+  "key_findings": [
+    "[supported] A combined OPC-UA / MQTT architecture with a central DataCenter can be implemented to support Digital Twin (DT) applications where OPC-UA handles rich machine-to-machine (M2M) payloads and MQTT handles lightweight remote monitoring/control.",
+    "[supported] Prototype implementation (JetMax robot + Jetson Nano + OPC-UA server + DataCenter + Oculus VR client) demonstrates feasibility of using OPC-UA for local DT control and VR-based digital shadows.",
+    "[supported] OPC-UA outperforms MQTT in measured round-trip latency (RTT) and stability for larger payloads under normal network conditions (measured means and maxima reported in the experiments).",
+    "[supported] Under high network load, OPC-UA again showed lower average RTTs for larger packets and fewer extreme outliers than MQTT in the authors' measurements.",
+    "[supported] MQTT exhibited more scattered latency and larger outliers in many tests, including extreme RTTs (authors report up to ~9.9 seconds in one case), whereas OPC-UA responses were bounded by the server-side timeout used in the Python OPC-UA implementation.",
+    "[supported] The DataCenter concept (acting simultaneously as OPC-UA client and server) enables aggregation of node structures and centralized access/control for multiple OPC-UA servers, simplifying system-level access for VR/remote applications.",
+    "[speculative] The authors assert that the hybrid architecture (OPC-UA for heavy, structured payloads + MQTT for lightweight remote updates) is a practical best-practice for DT deployments in smart manufacturing, reducing software intervention and improving performance.",
+    "[speculative] Using OPC-UA for local, high-bandwidth DT visualization (e.g., VR) and MQTT for remote mobile dashboards is proposed as an optimal mapping of protocol capabilities to DT use cases.",
+    "[supported] The authors implemented a VR application (Unity + Oculus Quest 2) that connects as an OPC-UA client to the DataCenter and visualizes a 3D robotic arm synchronized to real device state via OPC-UA node updates.",
+    "[supported] DIKO (two-stage hybrid network): Using YOLOv5 for ROI detection followed by a Multicolumn CNN (InceptionV3 + DenseNet201) achieves 88.74% accuracy and F1-score 0.878 on the authors' Vietnamese knee X-ray Yes/No dataset after data augmentation/rebalancing.",
+    "[supported] YOLOv5 for ROI detection: Reported mAP0.5 = 0.995 and mAP0.5:0.95 = 0.73 on the “Knee’s ROI Identification” dataset (trained/tested as described).",
+    "[supported] Shallow CNNs for skin disease: Shallow architectures (e.g., input 32×32, two conv layers, 64 filters) can achieve high accuracy on the ISIC 2019-derived experiments — average accuracy ~91.1% across eight binary disease tasks and per-class best up to 99.9% (dermatofibroma).",
+    "[supported] Edge UWB indoor positioning (ESP32 DW1000): A three-device setup (two anchors + tag) demonstrably localized a tag indoors with mean ranging errors reported around 0.01–0.09 m in small-scale experiments.",
+    "[supported] Smart parking on Jetson Xavier: A prototype processing video on edge (Jetson Xavier) achieved ~30 FPS for license-plate and slot-management models; parking-slot model F1 and accuracy claims reported up to ~99.6% on used datasets; cloud booking service responded <1s for >57% of requests in the author testbed.",
+    "[supported] AlPicoSoC (RISC-V SoC + Alpha Accelerator on Ultra96-V2 FPGA): Reported MNIST inference accuracy 97.69%; claimed speedup of up to 1679.47× vs PicoSoC (and ~40.6× vs ARM Cortex-A53 on same board) with resource utilization increase ~8.26× and power increase ~1.21×.",
+    "[supported] zk-STARK-based e-voting design (Open Vote Network adaptation): Design and PoC show zk-STARKs avoid trusted setup (unlike zk-SNARK), preserve dispute-freeness and transparency in their protocol, and exhibit that STARK proof sizes scale sub-linearly (log-like) with batch size; verifier times reported lower than naive verifier in their experiments.",
+    "[supported] DarkMDE (nighttime depth estimation): Using CycleGAN to synthesize paired night images and cross-domain supervision (pose from daytime, photometric loss on daytime warped by night-predicted depth) resulted in competitive nighttime depth performance: e.g., Abs Rel = 0.221 (40m) in their RobotCar evaluations, improving over baseline Monodepth2 on night images.",
+    "[speculative] Edge processing reduces network bandwidth and storage needs for video-heavy IoT applications (claimed in smart-parking design rationale).",
+    "[speculative] Combining GAN-based domain translation with daytime supervision is a generally applicable way to mitigate photometric-noise-driven failures in nighttime depth estimation (methodological claim).",
+    "[speculative] The AlPicoSoC bit-serial accelerator design is suited for further extension to other neural architectures (authors suggest future work to support ANN and RNN)."
+  ],
+  "results_summary": "The paper presents a hybrid DT communication architecture that integrates OPC-UA for heavy, structured M2M exchange and MQTT for lighter remote telemetry. The authors implemented a DataCenter (acting as both OPC-UA client and server) and demonstrated a prototype (JetMax robot + Jetson Nano + Oculus VR) that uses OPC-UA for real-time local control/visualization and MQTT for cloud/mobile telemetry. In empirical latency tests (1000 round-trip samples per condition), OPC-UA showed lower mean RTTs and fewer extreme outliers than MQTT for larger payloads, both in normal and high network load scenarios. MQTT had more variable latency and larger maximum delays in these experiments but remains suitable for lightweight remote updates. The provided set of conference papers covers diverse applied research (medical imaging, shallow CNNs for skin disease, object/slot detection and smart parking on edge devices, a small RISC-V SoC with a DNN accelerator on FPGA, UWB indoor positioning, zk-STARK-based e-voting, and nighttime monocular depth estimation). Empirically, the DIKO two-stage model achieves ~88.7% accuracy on a Vietnam knee X-ray dataset; shallow CNN conﬁgurations reach ~91% average accuracy on multiple skin disease binary tasks at small input resolution; Jetson Xavier edge prototypes yield up to ~30 FPS for video inference and claim very high model accuracy for license-plate/slot tasks; the AlPicoSoC FPGA design reports large inference speedups (orders of magnitude) at modest power/resource overheads; the UWB prototype reports decimeter-to-centimeter localization accuracy in small tests; zk-STARK-based e-voting PoC demonstrates promise for scaling and transparency without trusted setup; DarkMDE shows improvement on nighttime depth benchmarks using cross-domain supervision. None of the presented works discuss quantum computing or financial services.",
+  "performance_claims": [
+    {
+      "claim": "In a normal network scenario, OPC-UA mean RTT observed in experiments ranged from ~83 ms to ~156 ms across tested payloads; MQTT mean RTT ranged from ~120 ms to ~239 ms.",
+      "evidence": "Experimental RTT samples reported in the paper (1000 samples per payload).",
+      "tag": "[supported]"
+    },
+    {
+      "claim": "For a 128 KB payload in normal conditions, MQTT maximum RTT reached ~1609 ms vs OPC-UA maximum ~689 ms in these tests.",
+      "evidence": "Reported extreme RTTs in the experimental section.",
+      "tag": "[supported]"
+    },
+    {
+      "claim": "Under high network load, OPC-UA mean RTT ranged roughly 314 ms to 895 ms while MQTT ranged roughly 348 ms to 2055 ms; MQTT exhibited a maximum observed RTT up to ~9985 ms in an experiment.",
+      "evidence": "Reported experimental results under simulated high-load conditions.",
+      "tag": "[supported]"
+    },
+    {
+      "claim": "The DataCenter + OPC-UA prototype successfully streamed device state to an Oculus VR client as a real-time digital shadow and supported remote control via OPC-UA methods.",
+      "evidence": "Implemented prototype described in the paper; SignalTap traces and implementation details reported.",
+      "tag": "[supported]"
+    },
+    "DIKO: 88.74% accuracy and F1-score 0.878 on Vietnamese knee X-ray Yes/No dataset after augmentation/rebalancing [supported].",
+    "YOLOv5 on Knee ROI: mAP0.5 = 0.995, mAP0.5:0.95 = 0.73 (times per epoch 18s) [supported].",
+    "Shallow CNN (32×32 input) average accuracy 91.5%; best architecture (2 conv layers, 64 filters) average accuracy 91.1% on evaluated skin tasks; per-class best accuracy up to 99.9% (dermatofibroma) [supported].",
+    "ESP32 UWB indoor positioning: experimental ranging errors reported 0.01–0.09 m in small-case tests; mean error <0.1 m [supported].",
+    "Smart parking Jetson Xavier prototype: video processing up to 30 FPS; slot/license models \"up to 99.6%\" accuracy; >57% booking requests served under 1s in tested load [supported].",
+    "AlPicoSoC FPGA: MNIST accuracy 97.69%; speedup 1679.47× vs PicoSoC, resource usage 8.26× higher, power consumption 1.21× higher; comparable performance improvement vs Cortex-A53 (~40.6×) [supported].",
+    "zk-STARK PoC: STARK verifier faster than naive verifier across evaluated batch sizes; proof size grows logarithmically with batch size (empirical scaling) [supported].",
+    "DarkMDE: Abs_rel = 0.221 at 40m, and 0.218 at 60m reported on RobotCar night dataset; improvements over baseline/night-trained Monodepth2 [supported]."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "This paper does not address quantum computing or claims any quantum advantage. It focuses on classical M2M protocols (OPC-UA and MQTT) applied to Digital Twin system architectures and empirical latency/robustness comparisons.",
+  "limitations": [
+    "Eﬃciency lower than some published FPGA implementations (author-stated): the presented design, when synthesized on a Cyclone V device, achieves a lower throughput-per-area (Mbps/ALM) compared to several prior works (author explicitly notes lower eﬃciency vs. some Virtex implementations).",
+    "Does not outperform all prior art in raw speed (author-stated): the implementation did not surpass the highest-throughput implementations (e.g., some Virtex/Stratix designs operating at higher frequency achieved better absolute latency/throughput).",
+    "Area and resource usage on low-end FPGA families (author-stated): on Cyclone V the ECC IP used ~49% of device ALMs and the complete system used ~51% — this is a substantial fraction of a small FPGA and could limit integration with other functions.",
+    "Dependence on target FPGA family (author-stated): results vary signiﬁcantly across FPGA families; on Stratix 10 the IP consumes much fewer resources and achieves much better latency, indicating portability and performance are strongly device-dependent.",
+    "[inferred] No energy/power evaluation: the paper reports throughput and area but does not provide power consumption or energy/bit ﬁgures (critical for IoT/edge deployments).",
+    "[inferred] Lack of side-channel and security evaluation: implementation-level or hardware-based side-channel resistance (timing, power, electromagnetic) is not discussed or evaluated.",
+    "[inferred] Limited discussion of latency/real-time integration in full IoT stacks: while throughput and cycles are reported, system-level latency and integration with real network/application stacks are not demonstrated.",
+    "[inferred] Single-curve focus and key-length scope: the work implements SECP256K1 (256-bit curve); extensibility to other curves or variable key sizes is not demonstrated or evaluated.",
+    "[inferred] No comparison vs optimized software implementations: the paper compares to other FPGA implementations but lacks direct comparisons to highly-optimized CPU/GPU or embedded-software ECC implementations for IoT platforms.",
+    "[inferred] Scalability and multi-session handling under realistic loads not measured: while the design supports multi-block messages, throughput under concurrent multiple-session real-world workloads is not shown.",
+    "Human emotion and pose recognition: recognition accuracy and speed of the EfficientNet model is still low; more data needed and more research required to improve performance (author-stated).",
+    "DIKO (Knee Osteoarthritis): limited and imbalanced labeled data, varied image quality and regional physical characteristics reduce generalization and performance on real Vietnamese patient data (author-stated).",
+    "DIKO: ROI detection plus hybrid CNN approach still depends on dataset quality and quantity; current evaluation focused on binary Yes/No rather than multi-grade KOA (inferred).",
+    "Shallow CNNs for skin disease: shallower architectures perform well on small input sizes but lose small-detail features when large images are downsampled; class imbalance across disease subclasses harms performance (author-stated and inferred).",
+    "ESP32 UWB Indoor Positioning: prototype evaluated in small/simple area with few obstacles; results may not generalize to complex indoor environments with dense occlusions or multipath (author-stated).",
+    "Smart parking (Jetson Xavier): system depends on robust reliable communication, accurate detection (LP recognition/slot detection) and smooth integration/interoperability — these remain practical challenges (author-stated as general challenges).",
+    "AlPicoSoC: although it achieves large speedups, its raw computational throughput is relatively lower than some FPGA implementations; achieves trade-oﬀ favoring very low resource/energy use over peak performance (author-stated/inferred).",
+    "AlPicoSoC: evaluation limited to a simple MNIST CNN; extensibility to larger modern networks and to other DNN types (RNN/ANN) is not demonstrated (author-stated/inferred).",
+    "Zk-STARK-based Open Vote Network: proof-of-concept highlights elements needing adjustment — unnecessary use of zk-STARKs for tally validation, inconsistent verifier timing, and on-chain public input size concerns (author-stated).",
+    "Zk-STARK approach: while zk-STARK removes trusted-setup concerns, its practical proof sizes / veriﬁer costs and integration trade-offs (vs zk-SNARK) in real election workloads require further validation (inferred).",
+    "DarkMDE (nighttime depth): relies on synthetic paired data (CycleGAN) and cross-domain supervision; quality depends on domain translation fidelity and paired data realism; generalization beyond tested dataset (Oxford RobotCar) not yet established (author-stated/inferred).",
+    "[inferred] Across several works: many prototypes and evaluations are dataset- or scenario-specific (e.g., Oxford RobotCar, Vietnamese X-rays, particular parking lot), so external validity and robustness under diverse real-world conditions is uncertain."
+  ],
+  "open_questions": [
+    "How can the design be further optimized to improve the throughput-per-area (e.g., Mbps/ALM) on low-cost FPGAs such as Cyclone families while preserving the multi-block, software-free functionality?",
+    "What are the energy and power trade-oﬀs of the proposed hardware design at target operating points (e.g., energy per scalar multiplication) for battery-powered IoT/edge devices?",
+    "How robust is the hardware implementation to side-channel attacks (power, timing, EM)? What hardware/software countermeasures are needed for production use?",
+    "Can the architecture be adapted eﬀectively to other domain parameters (other prime/static curves, variable key sizes, or curves over diﬀerent ﬁelds)?",
+    "What are the real-world end-to-end latencies (including memory I/O, DMA, and OS interactions) when integrated into an IoT gateway or node, and are these acceptable for targeted applications?",
+    "How does the multi-message, multi-block hardware scheduling perform under heavy, concurrent traﬃc with many parallel sessions and dynamic workloads?",
+    "Could further algorithmic changes (e.g., alternative coordinate systems, windowing, or precomputation strategies) reduce cycles or area while maintaining the software-free multi-block behavior?",
+    "How to improve EfficientNet (or other backbones) accuracy and inference speed for embedded emotional/pose recognition under constrained datasets and compute (raised implicitly by authors' note on low accuracy/speed)?",
+    "How to collect and curate suﬃcient, balanced, and representative medical imaging datasets (e.g., knee X-rays) to enable models that generalize across regional patient populations (explicit in DIKO)?",
+    "Can shallow CNN architectures be systematically tuned (input size, depth, filters) to retain small-feature information without heavy models, and how do they scale to higher-resolution clinical imagery (inferred from skin-disease study)?",
+    "How will the ESP32 UWB bilateration approach perform in complex, cluttered indoor environments with severe NLOS and multipath? What mitigation/adaptation strategies are necessary (explicitly suggested as future testing)?",
+    "For smart parking: what are the best practices and architectures to ensure robust connectivity, accurate multi-slot detection, and interoperability across heterogeneous hardware and vendor ecosystems (raised as challenges)?",
+    "Can the AlPicoSoC accelerator design and bit-serial compute technique scale to modern, larger CNNs (or other network families) while preserving its low-area and low-power advantages (explicit in future work)?",
+    "In blockchain-based voting using zk-STARKs: what is the optimal division of on-chain vs oﬀ-chain work to minimize costs while maintaining transparency and dispute-freeness? Is zk-STARK cost/latency practical at election scale (explicit/inferred)?",
+    "What mechanisms should be used to report and mitigate aggregator misbehavior in zk-rollup based e-voting (e.g., on-chain reporting, blacklisting), and how to decentralize aggregator role without losing eﬃciency (explicit future-work items)?",
+    "How sensitive is DarkMDE to the quality of GAN-generated night images? Does reliance on synthetic pairing introduce systematic biases or failure modes in unseen nighttime conditions (inferred)?"
+  ],
+  "future_work": [
+    "Human emotion/pose recognition: collect more data, contribute to dataset, and carry out more research to improve EfficientNet model performance (author-stated).",
+    "DIKO (Knee OA): create a dataset with various levels of knee osteoarthritis, collect more data on other knee joint diseases, enhance and expand model to incorporate IoT information to increase accuracy and provide timely diagnoses (author-stated).",
+    "Shallow CNNs for skin disease: continue experimenting with hyperparameters to choose optimal values and improve diagnostic quality (author-stated).",
+    "ESP32 UWB Indoor Positioning: test the indoor positioning system in rooms/areas with more complex obstructions such as warehouses or busy oﬃces (author-stated).",
+    "AlPicoSoC: further enhance eﬃciency, optimize area utilization, and expand computational speed to support other network architectures including ANNs and RNNs (author-stated).",
+    "Zk-STARK Open Vote Network: add mechanisms to report aggregator misbehavior on-chain, support multiple aggregators for decentralization, reduce on-chain costs (minimize public inputs), improve time-consistency and veriﬁer performance, and build a more user-friendly interface (author-stated).",
+    "DarkMDE/night depth: (implicit) extend evaluation beyond Oxford RobotCar, investigate robustness to diverse night conditions and improve domain translation fidelity between day/night image pairs (inferred)."
+  ],
+  "topic_tags": [],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability",
+    "contradiction:classical-vs-quantum"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "medium",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Reformulate feature selection as a QUBO/Ising model (using Pearson-correlation based Q matrix) and solve with QAOA + CVaR to obtain feature subsets that improve downstream classification accuracy versus prior methods.",
+    "#idea:hybrid-approach — Use a three-stage hybrid parameter strategy: Trotterized Quantum Annealing (TQA) to set a time scale, Differential Evolution (DE) to find strong initial QAOA parameters within TQA-informed bounds, then classical COBYLA refinement on the QAOA expectation.",
+    "#idea:near-term-feasibility — Target NISQ-era variational approach (QAOA, p up to 10) and demonstrate method on realistic-sized UCI datasets using a Qiskit Aer matrix-product-state simulator (emulating up to 100 qubits).",
+    "#idea:quantum-advantage — Apply CVaR objective with an extreme tail level (alpha = 0.0001) to concentrate sampling on very low-energy bitstrings, improving the probability of finding high-quality feature selections from QAOA samples.",
+    "#idea:hybrid-approach — Evaluate selected feature subsets with classical ML models (Logistic Regression, XGBoost, HistGradientBoosting) to show end-to-end benefit of quantum-selected features for classification tasks."
+  ],
+  "contradictions": [
+    "contradiction:scalability — The paper demonstrates results only via a classical matrix-product-state simulator (100-qubit emulation) without running on noisy hardware or reporting shot counts; claims of practical/near-term applicability are not substantiated on real QPUs and scalability to real noisy devices is not demonstrated.",
+    "contradiction:classical-vs-quantum — The reported improvements in downstream classifier accuracy derive from feature subsets found by simulated QAOA, but comparisons to strong classical feature-selection methods are limited; because experiments are simulation-only and full experimental hyperparameters (shots, seeds, DE/COBYLA details) are missing, the claimed quantum advantage is not conclusively separated from benefits of the hybrid classical search/initialization or dataset-specific tuning."
+  ],
+  "qubit_count": null,
+  "_chunks_used": 2
+}

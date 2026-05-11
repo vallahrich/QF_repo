@@ -1,0 +1,300 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document shows an arXiv identifier (arXiv:2407.05589v3), dated header and paper-like structure (abstract, methods, results, citations) but no journal or conference venue; contains original experimental work published on a preprint server.",
+  "title": "Improving the trainability of VQE on NISQ computers for solving portfolio optimization using convex interpolation",
+  "authors": [
+    "Shengbin Wang",
+    "Guihui Li",
+    "Zhimin Wang",
+    "Zhaoyun Chen",
+    "Peng Wang",
+    "Yongjian Gu",
+    "Yu-Chun Wu",
+    "Guo-Ping Guo"
+  ],
+  "year": "2026",
+  "journal_or_venue": "arXiv:2407.05589v3 (quant-ph)",
+  "doi": "",
+  "abstract_summary": "The authors introduce a convex interpolation approach to improve the trainability of variational quantum eigensolver (VQE) on NISQ devices for portfolio optimization. By predicting the ground-state subspace from a small subset of basis-state minima they propose strategies—close-to-solution initialization, regularized cost landscapes, and recursive ansatz partitioning—and demonstrate a 40-qubit portfolio optimization using only 10 superconducting qubits, along with a hybrid VQE/greedy classical algorithm that empirically enhances performance on large combinatorial problems.",
+  "methodology_description": "The paper develops and evaluates a problem-specific methodology to improve VQE trainability for binary portfolio optimization on NISQ hardware. Core elements are: (1) problem-inspired ansatz design (CCC ansatz) that prepares Dicke-like states and admits a Hamming-distance based partitioning into product subspaces (fragments); (2) a convex-interpolation heuristic that uses minimum energies of a small set of easily-evaluated sub-ansatze (typically outer fragments) to estimate the subspace location of the global ground state; (3) close-to-solution parameter initialization (identical parameter schedules chosen to place the ansatz principal component over the interpolated target region); (4) reordering (regularization) of asset information (primarily by expected returns) to produce a smoother / biased cost-landscape; (5) recursive ansatz equilibrium partition to run large problems on smaller QPUs by decomposing Dicke states into smaller fragments, combined with a cruciform/greedy local search used to refine approximate solutions; (6) optimization of a CVaR-based cost function via an iterative COBYLA routine with a schedule that progressively reduces the number of correlated parameters (parameter correlation strategy) to combine rapid early descent with better final convergence. The implemented pipeline also uses light problem-specific measurement error mitigation and classical post-processing (a prototype greedy algorithm) to refine and validate VQE outputs. Experiments are performed on Origin Quantum’s superconducting machine (“Wukong”) and with classical simulation / brute-force subspace search where appropriate.",
+  "algorithms_used": [
+    "Variational Quantum Eigensolver (VQE)",
+    "Convex interpolation (heuristic for ground-state location)",
+    "CCC ansatz (problem-inspired Dicke-state ansatz / 3C blocks)",
+    "Recursive ansatz partition (fragmentation)",
+    "Iterative COBYLA optimizer",
+    "CVaR (Conditional Value at Risk) cost function",
+    "Parameter correlation strategy (correlated parameter scheduling)",
+    "Greedy local search (classical prototype refinement)"
+  ],
+  "frameworks": [
+    "PyQPanda",
+    "Qiskit (Qiskit Finance used for generating random datasets)",
+    "networkx (graph generation/processing)"
+  ],
+  "experimental_setup": "Hardware experiments run on Origin Quantum's superconducting quantum computer 'Wukong'. Experiments used up to 12 physical qubits (labels Q14..Q17 etc. listed) for direct runs and used recursive partitioning to solve a 40-qubit portfolio instance using only 10 qubits. Simple problem-specific measurement error mitigation was applied. Optimization used iterative-COBYLA minimizing CVaR with parameter-correlation scheduling; parameter initialization often used identical parameter values (e.g. 0.65π, 0.8π).",
+  "dataset_used": "Real financial data from Tushare (China A-shares closing prices; a 12-asset pool listed explicitly) and synthetic/random financial datasets generated with Qiskit Finance RandomFinanceData (seeded). Additional experiment: random weighted graph (Erdos-Renyi, p=0.4) built with networkx (seed 123).",
+  "experiment_input": {
+    "portfolio_real": {
+      "source": "Tushare (https://tushare.pro/)",
+      "assets": [
+        "600316",
+        "601808",
+        "688009",
+        "000959",
+        "600141",
+        "600010",
+        "000717",
+        "600500",
+        "002212",
+        "600776",
+        "600350",
+        "002048"
+      ],
+      "date_range": "2020-11-02 to 2020-12-31",
+      "n": 12,
+      "preprocessing": "Compute expected returns (µ) and covariance matrix (A) from closing prices; budget constraint enforced via CCC ansatz (Π simplified to ones). Assets reordered typically by expected return (µ) or variance (diag(A))."
+    },
+    "portfolio_random": {
+      "source": "Qiskit Finance (RandomFinanceData)",
+      "seed": 1000,
+      "date_range": "2022-12-01 to 2022-12-30",
+      "n": 40,
+      "preprocessing": "Generate covariance and expected returns; same mapping to QUBO / Ising form; reordering applied"
+    },
+    "graph_bisection": {
+      "source": "networkx (Erdos-Renyi)",
+      "seed": 123,
+      "n_nodes": 12,
+      "edge_prob": 0.4,
+      "preprocessing": "Construct Laplacian; node reorder by Laplacian diagonal for attempt to regularize landscape"
+    }
+  },
+  "experiment_process": {
+    "overview": [
+      "Map portfolio optimization to QUBO / Ising Hamiltonian (binary x or spin z formulation).",
+      "Use CCC (folded-staircase) ansatz that encodes budget constraint (Dicke-like ansatz); ansatz built from repeated 3C blocks (CNOT, controlled-RY, CNOT).",
+      "Partition ansatz into sub-ansatze (fragments) by Hamming-weight based decomposition; for large instances apply recursive partitions to simulate fragments on smaller QPUs.",
+      "Evaluate minimum energies of a small set of sub-ansatze (typically the 4 outer sub-ansatze or selected main-diagonal fragments) by brute-force or further recursive decomposition.",
+      "Interpolate a convex polyline from these minima (convex interpolation) to estimate in which sub-ansatz the global ground state lies.",
+      "Initialize VQE parameters close to the interpolated subspace (identical-parameter initialization chosen from heuristic intervals, often near π), apply parameter-correlation scheduling to group parameters initially and reduce grouping over iterations.",
+      "Run variational optimization minimizing CVaR expectation with iterative-COBYLA; apply simple measurement error mitigation and track CVaR expectation and ground-state probability.",
+      "If VQE yields an approximate solution, optionally refine via a classical greedy local search (cruciform migration / Hamming-distance guided local moves) to reach the true ground state."
+    ],
+    "key_steps_and_params_used_in_experiments": [
+      "Cost function: CVaR-based expectation (confidence α started low e.g. 0.01 and increased toward 1.0 in runs).",
+      "Optimizer: iterative-COBYLA called in repeated blocks (example: 8 iterations, each with a number of COBYLA epochs as per schedule).",
+      "Parameter-correlation schedule: arrays reported (example schedules used: [8,8,8,4,2,1,1,1] correlated logical parameters across successive iterations in one experiment; alternative schedule [6,6,6,3,3,3,1,1] for another).",
+      "Initial identical parameter choices: e.g., 0.65π, 0.75π or 0.8π depending on experiment.",
+      "Partitioning: e.g., D40_20 partitioned into 21 top-level sub-ansatze; recursive partitioning used to generate 36 40-qubit product sub-ansatze in one recursion example.",
+      "Classical brute-force used to find minima of small outer sub-ansatze; recursion used to evaluate minima of larger fragments."
+    ]
+  },
+  "experiment_output": {
+    "formats_and_metrics": [
+      "Convergence curves of CVaR expectation vs epochs/iterations",
+      "Ground state probability (%) (measured frequency of optimal bitstring)",
+      "Minimum energy values of sub-ansatze (used in convex interpolation)",
+      "Comparisons between initialization strategies (close-to-solution vs random) via ratio δ and variance σ of principal-component probabilities",
+      "Runtime logs (wall-clock minutes for hardware runs reported)"
+    ],
+    "representative_results": [
+      "Successful retrieval of optimal solution for a 40-qubit portfolio instance (D40_20) using 10 qubits via recursive partitioning and convex-interpolation-guided VQE + greedy refinement.",
+      "12-qubit (D12_6) experiments on real data showing CVaR descent and rising ground-state probability.",
+      "Empirical comparisons (2000 simulations) showing reordering by expected returns biases ground-state distribution to the right (for the sub-ansatze) and improves interpolation."
+    ],
+    "baselines_and_comparisons": [
+      "Compared to random parameter initialization (20 random inits) — close-to-solution initialization showed better ratios and lower variance in many sub-ansatze.",
+      "Numerical statistics over many synthetic and real datasets used to establish robustness of interpolation/violation rates."
+    ]
+  },
+  "experiment_parameters": {
+    "qubits_physical_used": {
+      "experiment_1": "12 physical qubits (labels Q14..Q17 in topology); used directly for D12_6",
+      "experiment_2": "10 physical qubits used to solve D40_20 via recursive partitioning (examples describe fragments with up to 15 three-C blocks)",
+      "graph_experiment": "11 physical qubits (one qubit fixed to break symmetry)"
+    },
+    "ansatz": "CCC folded-staircase Dicke-preparation ansatz built from repeated 3C blocks (CNOT, C-RY, CNOT). Number of 3C blocks depends on problem (e.g., 21 for D12_6 full ansatz; fragments contain up to 15 blocks).",
+    "optimizer": "iterative-COBYLA",
+    "cost_function": "CVaR (confidence α schedule, e.g. start 0.01 → increase toward 1.0 or upper-bounded like 0.1 depending on experiment)",
+    "parameter_initialization": "identical-parameter initialization, typical values 0.65π, 0.75π, 0.8π; identical initialization used to exploit principal-component placement",
+    "parameter_correlation_schedule": {
+      "example_1": [
+        8,
+        8,
+        8,
+        4,
+        2,
+        1,
+        1,
+        1
+      ],
+      "example_2": [
+        6,
+        6,
+        6,
+        3,
+        3,
+        3,
+        1,
+        1
+      ]
+    },
+    "epochs_per_cobyla_iteration": {
+      "example_1": [
+        15,
+        12,
+        10,
+        15,
+        19,
+        31,
+        31,
+        31
+      ],
+      "example_2": [
+        24,
+        24,
+        24,
+        38,
+        38,
+        38,
+        39,
+        39
+      ]
+    },
+    "rho_values": {
+      "example_1": [
+        0.15,
+        0.136,
+        0.124,
+        0.113,
+        0.102,
+        0.07,
+        0.07,
+        0.07
+      ],
+      "example_2": [
+        0.15,
+        0.15,
+        0.15,
+        0.15,
+        0.15,
+        0.1,
+        0.1,
+        0.1
+      ]
+    },
+    "risk_level_q": "varied across experiments; examples include q=0.9 (convergence plots) and q=0.5 (appendix example)",
+    "shots": null,
+    "measurement_mitigation": "simple problem-specific measurement error mitigation (described as simplest form)"
+  },
+  "hardware_details": {
+    "qpu_name": "Wukong",
+    "vendor": "Origin Quantum Computing Company Limited",
+    "type": "Superconducting qubit processor",
+    "physical_qubits_used": "up to 12 qubits (examples list Q14, Q8, Q7, Q6, Q0, Q1, Q2, Q3, Q4, Q10, Q11, Q17)",
+    "qubit_characteristics_example": {
+      "T1_us": "range shown, e.g. 7.18 - 35.47 µs across qubits in Table II",
+      "T2_us": "range shown, e.g. 0.94 - 3.09 µs",
+      "readout_fidelities_f00_f11_percent": "per-qubit readout fidelity numbers provided in Table II (~80-96%)",
+      "two_qubit_gate_fidelities": "CZ fidelities per link reported (e.g. ~96-99% reported in Table II)"
+    },
+    "access": "cloud-based access mentioned (queueing and communication overheads reflected in wall-clock runtimes).",
+    "software_framework": "PyQPanda used to control hardware"
+  },
+  "reproducibility_notes": "Partial reproduction is feasible: datasets and seeds are specified (real data from Tushare; random finance data from Qiskit Finance with seed 1000; graph seed 123). The paper lists detailed algorithmic schedules (parameter correlation arrays, epoch counts, initial identical parameters, risk levels, α schedules) and reports qubit calibration numbers for the qubits used. However, the authors do not provide a public code repository or reference to containerized experiment scripts in the preprint text. Specifics missing for full reproduction include the exact shot counts, low-level pulse/circuit compilation details, full optimizer tolerance settings, and the exact implementation of the 'simplest measurement error mitigation' and greedy post-processing. Therefore, reproducibility is partially supported but would require contacting authors or re-implementing parts from detailed descriptions.",
+  "key_findings": [
+    "[supported] The authors introduce a 'convex interpolation' heuristic that predicts the subspace region containing the ground state for VQE applied to portfolio optimization, and use it to bias ansatz initialization and reduce search effort.",
+    "[supported] They experimentally demonstrate solving a 40-qubit portfolio-optimization instance (|D40_20>) using only 10 superconducting qubits on their 'Wukong' device via recursive partitioning and the proposed methods.",
+    "[supported] Smaller-scale hardware experiments and numerical simulations (including a 12-qubit portfolio case and a 12-node graph bisection example) show improved VQE trainability when applying their combination of strategies (close-to-solution initialization, reordering by expected returns, recursive partitioning, and correlated-parameter schedules).",
+    "[supported] Reordering assets by expected-return (µ) produces a more regular, biased cost-function landscape in their tests, making interpolation and close-to-solution initialization more effective.",
+    "[supported] A prototype (classical) greedy algorithm inspired by the convex-interpolation idea, and hybridization of VQE with greedy local search, yields complementary behavior in simulations — VQE gives a global search and greedy refines approximate solutions locally.",
+    "[speculative] The CCC (CNOT–C‑RY–CNOT) ansatz for Dicke states can be partitioned recursively into product fragments so that large-n problems can be evaluated on smaller quantum devices (authors provide theoretical derivations and proofs in appendices).",
+    "[speculative] The convex-interpolation approach and recursive partitioning have potential to reduce sampling/experiment complexity compared to generic circuit-cutting methods and could, under certain recursion regimes (they discuss loglog(n) partitions), retain prospects for quantum speedups.",
+    "[supported] Empirical analyses show the interpolation heuristic works well in practice on the datasets and random instances tested, but interpolation accuracy degrades for larger problems and irregular cost landscapes.",
+    "[supported] Practical optimization choices (using CVaR as objective, iterative-COBYLA optimizer, gradual reduction of correlated parameters) and simple error mitigation plus correlated-parameter scheduling materially affected convergence behavior in their hardware runs.",
+    "[speculative] The authors suggest convex interpolation can be extended to other combinatorial problems (MaxCut, number partitioning, graph partition), but no broad empirical validation across these problem classes is provided in the paper.",
+    "[speculative] Theoretical claims about asymptotic sampling complexity comparisons: the paper argues their decomposition needs polynomial/exponential-favorable sampling in some regimes (e.g., they present O(n) scaling for specific 4-outside-subspace samplings) versus generic circuit-cutting exponential costs — these claims rely on ansatz structure and assumptions about decomposition amplitudes.",
+    "[supported] The authors document concrete wall-clock runtimes for their hardware experiments (20.43 minutes and 70.41 minutes for the two reported experiments) and show ground-state-probability traces and CVaR convergence curves for the experiments reported."
+  ],
+  "results_summary": "The paper proposes 'convex interpolation' — a heuristic exploiting Hamming-distance-based clustering of basis states in Dicke-state inspired CCC ansatzes — and combines it with three complementary strategies (close-to-solution initialization, reordering assets by expected returns to regularize the cost landscape, and recursive ansatz partitioning). Through numerical experiments and superconducting-hardware runs (including a reported demonstration of a 40-qubit portfolio-optimization instance executed using only 10 physical qubits via partitioning), the authors show improved VQE trainability and propose hybridization with a greedy classical optimizer to refine approximate solutions. They provide theoretical derivations for ansatz decompositions, complexity discussions, and identify limitations (degrading interpolation accuracy with size and irregular cost functions).",
+  "performance_claims": [
+    "[supported] Hardware demonstration: solved a 40-qubit portfolio-optimization problem (|D40_20>) using only 10 superconducting qubits (Wukong).",
+    "[supported] Hardware demonstration: additional 12-qubit portfolio experiment and a 12-node random-weighted graph-bisection experiment executed on superconducting hardware; CVaR convergence and ground-state-probability traces reported (ground-state probabilities rising up to the tens of percent range in figures).",
+    "[supported] Wall-clock runtimes: the two reported hardware experiments took 20.43 minutes and 70.41 minutes (including queueing and cloud access overheads).",
+    "[supported] For interpolation via brute-force on outer sub-ansatze, they state the total number of basis states to be sampled for D100_50 would be approximately 3 × 10^6 (derived from combinatorics of the 4 outer sub-ansatze).",
+    "[speculative] They state an asymptotic cost-of-brute-force interpolation estimate of O(n^4) (with constant 1/32) for the specific 4-outer-subspace brute-force approach; this is a derived combinatorial bound in the manuscript.",
+    "[speculative] Under recursive partitioning (they analyze up to loglog(n) partitions), the number of sub-ansatze required for locating the ground state via their interpolation-driven recursive scheme is argued to be O((log n)^{loglog n}) — a theoretical upper bound contingent on accurate interpolation assumptions."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors argue their convex interpolation + recursive partitioning approach can reduce required quantum resources and 'has great potential to provide quantum speedups' in some recursion regimes, but they do not present a rigorous complexity-separation proof or a benchmarked classical-hardness result; the strongest empirical claim is a demonstration of solving a 40-qubit instance on 10 qubits via partitioning (hardware engineering/heuristic), not an asymptotic quantum advantage over classical algorithms.",
+  "limitations": [
+    "Interpolation accuracy of the convex curve determines effectiveness; interpolation using the 4 outer sub-ansatze becomes less accurate as problem size increases (author-stated).",
+    "Brute-force evaluation of minimum energies for sub-ansatze is infeasible for large n; recursive partitioning can mitigate but introduces complexity trade-offs (author-stated).",
+    "Recursive convex interpolation requires high accuracy at each recursion; one misestimation can produce only an approximate solution (author-stated).",
+    "Principal-component smoothness and uniformity deteriorate as problem size grows, causing initialization-induced barren-plateau–like behavior and risk of convergence to local minima (author-stated).",
+    "The presented experiments relied on simple problem-specific measurement error mitigation and parameter-correlation strategies; hardware noise and stability still significantly affect convergence and final accuracy (author-stated).",
+    "Trade-off in correlated-parameter strategy: more correlation speeds early descent but increases spurious local minima and can bound CVaR expectation (author-stated).",
+    "Reordering heuristics (e.g., by expected returns or variances) do not always guarantee a regular cost landscape; suitable reordering is problem-dependent (author-stated).",
+    "Achieving quantum speedups requires careful bound on number of partitions; too many partitions can destroy speedup potential because of exponential partition counts (author-stated).",
+    "[inferred] Demonstrations are limited in scale and dataset diversity (two portfolio experiments, one graph bisection); scalability to realistic large financial problems remains unproven.",
+    "[inferred] The current convex-interpolation pipeline depends on heuristic choices (which sub-ansatze to sample, parameter initialization values like identical θ) that may not generalize across datasets.",
+    "[inferred] The need to assume or obtain a negative ground-state energy for convexity/monotonicity analyses limits applicability across arbitrary risk levels q and asset pools.",
+    "[inferred] The approach's performance under stronger, realistic noise models and with more complete measurement-error mitigation is not evaluated; noise may degrade interpolation and recursion steps.",
+    "[inferred] The hybrid VQE+greedy strategy and thresholds for switching between global and local search are not fully characterized; efficacy may vary by instance."
+  ],
+  "open_questions": [
+    "How can convex interpolation be made accurate and efficient for large n without exhaustive sampling of many sub-ansatze?",
+    "What interpolation algorithms (including machine learning approaches) best predict the convex curve / ground-state location under realistic problem/data distributions and noise?",
+    "How many recursive partitions are optimal to balance improved trainability and preservation of quantum speedup (i.e., what is the suitable upper bound on partitions)?",
+    "How robust is the recursive convex-interpolation pipeline to misestimation at intermediate recursions, and what error-correction or verification steps are effective?",
+    "How to design parameter-initialization methods that scale (beyond identical θ) to maintain a well-distributed, smooth principal component for large problem sizes?",
+    "What are principled reordering strategies (beyond sorting by expected returns or variances) that reliably regularize the cost landscape across problem instances (portfolio, graph, etc.)?",
+    "How to systematically set and adapt the number of correlated parameters during optimization to trade off quick descent and avoidance of spurious minima?",
+    "What are the limits of the hybrid VQE + greedy algorithm approach: when does the greedy refinement reliably convert approximate solutions to optima, and when does it fail?",
+    "Under what regimes (problem size, k in Dicke states, partition depth) can the fragments still be efficiently simulated classically, and where do quantum resources become strictly necessary?",
+    "How does realistic hardware noise (temporal instability, crosstalk, readout errors) affect the interpolation and recursion accuracy in practice?",
+    "Can the convex interpolation idea generalize effectively to other combinatorial optimization problems (maxcut, number partitioning, market split, general graph partitioning) without problem-specific tuning?"
+  ],
+  "future_work": [
+    "Develop more accurate and efficient interpolation methods for estimating the convex curve and ground-state location; investigate machine-learning approaches to predict convex curve distributions (author-stated).",
+    "Optimize the distribution of the principal component (e.g., local expressibility enhancement / local overparameterization) to reduce initialization-induced barren plateaus and improve convergence (author-stated).",
+    "Design and evaluate more advanced asset/graph reordering methods to produce regular cost-function landscapes (author-stated).",
+    "Analyze and determine the suitable number of recursive partitions that preserve potential quantum speedups while improving trainability (author-stated).",
+    "Investigate improved measurement-error mitigation and noise-robust strategies (beyond the simplest problem-specific mitigation used here) to stabilize optimization on hardware (inferred/author-stated).",
+    "Explore principled parameter-correlation schedules (how to decrease correlated parameters during optimization) and their impact on convergence and final accuracy (author-stated/inferred).",
+    "Systematically study and benchmark the hybrid VQE + greedy algorithm pipeline: switching criteria, failure modes, and instance-dependent performance (author-stated/inferred).",
+    "Extend and validate the convex-interpolation framework on a wider set of combinatorial optimization problems and larger, more realistic financial datasets (author-stated/inferred).",
+    "Investigate theoretical bounds on interpolation error propagation across recursions and design verification/repair mechanisms for misestimations (author-stated/inferred)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical",
+    "quantum-annealing-qubo",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Convex interpolation + ansatz partitioning improves VQE trainability on NISQ devices and is used to solve a 40-qubit portfolio instance using only 10 physical qubits via recursive fragmentation.",
+    "#idea:hybrid-approach — A hybrid pipeline combines problem-inspired CCC (Dicke-like) ansatz VQE on small QPUs with classical greedy local search and post-processing to refine approximate solutions.",
+    "#idea:quantum-advantage — Close-to-solution parameter initialization, parameter-correlation scheduling, and reordered problem data (by expected return) empirically boost convergence and ground-state probability compared to naive VQE setups.",
+    "#idea:near-term-feasibility — Demonstrated experiments on Origin Quantum's superconducting \"Wukong\" QPU (runs on up to 12 physical qubits) with light measurement error mitigation indicate practical NISQ-era applicability for small fragments.",
+    "#idea:hybrid-approach — Convex interpolation estimates which fragment/subspace contains the global ground state from a small set of easily-evaluated fragment minima, reducing search and enabling effective initialization.",
+    "#idea:near-term-feasibility — CVaR-based cost and an iterative-COBYLA optimizer with a schedule that progressively reduces parameter grouping (parameter-correlation strategy) combine fast early descent with improved final convergence."
+  ],
+  "contradictions": []
+}

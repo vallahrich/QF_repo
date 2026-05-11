@@ -1,0 +1,192 @@
+---
+aliases:
+- 'QLSTM4FM: Quantum Assisted Long Short-Term Memory Framework for Financial Market
+  Trend Forecasting'
+- QLSTM FM Quantum Assisted
+authors:
+- Sourodeep Kundu
+- Nachiketa Tarasia
+- Rabindra Kumar Barik
+auto_detected: true
+classification: ''
+contradiction_flags:
+- contradiction:scalability
+doi: 10.1109/IC-SIT63503.2024.10862667
+evaluation_type: simulator
+evidence_type: ''
+has_quantitative_results: true
+idea_tags:
+- idea:quantum-advantage
+- idea:near-term-feasibility
+- idea:hybrid-approach
+journal_or_venue: 2024 International Conference on Intelligent Computing and Sustainable
+  Innovations in Technology (IC-SIT)
+methodology_tags:
+- variational-nisq
+- quantum-ml
+- hybrid-quantum-classical
+paper_type: ''
+quantum_advantage_claim: speculative
+related_papers: []
+relevance_phase1: high
+relevance_phase3: high
+source_type: conference-paper
+source_type_confidence: high
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/quantum-ml-finance
+- method/variational-nisq
+- method/quantum-ml
+- method/hybrid-quantum-classical
+- idea/quantum-advantage
+- idea/near-term-feasibility
+- idea/hybrid-approach
+- contradiction/scalability
+title: 'QLSTM4FM: Quantum Assisted Long Short-Term Memory Framework for Financial
+  Market Trend Forecasting'
+topic_tags:
+- quantum-ml-finance
+year: '2024'
+zotero_key: ''
+---
+
+## Abstract summary
+This paper introduces QLSTM4FM, a hybrid quantum-classical LSTM architecture that integrates variational quantum layers (VQLs) to enhance learning of complex temporal dependencies in financial time series. The model is evaluated on Merck & Co. (MRK) stock data using technical indicators, Fourier-based trend filtering, correlated assets, and FinBERT sentiment features, and is reported to achieve faster convergence, lower loss, higher accuracy, and far fewer parameters than a comparable classical LSTM. Experiments are implemented in PyTorch with PennyLane simulators and the authors discuss scalability to NISQ hardware.
+## Methodology
+The study implements a hybrid quantum-classical pipeline to forecast Merck & Co. (MRK) stock prices by integrating variational quantum layers into an LSTM architecture (QLSTM) and comparing it against a classical LSTM baseline. Data were collected from Yahoo Finance (via manual download and the yfinance package) comprising 2,738 trading days of historical prices (OHLC and related fields) and supplemented with correlated asset time series (e.g., PFE, JNJ, BMY, S&P 500, NASDAQ) and news headlines for sentiment analysis. Feature engineering included technical indicators (moving averages, EMAs, MACD, Bollinger Bands, momentum), Fourier-based trend smoothing (retaining 3/6/9 frequency components), and FinBERT sentiment scoring for headlines. For modeling, the classical baseline is a PyTorch LSTM regression model (sequence length = 3 days, epochs = 20, learning rate = 1e-4). The QLSTM replaces key layers with a variational quantum circuit implemented via PennyLane: classical inputs are encoded using amplitude (and phase) encoding into 4 qubits, processed by one variational quantum layer composed of three rotational gates, and then integrated with the recurrent architecture. Training and evaluation were run on quantum simulators (lightning.qubit) tracking MSE training/testing losses and convergence; model complexity was compared via parameter counts (QLSTM: 293 vs LSTM: 3,217). Results are reported as loss curves and predicted vs. true price plots, with discussion of convergence speed and parameter efficiency. The work targets NISQ feasibility and discusses future runs on real hardware (IBM/AWS).
+
+**Algorithms used:** Classical LSTM, Quantum LSTM (QLSTM), Variational Quantum Circuit (VQC), Variational Quantum Layers (VQL), Amplitude/Phase Encoding, Fast Fourier Transform (FFT) for trend approximation, FinBERT for sentiment analysis
+**Frameworks:** PyTorch, PennyLane, yfinance, FinBERT, PennyLane Lightning (lightning.qubit simulator), NumPy (FFT)
+
+**Experimental setup:** Hybrid quantum-classical experiments performed on quantum simulators (PennyLane lightning.qubit). QLSTM uses 4 qubits, 1 variational layer with 3 rotational gates; classical LSTM implemented in PyTorch. Initial experiments on simulator; authors note intent to run future experiments on IBM/AWS quantum hardware.
+
+**Dataset:** Historical MRK (Merck & Co., Inc.) stock data from Yahoo Finance collected via yfinance/manual download spanning 2,738 trading days, containing OHLC prices and related fields; supplemented by correlated asset series (PFE, JNJ, BMY, S&P 500, NASDAQ) and news headlines (for FinBERT sentiment). Technical indicators computed: 7- and 21-day moving averages, 12- and 26-day EMAs, MACD, Bollinger Bands, and momentum.
+## Experiment details
+### Input
+Source: Yahoo Finance (via yfinance) for price data; news headlines stored in CSV for sentiment. Size: 2,738 trading days for MRK. Preprocessing: calculation of technical indicators (MAs, EMAs, MACD, Bollinger Bands, momentum), Fourier smoothing experiments retaining 3/6/9 frequency components, normalization/standardization of features, tokenization and sentiment probability generation using FinBERT for headlines, assembly of correlated-asset features. Time-series prepared with sequence length = 3 days for model input; classical data encoded to quantum states via amplitude/phase encoding for QLSTM.
+
+### Process
+1) Data collection from Yahoo Finance and news sources; compute technical indicators and compile correlated-asset series. 2) Apply FFT to smooth/remove high-frequency noise; test reconstructions with 3/6/9 components. 3) Run FinBERT on headlines to obtain sentiment probabilities and merge with feature set. 4) Normalize/standardize features and construct time-series windows (sequence length = 3 days). 5) Train baseline PyTorch LSTM (sequence length 3, epochs 20, learning rate 1e-4) using DataLoader; track training/testing MSE. 6) Construct QLSTM: encode classical windows via amplitude/phase encoding, feed into a PennyLane VQC (4 qubits, 1 variational layer, 3 rotational gates), integrate quantum layer into recurrent architecture, and train on simulator (lightning.qubit) for 20 epochs. 7) Evaluate and compare models by training/test loss curves, MSE, convergence speed, parameter count, and predicted vs true price plots. Hyperparameter tuning (learning rate, batch size) discussed but specific grid not detailed.
+
+### Output
+Primary metric: Mean Squared Error (MSE) for training and testing. Outputs include training and testing loss curves (epochs), predicted vs actual price plots, parameter counts (QLSTM: 293 parameters vs classical LSTM: 3,217 parameters), qualitative assessment of convergence speed and generalization. Baseline: classical LSTM. Reported observations: QLSTM showed faster convergence, lower loss, and fewer parameters.
+
+### Parameters
+- qubits: 4
+- variational_layers: 1
+- rotational_gates_per_layer: 3
+- sequence_length: 3
+- epochs: 20
+- learning_rate_classical_LSTM: 0.0001
+- learning_rate_QLSTM: None
+- batch_size: None
+- shots: None
+- optimizer: None
+- parameter_count_QLSTM: 293
+- parameter_count_LSTM: 3217
+
+### Hardware
+{'simulator': 'PennyLane lightning.qubit', 'qpu_model': None, 'cloud_provider': 'IBM/AWS (mentioned as future targets, not used in experiments)'}
+
+### Reproducibility
+The paper does not provide a public code repository or explicit scripts/config files. Data sources (Yahoo Finance via yfinance and public news headlines, FinBERT model) are publicly accessible, and the frameworks used (PyTorch, PennyLane) are standard, so reproduction is feasible if implementation details (exact model code, training splits, batch size, optimizer choice, random seeds) are reimplemented from descriptions. No direct code or dataset snapshots are referenced in the paper.
+## Findings
+- [supported] The authors propose QLSTM4FM, a hybrid LSTM architecture that integrates Variational Quantum Layers (VQLs) for stock price forecasting.
+- [supported] In simulation experiments on Merck & Co. (MRK) historical data, the QLSTM model attained faster convergence and lower training and testing loss than a classical LSTM baseline.
+- [supported] The QLSTM implementation used 4 qubits, 1 variational layer, and 3 rotational gates in the quantum layer(s) (experiments run on simulators via PennyLane/lightning.qubit).
+- [supported] The QLSTM model used substantially fewer trainable parameters than the classical LSTM reported in the paper (293 vs 3,217 parameters).
+- [supported] The dataset used for experiments included 2,738 trading days of MRK historical data, technical indicators (MA, EMA, MACD, Bollinger Bands, momentum), correlated assets, Fourier-based smoothing, and sentiment features derived via FinBERT.
+- [supported] The classical LSTM baseline used a sequence length of 3 days, trained for 20 epochs with a learning rate of 0.0001.
+- [speculative] The paper claims that quantum-enhanced layers (VQLs/QLSTM) offer a tangible advantage for time-series forecasting tasks on Noisy Intermediate-Scale Quantum (NISQ) hardware and are viable for real-world deployment.
+- [speculative] The authors suggest that quantum computing techniques (e.g., quantum annealing, QAOA, QNNs) can provide refined approaches to non-convex financial optimization and may yield computational or accuracy advantages over classical methods in finance more broadly.
+- [speculative] Statements in the introduction that quantum neural networks provide 'exponential computational acceleration' and can 'simulate complex probability distributions with fewer gate operations' are presented as motivating background rather than demonstrated by this work.
+- [speculative] Future directions proposed (increasing qubit count, running on real quantum hardware such as IBM or AWS, exploring QGRU/QGAN hybrids, and proving information-theoretic bounds on quantum advantage) are prospective and not evaluated in this paper.
+- [supported] The paper employed Fourier Transform (FFT) to denoise/approximate long-term trends by retaining a small number of frequency components (experiments with retaining 3, 6, and 9 components were reported).
+- [supported] Sentiment analysis (FinBERT) was incorporated as auxiliary features to capture market sentiment for MRK and combined with technical indicators in the dataset used to train models.
+
+**Results summary:** The paper presents QLSTM4FM, a hybrid quantum-classical LSTM that replaces certain classical layers with variational quantum layers and evaluates it on a 2,738-day MRK dataset enriched with technical indicators, correlated assets, FFT-based trend smoothing, and FinBERT sentiment features. In simulator-based experiments (PennyLane / lightning.qubit) the QLSTM with 4 qubits and a single variational layer converged faster and achieved lower training and testing loss than a classical PyTorch LSTM baseline, while using far fewer trainable parameters (293 vs 3,217). All quantum experiments were performed on simulators; deployment on real quantum hardware and broader claims of provable quantum advantage remain prospective.
+
+**Performance claims:**
+- 293 parameters for QLSTM vs 3,217 parameters for classical LSTM
+- 4 qubits used in the QLSTM experiments
+- 1 variational (quantum) layer with 3 rotational gates in the QLSTM
+- Dataset: 2,738 trading days of MRK data
+- Classical LSTM training setup: sequence length 3 days, 20 epochs, learning rate 0.0001
+- Experiments run for 20 epochs for both classical LSTM and QLSTM
+## Quantum advantage claim
+**Classification:** speculative
+
+The authors report better empirical performance for QLSTM versus classical LSTM in simulator experiments (faster convergence, lower loss, fewer parameters), but these results are based on simulation (PennyLane/lightning.qubit) rather than execution on real quantum hardware and do not constitute a provable or hardware-demonstrated quantum advantage. Broader claims about exponential speedups and NISQ viability are presented as prospective/theoretical rather than demonstrated within this work.
+## Limitations
+- Experiments were performed only on simulators (e.g., lightning.qubit); no results reported from actual quantum hardware (author-stated).
+- The implemented QLSTM used a very small quantum configuration: 4 qubits and 1 variational layer, limiting assessment of scalability (author-stated).
+- Work targeted NISQ-era feasibility and acknowledges current quantum-hardware limitations (author-stated).
+- Limited hyperparameter search: training reported over 20 epochs with a single learning rate setting; more exhaustive tuning not presented (author-stated/implied).
+- Evaluation uses a small set of reported metrics (primarily MSE, loss curves, parameter counts) with no statistical significance testing or confidence intervals reported ([inferred]).
+- [inferred] Dataset and task scope are narrow in evaluation: focus on one primary asset (MRK) and a modest set of correlated assets — generalization across different companies, sectors, market regimes, and asset classes is not demonstrated.
+- [inferred] Potential inconsistency between framing (abstract mentions binary classification) and body (price forecasting/regression) suggests task definition or reporting ambiguity.
+- [inferred] Limited baseline comparisons: comparison is only against a classical LSTM baseline (a single shallow LSTM); comparisons with stronger classical baselines or other quantum models are absent.
+- [inferred] Possible risk of overfitting or optimistic results due to small parameter count / limited epochs / simulator environment — generalization to out-of-sample, real-world trading settings is not tested.
+- [inferred] No ablation study isolating the contribution of the variational quantum layers versus other modeling choices (encoding, preprocessing, indicators, sentiment features).
+- [inferred] Practical deployment issues (latency, integration with trading systems, cost on real quantum hardware) are not evaluated.
+- [inferred] Impact of quantum hardware noise, gate errors and readout errors on QLSTM performance is unquantified.
+- [inferred] No discussion or experiments on transaction costs, slippage, or economic utility of predictions (e.g., backtesting a trading strategy).
+- [inferred] Reproducibility details are limited (exact model hyperparameters, random seeds, dataset splitting and pre-processing pipelines not fully specified).
+## Open questions
+- How will QLSTM performance translate when executed on real quantum hardware (IBM, AWS, etc.) under realistic noise conditions?
+- Does the reported advantage of QLSTM generalize across a wide range of assets, sectors, time periods, and market regimes?
+- How does performance scale with increasing numbers of qubits and deeper variational circuits? At what point do noise and circuit depth negate gains?
+- Which quantum data-encoding schemes (amplitude, phase, other encodings) are most effective for financial time-series inputs?
+- What are the theoretical, information-theoretic bounds or provable conditions under which a quantum advantage in time-series forecasting can be expected?
+- How much of the observed improvement is attributable specifically to the variational quantum layer versus differences in architecture, preprocessing (technical indicators, FFT smoothing), or hyperparameter choices?
+- How robust are QLSTM models to non-stationarity, regime shifts, and adversarial market conditions?
+- Can QLSTM be integrated into end-to-end trading systems, and do its predictions produce economically significant trading performance after accounting for transaction costs and constraints?
+- How do QLSTM models compare to stronger classical baselines (deeper LSTMs, Transformer-based time-series models, ensemble methods) and other quantum RNN variants (e.g., QGRU)?
+- What are the best strategies for hyperparameter tuning and learning-rate scheduling in hybrid quantum-classical training to ensure stable convergence?
+- How to perform principled model selection and uncertainty quantification for quantum-enhanced forecasting models?
+- What is the interpretability of quantum layers in terms of learned features or market signals, and can this be used for explainable finance?
+
+**Future work:**
+- Run experiments on actual quantum hardware (IBM, AWS) to validate simulator results (author-stated).
+- Increase the number of qubits and variational layers to study scalability and richer quantum representations (author-stated).
+- Optimize the QLSTM architecture for better accuracy and reduced training time (author-stated).
+- Explore other quantum recurrent architectures such as Quantum GRU (QGRU) (author-stated).
+- Investigate alternative quantum data-encoding techniques beyond amplitude encoding (author-stated).
+- Conduct theoretical studies, e.g., information-theoretic bounds on quantum advantage for temporal data (author-stated).
+- Incorporate adaptive learning rates and advanced feature-selection techniques to improve model performance (author-stated).
+- Integrate QLSTM within Quantum Generative Adversarial Networks (QGANs) to enhance predictive power and robustness (author-stated).
+- Deeper investigation into learning-rate scheduling and other optimization strategies for hybrid quantum-classical training (author-stated).
+## Key ideas
+- #idea:hybrid-approach — Proposes QLSTM4FM: an LSTM augmented with variational quantum layers (VQLs) to model temporal dependencies in financial time series.
+- #idea:quantum-advantage — Reports empirical improvements on a Merck (MRK) dataset: faster convergence, lower training/testing MSE, and a much smaller parameter count (293 vs 3,217) compared to a classical LSTM.
+- #idea:quantum-advantage — Uses amplitude and phase encoding into 4 qubits and a single variational layer (3 rotational gates) as the quantum component integrated into the recurrent architecture.
+- #idea:near-term-feasibility — Frames the approach as NISQ-targeted and discusses potential future runs on IBM/AWS hardware, arguing parameter efficiency as a NISQ-friendly property.
+- #limitation:simulation-only — All experiments were performed on PennyLane lightning.qubit simulator; no real QPU experiments were reported.
+- #limitation:qubit-count — The implementation uses only 4 qubits and a single variational layer, limiting evidence about scaling to realistic problem sizes.
+- #limitation:data-encoding — The pipeline relies on amplitude/phase encoding of classical features (including technical indicators and FinBERT sentiment), which can incur significant overhead in practice.
+- #limitation:no-empirical-validation — No public code, full training hyperparameters, or hardware runs provided, reducing reproducibility and external validation.
+## Contradictions
+- contradiction:scalability — The paper claims NISQ feasibility and improved performance, but provides only small-scale (4 qubit) simulator results without noisy hardware experiments or scalability analysis, undermining claims about scaling to practical NISQ deployments.
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

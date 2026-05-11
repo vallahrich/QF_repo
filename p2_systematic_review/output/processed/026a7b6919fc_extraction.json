@@ -1,0 +1,185 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes an abstract, structured sections (methods, algorithms, results/scaling), references, and a venue marker 'DSDM – 2021' with an EDP Sciences open-access notice, consistent with a conference proceedings paper rather than a full journal article or technical report.",
+  "title": "Hybrid classical-quantum computing: Applications to statistical mechanics of financial markets",
+  "authors": [
+    "Lester Ingber"
+  ],
+  "year": "2021",
+  "journal_or_venue": "DSDM 2021 (conference proceedings)",
+  "doi": "",
+  "abstract_summary": "The paper presents a framework for modeling options on hypothetical quantum money by combining classical optimisation and path-integral methods to capture quantum features using only classical (super)computers. It applies Adaptive Simulated Annealing (ASA) to fit parameters of the Statistical Mechanics of Financial Markets (SMFM) model and uses PATHINT/qPATHINT to propagate short-time (quantum) path-integral probability distributions, demonstrating feasibility and discussing performance and scaling considerations for hybrid classical-quantum computations in finance.",
+  "methodology_description": "The paper develops and applies a hybrid classical-quantum computational methodology implemented entirely on classical high-performance computers. Parameter fitting is performed using Adaptive Simulated Annealing (ASA) to fit short-time conditional probability distributions of a Statistical Mechanics of Financial Markets (SMFM) model. Time-sequential evolution of the distributions (and quantum generalizations) is computed with histogram-kernel path-integral algorithms: PATHINT for classical systems and qPATHINT (variables/functions treated as complex) for quantum-money analogues. The approach uses Lagrangian/path-integral representations equivalent to Fokker–Planck and Langevin formulations, with midpoint (Stratonovich/Feynman) discretization and Riemannian-curvature corrections when diffusions are non-constant. Numerical propagation is done by constructing banded kernel matrices from short-time Gaussian kernels; meshes are chosen using Δq ≈ (Δt g^{ii})^{1/2} and tiled diagonal meshes for multivariate factors. For options pricing the model uses a two-factor SDE system for underlying price S and stochastic volatility σ with a piecewise multiplicative noise function F(S,S',S*,x,y) (including forms that recover Black–Scholes in limits). American-option style epoch resets (wavefunction decoherence) are modeled by resetting time at the start of each epoch. Performance and scaling are benchmarked across dimensions using cloned 1-D systems; implementation details include C-code bases, gcc -O3 compilation, and runs on XSEDE supercomputers (Expanse).",
+  "algorithms_used": [
+    "Adaptive Simulated Annealing (ASA)",
+    "PATHINT (path-integral histogram kernel propagation)",
+    "qPATHINT (quantum generalization of PATHINT)",
+    "PATHTREE / qPATHTREE",
+    "Histogram kernel evaluation of short-time propagator"
+  ],
+  "frameworks": [],
+  "experimental_setup": "Classical HPC environment (XSEDE Expanse) running custom C codes: ASA (global optimization C-code) and PATHINT/qPATHINT implementations. Code compiled with gcc -O3; example timing: 1-D run with dt=0.0002, 10 foldings executes in ~0.002s. qPATHINT modifications involved converting variables/functions to complex (~7500 lines changed).",
+  "dataset_used": "",
+  "experiment_input": {
+    "model": "Synthetic / simulated SMFM two-factor SDEs (underlying price S and stochastic volatility σ). No external market dataset reported.",
+    "example_parameters": {
+      "underlying_price_S": 7.0,
+      "strike_X": 7.5,
+      "risk_free_rate_r": 0.0675,
+      "daily_volatility": 0.00793725,
+      "off_diagonal_kernel_band": 9,
+      "time_step_dt": 0.0002,
+      "number_of_foldings_per_run": 10
+    },
+    "preprocessing": "No external data preprocessing reported; meshes chosen via Δq ≈ (Δt g^{ii})^{1/2} and tiled diagonal mesh scheme for multivariate diffusion."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Define SMFM stochastic differential equations for S and σ, and specify multiplicative noise function F(S,S',S*,x,y).",
+      "Parameterize forms to be fit (e.g., exponents in multiplicative noise, region boundaries S', S*).",
+      "Use ASA to fit parameters to short-time conditional probability distributions (ASA options include QUENCHing controls, ASA_SAVE_BACKUP and ASA_EXIT_ANYTIME usage).",
+      "Construct short-time Gaussian kernel (Lagrangian-based) and assemble banded kernel matrix (PATHINT) for histogram propagation of P(x,t).",
+      "For quantum scenarios, use qPATHINT (complexified variables/functions) to propagate quantum wavefunction/propagator between epochs; reset time at each epoch to model decoherence/American exercise.",
+      "Compute option prices and Greeks from propagated distributions/wavefunctions; analyze sensitivity to shocks and volatility-of-volatility.",
+      "Benchmark performance and scaling by cloning 1-D system across dimensions and measuring kernel sizes and runtimes."
+    ],
+    "notable_parameters_used": {
+      "ASA": "annealing schedules for generating and acceptance functions, QUENCH options, periodic backup (ASA_SAVE_BACKUP), graceful exit (ASA_EXIT_ANYTIME)",
+      "PATHINT/qPATHINT": "dt (e.g., 0.0002), off-diagonal kernel bandwidth (e.g., 9), mesh selection Δq ≈ (Δt g^{ii})^{1/2}",
+      "Numerical": "gcc -O3 compilation; number of foldings (e.g., 10)"
+    },
+    "iterations_and_runs": "Specific ASA iteration counts not reported. Timing example: 10 foldings at dt=0.0002 run in ~0.002s for the 1-D test; multidimensional scaling runs reported for increasing dimensions."
+  },
+  "experiment_output": {
+    "formats": [
+      "Option prices",
+      "Greeks (sensitivities including higher-order derivatives e.g., VegapPI)",
+      "Runtime and scaling metrics (kernel size per dimension, ijkcnt table)",
+      "Qualitative sensitivity analyses to shocks"
+    ],
+    "metrics_reported": [
+      "Runtime per run (e.g., 0.002s for 10 foldings at dt=0.0002, 1-D)",
+      "Kernel bandwidth and kernel element counts (ijkcnt) across dimensions",
+      "Observations of sensitivity of higher-order Greeks to shocks"
+    ],
+    "baselines": "No external baseline algorithms (e.g., Black–Scholes closed form) used for systematic benchmark comparisons; Black–Scholes limits are discussed analytically."
+  },
+  "experiment_parameters": {
+    "time_step_dt": 0.0002,
+    "number_of_foldings_example": 10,
+    "off_diagonal_bandwidth": 9,
+    "example_underlying_price_S": 7.0,
+    "example_strike_X": 7.5,
+    "risk_free_rate_r": 0.0675,
+    "daily_volatility": 0.00793725,
+    "compiler_flags": "gcc -O3",
+    "mesh_rule": "Δq ≈ (Δt g^{ii})^{1/2}",
+    "ASA_options_noted": [
+      "custom annealing schedules",
+      "QUENCHing controls",
+      "ASA_SAVE_BACKUP",
+      "ASA_EXIT_ANYTIME"
+    ]
+  },
+  "hardware_details": {
+    "compute_infrastructure": "XSEDE supercomputing resources (Expanse)",
+    "execution_environment": "Classical HPC; compiled C codes (ASA, PATHINT/qPATHINT) with gcc -O3",
+    "notes": "No quantum hardware (QPU) used; quantum features modeled numerically via complexified path-integral (qPATHINT)."
+  },
+  "reproducibility_notes": "The implementation is based on custom C codes (ASA is referenced as available global optimization C-code in prior publications; PATHINT/qPATHINT are custom and qPATHINT required ~7500 lines of modification). No public repository or dataset links are provided in the paper; detailed parameter examples and algorithmic descriptions are given, but full code and exact ASA run configurations/iteration counts are not published in this paper, limiting direct reproducibility.",
+  "key_findings": [
+    "[supported] Several commercial vendors (Rigetti, D-Wave, Microsoft, IBM) offer hybrid classical-quantum computing services.",
+    "[supported] The author implemented Hybrid Classical-Quantum functionality entirely on classical (super-)computers by running classical codes that incorporate quantum features (qPATHINT/qPATHTREE).",
+    "[supported] Adaptive Simulated Annealing (ASA) has been used since 1989 to fit parameters in nonlinear stochastic models and is used in this project to fit SMFM parameters.",
+    "[supported] PATHINT was generalized from 1-D to N-D and a quantum generalization qPATHINT was implemented (changing variables/functions to complex), applied previously to neocortical interactions and financial options.",
+    "[speculative] The paper proposes that quantum money (QM) will be incorporated into financial markets and that options on QM will be required when QM becomes practical.",
+    "[speculative] The classical SMFM space can be fitted to short-time conditional probability distributions while qPATHINT can model quantum money dynamics — presented as a modeling framework rather than validated on real quantum money.",
+    "[supported] PATHTREE/qPATHTREE and PATHINT/qPATHINT codes can include serial random shocks across many time foldings.",
+    "[supported] Path-integral, Fokker-Planck, and Langevin formulations are mathematically equivalent and can be used for numerical propagation of short-time conditional probabilities in these systems.",
+    "[supported] The histogram (kernel) method (PATHINT) yields a banded transition matrix (T) from short-time Gaussian kernels and is appropriate for time-dependent path integrals.",
+    "[supported] Monte Carlo/importance-sampling methods (e.g., ASA_SAMPLE) are commonly used, but are not convenient for modeling time-sequential serial random shocks compared to the kernel-based PATHINT approach.",
+    "[supported] qPATHINT has been tested with shocks to quantum-options wavefunctions and demonstrates significant computational scaling issues as dimensionality increases.",
+    "[speculative] Imaginary-time Wick rotations in numerical path-integral calculations can obfuscate an audit trail back to imaginary time after many foldings (based on the author’s communications).",
+    "[supported] In the SMFM two-factor model, fits were most sensitive when the central region used S^2 dependence for the volatility functional form.",
+    "[supported] For multivariate PATHINT, tiling/diagonal-mesh strategies and diffusion-based mesh scaling were used to address multivariate diffusion coupling.",
+    "[supported] Empirical scaling data: 2-D PATHINT problem requires on the order of 200x the computation of the corresponding 1-D problem.",
+    "[supported] Benchmarks for an N-dimensional cloned-system show explosive kernel-size growth (ijkcnt), e.g., D=1: 189; D=2: 35721; D=3: 6,751,269; D=4: 1,275,989,841; etc.",
+    "[supported] SMNI one-dimensional benchmark: dt = 0.0002 requires 10 foldings; run time reported 0.002 s (≈0.0002 s per qIteration) with 'gcc -O3' on XSEDE Expanse.",
+    "[speculative] The author suggests that hybrid classical-quantum analyses of financial options can be carried out today by classical emulation and will be relevant when genuine quantum money/markets arise.",
+    "[supported] Example option-calculation parameters used in prior experiments: kernel off-diagonal span 9, underlying price 7.0, strike 7.5, risk-free rate 0.0675, daily volatility 0.00793725."
+  ],
+  "results_summary": "The paper describes a modeling and computational approach that uses classical implementations of path-integral algorithms (PATHINT/qPATHINT) together with Adaptive Simulated Annealing (ASA) to fit and propagate short-time conditional probability distributions for financial options models (SMFM) and related systems. The author reports having generalized PATHINT to N dimensions and to complex-valued quantum versions (qPATHINT), applied these to prior studies (neocortical interactions and options), and demonstrates that kernel-based path-integral propagation can include serial shocks that are less convenient for Monte Carlo methods. Performance benchmarks show rapid growth in kernel size and computation with increasing dimensionality (e.g., 2-D ≈ 200× 1-D), and a small 1-D SMNI benchmark run-time is reported on XSEDE hardware. The work is presented as a classical emulation of hybrid classical-quantum workflows aimed at preparing for potential future quantum-money markets; claims about the arrival and market adoption of quantum money and consequent option markets remain speculative.",
+  "performance_claims": [
+    "2-D PATHINT problem takes on the order of 200× the computation of the 1-D problem.",
+    "Kernel size (ijkcnt) benchmarks for cloned N-dimensional system: D=1: 189; D=2: 35,721; D=3: 6,751,269; D=4: 1,275,989,841; D=5: 241,162,079,949; D=6: 45,579,633,110,361; D=7: 8,614,550,657,858,229.",
+    "SMNI 1-D benchmark on XSEDE Expanse with 'gcc -O3': dt = 0.0002 requires 10 foldings, total run time 0.002 s, ≈0.0002 s per qIteration (0.004 s when compiled with debug '-g').",
+    "Example option-calculation parameters reported: kernel off-diagonal span = 9; underlying price = 7.0; strike = 7.5; risk-free rate = 0.0675; daily volatility = 0.00793725.",
+    "PATHINT was modified to use a mesh constraint Δq_i ≈ (Δt g^{ii})^{1/2}, and mesh-tiling exponentiation strategies were used to approximate diagonal meshes in multivariate systems."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper does not demonstrate any quantum computational advantage; instead it shows how quantum-like models (qPATHINT) can be emulated and run on classical (super-)computers and discusses future relevance if quantum money/markets arise. Performance and scaling challenges for qPATHINT are highlighted, and no empirical claim of quantum speedup or advantage is presented.",
+  "limitations": [
+    "Quantum money (QM) implementation and exchange with classical money is not addressed; there is no clear proposal for how QM would be implemented or exchanged with classical money (author-stated).",
+    "Quantum computing remains infeasible for many systems even when combined with classical optimizers (author-stated/cited).",
+    "Numerical imaginary-time (Wick) rotations can leave no audit trail back to imaginary time in multiple foldings of the path integral, limiting interpretability of numerical quantum solutions (author-stated).",
+    "Monte Carlo / importance-sampling methods are not convenient for time-sequential serial random shocks, necessitating kernel-based approaches (author-stated).",
+    "Severe computational scaling: kernel (qPATHINT/PATHINT) sizes grow very rapidly with dimensionality (author-stated), e.g., 2-D is ~200x 1-D and higher D explode exponentially.",
+    "Multivariate diffusions cause mesh-coupling problems (the mesh of S depends on sigma) and complicate PATHINT grids; available transformations produce cumbersome boundary conditions (author-stated).",
+    "Oscillatory quantum wavefunctions require much larger off-diagonal spreads in the kernel, increasing computational cost (author-stated).",
+    "Treatment of American options assumes epochal decoherence/collapse at each early-exercise measurement which is a modeling assumption that may not capture all quantum measurement dynamics (author-stated/inferred).",
+    "[inferred] The project uses classical (super-)computers to emulate hybrid classical-quantum systems; results may not capture true quantum-hardware-specific phenomena such as entanglement, hardware noise, or real quantum speedups.",
+    "[inferred] High sensitivity of some Greeks (higher-order derivatives) to shocks indicates potential numerical instability or model fragility for risk measures.",
+    "[inferred] Large number of ASA options and quench parameters implies substantial tuning effort and potential difficulty in robust, automated model fitting across market regimes.",
+    "[inferred] Approximations such as tiling diagonal meshes for multivariate problems are ad hoc and may reduce accuracy in strongly coupled regions."
+  ],
+  "open_questions": [
+    "How will quantum money actually be implemented, standardized, and exchanged with existing classical money?",
+    "How will financial markets value quantum money and integrate quantum instruments into existing market structures?",
+    "Will classical-only simulations (qPATHINT running on classical supercomputers) adequately reflect behavior of real quantum financial systems or quantum hardware?",
+    "What is the practical threshold for quantum advantage in derivative pricing and related financial computations (cited external work raises this question)?",
+    "How can the exponential computational scaling of kernel-based path-integral methods be mitigated for realistic multi-factor (D>2) financial models?",
+    "What numerical or methodological approaches can better handle mesh coupling in multivariate multiplicative-diffusion systems without introducing unwieldy boundary conditions?",
+    "How should decoherence and quantum measurement (e.g., American option early exercise) be modeled most realistically in quantum-option pricing?",
+    "How to reconcile imaginary-time numerical artifacts (loss of audit trail) with requirements for reliable quantum path-integral pricing?",
+    "What are the implications of serial random shocks in quantum-option wavefunctions for hedging and Greeks, and how robust are pricing/hedging strategies under such shocks?",
+    "How generalizable are the presented qPATHINT kernel methods to a broader class of quantum financial instruments and market microstructures?"
+  ],
+  "future_work": [
+    "Develop and further refine the kernel-based quantum path-integral algorithm (qPATHINT) motivated by pilot studies (author-stated).",
+    "Use qPATHINT to study serial random shocks in quantum systems and quantum options (author-stated).",
+    "Apply qPATHINT to a broader set of quantum systems that will become important in finance (author-stated).",
+    "Use ASA to fit volatility-of-volatility option models over short-time conditional probability distributions for quantum money-based markets (author-stated/current project direction).",
+    "Investigate performance and scaling behavior further (supercomputer benchmarks, N-dimensional scaling) and explore mitigation strategies such as parameterized fits of drifts and covariances when time/compute resources are constrained (author-stated)."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Proposes a hybrid classical-quantum computational framework for pricing options on \"quantum money\" using classical Adaptive Simulated Annealing (ASA) for parameter fitting and PATHINT/qPATHINT (complexified path-integral histogram kernels) for time evolution.",
+    "#idea:near-term-feasibility — Demonstrates feasibility via classical HPC experiments (XSEDE Expanse), reporting concrete runtime and scaling metrics (e.g., ~0.002s for a 1-D test with dt=0.0002 and 10 foldings) and discusses how meshes, kernel bandwidth and dimensional tiling affect performance.",
+    "#limitation:simulation-only — Quantum aspects are modeled by complexifying classical path-integral code (qPATHINT) and executed on classical supercomputers; no quantum hardware (QPU) experiments were performed.",
+    "#limitation:no-empirical-validation — No external market dataset or public code repository provided; ASA iteration counts and full run configurations are not fully reported, limiting reproducibility and empirical validation on real market data.",
+    "#idea:hybrid-approach — Uses Lagrangian/path-integral representations (equivalent to Fokker–Planck/Langevin) with midpoint discretization and Riemannian-curvature corrections to capture multiplicative noise and stochastic volatility effects beyond Black–Scholes limits.",
+    "#idea:near-term-feasibility — Provides analytical connection to Black–Scholes limits and demonstrates sensitivity analyses (Greeks including higher-order) and shock responses, arguing the approach can capture features (vol-of-vol, decoherence-like epoch resets) that closed-form models miss."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — The paper demonstrates that quantum-like option dynamics (\"quantum money\" scenarios) can be emulated by complexified classical path-integral algorithms (qPATHINT) on HPC, which undercuts any strong claims that QPUs are strictly required for modeling these quantum features at the scales tested."
+  ]
+}

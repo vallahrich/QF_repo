@@ -1,0 +1,198 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "Published in the Journal of Forecasting with DOI, structured with abstract, methods, empirical analysis, results and formal citations — indicative of a peer‑reviewed empirical research article reporting data, experiments and statistical tests.",
+  "title": "A Novel Decomposition-Ensemble Approach for Forecasting Stock Price With Quantum Neural Network and Big Data",
+  "authors": [
+    "Shuihan Liu",
+    "Gang Xie"
+  ],
+  "year": "2026",
+  "journal_or_venue": "Journal of Forecasting",
+  "doi": "10.1002/for.70047",
+  "abstract_summary": "The paper proposes a decomposition-ensemble forecasting framework that combines multivariate empirical mode decomposition (MEMD) with quantum neural networks (QNNs) and integrates multi-source big data (market technical indicators, Baidu search data, and Weibo-derived sentiment via BERT). Empirical results on the Shenzhen Stock Exchange average price show that the MEMD-QNN approach outperforms traditional benchmarks (SVR, BPNN, ELM) and that incorporating decomposition and big-data features improves predictive accuracy for volatile, nonlinear financial series.",
+  "methodology_description": "This empirical study develops a decomposition-ensemble forecasting pipeline that fuses multi-source big data with quantum neural networks. The authors compute an aggregate daily average stock price for the Shenzhen Stock Exchange (total trading value divided by trading volume) as the target series and collect complementary features: market technical indicators from the Wind database (initially 37 indicators reduced/averaged to 27 and further aggregated to address multicollinearity), search-query volumes from Baidu Index (a selected set of keywords expanded via the Baidu demand map and aggregated by correlation analysis), and social-media posts from the Shenzhen Stock Exchange official Weibo account. Text posts are cleaned (deduplication, URL/non-Chinese removal, emoji/slang handling, jieba segmentation, stop-word removal) and sentiment-scored using a fine-tuned Chinese BERT classifier (pretrained on 216,006 Eastmoney Guba comments and fine-tuned for bullish/bearish labeling with tokenization padded/truncated to 512 tokens). All features and the target are normalized to [0,1] and aligned on trading days (2267 trading-day samples from 2013-12-02 to 2023-03-23), then split 90% train / 10% test. Multivariate empirical mode decomposition (MEMD) is applied jointly to the target and features (MEMD tolerance 0.075) to produce matched-mode intrinsic mode functions (IMFs) for each channel. Each IMF (or groups of IMFs) is modeled separately by quantum neural networks (QNNs) implemented in a quantum-circuit-learning (QCL) style: angle encoding (RY,RZ) with an A2-CNOT encoding pattern, entanglement via CNOTs, variational layers (CNOT-XZX pattern), and z-axis measurement producing fidelity as the loss. Number of qubits is set to twice the number of input features for each QNN; depths (number of variational layers) vary with feature count (5 layers for three-feature inputs, 3 for two-feature, 1 for single-feature). Training uses the Adam optimizer (default settings); training/forecasting is repeated 20 times and averaged. Benchmarks include SVR (rbf kernel, C=2.0, gamma=0.01), backpropagation neural network (BPNN), and extreme learning machine (ELM), plus MEMD variants of those models. Evaluation uses MAE, RMSE, MAPE, improvement rate (IR) and Diebold–Mariano statistical tests to compare models.",
+  "algorithms_used": [
+    "Multivariate Empirical Mode Decomposition (MEMD)",
+    "Quantum Circuit Learning (QCL) / Quantum Neural Network (QNN)",
+    "Angle encoding (RY/RZ) and CNOT entanglement",
+    "Variational quantum circuits (CNOT-XZX pattern)",
+    "BERT (fine-tuned for sentiment classification)",
+    "Support Vector Regression (SVR, RBF kernel)",
+    "Backpropagation Neural Network (BPNN)",
+    "Extreme Learning Machine (ELM)",
+    "Diebold–Mariano test"
+  ],
+  "frameworks": [
+    "Hugging Face (pretrained BERT models)",
+    "jieba (Chinese text segmentation)",
+    "Python (regular expressions used for text cleaning)"
+  ],
+  "experimental_setup": "",
+  "dataset_used": "Target: daily average stock price of the Shenzhen Stock Exchange computed as daily total trading value divided by daily trading volume. Features: market technical indicators from Wind (27 treated indicators, aggregated to reduce multicollinearity; e.g., average P/E metrics), Baidu Index search volumes for selected keywords (11 keywords), and sentiment scores from Weibo posts (Shenzhen Stock Exchange official account). Time span: Dec 2, 2013 to Mar 23, 2023, 2267 trading-day samples.",
+  "experiment_input": {
+    "sources": {
+      "stock_price": "Wind database (average price computed from total trading value / trading volume for SZSE)",
+      "technical_indicators": "Wind database (initial collection of 37, processed to 27 indicators, aggregated averages used)",
+      "search_query": "Baidu Index (selected keywords expanded via demand map; personal computer + mobile volumes aggregated)",
+      "social_media": "Weibo official account 'Shenjiaosuo' posts scraped via Weibo API"
+    },
+    "size": 2267,
+    "time_range": "2013-12-02 to 2023-03-23 (trading days only)",
+    "preprocessing": {
+      "stock_and_features_alignment": "Removed suspended days and aligned all series to trading days; normalized to [0,1]; 9:1 train/test split",
+      "technical_index_processing": "1-day lagged Pearson correlations computed; highly correlated indicators averaged to reduce multicollinearity (e.g., overall and GEM APER averaged)",
+      "search_query_processing": "Keywords selected via Baidu demand map; aggregated SQD computed by correlation analysis",
+      "weibo_text_processing": "Deduplication, URL/non-Chinese removal, emoji conversion to Unicode text, slang dictionary extension, stop-word removal, jieba segmentation; average sentiment per day computed (posts after 3pm averaged across next two trading days)",
+      "sentiment_model": "Pretrained Chinese BERT (from Hugging Face) fine-tuned on 216,006 Eastmoney Guba comments to output probability of positive/negative sentiment (positive-prob used as feature)",
+      "decomposition": "MEMD applied jointly to target and features with tolerance 0.075 producing matched IMFs (e.g., 9 IMFs + residual for 4-channel example)"
+    }
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Data collection: Wind (price & technicals), Baidu Index (search volumes), Weibo posts (official account)",
+      "Text cleaning and preprocessing with regex and jieba; sentiment extraction via fine-tuned BERT (probability for positive class used as sentiment score)",
+      "Feature construction: aggregate technical indices to reduce multicollinearity; aggregate Baidu keyword volumes; average daily sentiment",
+      "Normalization (0–1) and 9:1 train/test split on trading days",
+      "Multivariate Empirical Mode Decomposition (MEMD) applied to joint multivariate signal (target + features) with stopping tolerance 0.075 to obtain aligned IMFs across channels",
+      "For each IMF (or group), train a QNN in QCL framework: state preparation via angle encoding (A2-CNOT pattern using RY and RZ gates), variational circuit with entanglement (CNOT) and parameterized rotations (CNOT-XZX pattern), measurement on z-axis; fidelity used as loss",
+      "QNN configuration: number of qubits = 2 * number_of_features; variational layer counts = {3-features:5 layers, 2-features:3 layers, 1-feature:1 layer}",
+      "Optimizer: Adam (default settings); training repeated 20 times and average forecasts used",
+      "Compare with baseline models (SVR with RBF kernel C=2.0, gamma=0.01; BPNN; ELM) and decomposed variants (MEMD-BPNN, MEMD-SVR, MEMD-ELM)",
+      "Evaluate out-of-sample performance using MAE, RMSE, MAPE, compute improvement rates (IR), and conduct Diebold–Mariano tests for statistical comparison"
+    ],
+    "training_iterations_notes": "Authors state Adam optimizer with default parameters; they note '10 times the training parameters in quantum layers are updated' (text ambiguous) and that the entire training/forecasting process is repeated 20 times with averages taken for final forecasts."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "MAE (Mean Absolute Error)",
+      "RMSE (Root Mean Square Error)",
+      "MAPE (Mean Absolute Percentage Error)",
+      "Improvement Rate (IR)",
+      "Diebold–Mariano test Z-statistics"
+    ],
+    "baselines": [
+      "BPNN (non-decomposed)",
+      "SVR (rbf, C=2.0, gamma=0.01) (non-decomposed)",
+      "ELM (non-decomposed)",
+      "MEMD-BPNN",
+      "MEMD-SVR",
+      "MEMD-ELM",
+      "QNN (non-decomposed)"
+    ],
+    "key_findings_format": "Tabulated error metrics on test set per model/configuration and DM-test Z-statistics; plots (e.g., polar area diagram) and reported improvement rates. Best reported result: MEMD-QNN achieved the lowest MAPE (e.g., 0.0185 for full feature set)."
+  },
+  "experiment_parameters": {
+    "qubits": "2 * number_of_input_features (explicitly: two times feature numbers)",
+    "variational_layers_by_feature_count": {
+      "3_features": 5,
+      "2_features": 3,
+      "1_feature": 1
+    },
+    "encoding": "Angle encoding using RY and RZ (A2-CNOT encoding pattern)",
+    "entanglement_gates": "CNOT",
+    "variational_block_pattern": "CNOT-XZX (inner structure)",
+    "measurement": "Z-axis projection (fidelity as loss)",
+    "optimizer": "Adam (default parameters)",
+    "memd_tolerance": 0.075,
+    "train_test_split": "90% train / 10% test (2267 samples total)",
+    "training_repeats": 20,
+    "svr_parameters": {
+      "kernel": "rbf",
+      "C": 2.0,
+      "gamma": 0.01
+    },
+    "shots": null,
+    "training_epochs_or_steps": null
+  },
+  "hardware_details": null,
+  "reproducibility_notes": "The paper states that the data supporting findings are available from the corresponding author upon reasonable request. The authors used a pretrained BERT model from Hugging Face (fine-tuned on 216,006 Eastmoney Guba comments) and reference the MEMD implementation by Rehman & Mandic (2009). No explicit code repository, quantum software framework (e.g., Qiskit, PennyLane), simulator/QPU backend, shot counts, or low-level circuit files are provided in the text, which limits exact reproducibility of the QNN experiments without contacting the authors for code and implementation details.",
+  "key_findings": [
+    "[supported] The proposed MEMD-QNN (multivariate empirical mode decomposition + quantum neural network) produced the best forecasting accuracy among the eight evaluated models on Shenzhen average stock price forecasting.",
+    "[supported] MEMD decomposition of the target series and multi-source features improves forecasting accuracy for all evaluated models (notably large improvements for ELM and moderate improvements for QNN).",
+    "[supported] Incorporating multi-source big data (technical indicators, Baidu search query data (SQD), and Weibo-derived sentiment scores) materially improves forecast accuracy; incremental additions of SQD and sentiment reduced errors for most models.",
+    "[supported] QNN (quantum neural network) outperformed traditional models (BPNN, SVR, ELM) on the considered forecasting tasks and feature sets (lower MAE, RMSE, MAPE).",
+    "[supported] Statistical Diebold–Mariano (DM) tests indicate that MEMD-QNN's forecasts are significantly better than many benchmark models in most comparisons (many z-statistics significant at 1%).",
+    "[supported] The MEMD implementation yielded matched IMFs across channels (same number of IMFs for price and features) enabling aligned modal modelling.",
+    "[supported] Fine-tuned BERT sentiment extraction from Weibo posts provided informative features that contributed to improved forecasts when included.",
+    "[speculative] The authors assert quantum models offer shorter training times and optimization acceleration via quantum computing speed-ups; no empirical hardware speed-up evidence was provided in this study.",
+    "[speculative] The authors propose that quantum encoding/entanglement captures nonlinearities in features more effectively than classical encodings; the observed improved accuracy is consistent with this but causal mechanism remains speculative.",
+    "[disputed] The paper claims the overall framework is hyperparameter-free; however model-layer counts, qubit counts, optimizer choices and other configuration choices are reported, which contradicts the hyperparameter-free assertion.",
+    "[speculative] The authors suggest QNNs' simpler structure and fewer hyperparameters are general advantages over classical ML—this broader generalization is speculative given the limited empirical scope.",
+    "[speculative] The paper suggests the approach generalizes to other forecasting tasks and that quantum advantage will transfer broadly—this is a forward-looking claim without empirical generalization evidence in this work."
+  ],
+  "results_summary": "In empirical experiments on daily average Shenzhen Stock Exchange price (Dec 2013–Mar 2023, 2,267 trading-day samples) the authors show that decomposing the target and multi-source feature series with MEMD and forecasting IMFs with quantum neural networks (MEMD-QNN) yields the lowest errors among tested approaches. Against classical benchmarks (BPNN, SVR, ELM) and their MEMD-variants, MEMD-QNN achieved the smallest MAE, RMSE and MAPE across three feature scenarios (technical indicators only; +SQD; +SQD+sentiment). Diebold–Mariano tests mostly confirm MEMD-QNN's superiority at conventional significance levels. The study also demonstrates that adding Baidu search query data and Weibo-derived sentiment scores significantly improves accuracy, and that MEMD helps align modal content across the multivariate inputs for better modelling. The authors discuss potential quantum-specific benefits (encoding, entanglement, fewer hyperparameters, training speed) but do not provide hardware-level quantum speed-up evidence.",
+  "performance_claims": [
+    "[supported] MEMD-QNN MAPE = 0.0185, RMSE = 0.2996, MAE = 0.2410 when using technical index + SQD + sentiment score (Table 6–8).",
+    "[supported] MEMD-QNN MAPE = 0.0322, RMSE = 0.4953, MAE = 0.4161 for technical index + SQD (Table 6–8).",
+    "[supported] MEMD-QNN MAPE = 0.0485, RMSE = 0.7693, MAE = 0.6326 for technical index only (Table 6–8).",
+    "[supported] Non-decomposed QNN MAPE = 0.0457, RMSE = 0.7385, MAE = 0.6099 for technical index + SQD + sentiment (Table 6–8).",
+    "[supported] Compared with non-decomposed baselines, MEMD decomposition produced largest absolute improvements for ELM variants (e.g., MEMD-ELM showed large MAE/RMSE reductions vs ELM), and consistent improvements for QNN variants as well (Tables 6–8).",
+    "[supported] Reported DM-test z-statistics show many significant results at 1% level (e.g., comparisons vs BPNN: z = 5.0420, 6.5650, 4.2234 for the three feature sets; see Table 9), indicating statistical significance of MEMD-QNN's superior accuracy in most pairwise tests.",
+    "[supported] Reported improvement rates: MEMD-QNN improved by ~33.7% after adding SQD and ~42.6% after adding sentiment (section 4.6.3); QNN improved by ~34.46% and ~26.36% respectively when adding these features."
+  ],
+  "quantum_advantage_claim": "demonstrated",
+  "quantum_advantage_detail": "The paper provides empirical evidence that QNN and especially MEMD-QNN achieved lower forecast errors (MAE, RMSE, MAPE) than classical benchmarks on the Shenzhen average-price forecasting task; Diebold–Mariano tests often confirm significance. However, the study appears to use simulated quantum circuits (no hardware speed-up or asymptotic quantum computational advantage is demonstrated), so the demonstrated advantage is in predictive accuracy on this dataset rather than a proven computational/complexity advantage on quantum hardware.",
+  "limitations": [
+    "Practical implementations of deep quantum neural networks (DQNNs) remain limited by current quantum hardware constraints (author-stated).",
+    "This study applied a classical decomposition (MEMD) to classical (unquantized) data; no quantum-native decomposition was implemented (author-stated).",
+    "The integration of multi-source big data with QNNs in this work is preliminary; further evidence and more in-depth study are required (author-stated).",
+    "[inferred] The QNN experiments were performed in a simulated/classical environment rather than on large-scale fault-tolerant quantum hardware, so reported gains may not directly translate to near-term quantum devices.",
+    "[inferred] The empirical analysis is limited to one market (Shenzhen Stock Exchange) and China-specific data sources (Baidu, Weibo), which constrains generalizability to other markets, regions, or asset classes.",
+    "[inferred] The social sentiment input was built from a single Weibo official account and a BERT model fine-tuned on Eastmoney Guba posts; this may limit representativeness and introduce domain/sample biases.",
+    "[inferred] The target variable is an aggregate average price across all traded SZSE stocks — while novel, this aggregation may conceal heterogeneity across stocks and sectors.",
+    "[inferred] The forecasting exercise focused on one-step-ahead daily predictions and point-forecast metrics (MAE, RMSE, MAPE); economic evaluation (e.g., trading strategy/backtest, transaction costs) and multi-step horizons were not assessed.",
+    "[inferred] MEMD and QNN hyperparameters and architecture choices (e.g., number of IMFs, qubit counts, circuit structure, number of quantum layers) may affect results; sensitivity to these choices was not fully explored.",
+    "[inferred] The classical benchmark models (BPNN, SVR, ELM) used specific architectures/parameter settings chosen by the authors (e.g., hidden layer sizes set to parallel qubit numbers), which may not represent optimally tuned classical baselines."
+  ],
+  "open_questions": [
+    "Can classical decomposition algorithms (e.g., MEMD) be formulated and implemented natively within quantum circuits (author-raised)?",
+    "How can deep quantum neural networks (DQNNs) be practically implemented and scaled on real quantum hardware (author-raised)?",
+    "What implementation algorithms and engineering advances are needed to deploy quantum neural models on available quantum devices (author-raised)?",
+    "How can the integration of multi-source big data with QNNs be improved and validated more comprehensively—what architectures, encodings, and fusion strategies work best (author-stated)?",
+    "To what extent are the predictive gains attributable to quantum-specific encoding/entanglement versus the decomposition (MEMD) and feature set (inferred from comparisons)?",
+    "How robust are the reported improvements across different markets, asset classes, frequencies, and market regimes (inferred)?",
+    "How do different quantum data-encoding schemes, variational circuit designs, and measurement/readout strategies affect forecasting performance (inferred)?",
+    "Can quantum-native versions of other conventional preprocessing or feature-extraction algorithms (beyond decomposition) provide additional benefits (author- and inferred)?",
+    "What are the limits of scalability for QNN-based forecasting in terms of number of features, qubits, and time-series length when moving toward real quantum hardware (inferred)?",
+    "How would model performance translate into economic value—e.g., risk-adjusted returns, transaction-cost-aware strategies, or portfolio construction (inferred)?"
+  ],
+  "future_work": [
+    "Implement deep quantum neural networks (DQNNs) for financial forecasting (author-stated).",
+    "Combine other decomposition techniques with quantum models in further investigations (author-stated).",
+    "Produce more evidence and perform deeper integration studies of multi-source big data with QNNs (author-stated).",
+    "Design and develop implementation algorithms for quantum hardware to enable practical deployment of QNNs (author-stated).",
+    "Develop quantum-native versions of conventional algorithms (e.g., decomposition methods) and explore embedding such procedures into quantum circuits (author-stated).",
+    "Further investigate behavioral finance theory connections to improve forecasting approaches informed by investor anticipation, attention, and sentiment (author-stated)."
+  ],
+  "topic_tags": [
+    "quantum-ml-finance"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — A decomposition-ensemble pipeline combining MEMD decomposition with quantum neural networks (QCL-style QNNs) to model matched IMFs separately and aggregate forecasts.",
+    "#idea:hybrid-approach — Integration of multi-source big data (technical indicators, Baidu search volumes, Weibo sentiment from a fine-tuned Chinese BERT) as inputs to the MEMD-QNN pipeline to capture nonlinear and volatile dynamics.",
+    "#idea:quantum-advantage — Empirical results on 2,267 trading-day SZSE average-price data show the MEMD-QNN ensemble outperforms classical benchmarks (SVR, BPNN, ELM) and their MEMD variants on MAE, RMSE, MAPE and improvement rate, with Diebold–Mariano tests reported.",
+    "#idea:hybrid-approach — QNN architecture details: angle encoding (RY,RZ) with A2-CNOT pattern, entanglement via CNOTs, variational layers (CNOT-XZX pattern), fidelity-based loss, and Adam optimizer; classical preprocessing and postprocessing form the bulk of the pipeline.",
+    "#idea:quantum-advantage — Training repeated 20 times and averaged to stabilize results; authors report statistical testing (Diebold–Mariano) to support out-of-sample forecasting superiority claims.",
+    "#idea:hybrid-approach — Practical circuit-sizing rule used: number of qubits = 2 * number_of_features, with variational depth scaled by input size (5 layers for 3 features, 3 for 2 features, 1 for single-feature models)."
+  ],
+  "contradictions": [],
+  "limitation:simulation-only": true,
+  "limitation:qubit-count": true,
+  "limitation:data-encoding": true
+}

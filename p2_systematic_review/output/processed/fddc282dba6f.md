@@ -1,0 +1,185 @@
+---
+aliases:
+- Portfolio construction using a sampling-based variational quantum scheme
+- Portfolio construction using sampling
+authors:
+- Gabriele Agliardi
+- Dimitris Alevras
+- Vaibhaw Kumar
+- Roberto Lo Nardo
+- Gabriele Compostella
+- Sumit Kumar
+- Manuel Proissl
+- Bimal Mehta
+auto_detected: true
+classification: ''
+contradiction_flags: []
+doi: ''
+evaluation_type: real-hardware
+evidence_type: ''
+has_quantitative_results: true
+idea_tags:
+- idea:near-term-feasibility
+- idea:hybrid-approach
+journal_or_venue: arXiv preprint arXiv:2508.13557
+methodology_tags:
+- variational-nisq
+- hybrid-quantum-classical
+- error-mitigation
+paper_type: ''
+quantum_advantage_claim: speculative
+related_papers: []
+relevance_phase1: high
+relevance_phase3: high
+source_type: preprint
+source_type_confidence: high
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/portfolio-optimization
+- method/variational-nisq
+- method/hybrid-quantum-classical
+- method/error-mitigation
+- idea/near-term-feasibility
+- idea/hybrid-approach
+title: Portfolio construction using a sampling-based variational quantum scheme
+topic_tags:
+- portfolio-optimization
+year: '2025'
+zotero_key: ''
+---
+
+## Abstract summary
+The paper studies a quantum-classical workflow for a realistic bond ETF portfolio construction problem using a sampling-based CVaR variational quantum algorithm (VQA) combined with classical local-search post-processing, and proposes a formulation suited to sampling-based VQA to avoid qubit overhead. Experiments include simulations and 109-qubit runs on IBM Heron processors (up to ~4200 gates), showing that the hybrid approach attains low relative solution error (~0.49%) and that harder-to-simulate, problem-inspired ansatzes can improve convergence compared to simpler circuits.
+## Methodology
+The authors study a sampling-based CVaR variational quantum algorithm (CVaR-VQA) combined with a classical local-search post-processing to solve a simplified, yet realistic, bond ETF portfolio construction instance. They convert the constrained quadratic binary portfolio optimization into an unconstrained binary objective by adding a non-negative penalty term 1^T max{0, s ⊙ (Ax − b)} (with s scaled large enough to penalize violations) so that only one qubit per bond is required. The workflow follows: initialize variational circuit parameters θ; execute a parametrized ansatz V(θ) on a quantum backend to collect N measurement samples; compute the classical cost f(x) (including penalties) on each sample; aggregate sample costs using CVaR(α) to form the objective s(θ); update θ with a classical optimizer (Nakanishi-Fujii-Todo, NFT) that estimates partial derivatives with 3-point finite differences and proceeds parameter-by-parameter in randomized order; repeat until convergence; and finally post-process sampled bit-strings via a greedy single-bit-flip local search (restarting upon improvements). Two ansatz families were explored (a standard TwoLocal with RY and CZ gates, and a bias-field counterdiabatic-inspired BFCD with RY and two-qubit RYZ/RZY-like gates), and two entanglement patterns (bilinear chain and a device-aware 3-color entanglement). The authors tuned CVaR tail fraction α and circuit repetition r on a 31-qubit simulator (MPS) and then ran 109-qubit experiments on IBM Heron processors (ibm_marrakesh, ibm_fez) and on MPS simulation. Additional practical choices include initial parameters θ = π/3, NFT parameter cutoff (ignore gates with |θ|<0.06 on hardware), Qiskit transpilation (optimization level 3), and dynamical decoupling (XX sequence). Results are reported in terms of sample-based CVaR, best sampled objective, and relative optimization gap versus a classical optimum obtained from CPLEX; comparisons against classical local search alone and simulator baselines are provided.
+
+**Algorithms used:** Sampling-based CVaR-VQA, CVaR aggregation, TwoLocal ansatz, Bias-field counterdiabatic-inspired (BFCD) ansatz, Nakanishi-Fujii-Todo (NFT) optimizer, Greedy local search (single-bit-flip)
+**Frameworks:** Qiskit (Primitive V2, transpiler, sampling primitive)
+
+**Experimental setup:** MPS simulation (no bond-dimension truncation) on an Apple M1 Pro (16 GB RAM) for smaller runs; hardware experiments on IBM Quantum Heron processors (ibm_marrakesh and ibm_fez). Circuits transpiled with Qiskit (optimization level 3); dynamical decoupling (XX) applied; sampling primitive used with Nshots = 213 per iteration. Ansatz repetitions r tuned (r ∈ {1,2,3} in tuning; final r = 2 used for 109-qubit runs). CVaR tail α tuned (α ∈ {0.1,0.15,0.2}; α = 0.1 selected).
+
+**Dataset:** A simplified bond ETF portfolio-construction instance derived from a larger realistic problem: bonds clustered by classes/dimensions with associated metrics and targets. For experiments the problem was reduced to binary inclusion variables (yi = c_i x_i) on selected subsets of classes; specific empirical runs used a 31-qubit instance for tuning and a 109-bond (109-qubit) instance for main experiments. Classical optimum for benchmarking obtained via CPLEX.
+## Experiment details
+### Input
+{'source': 'Proprietary/industrial portfolio construction instance (simplified from a larger ETF construction problem)', 'size': '31-qubit instance for tuning; 109-qubit instance for main experiments', 'preprocessing': 'Problem reduced to binary variables by fixing lot sizes (yi = c_i x_i); constraints involving removed bonds were dropped and budget M manually adjusted to fit the reduced problem; inequality constraints encoded via a penalty term 1^T max{0, s ⊙ (Ax − b)} instead of introducing slack qubits; initial circuit parameters set to π/3.'}
+
+### Process
+{'pipeline_steps': ['Formulate unconstrained binary objective f(x) = x^T Q x + penalty(x) where penalty = 1^T max{0, s ⊙ (Ax − b)}', 'Choose ansatz V(θ) (TwoLocal or BFCD) and entanglement map (bilinear or 3-color device-aware)', 'Initialize θ (all parameters set to π/3)', 'For each iteration: execute V(θ) on backend, take Nshots samples in computational basis, compute f(x) for each sample, compute CVaR(α) of sample costs to obtain s(θ), update θ using NFT optimizer (3-point finite-difference per parameter, randomized parameter order) with parameter cutoff (ignore gates with |θ|<0.06 on hardware)', 'Repeat until convergence/stop', 'Post-process sampled bit-strings (typically from later iterations; e.g., last 20 iterations) with greedy single-bit-flip local search restarting on improvements'], 'parameters_and_choices': {'CVaR_alpha': 'tuned over {0.1,0.15,0.2}; chosen 0.1', 'ansatz_repetitions_r': 'tuned over {1,2,3}; final r = 2 for 109-qubit runs', 'ansatze': 'TwoLocal (RY + CZ), BFCD (parameterized RY and two-qubit RYZ/RZY-like gates)', 'entanglement_maps': 'bilinear chain and device 3-color (colored) entanglement', 'classical_optimizer': 'NFT (3-point numerical derivative per parameter, parameter-by-parameter updates)', 'postprocessing': 'greedy local search flipping one bit at a time in randomized order; restart on improvement; applied to samples from iterations (often last 20)'}, 'iterations': 'Number of optimizer epochs varies by run; tuning experiments comprised multiple repeats (10 repeats per condition) and hardware runs proceeded until observed convergence (plots mark NFT epochs)'}
+
+### Output
+{'formats_reported': ['Sample-based CVaR(α) over iterations', 'Best sampled objective value per iteration (and moving average)', 'Distribution / kernel density estimate of sampled objective values (raw and post-processed by local search)', 'Relative optimization gap γ = |F(θ_f)_low − F0| / |F0| versus CPLEX optimum'], 'metrics': ['Relative optimization gap (percentage)', 'CVaR aggregated cost', 'Convergence behavior (CVaR and best sample over iterations)', 'Simulator runtime per circuit (for MPS)'], 'baselines_and_comparisons': ['Classical optimal solution from CPLEX (used to compute gaps)', 'Purely classical local-search-only post-processing', 'Noiseless MPS simulation results as a reference for hardware runs'], 'key_results': {'109-qubit_hardware_gaps': {'TwoLocal_bilinear': '0.49%', 'TwoLocal_color': '0.55%', 'BFCD_bilinear': '0.91%'}, '109-qubit_simulator_gap': '0.39%', 'tuning_findings': 'CVaR α = 0.1 yielded better results; BFCD showed better performance with increased repetitions in 31-qubit tuning but converged slower on 109-qubit runs'}}
+
+### Parameters
+- qubits: [31, 109]
+- circuit_depths_transpiled: {'TwoLocal_bilinear_109': 17, 'TwoLocal_color_109': 19, 'BFCD_bilinear_109': 57}
+- gate_counts_transpiled: {'TwoLocal_bilinear_109': 1525, 'TwoLocal_color_109': 1555, 'BFCD_bilinear_109': 4220}
+- two_qubit_gate_counts: {'TwoLocal_bilinear_109': 216, 'TwoLocal_color_109': 246, 'BFCD_bilinear_109': 648}
+- parameter_counts: {'TwoLocal_109': 327, 'BFCD_109': 434}
+- shots_per_iteration: Nshots = 213 (as reported)
+- CVaR_alpha: 0.1
+- ansatz_repetitions_r: 2
+- initial_parameters: π/3 for all circuit parameters
+- optimizer: Nakanishi-Fujii-Todo (NFT), 3-point finite difference, parameter cutoff 0.06
+- transpiler_optimization_level: 3
+- dynamical_decoupling: XX sequence
+- simulator_settings: MPS simulator with no bond-dimension truncation (reported runtimes on Apple M1 Pro 16GB)
+
+### Hardware
+{'simulator': {'name': 'Matrix Product State (MPS) simulator', 'host': 'Apple M1 Pro (16 GB RAM) reported for runtime measurements', 'settings': 'no truncation of bond dimension'}, 'quantum_processors': [{'name': 'ibm_marrakesh', 'family': 'IBM Heron processor', 'provider': 'IBM Quantum'}, {'name': 'ibm_fez', 'family': 'IBM Heron processor', 'provider': 'IBM Quantum'}], 'software': 'Qiskit (Primitive V2 transpiler and sampling primitive), transpile optimization level 3, dynamical decoupling applied'}
+
+### Reproducibility
+The preprint describes algorithms, circuit designs, ansatz configurations, and many low-level parameters (initialization, CVaR α, NFT optimizer settings, parameter cutoff, transpiler level, dynamical decoupling). However, the paper does not provide links to code repositories, data, or exact instance files. Reproducing the experiments would require reimplementation of the problem instance construction (choice of the 109-bond subset and penalty scaling s), ansatz circuits (exact gate decomposition for BFCD), and full experiment scripts; the use of Qiskit and standard primitives is specified which aids reproduction. Overall, reproducibility is partially supported by detailed methodological descriptions but no public code/data are provided in the paper.
+## Findings
+- [supported] A sampling-based CVaR-VQA pipeline combined with local-search post-processing can produce near-optimal solutions for a simplified bond-ETF portfolio construction instance.
+- [supported] Hardware experiments on IBM Heron processors with 109 qubits (circuits up to ~4,200 gates, ~648 two-qubit gates) showed continual improvement of raw sample quality over optimization iterations despite noise.
+- [supported] The best hardware result after local search achieved a relative optimization gap of 0.49% (TwoLocal bilinear ansatz); TwoLocal color and BFCD achieved 0.55% and 0.91% respectively; noiseless simulator reached 0.39%.
+- [supported] Local-search post-processing substantially improves sampled candidate solutions, but is most effective when raw samples are already reasonably close to optimal.
+- [supported] In 31-qubit MPS simulations BFCD (a bias-field counterdiabatic inspired ansatz) outperformed a standard TwoLocal ansatz for some parameter choices and repetitions.
+- [supported] CVaR aggregation with α = 0.1 yielded better convergence in these experiments and was chosen for hardware runs.
+- [supported] The NFT (Nakanishi-Fujii-Todo) gradient-free optimizer and a parameter cutoff were used successfully in hardware runs to mitigate noise effects.
+- [supported] The simplified 109-bond problem is still solvable to optimality by classical solvers (CPLEX) in seconds and was used as a baseline for relative-gap reporting.
+- [speculative] The one-qubit-per-asset sampling-based formulation that encodes constraints via penalty terms (max{0, s ⊙ (Ax − b)}) can avoid qubit overhead from slack-variable encodings and may be advantageous for larger instances.
+- [speculative] Circuits that are harder to classically simulate (higher entanglement / BFCD-style ansatz) may yield better convergence, suggesting a pathway toward regimes where quantum methods could outperform classical simulation.
+- [speculative] A quantum-classical workflow (CVaR-VQA + local search) could reduce total computational resources versus purely classical local search in larger or harder instances, but this has not been demonstrated at classically hard scales in this work.
+- [speculative] Runtime trade-offs (more optimization iterations on noisy hardware vs. faster per-circuit execution) imply hardware could be faster than simulators even if it needs more iterations, depending on per-circuit execution time.
+
+**Results summary:** The authors implement a sampling-based CVaR Variational Quantum Algorithm (CVaR-VQA) with NFT optimization and local-search post-processing for a simplified but realistic bond-ETF portfolio construction problem. They run MPS simulations (31 and 109 qubits) and 109-qubit hardware experiments on IBM Heron processors (up to ~4,200 gates, ~648 two-qubit gates). Empirically, CVaR with α=0.1 and a TwoLocal bilinear ansatz produced the best hardware result after local search (0.49% relative gap to the classical optimum); simulator runs reached 0.39%. Results show raw hardware samples improve over iterations despite noise, and that local search enhances solution quality when raw samples are sufficiently close to optimal. The paper presents preliminary evidence that harder-to-simulate ansatze can improve convergence, and argues the sampling-based formulation avoids qubit overhead for constraints, but scaling claims toward quantum advantage remain speculative and not demonstrated at classically hard problem sizes.
+
+**Performance claims:**
+- 109 qubit hardware runs with circuits up to ~4,220 gates and ~648 two-qubit gates were executed on IBM Heron processors.
+- Best hardware relative optimization gaps after local search: TwoLocal bilinear 0.49%, TwoLocal color 0.55%, BFCD 0.91%; simulator gap 0.39%.
+- Circuit shot count per iteration: 2^13 = 8192 shots (Nshots = 213 measurements reported as 2^13 in text).
+- Ansatz circuit characteristics (109 qubits, transpiled on ibm_marrakesh): TwoLocal bilinear depth 17, gate count 1525, two-qubit gates 216, params 327; TwoLocal color depth 19, gate count 1555, two-qubit gates 246, params 327; BFCD bilinear depth 57, gate count 4220, two-qubit gates 648, params 434.
+- Simulator runtimes (MPS on Apple M1 Pro, 1k shots): TwoLocal bilinear ~5 s, TwoLocal color ~3 min, BFCD bilinear ~16 min (as reported in Table I).
+- 31-qubit MPS experiments across α ∈ {0.1, 0.15, 0.2} and repetitions r ∈ {1,2,3} (10 repetitions each) showed α=0.1 overall performed best.
+## Quantum advantage claim
+**Classification:** speculative
+
+The paper provides empirical evidence that a combined CVaR-VQA + local-search workflow can approach near-optimal solutions on a 109-qubit simplified instance and that higher-entanglement ansatze may improve convergence. However, the studied instance is classically solvable and the authors do not demonstrate a separation from best classical solvers on classically hard instances; claims that these methods will yield quantum advantage at larger scales are presented as a plausible path and remain speculative.
+## Limitations
+- Problem simplifications: reduced to binary variables (yi = ci xi), selection of a subset of classes, removal of constraints involving excluded bonds, and manual adjustment of the cash budget (author-stated).
+- Experiments performed at small-to-mid problem sizes (e.g., 109 bonds) while classical hardness emerges only at much larger scales (≈1,000+ bonds), so the instances tested are not classically intractable (author-stated).
+- Limited conclusions about asymptotic runtime or scaling of the method — a detailed scaling analysis is out of scope and likely infeasible with current hardware (author-stated).
+- Sampling-based CVaR-VQA requires many circuit executions during quantum-classical training; the number of executions grows with the number of parameters and problem size (author-stated).
+- Local-search post-processing can fail to improve samples if the raw quantum samples are too far from optima; good raw samples are required for local search to be effective (author-stated).
+- Hardware noise slows variational parameter tuning leading to more iterations required on hardware than in noiseless simulation (author-stated).
+- MPS (classical) simulation cost grows with entanglement; harder-to-simulate ansatze are expensive/impractical to simulate classically (author-stated).
+- Penalty-term formulation requires choosing scaling factors s for constraints; these must be large enough to enforce feasibility but require careful selection (author-stated).
+- BFCD ansatz has substantially more parameters and slower convergence in practice, increasing resource needs (author-stated).
+- [inferred] The simplified constraint handling (penalty term instead of explicit slack variables) may change optimization landscape and could require careful tuning or lead to ill-conditioned objectives.
+- [inferred] Results depend on specific hardware topologies and transpilation choices (e.g., removal of low-degree nodes), possibly limiting generality across devices.
+- [inferred] Sensitivity to optimizer choice, parameter initialization, shot count, and other hyperparameters is not fully characterized and could affect reproducibility and performance.
+- [inferred] Even though 109-qubit circuits were executed, those problem instances do not demonstrate quantum advantage; extrapolating benefits to truly hard instances remains uncertain.
+- [inferred] The approach's runtime advantage depends on hardware being sufficiently faster per circuit execution than simulators; this trade-off is not quantified.
+## Open questions
+- Can classically hard-to-simulate (high-entanglement) ansatze consistently yield better optimization performance than easier-to-simulate circuits, and under what conditions?
+- At what problem sizes and resource regimes (qubits, circuit depth, fidelity) will sampling-based CVaR-VQA with local search outperform the best classical solvers in practice?
+- How does hardware noise quantitatively affect convergence speed, required iterations, and the total wall-clock runtime advantage relative to classical methods?
+- What are principled methods to choose the penalty scaling vector s so that constraints are enforced without causing optimization instability?
+- When and how much does local-search post-processing contribute beyond the quantum sampler? Can we characterize regimes where local search alone suffices versus where the quantum step is essential?
+- Can parameter-transfer, classical-only training, or other techniques materially reduce the quantum-runtime overhead while preserving or improving solution quality?
+- How do different optimizers (gradient-free vs gradient-based), initializations, shot counts, and other hyperparameters influence performance robustness on hardware?
+- What is the relation between circuit entanglement structure, classical simulability cost, and ultimate solution quality — i.e., can one identify ansatz properties predictive of usefulness?
+- Is there a systematic way to adapt the ansatz depth/structure with problem size to balance trainability, hardware noise resilience, and expressivity?
+- How generalizable is the proposed unconstrained penalty formulation (x^T Q x + 1^T max{0, s⊙(Ax−b)}) to wider classes of portfolio constraints and larger-scale, multi-period or stochastic portfolio problems?
+
+**Future work:**
+- Investigate parameter-transfer techniques and classical-only training modes to reduce the number of hardware circuit executions required.
+- Scale the approach to much larger problem sizes to reach regimes where the portfolio construction problem becomes classically hard, and study empirical scaling behavior.
+- Further explore problem-inspired, higher-entanglement ansatze (e.g., BFCD variants) to better understand trade-offs between simulability and optimization performance.
+- Conduct a detailed analysis of scaling, including runtime and resource trade-offs, when moving to larger instances (acknowledged as future work by the authors).
+- Study training techniques and hyperparameter choices (optimizers, initialization, shot budgets, CVaR α) in more depth to improve robustness and convergence.
+- Leverage recent approaches for tackling larger-scale problems (e.g., references [15], [23]) to extend applicability to practical ETF construction instances.
+## Key ideas
+- #idea:hybrid-approach — A sampling-based CVaR-VQA coupled with classical local-search post-processing forms a practical hybrid workflow for bond-ETF portfolio construction.
+- #idea:near-term-feasibility — Demonstrated runs on 109-qubit IBM Heron hardware (≈4200 gates) and MPS simulation indicate near-term NISQ feasibility for medium-scale portfolio instances, achieving a low relative optimization gap (~0.49%).
+- #idea:hybrid-approach — Encoding constraints as a non-negative penalty (1^T max{0, s ⊙ (Ax − b)}) avoids slack qubits so the formulation uses one qubit per bond, reducing qubit overhead at the cost of modifying the objective landscape.
+- #idea:hybrid-approach — Problem-inspired ansatz (BFCD) and device-aware entanglement patterns improved convergence relative to simpler TwoLocal circuits in both simulation and hardware experiments.
+- #limitation:noise — Hardware noise required mitigation (dynamical decoupling, parameter cutoff for small angles) and influenced choices like shot numbers and NFT optimizer settings.
+- #limitation:data-encoding — The penalty-based approach trades additional penalty tuning and landscape alteration for lower qubit count; this data/constraint encoding choice is a practical workaround with potential optimization trade-offs.
+## Contradictions
+<!-- Step 6 output — where this paper contradicts others -->
+
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

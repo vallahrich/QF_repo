@@ -1,0 +1,226 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier and date (arXiv:2511.14420v1), has the structure of an academic manuscript (abstract, methods, results, citations) but no journal or conference venue is indicated, consistent with an arXiv preprint.",
+  "title": "Explicit block-encoding for partial differential equation-constrained optimization",
+  "authors": [
+    "Yuki Sato",
+    "Jumpei Kato",
+    "Hiroshi Yano",
+    "Kosuke Ito",
+    "Naoki Yamamoto"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint arXiv:2511.14420",
+  "doi": "",
+  "abstract_summary": "The paper presents a fully coherent quantum algorithm for PDE-constrained optimization that composes a quantum PDE solver (LCHS) with a quantum optimizer (quantum Hamiltonian descent) via an explicit block-encoding of the objective function, avoiding costly classical readout. It derives end-to-end complexity bounds showing speedups inherited from quantum PDE solvers and demonstrates the method on Black–Scholes parameter calibration and a wave-equation material design example.",
+  "methodology_description": "The paper develops a fully coherent quantum algorithmic pipeline for PDE-constrained optimization by composing a quantum PDE solver and a coherent quantum optimizer. The quantum PDE solver is based on the linear-combination-of-Hamiltonian-simulation (LCHS) approach to prepare the PDE solution |u(t;ξ)>, and the optimizer is Quantum Hamiltonian Descent (QHD). The central technical contribution is an explicit construction of a block-encoding (LCU-style) of the objective operator ˆF(ξ) that coherently embeds the quantum-produced solution without measurement. The construction uses: (i) an extended design-dependent forward-simulation oracle U_for realized from a block-encoding of the extended coefficient matrix, (ii) reflections (projections) to compute quadratic or error-based objective functions, (iii) LCU primitives, and (iv) QSVT + oblivious amplitude amplification to implement time evolution e^{-iˆF s}. Time-dependent Hamiltonian simulation for QHD is implemented either via interaction-picture truncated Dyson series (for complexity proofs and strong-convexity convergence guarantees) or via simpler product-formula Trotterization (used in numerical demonstrations). The paper derives query and gate complexities (including dependence on PDE discretization N, spatial dimension d, number of design parameters M, discretization bits m, and simulation time T), and validates the constructions with numerical statevector simulations on two application examples: volatility calibration in the Black–Scholes PDE and material-parameter design in a 1D wave PDE. Numerical experiments use explicit discretizations, LCHS/Trotter kernels for forward simulation, block-encoding circuits for objective evaluation, time evolution via product formulas, and measurement of the design-variable register to extract optimized parameters.",
+  "algorithms_used": [
+    "Linear Combination of Hamiltonian Simulation (LCHS)",
+    "Quantum Hamiltonian Descent (QHD)",
+    "Linear Combination of Unitaries (LCU)",
+    "Quantum Singular Value Transformation (QSVT)",
+    "Oblivious Amplitude Amplification (OAA)",
+    "Truncated Dyson Series (interaction-picture simulation)",
+    "Trotterization (product formula)",
+    "Amplitude encoding / amplitude estimation (used conceptually)"
+  ],
+  "frameworks": [
+    "Qiskit 1.3"
+  ],
+  "experimental_setup": "All numerical experiments were performed in Python using Qiskit 1.3. Statevector simulation was used to validate the block-encoding circuits; time-dependent Hamiltonian simulation in the examples was implemented via classical direct matrix-vector evolution (product-formula / Trotter steps) rather than execution on hardware. The LCHS forward-solver was realized in the experiments with Trotterization and a kernel f(k)=1/(π(1+ik)) for the integral representation. No physical quantum hardware was used.",
+  "dataset_used": "Synthetic data generated from analytic models. For Black–Scholes calibration, the reference option price u_ref is generated from the closed-form Black–Scholes European call pricing formula at a selected spatial point (analytic reference with sigma=0.3). For the wave equation example, initial conditions are analytically prescribed (an impulse-shaped v0); no external/market dataset was used.",
+  "experiment_input": {
+    "BlackScholes": {
+      "source": "Analytic Black–Scholes pricing formula (synthetic reference)",
+      "spatial_truncation": "x in [ln(1e-4), ln(10*K)]",
+      "spatial_nodes": 64,
+      "qubits_for_space": 6,
+      "k_discretization_qubits": 8,
+      "design_variable_bits": 4,
+      "time_integration_trotter_dt": 0.02,
+      "volatility_range": {
+        "sigma_min": 0.01,
+        "sigma_max": 0.5
+      },
+      "uref_generation": "closed-form V*(X,τ) evaluated at chosen x_ref"
+    },
+    "WaveEquation": {
+      "source": "Analytic initial conditions (sparse impulse)",
+      "domain_length_W": "1/25",
+      "spatial_nodes": 32,
+      "qubits_for_space_plus_ancilla": 6,
+      "design_variable_bits_per_param": 3,
+      "design_params": 2,
+      "time_integration_trotter_dt": 0.5,
+      "c_values": {
+        "c1": 1.0,
+        "c2": 0.25
+      }
+    },
+    "preprocessing": "Finite-difference spatial discretization; domain truncation; mapping continuous design variables to binary grids via m-bit binary expansion"
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Prepare initial QHD design-variable state (uniform superposition) on Mm = M * m qubits.",
+      "Construct forward-simulation oracle U_for that maps |ξ>|0> to |ξ>|u(t;ξ)> (unnormalized amplitudes) via LCHS; in experiments LCHS implemented with Trotterization and specified kernel discretization.",
+      "Construct block-encoding of objective ˆF (either quadratic F_quad or error F_err) using U_for, reflections on projector P, and LCU (and for F_err, include reference-state oracle U_ref).",
+      "Use QSVT + OAA to exponentiate ˆF as required by time-dependent Hamiltonian simulation.",
+      "Perform time-dependent Hamiltonian simulation for QHD time S with small time steps Δs, implemented in experiments via product formula (UPF) across N_step intervals.",
+      "At the end of QHD evolution, measure the Mm-qubit design-variable register in the computational basis to obtain bitstring(s) representing optimized ξ."
+    ],
+    "parameters_and_iteration_notes": [
+      "Black–Scholes: Δs = 0.01 / sqrt(¯F), S = 10 / sqrt(¯F) => N_step = 1000 (reported); Trotter dt = 0.02; forward grid 64 nodes; design variable encoded with 4 bits.",
+      "Wave equation: Δs = 0.1 / sqrt(¯F), S = 10 / sqrt(¯F) => N_step = 100; forward grid 32 nodes; each design parameter encoded with 3 bits; Trotter dt = 0.5.",
+      "Block-encoding verification used statevector simulator; time evolution used direct matrix-vector updates (classical) in experiments.",
+      "Objective operator evolution realized with product-formula in demonstrations; interaction-picture truncated Dyson series is described for complexity proofs and strong-convexity guarantees."
+    ]
+  },
+  "experiment_output": {
+    "result_formats": [
+      "Objective-function landscapes (numerical values per discretized ξ) comparing block-encoding vs per-ξ forward simulation",
+      "Convergence histories: expected value of ˆF under evolving ψ(s) and its standard deviation vs iteration/time",
+      "Probability distributions over discrete design-variable bitstrings at initial, intermediate, and final steps",
+      "Forward-simulation validation plots of PDE solutions for selected candidate parameter settings (to check fit to reference data or energy concentration)"
+    ],
+    "metrics": [
+      "Agreement between block-encoding-evaluated objective and explicit forward-simulation-evaluated objective",
+      "Convergence to minimum/maximum objective (expected value reduction or increase)",
+      "Concentration of probability mass on optimal discrete ξ",
+      "Visual/quantitative fit of optimized forward PDE output to reference (Black–Scholes) or energy concentration (wave)"
+    ],
+    "baselines": [
+      "Classical forward-simulation objective evaluation (per-ξ LCHS/Trotter simulation done explicitly) used as baseline comparison for correctness of block-encoding"
+    ],
+    "final_output": "Optimized design-variable bitstring(s) sampled from |ψ(S)|^2 and associated objective values; plots and tabulations as described above"
+  },
+  "experiment_parameters": {
+    "BlackScholes": {
+      "space_qubits": 6,
+      "k_discretization_qubits": 8,
+      "design_bits_m": 4,
+      "total_block_encoding_qubits_reported": 19,
+      "trotter_dt_forward": 0.02,
+      "QHD_delta_s": "0.01 / sqrt(¯F)",
+      "QHD_total_S": "10 / sqrt(¯F)",
+      "N_step": 1000,
+      "kernel_used": "f(k)=1/(π(1+ik))",
+      "reference_sigma_for_uref": 0.3
+    },
+    "WaveEquation": {
+      "space_qubits_plus_ancilla": 6,
+      "design_bits_per_param": 3,
+      "design_params_M": 2,
+      "total_block_encoding_qubits_reported": 12,
+      "trotter_dt_forward": 0.5,
+      "QHD_delta_s": "0.1 / sqrt(¯F)",
+      "QHD_total_S": "10 / sqrt(¯F)",
+      "N_step": 100
+    },
+    "common": {
+      "optimizer": "Quantum Hamiltonian Descent (coherent Hamiltonian dynamics, no classical optimizer)",
+      "simulator_type": "statevector (for block-encoding validation) + classical matrix-vector for time evolution",
+      "shots": "not applicable (statevector used); sampling described at final readout",
+      "error_tolerances": "not all numerical tolerances enumerated; LCHS/Trotterization and QSVT errors discussed theoretically in paper"
+    }
+  },
+  "hardware_details": {
+    "environment": "Classical workstation running Python",
+    "quantum_simulator": "Qiskit 1.3 statevector simulator (used to validate block-encoding circuits)",
+    "QPU": null,
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "The paper provides detailed algorithmic descriptions, discretization choices, and numeric parameter values used in the two demonstration examples (grid sizes, qubit counts, Trotter time steps, QHD Δs and S). The authors report using Qiskit 1.3 and Python for statevector simulations, but no public code repository or dataset link is provided in the text. Reproducibility is feasible in principle using the described parameters and Qiskit, but would require the authors' implementation of the specific block-encoding circuits and LCHS/Trotter kernels; these circuit-level implementations are described but not provided as downloadable code.",
+  "key_findings": [
+    "[speculative] The authors propose a fully coherent quantum algorithm for PDE-constrained optimization that composes a quantum PDE solver (LCHS / Hamiltonian simulation) with a coherent quantum optimizer (Quantum Hamiltonian Descent) via an explicit block-encoding of the objective function, thereby avoiding classical readout/tomography.",
+    "[speculative] They present explicit block-encoding constructions for the objective operators (quadratic and error objective forms) that coherently embed the PDE solution state into the oracle used by the optimizer, using LCU/QSVT/OAA primitives together with the LCHS forward-simulation subroutine.",
+    "[speculative] The paper derives end-to-end complexity bounds for the proposed algorithm (queries and gates), and claims that—under stated assumptions (notably strong convexity and standard access models)—the quantum algorithm inherits the speedups of the underlying quantum PDE solver: polynomial speedup in the PDE system size N and evolution time T, exponential speedup in spatial dimension d, and an exponential space advantage compared to classical approaches in the N, T regime.",
+    "[supported] The block-encoding constructions and optimization workflow were validated in numerical (statevector and matrix-calculation) experiments on two example problems: (i) a Black–Scholes parameter calibration (1 design variable) and (ii) a 1D wave-equation material-parameter design (2 design variables). In these simulations the block-encoded objective values agreed with forward simulation and the QHD-based evolution concentrated probability mass on the optimum.",
+    "[speculative] The theoretical convergence guarantees and derived complexity bounds rely on assumptions about the objective (strong convexity) and access models (block-encodings / Hamiltonian simulation oracles) and, therefore, the claimed speedups are conditional on those assumptions.",
+    "[speculative] The construction avoids the classical readout bottleneck by coherently composing the PDE-simulation subroutine into a block-encoding oracle for the objective, enabling fully quantum optimization without intermediate tomography.",
+    "[supported] The authors provide concrete resource estimates and example circuit parameters in their demonstrations (e.g., qubit counts, choices of discretization and time steps) and show empirical optimizer behavior using a product-formula time evolution as a practical implementation.",
+    "[speculative] Use of interaction-picture truncated Dyson-series simulation and QSVT for implementing the time-dependent Hamiltonian evolution yields the provable complexity bounds claimed in the paper; the product-formula implementation is proposed and tested as a simpler (less rigorously bounded) alternative."
+  ],
+  "results_summary": "This preprint introduces a fully coherent quantum approach to continuous PDE-constrained optimization by explicitly constructing block-encodings of objective functions that coherently incorporate the output of a quantum PDE solver (LCHS). The authors derive theoretical query/gate complexity bounds showing potential quantum speedups (polynomial in PDE system size and time, exponential in spatial dimension) under standard oracle models and problem assumptions (notably strong convexity and N ≫ M). They validate the block-encoding constructions and the optimizer dynamics in statevector simulations on two example problems (Black–Scholes volatility calibration and a 1D wave-equation material design), demonstrating agreement with forward simulation and concentration of probability on optima in their numerical trials. The claims of quantum advantage remain conditional and theoretical, tied to access-model assumptions and convexity conditions.",
+  "performance_claims": [
+    "[speculative] Asymptotic gate complexity (interaction-picture analysis, strong-convexity regime): ˜O(α_PDE d N^{η/d} M^3 T / h_ξ^2 ε) (Eq. 41), where N = PDE discretization size, d = spatial dimension, η = order of spatial derivative, M = number of design variables, h_ξ = discretization interval of design variables, T = PDE evolution time, ε = target tolerance.",
+    "[speculative] Classical counterpart complexity (per authors' comparison, Eq. 43): ˜O(M N T log(1/ε) + α_PDE^{1+1/p} d^{1+1/p} N^{η/d (1+1/p)} T^{1+1/p} ε^{-1/p}), yielding an asserted polynomial advantage in N and T (and exponential in d) for the quantum method in the N ≫ M regime.",
+    "[supported] Numerical experiment resource examples: Black–Scholes example used a 19-qubit block-encoding instance (n=6 spatial qubits, afor=8, M=1, m=4, +1 extra LCU ancilla) and Nstep = 1000 iterations for the product-formula QHD run; the wave-equation example used a 12-qubit instance (n=6, afor=0, M=2, m=3) with Nstep = 100.",
+    "[supported] Empirical result in simulations: objective values computed by the block-encoding matched forward-simulation-based evaluations and the QHD-driven state evolved to concentrate probability on the discrete optimal parameters in both test problems (plots and histories shown in the paper)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The authors present theoretical complexity bounds that suggest quantum speedups (polynomial in system size and time, exponential in spatial dimension and space usage) inherited from quantum PDE solvers under standard oracle/block-encoding models and strong-convexity assumptions. These are not empirically demonstrated as end-to-end advantage on realistic hardware; numerical validation in the paper is done via statevector simulation on small instances and demonstrates correctness of constructions rather than hardware speedup.",
+  "limitations": [
+    "Oracle construction for the optimizer is non-trivial and may be hard in practice (authors-stated).",
+    "QHD / coherent optimization requires oracle access to a quantized objective function — obtaining such an oracle is a strong assumption (authors-stated).",
+    "Convergence guarantees and the detailed complexity analysis are derived under a strong-convexity assumption on the objective; results may not hold for non-convex objectives (authors-stated).",
+    "For non-convex objectives, accurate time-dependent Hamiltonian simulation may not yield practical benefit and convergence guarantees disappear; the paper resorts to heuristic/product-formula implementations in those cases (authors-stated).",
+    "The approach assumes the PDE coefficient matrix is affine in design parameters, A(ξ) = A0 + sum_mu A_mu ξ_mu, and that Re(A_mu) are positive semidefinite — this restricts applicability (authors-stated assumption).",
+    "The complexity and error analysis assume access models (block-encoding, Hamiltonian simulation oracles, sparse-access) for the PDE operators and objective; availability of such oracles is a strong, potentially impractical assumption in many applications [inferred].",
+    "[inferred] The method's cost depends on amplitude factors like ||u(0)||/||u(T)|| arising in LCHS; large amplitude amplification factors can make the quantum forward-solver expensive in practice.",
+    "[inferred] Efficient preparation of initial-state and reference-state oracles (U_u0 and U_ref) is assumed; this may be nontrivial or costly for realistic datasets.",
+    "[inferred] Discretization of continuous design variables into m-bit registers imposes a resolution/complexity tradeoff; the overall complexity contains factors exponential in m (2^m dependency in some terms), limiting fine-grained continuous optimization.",
+    "[inferred] The gate and qubit resource estimates are large (many ancilla, deep circuits); practical implementation likely requires large fault-tolerant quantum hardware not yet available.",
+    "[inferred] The asymptotic speedups are derived in the regime N >> M; speedups may disappear or be less significant when the number of design parameters M is not small compared to PDE dimension N.",
+    "[inferred] Numerical experiments use simple Trotter/product-formula implementations for time evolution (with unfavorable errors); the empirical performance on noisy or constrained hardware is not assessed.",
+    "[inferred] The choice of friction parameter ν is heuristic (set via mean objective value) and requires estimation; sensitivity of performance to ν and robustness of that choice are not fully characterized."
+  ],
+  "open_questions": [
+    "How to construct oracles/block-encodings of objective functions for broader or more complex PDE-constrained optimization problems in a resource-efficient manner?",
+    "How to generalize the analysis and provide convergence guarantees for non-convex objective landscapes under QHD or related coherent optimization schemes?",
+    "What are practical methods to prepare initial forward-state and reference-state quantum states (U_u0, U_ref) for realistic datasets with acceptable resource overhead?",
+    "How do amplitude-related costs (||u(0)||/||u(T)||) of LCHS impact end-to-end performance for realistic PDEs and boundary/initial conditions?",
+    "How does the proposed composed algorithm perform under realistic noise models and on near-term (NISQ) or early fault-tolerant devices? What are error mitigation or robustification strategies?",
+    "What are tight, practical resource (qubit, depth, gate) estimates for realistic high-dimensional PDE problems, and at what problem sizes do quantum advantages materialize in practice?",
+    "How sensitive is QHD performance to the friction parameter ν and to the chosen discretization of design variables (m bits)? Can adaptive schemes for ν or adaptive discretization improve performance?",
+    "Can improved time-evolution simulation methods (beyond the LCHS/Trotter/product-formula variants tested) reduce the total cost while preserving optimizer convergence?",
+    "How to extend the block-encoding constructions to PDEs with more general (non-piecewise-constant, non-affine) spatially varying coefficients or complex geometries?",
+    "What are the implications for optimization when M (number of design parameters) is large or comparable to N (PDE state size)?"
+  ],
+  "future_work": [
+    "Extend theoretical analysis and complexity bounds beyond the strongly convex setting to non-convex objective functions and characterize practical convergence behavior.",
+    "Develop more efficient and practical oracle / block-encoding constructions for objective functions and PDE operators (including non-affine parameterizations and complex spatial coefficients).",
+    "Investigate practical state-preparation methods for initial and reference states (U_u0, U_ref) and quantify their resource costs for real-world datasets.",
+    "Study the effect of noise and error on the fully coherent pipeline, and design noise-resilient/mitigating strategies for the composed quantum subroutines.",
+    "Evaluate end-to-end performance and resource requirements on realistic problem instances and provide concrete fault-tolerant resource estimates (qubits, gate counts, circuit depth).",
+    "Explore improved time-dependent Hamiltonian simulation algorithms (beyond the truncated Dyson series and simple product formulas) tailored to QHD to reduce cost while maintaining optimizer performance.",
+    "Investigate adaptive schemes for discretization of design variables and tuning of the friction parameter ν to improve empirical performance and robustness.",
+    "Apply and benchmark the proposed framework on a wider set of PDE-constrained optimization problems from engineering and finance to determine domains where quantum advantage is most likely."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "hybrid-quantum-classical",
+    "quantum-linear-systems"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Construct an explicit block-encoding of the PDE-constrained objective operator so the quantum-produced PDE solution can be embedded coherently and exponentiated (via QSVT + OAA) enabling a fully coherent Quantum Hamiltonian Descent pipeline with provable end-to-end complexity bounds.",
+    "#idea:quantum-advantage — Complexity analysis shows potential speedups inherited from quantum PDE solvers (LCHS) and coherent objective evaluation compared to naïve per-parameter classical readout, with explicit dependence on discretization N, spatial dimension d, number of design parameters M, bit-precision m, and simulation time.",
+    "#idea:quantum-advantage — Demonstrated numerically (statevector simulation) on two small problems: Black–Scholes volatility calibration and a 1D wave PDE material-design example, validating block-encoding construction and QHD evolution on toy instances.",
+    "#idea:quantum-advantage — The pipeline composes LCU-style block-encodings, time-dependent Hamiltonian simulation (truncated Dyson series for proofs, Trotter for demos), and QHD to avoid intermediate classical readout within the optimization loop."
+  ],
+  "contradictions": [
+    "The paper claims end-to-end quantum speedups inherited from quantum PDE solvers, but provides only statevector and classical matrix-vector simulations on small discretizations (e.g., 6 qubits for space, 64 nodes, 4-bit design encoding). Practical scaling to real financial PDE calibration problems (required qubit counts, circuit depths, and overheads from LCU/QSVT/OAA) remains unverified and may negate claimed advantages.",
+    "There is a methodological mismatch: complexity proofs and convergence guarantees rely on interaction-picture truncated Dyson-series simulation and advanced block-encoding/QSVT primitives, whereas numerical demonstrations use product-formula (Trotter) kernels and classical propagation. This raises questions about whether the provable theoretical regime is the same as the one demonstrated numerically, and about near-term feasibility."
+  ],
+  "limitation_tags": [
+    "limitation:simulation-only",
+    "limitation:no-empirical-validation",
+    "limitation:qubit-count",
+    "limitation:data-encoding"
+  ]
+}

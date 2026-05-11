@@ -1,0 +1,227 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes an arXiv identifier/version (arXiv:2211.04456v4), typical preprint header and date, has academic structure (abstract, methods, results, refs) but no journal/venue or peer-review indicator.",
+  "title": "Quantum Risk Analysis: Beyond (Conditional) Value-at-Risk",
+  "authors": [
+    "Christian Laudagé",
+    "Ivica Turkalj"
+  ],
+  "year": "2025",
+  "journal_or_venue": "arXiv preprint arXiv:2211.04456v4",
+  "doi": "",
+  "abstract_summary": "The paper develops quantum algorithms based on quantum amplitude estimation to compute two alternative risk measures—Expectile Value-at-Risk (EVaR) and Range Value-at-Risk (RVaR)—extending prior quantum approaches for VaR and CVaR. Through two case studies (a credit-risk portfolio and insurance claim-size data) the authors compare performance on simulators and noisy hardware, finding that EVaR (and VaR via the bisection strategy) is relatively robust to device noise while CVaR and RVaR are more sensitive.",
+  "methodology_description": "The paper develops quantum algorithms to compute two alternative financial risk measures (Expectile Value-at-Risk (EVaR) and Range Value-at-Risk (RVaR)) by leveraging quantum amplitude estimation (QAE). For EVaR the authors reformulate the expectile as the root of an expectation-valued function h_{X,α}(x) and perform a classical bisection root search; each evaluation of h_{X,α} is computed on a quantum device via an amplitude-estimation subroutine. For RVaR they compute two VaR thresholds (via QAE), estimate the probability mass between them (via QAE) and then compute the conditional expectation for that interval (again via amplitude estimation). The state preparation (loading discretized distributions) is implemented using uniformly controlled y-rotations (Mottonen state-preparation). They compare three QAE variants: canonical QAE (uses QFT and controlled Grover powers, parameterized by ancilla qubits m), Maximum-Likelihood QAE (MLQAE) and Iterative QAE (IQAE) (both avoid QFT and deep controlled gates). Experiments include noiseless and noisy simulations (noise model of IBM Brisbane) and limited runs on real hardware conditions; metrics are estimation error (absolute and relative to interval length), frequency of most-common output, convergence behavior with respect to number of distribution qubits and ancilla qubits, and sensitivity to noise. Two case studies are used: (1) a synthetic two-asset credit-loss portfolio (closed-form construction and quantum circuit for distribution loading); (2) empirical insurance claim-size data (Norwegian automobile dataset from R CASdatasets) fitted to lognormal and gamma distributions and discretized for quantum loading. Parameter sweeps include number of qubits for distribution loading (n), number of QAE ancilla qubits (m), QAE variant, shots, and angle-scaling parameter γ; algorithmic recommendations for γ are provided.",
+  "algorithms_used": [
+    "Quantum Amplitude Estimation (canonical QAE)",
+    "Maximum Likelihood QAE (MLQAE)",
+    "Iterative QAE (IQAE)",
+    "Mottonen state preparation (uniformly controlled y-rotations)",
+    "Classical bisection root-finding (for expectiles)"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Experiments run on Qiskit simulators: both a noiseless simulator and a noisy simulator that emulates the IBM Brisbane noise characteristics. Some experiments emulate execution on the real IBM Brisbane hardware (noise model). Typical hardware-constrained runs use small numbers of qubits for distribution loading (e.g., n=3) and small ancilla registers (e.g., m=3) for canonical QAE in noisy runs.",
+  "dataset_used": "Two types: (1) Synthetic credit-risk portfolio of K=2 assets (Bernoulli defaults conditional on latent standard normal Z) with specified parameters (p0_k, ρ_k, λ_k). (2) Real-world insurance claim-size data: Norwegian automobile dataset from the R package CASdatasets, cleaned and truncated and then fitted to lognormal and gamma distributions via method of moments.",
+  "experiment_input": {
+    "credit_portfolio": {
+      "type": "synthetic",
+      "description": "Two-asset credit-loss model L = λ1 X1 + λ2 X2 with default probabilities conditional on a standard normal factor Z.",
+      "parameters": {
+        "asset1": {
+          "p0": 0.12,
+          "rho": 0.1,
+          "lambda": 1
+        },
+        "asset2": {
+          "p0": 0.35,
+          "rho": 0.05,
+          "lambda": 2
+        }
+      },
+      "Z_discretization": {
+        "qubits_for_Z": 2,
+        "support": [
+          -2,
+          2
+        ]
+      }
+    },
+    "insurance_claims": {
+      "source": "CASdatasets (Norwegian automobile)",
+      "preprocessing": "Removed values 1, 99, and 16999; truncated claims > 100000; resulting dataset size 7704",
+      "fitting": "Parameters estimated via method of moments",
+      "fitted_distributions": {
+        "lognormal": {
+          "mu": 9.6754,
+          "sigma": 0.7416,
+          "support_truncated": "(0,100000]"
+        },
+        "gamma": {
+          "p": 1.3635,
+          "q": 15373,
+          "support_truncated": "(0,100000]"
+        }
+      }
+    },
+    "discretization": "Continuous PDFs restricted to chosen finite interval and discretized on 2^n points (n varied; examples used n in {2,3,4,5})."
+  },
+  "experiment_process": {
+    "overview": "For each risk measure and dataset, build quantum circuits that (a) prepare the discretized distribution state via Mottonen uniformly-controlled rotations; (b) implement comparator ancilla registers and multi-controlled y-rotations to encode piecewise payoff/indicator functions; (c) run one of the QAE variants to estimate the required expectation or probability; (d) for expectiles, embed QAE as the evaluation oracle inside a classical bisection loop until tolerance criteria are met; (e) for RVaR, obtain VaR indices (two QAE runs), estimate the probability mass between indices (QAE), then compute the conditional expectation (QAE) and combine results.",
+    "QAE_variants_and_parameters": {
+      "canonical_QAE": "Uses m ancilla qubits and QFT; parameter m varied (examples: m up to 6 in simulation; m=3 used for noisy hardware experiments).",
+      "MLQAE": "Estimates amplitudes via maximum likelihood on repeated measurements of Q^kA|0>; used evaluation schedule parameter (example schedule=3).",
+      "IQAE": "Iterative amplitude estimation using confidence-interval refinement; target precision and confidence supplied (examples: target_precision=0.05, confidence=0.01 or 0.05)."
+    },
+    "stopping_criteria": "Bisection stops when |h(x)-x|<ϵ or interval half-length <δ or max iterations N reached; example tolerances not fixed globally in paper.",
+    "repetitions_and_statistics": "For some plots they execute QAE 1000 times to obtain average and most-frequent outputs; experiments also sweep shots to evaluate MLQAE and IQAE shot sensitivity."
+  },
+  "experiment_output": {
+    "format": "Estimated scalar risk measures (VaR, CVaR, EVaR, RVaR) per run; additional diagnostic quantities (estimated probabilities p, VaR indices, intermediate amplitudes).",
+    "metrics": [
+      "Absolute estimation error",
+      "Relative estimation error (normalized by discretization interval length)",
+      "Most frequent estimation (mode) across repeated runs",
+      "Average estimation across repeated runs",
+      "Convergence versus number of distribution qubits n and ancilla qubits m",
+      "Sensitivity to hardware noise (noiseless vs noisy simulator vs device model)"
+    ],
+    "baselines": "Classical exact values computed analytically or via classical Monte Carlo/closed form for comparison."
+  },
+  "experiment_parameters": {
+    "distribution_qubits_n": "Varied (examples: 2,3,4,5); many hardware-noise runs used n=3",
+    "QAE_ancilla_m": "Varied; canonical QAE examples used m up to 6 in simulator; m=3 used for noisy-device runs",
+    "shots": "Varied per experiment (sweeps performed); specific exploration across shot counts for MLQAE and IQAE",
+    "IQAE_target_precision": 0.05,
+    "IQAE_confidence_levels": [
+      0.01,
+      0.05
+    ],
+    "MLQAE_schedule": 3,
+    "gamma_angle_scaling": {
+      "recommendation_for_VaR_CVaR": "gamma ≈ π/8",
+      "recommendation_for_RVaR_EV aR": "gamma ≈ π/4"
+    },
+    "QAE_repetitions_for_statistics": 1000,
+    "credit_model_Z_qubits": 2
+  },
+  "hardware_details": {
+    "simulators": [
+      {
+        "name": "Qiskit Aer noiseless simulator"
+      },
+      {
+        "name": "Qiskit noise-enabled simulator",
+        "noise_model": "emulates IBM Brisbane"
+      }
+    ],
+    "real_device_mentioned": {
+      "name": "IBM Brisbane",
+      "provider": "IBM"
+    },
+    "remarks": "No explicit access details (account, backend names) or runtime configurations beyond noise-model description are provided."
+  },
+  "reproducibility_notes": "The experiments were implemented in Qiskit (paper cites Qiskit 0.39.0). Datasets are identifiable: the Norwegian automobile dataset is available in the R CASdatasets package; credit portfolio is synthetically specified with explicit parameters. The paper specifies many algorithmic parameters (n, m, IQAE target precision, MLQAE schedule, γ recommendations) and states the noise model used (IBM Brisbane). However, no public code repository or scripts are linked in the manuscript, and some implementation details (exact tolerances ϵ/δ, full circuit listings, exact shot schedules for all plots) are described but not provided as runnable artifacts. Reproducibility is moderate: inputs and high-level procedures are documented, but full replication would require re-implementation of circuits and parameter schedules unless authors release code.",
+  "key_findings": [
+    "[speculative] Quantum amplitude estimation (QAE) yields a quadratic speed-up over classical Monte-Carlo methods for estimating expectations used in risk measures (background/theoretical claim).",
+    "[speculative] The authors construct new quantum-based algorithms to compute Expectile Value-at-Risk (EVaR) and Range Value-at-Risk (RVaR) based on QAE; the operator construction for expectiles is claimed to be new.",
+    "[supported] On noiseless quantum simulators the proposed algorithms for EVaR, RVaR, VaR and CVaR converge toward the true values as the number of qubits used to load the distribution increases.",
+    "[supported] In a two-asset credit-risk case study, increasing the number of ancilla qubits in canonical QAE improves accuracy for expectiles; RVaR accuracy is comparatively worse in that example.",
+    "[supported] For insurance-claims data fitted to lognormal and gamma distributions, the accuracy of all risk-measure estimates improves with increased qubit count for distribution discretization; discretization granularity materially affects capital estimates.",
+    "[supported] Expectile (EVaR) and VaR calculations proved robust to noise in real-device/noisy-simulator experiments reported here, whereas CVaR and RVaR were significantly degraded by device noise.",
+    "[supported] Iterative QAE (IQAE) produced the lowest estimation errors for expectiles on the noisy simulator in these experiments; MLQAE and canonical QAE were also evaluated and showed differing robustness trade-offs depending on the measure and distribution.",
+    "[supported] The authors recommend parameter choices for the internal scaling γ used in their A-operator constructions: roughly γ ≈ π/8 for VaR and CVaR and γ ≈ π/4 for RVaR and expectiles (heuristic/empirical guidance arising from their experiments).",
+    "[supported] Canonical QAE's most frequent outcome did not improve with increased shots (observation in their noisy-device experiment), while MLQAE and IQAE benefited from shot increases in some cases.",
+    "[speculative] Expectiles have attractive theoretical statistical properties (e.g., they are elicitable and for certain α they are coherent) and are meaningful alternatives/compromises to VaR and CVaR (literature-backed theoretical claim).",
+    "[speculative] RVaR provides a robustness-versus-sensitivity tradeoff between VaR and CVaR and can be advantageous in practical risk estimation (theoretical/motivational claim, supported by cited literature).",
+    "[supported] The paper demonstrates end-to-end circuits (distribution loading, comparators, y-rotations) and evaluates different QAE variants (canonical, MLQAE, IQAE) for the specific tasks of EVaR and RVaR estimation on simulators and a noisy-device emulator."
+  ],
+  "results_summary": "The paper develops quantum-algorithmic procedures (based on quantum amplitude estimation) to compute two alternative risk measures — Expectile Value-at-Risk (EVaR) and Range Value-at-Risk (RVaR) — and implements the required operators/circuits. On noiseless simulators the algorithms converge as the number of qubits used for distribution discretization increases. In noisy-device experiments and emulations, EVaR and VaR estimations were relatively robust to hardware noise, while CVaR and RVaR were much more sensitive (largely because they require estimating small conditional probabilities that amplify errors). Iterative QAE (IQAE) gave the best noisy-device results for expectiles in these tests, and MLQAE showed some advantages for RVaR in a specific instance. The authors present heuristics for internal scaling parameters and discuss circuit resource considerations and scaling behavior.",
+  "performance_claims": [
+    "[speculative] QAE provides a quadratic reduction in computation time compared to classical Monte-Carlo methods (theoretical claim).",
+    "[supported] Minimum estimation error observed for expectile (gamma distribution) was 0.125 (relative to interval length) for both IQAE and canonical QAE on the noisy simulator in the experiments reported.",
+    "[supported] MLQAE produced a larger minimum estimation error of 0.375 for the same expectile/gamma noisy-simulator experiment (reported comparison).",
+    "[supported] Increasing number of ancilla qubits m improves the most frequent/canonical-QAE result for expectile estimation (observed convergence behavior in simulator experiments).",
+    "[supported] Discretization error (from number of qubits used to load distributions) dominates approximation accuracy; reported acceptable relative errors (< 0.025 relative to interval length) when qubit count is sufficiently large in simulator trials (illustrative plots reported).",
+    "[supported] Recommended heuristic choices for scaling parameter γ: γ ≈ π/8 for VaR/CVaR and γ ≈ π/4 for RVaR/expectiles (empirical guidance from authors' experiments)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The manuscript cites the standard theoretical result that amplitude estimation offers quadratic speed-up compared to classical Monte Carlo (a theoretical advantage). The paper does not demonstrate a practical quantum runtime or resource advantage on real hardware; empirical results are limited to small-scale simulators and noisy-device emulation and focus on accuracy/robustness, not end-to-end runtime or scaling advantage against classical methods.",
+  "limitations": [
+    "CVaR and RVaR calculations are significantly affected by noise on real (noisy) quantum devices; expectiles and VaR proved much more robust in the experiments (author-stated).",
+    "Canonical quantum amplitude estimation (QAE) requires QFT and controlled Q^j operations, producing deep circuits with many CNOT/Toffoli gates that are challenging for NISQ hardware (author-stated).",
+    "All continuous distributions must be truncated and discretized for state preparation; approximation error depends strongly on the number of qubits used for loading the distribution (author-stated).",
+    "The conditional-expectation-based measures (CVaR, RVaR) require estimation of a probability p that appears in a denominator, so small p and noisy estimates cause large sensitivity/instability (author-stated).",
+    "The sin^2(·) -> affine approximation sin^2(γ ˜f + π/4) ≈ γ ˜f + 1/2 is used to linearize the amplitude-to-payoff mapping; this approximation introduces bias/errors not fully quantified (author-stated/implicit).",
+    "Noisy-device experiments were restricted to very small problem sizes (e.g., 3 qubits for distribution load), limiting conclusions about practical, larger-scale performance (author-stated).",
+    "The study contains only two case studies (a 2-asset credit example and a single insurance claims dataset); broader generality across instruments, portfolio sizes and distributions is untested (author-stated).",
+    "State preparation (Mottonen-style uniformly controlled rotations and comparators) has nontrivial gate/ancilla costs; resource scaling (Toffoli counts, depth) becomes problematic as the number of assets/qubits grows (author-stated / Remark 5.1).",
+    "Choice of the scaling parameter γ (used in amplitude-rotation encoding) is heuristic and distribution-/measure-dependent; no systematic method for optimal γ selection is provided (author-stated).",
+    "[inferred] The first-order approximation used for implementing Bernoulli rotation angles (Θ_p approximated linearly) may introduce inaccuracies when the linearization assumption is not well satisfied.",
+    "[inferred] No analytic end-to-end error bounds are provided that combine discretization/truncation error, amplitude-estimation error, and approximation errors (sin approximation, linearization), so the overall accuracy guarantees are unclear.",
+    "[inferred] The bisection + QAE strategy for expectiles depends on correct sign decisions from noisy amplitude estimates; the probability of selecting wrong subintervals and its impact are not quantified.",
+    "[inferred] Heavy-tailed distributions and extreme-tail behavior may be poorly captured due to truncation/discretization choices and were not specifically addressed; tail-risk fidelity is unclear.",
+    "[inferred] The introduced operator constructions (especially for expectiles) are novel but not proven optimal with respect to gate count or depth; potential optimizations are not explored."
+  ],
+  "open_questions": [
+    "How can the noise sensitivity of CVaR and RVaR estimation be reduced so those measures become practical on near-term quantum devices?",
+    "What are principled methods to choose the scaling parameter γ (and related encoding choices) across different distributions and risk measures to minimize bias and variance?",
+    "How do QAE variants (canonical QAE, MLQAE, IQAE) compare in realistic noise regimes and across a wider set of distributions and risk measures — which variant is preferable under which conditions?",
+    "Can quantum signal processing (QSP) or other advanced quantum techniques be adapted to compute these risk measures with substantially reduced resource requirements and improved noise resilience?",
+    "What are rigorous, quantifiable error bounds (and their decomposition) for the full pipeline: distribution truncation/discretization + state preparation + amplitude estimation + postprocessing (bisection/conditional expectation)?",
+    "How well do the proposed algorithms handle heavy-tailed distributions and extreme quantiles/expectiles that are important for regulatory capital estimation?",
+    "How to obtain reliable estimates of small probabilities p (used as denominators in conditional expectations) on noisy devices — are there bias-correction or regularization techniques that work well?",
+    "What are the resource and depth requirements to scale these algorithms to realistic, industry-sized portfolios (many assets, fine-grained discretization)?",
+    "Can state preparation be improved (lower gate count, fewer ancillas) for arbitrary distributions in ways that materially improve end-to-end performance?",
+    "What is the failure probability of the bisection search driven by noisy amplitude estimates, and can one design provably robust hybrid quantum-classical root-finding procedures?",
+    "How to adapt the algorithms to other classes of risk measures (shortfall risk measures generally, optimized certainty equivalent, optimal expected utility) in an efficient quantum-native way?",
+    "What discretization schemes (e.g., non-uniform grids focusing on tails) provide better trade-offs between state-prep cost and accuracy for tail-sensitive risk measures?"
+  ],
+  "future_work": [
+    "Analyze and implement other risk measures not covered in this work, in particular shortfall risk measures of which expectiles are a special case (author-stated).",
+    "Study other utility-based risk measures such as the optimized certainty equivalent and the optimal expected utility risk measure on quantum hardware (author-stated).",
+    "Investigate application of quantum signal processing (QSP) or related techniques to reduce resource requirements and improve performance for quantum risk analysis (suggested by related literature cited by authors).",
+    "Perform scaling/resource studies to extrapolate circuit depth and gate counts for larger/more realistic portfolios (author-suggested, Remark 5.1).",
+    "Systematically study and optimize the choice of encoding parameters (e.g., γ) and discretization strategies for different distributions and risk measures (implicit/follow-up).",
+    "Develop improved state-preparation and comparator circuits with lower ancilla/gate overhead to enable larger problem instances on NISQ devices (implicit/follow-up).",
+    "Derive rigorous error analysis and bounds that combine discretization, amplitude estimation, and approximation errors to guide algorithm design and parameter selection (inferred future work)."
+  ],
+  "topic_tags": [
+    "risk-management",
+    "simulation-monte-carlo",
+    "insurance-actuarial"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "qft-phase-estimation",
+    "grover-search",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Use of Quantum Amplitude Estimation (canonical QAE, MLQAE, IQAE) to estimate financial risk measures (EVaR and RVaR) including detailed empirical evaluation on noiseless simulators, noisy simulators (IBM Brisbane noise model) and limited runs on real hardware.",
+    "#idea:hybrid-approach — Expectile (EVaR) computation formulated as root finding; classical bisection outer loop uses QAE as an oracle to evaluate expectation-valued function h_{X,α}(x), demonstrating a practical hybrid QPU-CPU workflow.",
+    "#idea:near-term-feasibility — Comparison of QAE variants: canonical QAE (QFT + controlled Grover powers) versus MLQAE and IQAE (QFT-free) showing MLQAE/IQAE are more NISQ-friendly in noisy conditions.",
+    "#idea:near-term-feasibility — Empirical finding that EVaR (and VaR via bisection) appear relatively robust to device noise, while CVaR and RVaR estimates are more sensitive to noise and discretization choices.",
+    "#idea:near-term-feasibility — State preparation via Mottonen uniformly-controlled y-rotations for loading discretized distributions is used; discretization (2^n grid) and number of distribution qubits n critically affect accuracy and resource needs.",
+    "#idea:hybrid-approach — Detailed parameter sweeps (distribution qubits n, ancilla qubits m, shots, γ scaling) and practical algorithmic recommendations (e.g., γ tuning) provided to guide implementations on constrained devices.",
+    "#limitation:qubit-count — Experiments limited to small distribution registers (n typically ≤5, hardware runs often n=3) and small QAE ancilla (m small), highlighting qubit-count limits for realistic financial distributions.",
+    "#limitation:noise — Noisy-simulator and device-model experiments show degradation in CVaR/RVaR estimates, indicating hardware noise is a major barrier to accurate risk estimation with QAE.",
+    "#limitation:data-encoding — The cost and impact of discretizing continuous distributions and Mottonen state-preparation are emphasized; data-loading overheads and discretization error are nontrivial practical issues."
+  ],
+  "contradictions": [
+    "contradiction:scalability — While canonical QAE offers a theoretical quadratic speedup, the paper shows that its depth (QFT and controlled Grover powers) and ancilla requirements make it impractical on current noisy hardware; MLQAE/IQAE mitigate some issues but overall results contradict overly optimistic claims that QAE-based methods are immediately scalable to realistic financial problems without significant hardware improvements."
+  ]
+}

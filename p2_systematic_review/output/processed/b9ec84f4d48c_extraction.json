@@ -1,0 +1,179 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes an arXiv identifier and date (arXiv:1904.05803v1) and lacks journal/venue information; format and sections match an arXiv preprint rather than a published peer-reviewed article.",
+  "title": "Towards Pricing Financial Derivatives with an IBM Quantum Computer",
+  "authors": [
+    "Ana Martin",
+    "Bruno Candelas",
+    "Ángel Rodríguez-Rozas",
+    "José D. Martín-Guerrero",
+    "Xi Chen",
+    "Lucas Lamata",
+    "Román Orús",
+    "Enrique Solano",
+    "Mikel Sanz"
+  ],
+  "year": "2019",
+  "journal_or_venue": "arXiv preprint (arXiv:1904.05803)",
+  "doi": "",
+  "abstract_summary": "The paper applies a quantum principal component analysis (qPCA) approach to reduce the number of stochastic factors needed in the multifactor Heath-Jarrow-Morton (HJM) interest-rate model and implements the algorithm on IBM's 5-qubit IBMQX2 processor. The authors estimate principal components from 2×2 and 3×3 forward-rate cross-correlation matrices derived from historical data, obtain reasonable results for small matrices, and discuss limitations due to circuit depth and noise for larger cases, positioning this work as an initial step toward quantum simulation of HJM for derivative pricing.",
+  "methodology_description": "The authors adapt and implement a quantum principal component analysis (qPCA) pipeline, based on Lloyd et al., to estimate the dominant eigenvalues and eigenvectors of covariance matrices of forward interest rates (volatility factors in a multi-factor HJM model). The covariance matrix is normalized by its trace and encoded as a density matrix ρ; the unitary U = exp(2π i ρ) is constructed (and decomposed into device gates) and used in controlled powers for phase-estimation-style routines. The approach is hybrid and iterative: initialize a (classical) random state |b> for the eigenvector register, run a reduced-bit quantum phase-estimation-like circuit (n qubits for an n-bit coarse eigenvalue register + log N qubits for the system), project onto the binary eigenvalue subspace |y(n)>, extract the resulting (approximate) eigenvector, and re-use that eigenvector as the new initial state to sequentially improve fidelity over several iterations. After convergence the approximate eigenvector is used with (full) quantum phase estimation to refine the eigenvalue estimate. The authors ran experiments on both the Qiskit simulator and the IBM 5-qubit superconducting processor IBMQX2, for small covariance matrices (2×2 and a 3×3 case embedded into 4×4), measured in multiple bases (Z, X, Y and a custom basis) to estimate amplitudes and relative phases, and report populations, estimated complex amplitudes and fidelity diagnostics. They discuss practical NISQ limitations (gate depth, entangling-gate errors, decoherence) and provide experimental counts (iterations, shots) and estimated gate-error assumptions used to interpret results.",
+  "algorithms_used": [
+    "Quantum Principal Component Analysis (qPCA)",
+    "Quantum Phase Estimation (QPE)",
+    "Iterative hybrid classical-quantum eigenvector refinement (projection and bootstrapping)"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Experiments executed on IBM's cloud quantum platform using the IBMQX2 5-qubit superconducting processor and on the Qiskit statevector/sampling simulator. For measurements the authors used 8192 shots per iteration in the eigenvector estimation runs. They ran iterative projection cycles (up to 4 iterations reported) and both low-bit and higher-bit eigenvalue registers (2-bit and 3-bit tests).",
+  "dataset_used": "Covariance / cross-correlation matrices derived from historical forward-rate data (one-month, three-month and six-month maturities). The primary 3×3 matrix used is taken from Fig. 19.3 of Ref. [33] (Paul Wilmott, Introduces Quantitative Finance) and the experiments include 2×2 submatrix cases and a padded 4×4 expansion for implementation on qubit registers.",
+  "experiment_input": {
+    "source": "Covariance matrix from Fig. 19.3 in Ref. [33] (historical 1m, 3m, 6m forward-rate data)",
+    "size": "2×2 submatrix (used) and 3×3 matrix (used; embedded into 4×4 for qubit mapping)",
+    "preprocessing": "Each covariance matrix is normalized by its trace to form a density matrix ρ (tr(ρ)=1). For the 3×3 case the matrix was embedded into a 4×4 density matrix by padding a zero row/column (|11⟩ basis component)."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Normalize covariance matrix by its trace to obtain density matrix ρ.",
+      "Construct unitary U = exp(2π i ρ) and decompose controlled-U^2^k operations into available gates of the device.",
+      "Prepare eigenvalue register of n qubits (Hadamard-initialized) and eigenvector register initialized to a random state |b> (uniform superposition or chosen random amplitudes).",
+      "Apply controlled U^(2^k) operations and controlled phase rotations (QPE-like circuit) to entangle eigenvalue bits with eigenvectors.",
+      "Project the eigenvalue register onto a chosen n-bit target |y(n)⟩ corresponding to the coarse estimate of the dominant eigenvalue; obtain the collapsed eigenvector approximation in the system register.",
+      "Iteratively re-initialize the circuit using the output eigenvector as the new input state and repeat projection/measurement cycles until the eigenvector coefficients stabilize (authors ran up to 4 iterations).",
+      "Measure the final eigenvector register in multiple bases (Z, X, Y and a custom basis) to reconstruct complex amplitudes and relative phases.",
+      "Use the refined eigenvector as input for a more precise quantum phase estimation run (larger n) to estimate the maximal eigenvalue with higher resolution.",
+      "Compare simulator and hardware results; compute fidelity between simulator QPE output and expected eigenvector where applicable."
+    ],
+    "parameters_and_variations": "Experiments used n = 2 bits for coarse eigenvalue estimation (2×2 case) and also n = 3 bits for finer estimation; eigenvector register sizes varied with matrix dimension (1 qubit for 2×2, 2 qubits for 4×4 embedding). Iterations: up to 4 sequential refinement steps reported. Shots: 8192 per measurement set. Gate-error model: empirical device fidelities and an assumed 8% error per two-qubit gate used for error budgeting in discussion."
+  },
+  "experiment_output": {
+    "format": "Estimated eigenvectors as complex amplitude vectors (measured populations and reconstructed phases), eigenvalues reported in binary n-bit strings and converted to decimal, state populations/probabilities, and fidelity between simulator and hardware/state estimates.",
+    "metrics_reported": [
+      "Estimated eigenvalues (binary and decimal)",
+      "Estimated eigenvector complex amplitudes (per computational basis state)",
+      "Populations/probabilities per computational basis state",
+      "Fidelity between QPE simulator output and target eigenvector (example: 0.977 reported)",
+      "Qualitative error analysis (gate-depth, decoherence, per-gate-error assumptions)"
+    ],
+    "baselines": "Comparison against exact classical spectral decomposition (analytical eigenvalues/eigenvectors) and Qiskit simulator outputs; no other algorithmic baselines (e.g., classical PCA runtime) are quantitatively compared."
+  },
+  "experiment_parameters": {
+    "device_qubits_total": 5,
+    "used_on_device": {
+      "2x2_case": {
+        "eigenvalue_bits_n": 2,
+        "eigenvector_qubits": 1,
+        "total_qubits_used": 3,
+        "iterations": 4,
+        "shots_per_run": 8192,
+        "observed_entangling_gates_for_QPE": "≈6 (discussion)",
+        "assumed_two_qubit_gate_error": "≈8%"
+      },
+      "3bit_QPE_refinement": {
+        "eigenvalue_bits_n": 3,
+        "eigenvector_qubits": 1,
+        "total_qubits_used": 4,
+        "simulator_result": "good",
+        "hardware_result": "decohered / noisy"
+      },
+      "4x4_embedding_case": {
+        "eigenvalue_bits_n": 1,
+        "eigenvector_qubits": 2,
+        "total_qubits_used": 3,
+        "iterations": 4,
+        "observed_entangling_gates": "≥18 (circuit depth high; heavy decoherence)"
+      }
+    },
+    "shots": 8192,
+    "optimizer": "none (no variational classical optimizer used)",
+    "unitary_definition": "U = exp(2π i ρ) used for controlled-U^(2^k) operations"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit simulator (statevector / sampling used)",
+    "quantum_processor": "IBMQX2 (IBM 5-qubit superconducting processor)",
+    "cloud_provider": "IBM Quantum Experience (cloud access)",
+    "notes": "Authors report limited low-level access to device; IBM not providing exact low-level circuit transpilation details in cloud service (black-box behaviour)."
+  },
+  "reproducibility_notes": "The paper reports matrix data (explicit 3×3 covariance matrix values) and describes circuit designs and parameters (n-bit choices, iteration counts, shots). Implementation used Qiskit and IBMQX2, but no publicly shared source code, scripts, or repository is provided in the text. The authors note that IBM cloud does not expose full low-level transpilation details of the executed circuits, which complicates exact reproduction on hardware. Thus, while the analytic matrices and algorithmic description are sufficient to reproduce simulations in Qiskit, exact hardware runs may not be fully reproducible without access to the same device backend and equivalent transpilation settings.",
+  "key_findings": [
+    "[supported] The authors implemented a quantum principal component analysis (qPCA) style algorithm on the IBMQX2 5-qubit superconducting processor and corresponding Qiskit simulator.",
+    "[supported] For a 2x2 normalized covariance matrix (embedded single-qubit eigenproblem using 3 total qubits), the experiment produced a reasonable approximation to the dominant eigenvector and eigenvalue; the simulator QPE result had high fidelity (~0.977) with the target.",
+    "[supported] The 4x4 encoding (used to represent a 3x3 covariance matrix embedded into 4x4) requires substantially deeper circuits (many two-qubit gates), and on the real device decoherence and gate errors prevented extraction of useful information.",
+    "[supported] Simulations in Qiskit reproduce near-ideal qPCA / quantum phase estimation (QPE) behaviour for the small matrices studied.",
+    "[supported] The practical limits encountered (circuit depth, number of entangling gates, and gate/measurement fidelity) indicate current NISQ hardware constraints were the limiting factor for scaling beyond very small matrices.",
+    "[speculative] qPCA can be used to reduce the number of noisy volatility factors in the multifactor Heath-Jarrow-Morton (HJM) interest-rate model, thereby reducing computational cost of classical simulations when implemented on larger quantum hardware.",
+    "[speculative] The paper claims this is the first quantum computing experiment in financial option/derivative pricing and the largest implementation of qPCA on a quantum platform (as of the paper date).",
+    "[speculative] The authors claim practical applications of quantum computers in finance will be achievable in the near future as quantum hardware improves."
+  ],
+  "results_summary": "The paper presents a hybrid classical-quantum implementation of a qPCA-style protocol applied to small covariance matrices arising from forward-rate data under the HJM framework. On the 5-qubit IBMQX2 device and in Qiskit simulation the authors successfully estimated the dominant principal component for a 2x2 covariance (implemented with 3 qubits), obtaining a high-fidelity eigenvector/eigenvalue estimate in simulation and reasonable experimental approximations on hardware. Attempts to scale to a 4x4 encoding (to represent three maturities) produced circuits with many entangling gates; on real hardware decoherence and gate errors dominated and prevented meaningful extraction of the principal component, while the simulator still showed the ideal behaviour. The work demonstrates feasibility on very small problems, documents current NISQ limitations, and argues that larger practical applications would require improvements in hardware/gate fidelities and lower-level circuit optimization.",
+  "performance_claims": [
+    "2x2 normalized covariance spectral decomposition: λ1 = 0.8576, λ2 = 0.1424 (analytical/classical reference).",
+    "Experimental eigenvector estimate for the 2x2 case (Eq. 17): coefficients approximately 0.87 - i0.10 for |0>, and 0.47 + i0.10 for |1> (with quoted device/statistical error estimate δ ≈ 0.9 in text).",
+    "Quantum phase estimation (3-bit) in Qiskit simulator yielded eigenvalue binary 0.111 (decimal 0.875), and fidelity between simulator QPE eigenvector and the prior eigenvector estimate: F = 0.977.",
+    "2x2 experiment used 4 iterations with 8192 shots per iteration for statistics (as reported).",
+    "4x4 implementation required at least 18 entangling gates; assuming ~8% error per two-qubit gate yields estimated cumulative error >100%, rendering results unusable on the device.",
+    "For the 4x4 (embedded 3x3) matrix the classical spectral decomposition reported: λ = {0.000, 0.031, 0.169, 0.800} (with dominant eigenvector components listed in the paper)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper cites known theoretical results (Lloyd et al.) that qPCA can have exponential speedup under certain assumptions and demonstrates small-scale feasibility, but it does not demonstrate any empirical quantum advantage (no speedup or scaling advantage shown on hardware). The claims about advantage are therefore theoretical/speculative and contingent on future improvements in hardware, circuit optimization, and assumptions (e.g., efficient Hamiltonian simulation or access to many copies of the density matrix).",
+  "limitations": [
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:data-encoding"
+  ],
+  "open_questions": [
+    "Can qPCA be scaled to large, realistic HJM covariance matrices on next‑generation quantum hardware with sufficient fidelity to outperform classical PCA?",
+    "How can controlled implementations of U = e^{i t σ} (and its powers) be realized efficiently for dense covariance matrices arising in finance?",
+    "What are the minimum qubit count, connectivity, and gate‑fidelity thresholds required to obtain useful/practical results for multi-factor HJM simulations?",
+    "Which hardware‑aware compilation or low‑level programming techniques would most reduce circuit depth and error for this application?",
+    "How effective are error‑mitigation strategies (e.g., randomized compiling, measurement error mitigation) in improving qPCA outcomes for financial datasets on NISQ devices?",
+    "How should one prepare arbitrary covariance matrices as quantum states in a resource‑efficient manner for qPCA in finance?",
+    "How to handle nearly degenerate eigenvalues or clusters of eigenvalues in the eigenvalue projection stage without prohibitive increases in precision/qubit usage?",
+    "What end‑to‑end quantum algorithmic pipeline (including volatility factor estimation, simulation, and derivative pricing) yields concrete speedups over classical methods?",
+    "How many principal components are necessary in practice for accurate HJM simulations across varied market regimes, and how would that affect quantum resource requirements?",
+    "What is the impact of using hybrid classical‑quantum workflows for PCA in finance compared to purely classical dimensionality reduction methods?"
+  ],
+  "future_work": [
+    "Design a general quantum algorithm to fully simulate the Heath‑Jarrow‑Morton (HJM) model for pricing interest‑rate derivatives on quantum hardware.",
+    "Improve experimental implementations via better gates, higher‑fidelity qubits, and increased qubit counts to enable larger matrix qPCA (beyond 3×3/4×4).",
+    "Explore lower‑level programming and hardware‑aware circuit optimization (tailored to chip topology and native gate set) to reduce depth and errors.",
+    "Apply the protocol on improved experimental platforms (or simulators reflecting future hardware) to validate scalability and accuracy.",
+    "Investigate techniques to more robustly estimate eigenvectors/eigenvalues (e.g., improved projection heuristics, multiple random initial states, increased precision) in noisy settings.",
+    "Integrate qPCA outputs into a complete HJM simulation and derivative pricing pipeline to assess end‑to‑end performance and potential quantum advantage.",
+    "Study and develop efficient methods for preparing covariance matrices as quantum states and for implementing e^{i t σ} under realistic resource constraints."
+  ],
+  "topic_tags": [
+    "derivative-pricing"
+  ],
+  "methodology_tags": [
+    "qft-phase-estimation",
+    "hybrid-quantum-classical",
+    "quantum-ml",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Demonstrated a qPCA pipeline (QPE-based) on real IBM 5-qubit hardware for small covariance matrices (2x2 and embedded 3x3), showing feasibility of basic eigenvalue/eigenvector estimation in NISQ devices.",
+    "#idea:hybrid-approach — Uses an iterative hybrid classical-quantum eigenvector refinement: projective measurement of coarse QPE collapse, reuse of measured eigenvector as new input state, and subsequent refinement with higher-bit QPE.",
+    "#idea:near-term-feasibility — Reports quantitative experimental metrics (eigenvalues, reconstructed complex amplitudes, state populations, simulator-to-hardware fidelity ~0.977 for an example) and operational parameters (8192 shots, up to 4 iterations, assumed ~8% two-qubit gate error) to characterise NISQ performance.",
+    "#idea:hybrid-approach — Encodes classical covariance matrices as normalized density matrices and constructs U = exp(2π i ρ) decomposed into device gates; uses padding/embedding to map a 3x3 covariance into a 4x4 density matrix for qubit mapping."
+  ],
+  "contradictions": [
+    "The paper reports that current NISQ hardware (IBMQX2) cannot scale the qPCA/QPE pipeline to larger HJM multifactor instances because gate depth, two-qubit gate errors (~8% assumed), and decoherence prevent reliable eigenvector/eigenvalue estimation — contradicting any optimistic claims that near-term devices can directly handle realistically-sized HJM covariance matrices.",
+    "Practical data-encoding and unitary-construction costs (building U = exp(2π i ρ) and embedding/padding of matrices) plus limited qubit counts mean the demonstrated approach is restricted to toy matrices, contradicting assertions that the demonstration immediately generalizes to production derivative-pricing workloads."
+  ],
+  "has_limitations": null
+}

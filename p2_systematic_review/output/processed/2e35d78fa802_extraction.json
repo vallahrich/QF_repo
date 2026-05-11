@@ -1,0 +1,262 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document is hosted on TechRxiv and explicitly labeled as a preprint (citation includes 'Preprint' and the text states 'In this preprint...'). It has submission/posting dates but no journal or conference proceedings indicating peer review.",
+  "title": "Solving Subset Sum Problems using Binary Optimization with Applications in Auditing and Financial Data Analysis",
+  "authors": [
+    "David Biesner",
+    "Rafet Sifa",
+    "Christian Bauckhage",
+    "Bernd Kliem"
+  ],
+  "year": "2022",
+  "journal_or_venue": "TechRxiv (preprint)",
+  "doi": "10.36227/techrxiv.18994160.v1",
+  "abstract_summary": "The paper formulates the problem of finding sum structures in financial tables as subset sum instances and casts them as QUBO problems. It shows how Hopfield networks performing gradient-descent updates can reliably find solutions on both synthetic and real financial data, and discusses implications for specialized hardware and quantum annealing.",
+  "methodology_description": "The authors formulate the subset-sum problem as a QUBO/Ising optimization: for input vector x and target T they minimize (x^T z - T)^2 over binary indicator vector z, yielding P = x x^T and p = 2 T x (Q = 1/4 P, q = 1/2(P 1 - p) in the Ising form). They map this QUBO to a Hopfield network by setting Hopfield weights W = -1/2 P and thresholds θ = 1/2(P 1 - p), and perform gradient-descent-like asynchronous updates of bipolar neurons s ∈ {-1,+1} using the Hopfield update rule si = sign(w_i^T s - θ_i). They use multiple random restarts (many random initializations) and run until energy convergence or a zero-energy solution (exact subset sum) is found. Experiments evaluate performance on both synthetic instances (various n, Xmax, k) and parsed real financial tables (Deutsche Bank Financial Data Supplement Q4 2020), reporting mean time-to-solution, mean number of runs, and success counts. The method is implemented to run many independent Hopfield optimizations in parallel on GPU (reported use of an NVIDIA A100), with initializations executed in batches (reported batch size of 1e4).",
+  "algorithms_used": [
+    "QUBO (quadratic unconstrained binary optimization)",
+    "Ising model formulation",
+    "Hopfield network (gradient descent / energy minimization)",
+    "Random-restart local search (multiple random initializations)"
+  ],
+  "frameworks": [],
+  "experimental_setup": "Implementation ran on a single NVIDIA A100 GPU. Synthetic experiments used up to 1e8 random initializations executed in batches of 1e4; practical run time per experimental set was on the order of minutes (max ~8 minutes reported). Hopfield networks were updated asynchronously by selecting the neuron with maximal change and updating until energy convergence or until E(s)=0, with multiple restarts until a maximum number of runs.",
+  "dataset_used": "Two types of data: (1) Artificially generated subset-sum problems: integers sampled uniformly from intervals [-Xmax, Xmax] with configurations varying n (16, 32, 64, 128, 256), Xmax in {1e4, 1e5, 1e6}, fixed k for target construction, M = 5 samples per configuration. (2) Real financial data: parsed columns from Deutsche Bank Financial Data Supplement Q4 2020 Excel file (link provided in paper). Parsed set comprises 190 independent columns aggregated into groups (e.g., assets: 15 problems, n=17; consincome: 49 problems, n=31; liabilities: 29, n=20; net revenues: 97, n=25). Values are monetary amounts up to multiple billion, exact to cents (≈14 significant figures).",
+  "experiment_input": {
+    "synthetic": {
+      "generation_procedure": "Uniform sampling of n integers in interval [-Xmax, Xmax]; choose k items at random and set T to their sum, yielding a problem instance (x, T).",
+      "configurations": [
+        {
+          "n": 16,
+          "k": 4,
+          "Xmax": [
+            10000.0,
+            100000.0,
+            1000000.0
+          ],
+          "M": 5
+        },
+        {
+          "n": 32,
+          "k": 8,
+          "Xmax": [
+            10000.0,
+            100000.0,
+            1000000.0
+          ],
+          "M": 5
+        },
+        {
+          "n": 64,
+          "k": 8,
+          "Xmax": [
+            10000.0,
+            100000.0,
+            1000000.0
+          ],
+          "M": 5
+        },
+        {
+          "n": 128,
+          "k": 8,
+          "Xmax": [
+            10000.0,
+            100000.0,
+            1000000.0
+          ],
+          "M": 5
+        },
+        {
+          "n": 256,
+          "k": 8,
+          "Xmax": [
+            10000.0,
+            100000.0,
+            1000000.0
+          ],
+          "M": 5
+        }
+      ]
+    },
+    "real_financial": {
+      "source": "Deutsche Bank Financial Data Supplement Q4 2020 (Excel file)",
+      "parsed_columns": [
+        {
+          "group": "assets",
+          "M": 15,
+          "n": 17,
+          "Xmin": 17000000.0,
+          "Xmax": 150000000000000.0
+        },
+        {
+          "group": "consincome",
+          "M": 49,
+          "n": 31,
+          "Xmin": -2500000000000.0,
+          "Xmax": 2500000000000.0
+        },
+        {
+          "group": "liabilities",
+          "M": 29,
+          "n": 20,
+          "Xmin": 25000000000.0,
+          "Xmax": 150000000000000.0
+        },
+        {
+          "group": "net revenues",
+          "M": 97,
+          "n": 25,
+          "Xmin": -53000000000.0,
+          "Xmax": 2500000000000.0
+        }
+      ],
+      "preprocessing": "Parsing of Excel tables into numeric columns. No additional preprocessing steps (e.g., normalization) are described."
+    }
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "For each instance (x, T), form QUBO objective E(z) = (x^T z - T)^2 and compute P = x x^T and p = 2 T x.",
+      "Convert to Ising form (s in {-1,+1}) with Q = 1/4 P and q = 1/2(P 1 - p).",
+      "Map to Hopfield network: set weights W = -2 Q = -1/2 P and thresholds θ = q = 1/2(P 1 - p).",
+      "Initialize network state s randomly in {-1,+1}^n.",
+      "Iteratively update neurons asynchronously: compute gradient ∇E = -W s + θ, select index i = argmin ∇E_i (index of maximum change), update si = sign(w_i^T s - θ_i).",
+      "Check energy E(s) after updates; if E(s) == 0 (exact solution) return subset {xi | si = 1}.",
+      "If not found, perform another random initialization (random-restart) until solution found or a maximum number of initializations is reached.",
+      "Run many independent Hopfield networks in parallel (GPU batches) to exploit parallelism."
+    ],
+    "stopping_criteria": "Energy convergence per Hopfield run or detection of E(s)=0; global stopping when a solution is found or when maximum number of random initializations (reported up to 1e8 across batches) or wall-time (~8 minutes for large experiment) is reached.",
+    "implementation_notes": "Updates are single-neuron (asynchronous) updates choosing the neuron with maximum gradient change. Multiple random restarts are batched (reported batch size 1e4) for GPU parallelism."
+  },
+  "experiment_output": {
+    "output_format": "Per-instance: whether a zero-energy (exact) solution was found; the solution subset indices {i | si = 1} when found.",
+    "metrics_reported": [
+      "Mean time-to-solution (seconds) per configuration/group",
+      "Mean number of runs (random initializations) until solution",
+      "Number of problem instances solved (success count Mfound out of M)"
+    ],
+    "baselines": "No explicit baseline optimization algorithms (e.g., dynamic programming, SAT solvers, or specialized subset-sum solvers) are reported for direct comparison.",
+    "results_summary": "On synthetic data most configurations were solved reliably; one hard configuration (n=256, Xmax=1e6) only had 2 of 5 solved within the allocated runs. On real financial columns all parsed problems were solved within the reported limits. Reported metrics are tabulated mean times and mean runs per configuration/group."
+  },
+  "experiment_parameters": {
+    "n_values_tested": [
+      16,
+      32,
+      64,
+      128,
+      256
+    ],
+    "k_values_for_target": {
+      "16": 4,
+      "32": 8,
+      "64": 8,
+      "128": 8,
+      "256": 8
+    },
+    "Xmax_values": [
+      10000.0,
+      100000.0,
+      1000000.0
+    ],
+    "M_synthetic_per_config": 5,
+    "real_M_per_group": {
+      "assets": 15,
+      "consincome": 49,
+      "liabilities": 29,
+      "net revenues": 97
+    },
+    "initializations_max_total_reported": 100000000.0,
+    "batch_size_initializations": 10000.0,
+    "GPU": "NVIDIA A100",
+    "stopping_condition": "E(s)=0 or convergence of Hopfield energy; global cap on number of random restarts / wall-time (~8 minutes for reported runs)",
+    "update_scheme": "Asynchronous single-neuron updates selecting index of maximum gradient change",
+    "weight_mapping": "W = -1/2 * (x x^T), theta = 1/2( (x x^T) 1 - 2 T x )"
+  },
+  "hardware_details": {
+    "device": "NVIDIA A100 GPU",
+    "parallelization": "Independent Hopfield network initializations batched (reported batch size 1e4) and executed in parallel on GPU",
+    "runtime_notes": "Reported total wall-time for large experimental sweep ~8 minutes on the single A100 for up to 1e8 initializations across batches"
+  },
+  "reproducibility_notes": "The paper provides a clear mathematical mapping (equations) and pseudocode (Algorithm 1) and cites the real-data source (Deutsche Bank FDS Excel). However, no implementation code or repository is provided. Important implementation details (exact smax, numeric tolerances for convergence, random seed handling, and low-level GPU implementation choices) are not fully specified; these would be needed to fully reproduce reported timings. Data source for the real dataset is given via a URL in the paper.",
+  "key_findings": [
+    "[speculative] The subset-sum problem can be formulated as a QUBO / Ising model (derivation: P = x x^T, p = 2 T x, conversion to s ∈ {−1,1} provided).",
+    "[supported] A Hopfield network (gradient-descent on the Hopfield energy) can be used to solve the QUBO formulation of subset-sum by mapping Q and q to weights W and thresholds θ.",
+    "[supported] In experiments on artificial datasets (various n and value magnitudes) the Hopfield-based algorithm reliably found correct subset-sum solutions in almost all tested configurations.",
+    "[supported] On a parsed real-world financial dataset (190 independent columns from Deutsche Bank reports) the algorithm found solutions for all tested sum-finding problems in the study.",
+    "[supported] Empirical results indicate runtime/search effort is more strongly affected by the magnitude of numbers (Xmax) than by the number of items n in the tested regimes.",
+    "[supported] For large-scale artificial configurations (n=256, Xmax=1e6) the algorithm struggled: only 2 of 5 sampled problems were solved within the maximum number of runs.",
+    "[supported] The method was implemented and executed on GPU (NVIDIA A100); the authors state that multiple independent Hopfield networks/initializations can be parallelized efficiently on GPUs.",
+    "[speculative] The authors suggest future application of specialized classical hardware (FPGAs) and quantum algorithms / quantum annealing to this QUBO formulation as promising directions.",
+    "[speculative] The authors claim this approach could be integrated into smart auditing software to assist auditors (stated as near-term deployment outlook)."
+  ],
+  "results_summary": "The paper formulates subset-sum as a QUBO/Ising problem and maps that to Hopfield network weights and thresholds. Using gradient-descent updates with multiple random restarts (implemented on an NVIDIA A100 GPU), the authors empirically solved a variety of artificial subset-sum instances and real financial-table sum-detection problems. Results show reliable recovery of correct subsets across most tested configurations; runtime and number of restarts grow with the magnitude of values, and one very large configuration (n=256, Xmax=1e6) only partially succeeded. The authors report that the approach is parallelizable on GPUs and discuss future work toward FPGA and quantum implementations and deployment in auditing tools.",
+  "performance_claims": [
+    "Ran up to 1e8 random initializations in batches of 1e4 on an NVIDIA A100 GPU (maximum wall-clock testing window ≈ 8 minutes).",
+    "Artificial data: for n=16, Xmax=1e4 mean time ≈ 0.4s, mean runs ≈ 2.0e4; n=16, Xmax=1e6 mean time ≈ 1.1s, mean runs ≈ 4.9e4.",
+    "Artificial data: for n=32, Xmax=1e6 mean time ≈ 77.2s, mean runs ≈ 3.4e6.",
+    "Artificial data: for n=64, Xmax=1e6 mean time ≈ 40.1s, mean runs ≈ 1.7e6.",
+    "Artificial data: for n=128, Xmax=1e6 mean time ≈ 18.4s, mean runs ≈ 7.3e5.",
+    "One hard configuration (n=256, Xmax=1e6): only 2 of 5 sampled problems were solved within allotted runs.",
+    "Real financial columns (examples): 'assets' (n=17, M=15) mean time 0.4s, mean runs 1.0e4 (15/15 solved); 'net revenues' (n=25, M=97) mean time 17.6s, mean runs 4.6e5 (97/97 solved); 'consincome' (n=31, M=49) mean time 30.4s, mean runs 8.0e5 (49/49 solved)."
+  ],
+  "quantum_advantage_claim": "not-applicable",
+  "quantum_advantage_detail": "The paper does not claim a demonstrated quantum advantage. It formulates subset-sum as a QUBO (which enables potential quantum/annealing approaches) and mentions future work and outlook for quantum algorithms and special-purpose hardware, but provides no quantum experiments or claims of superior performance using quantum devices.",
+  "limitations": [
+    "Hopfield networks are not guaranteed to find the global optimum; they can get stuck in local minima and therefore require multiple random initializations (author-stated)",
+    "Some hard problem instances are not reliably solved within the specified iteration budget (e.g., n=256, Xmax=1e+6 only 2/5 samples solved) (author-stated)",
+    "Computation time can grow substantially with the magnitude of the numbers (Xmax) and with problem size; experiments used many restarts and nontrivial GPU time (author-stated)",
+    "[inferred] The QUBO/weight matrix is dense (P = x x^T) and can have very large entries, potentially causing numerical stability, scaling, and embedding issues on specialized or quantum hardware",
+    "[inferred] No theoretical guarantees or runtime/success-probability analysis are provided for the Hopfield-based solver",
+    "[inferred] Experimental evaluation is limited (one real-world financial dataset, small M per artificial configuration), so generalizability to diverse real-world data is uncertain",
+    "[inferred] No head-to-head comparison to classical exact (dynamic programming, branch-and-bound) or other heuristic/quantum solvers was reported",
+    "[inferred] The method implicitly assumes exact integer arithmetic; robustness to noise, rounding errors, or OCR-induced extraction errors was not evaluated",
+    "[inferred] The decision rule checks for exact zero energy E(s)=0; handling of approximate/near-miss sums is not addressed",
+    "[inferred] Scalability and practicality for much larger n or for deployment in production workflows (without specialized acceleration) remain uncertain",
+    "[inferred] The approach can be resource-intensive because of the need for many random restarts, which may limit practicality without hardware acceleration"
+  ],
+  "open_questions": [
+    "Can Hopfield-network-based QUBO optimization scale reliably to much larger and harder subset sum instances encountered in practice?",
+    "How does the Hopfield approach compare (accuracy, runtime, resource use) to classical exact algorithms (dynamic programming), modern combinatorial solvers (ILP/SAT), and other heuristics?",
+    "What are the best strategies to reduce dependence on many random initializations and to escape local minima more effectively?",
+    "How can the dense, large-magnitude QUBOs arising from financial data be efficiently embedded and executed on specialized hardware (FPGAs) or quantum annealers with limited connectivity?",
+    "What are the implications of this QUBO formulation and Hopfield approach for quantum computing algorithms and hardware (quantum annealing, adiabatic QC)?",
+    "How robust is the method to noisy, rounded, or OCR-extracted financial data (e.g., imperfect table parsing, sign/format errors)?",
+    "How does the multiplicity of solutions for a target (many vs. unique solutions) affect difficulty and the algorithm's ability to find meaningful/semantically correct sum structures?",
+    "What are the practical runtime and resource limits for deploying this method in production auditing software and real auditing workflows?",
+    "How should approximate matches or near-zero residual sums be treated in the auditing context (tolerance thresholds, false positives/negatives)?",
+    "Can problem structure (e.g., rank-1 nature of P = x x^T) be exploited to design more efficient solvers or hardware mappings?"
+  ],
+  "future_work": [
+    "Investigate application of special purpose hardware (FPGAs) for QUBO-solving (author-stated)",
+    "Investigate implications of this algorithm architecture for quantum computing applications (author-stated)",
+    "Prepare and deploy the algorithm into existing smart auditing software to assist auditors (author-stated)"
+  ],
+  "topic_tags": [
+    "fraud-detection"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — QUBO formulation of subset-sum problems and mapping to Hopfield networks allows efficient classical solution of many real financial-table instances (n≈17–31) on GPU with reported mean time-to-solution and success counts.",
+    "#idea:hybrid-approach — The paper frames the problem as a QUBO/Ising model (suitable for quantum annealers) but demonstrates a highly-parallel classical implementation (many random-restart Hopfield runs on GPU), highlighting a pragmatic classical-to-quantum transition pathway.",
+    "#idea:near-term-feasibility — Large-scale batching of random initializations (up to 1e8 in experiments, batched at 1e4) and asynchronous single-neuron updates yield practical wall-clock performance (minutes) on realistic financial data."
+  ],
+  "contradictions": [
+    "The paper demonstrates that classical Hopfield-network-based QUBO solvers running on GPU can reliably solve parsed financial-table subset-sum instances, which challenges implicit claims that specialized quantum annealers are necessary or uniquely superior for these QUBO instances (contradiction: classical-vs-quantum).",
+    "Although the method solves many real and small-to-moderate synthetic instances efficiently, a hard synthetic instance (n=256, Xmax=1e6) remained largely unsolved within the allocated runs, indicating limits to scalability and contradicting any blanket claim that the approach (or QUBO methods generally) scale straightforwardly to much larger problem sizes (contradiction: scalability)."
+  ]
+}

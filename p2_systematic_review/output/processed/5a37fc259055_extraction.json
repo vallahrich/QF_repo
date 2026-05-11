@@ -1,0 +1,157 @@
+{
+  "source_type": "conference-paper",
+  "source_type_confidence": "high",
+  "reasoning": "The document carries an IEEE conference header (2026 IEEE 23rd Mediterranean Electrotechnical Conference, MELECON), includes an abstract, methods, experimental results, and references—all structural cues of a peer-reviewed conference paper.",
+  "title": "Quantum Optimization for Network Capacity Expansion of Microgrid Models via Grover-Enhanced QAOA",
+  "authors": [
+    "Giulio Pisaneschi",
+    "Davide Poli",
+    "Davide Fioriti"
+  ],
+  "year": "2026",
+  "journal_or_venue": "2026 IEEE 23rd Mediterranean Electrotechnical Conference (MELECON)",
+  "doi": "10.1109/MELECON64486.2026.11418844",
+  "abstract_summary": "The paper proposes a compact QAOA instantiation that combines a Grover-style feasibility-aware mixer, a diagonal cost Hamiltonian, and a pragmatic grid+refine parameter search to solve constrained combinatorial microgrid network expansion problems. Evaluated on an 11-qubit instance derived from a PyPSA model and benchmarked against a Gurobi global optimum in noiseless statevector simulation, the approach elevates the empirical probability of the classical optimum and improves feasible-subspace signal-to-noise ratio, while highlighting trade-offs and avenues for improved parameterization and hardware validation.",
+  "methodology_description": "The authors construct a compact, application-driven instantiation of QAOA for a constrained microgrid network expansion problem. They start from a PyPSA model of a small distribution network (N=3 buses) and solve the corresponding MILP with Gurobi to obtain the global optimum and to enumerate feasible binary assignments. The classical linear cost is encoded as a diagonal cost Hamiltonian on n=11 qubits using the Pauli-Z mapping, with an explicit identity shift (implementation Hamiltonian H_impl = 15 I + sum_i a_i Z_i where a equals the raw coefficient vector). Feasibility is enforced with a Grover-style oracle that flips the phase of exactly the feasible basis states; the mixer is implemented as repeated Grover iterates (the Grover operator raised to an integer power per QAOA layer). The phase separator is UC(γ) = exp(−i γ H) with continuous γ-parameters, while the mixer parameter β is treated as a discrete integer count of Grover iterations. Optimization is handled via a two-stage \"grid + refine\" strategy: a coarse grid search over discrete β-vectors followed by continuous refinement of the γ angles using L-BFGS-B while keeping β fixed. A soft penalty on feasible mass is added to the objective (penalty λ=100, target feasible mass τ=0.95) to steer solutions toward parameter regions with high probability on the feasible subspace. Circuits are executed in a noiseless statevector simulator (Qiskit Aer AerSimulator, method=\"statevector\"), transpiled with optimization_level=1; exact expectation values are computed from the statevector and empirical statistics are estimated by drawing Nshots=5000 samples per evaluated parameter set. Results are benchmarked against the Gurobi global optimum (binary vector 11110111011, cost −5), reporting expected cost, feasible mass, and empirical probability of the classical optimum across QAOA depths (p=1..4).",
+  "algorithms_used": [
+    "QAOA",
+    "Grover amplitude amplification (Grover mixer)",
+    "L-BFGS-B (classical continuous optimizer)",
+    "Grid search (coarse discrete search over Grover iteration counts)",
+    "Gurobi (MILP solver)"
+  ],
+  "frameworks": [
+    "PyPSA",
+    "Qiskit (Aer AerSimulator)",
+    "Gurobi"
+  ],
+  "experimental_setup": "Noiseless statevector simulation using Qiskit Aer AerSimulator with method='statevector'; circuits transpiled with Qiskit optimization_level=1. Simulated problem size: 11 qubits (2^11 = 2048 basis states). QAOA depths explored p = 1..4. For sampling-based metrics, Nshots = 5000 samples were drawn from the simulated statevector.",
+  "dataset_used": "",
+  "experiment_input": "Synthetic microgrid instance generated with PyPSA: small distribution network with 3 buses and candidate generators/lines. Decision problem encoded as an 11-binary-variable MILP (variables represent modular generator and line capacity increments, conductor selectors, and load-serve indicators). Search space size 2048 bitstrings. Gurobi used to enumerate feasibles and produce the reference global optimum (11110111011). Cost coefficient vector used: c = [1,2,0,0,6,0,0,1,-5,-5,-5].",
+  "experiment_process": "1) Build PyPSA microgrid model and formulate MILP; solve with Gurobi to obtain global optimum and enumerate feasible set F. 2) Map the linear cost to a diagonal cost Hamiltonian via Pauli-Z (implemented as H_impl = 15 I + sum_i a_i Z_i). 3) Construct a Grover oracle that phase-flips exactly states in F and a diffusion operator; define the mixer in each QAOA layer as r discrete Grover iterations UM(β)=G^r. 4) Initialize the quantum state as the uniform superposition H^{⊗n}|0^n⟩. 5) Run QAOA layers alternating UC(γ)=exp(−iγ H_impl) and UM(β). 6) Parameter search: coarse grid sweep over integer β-vectors (Grover counts per layer), then refine γ parameters using L-BFGS-B while keeping β fixed. 7) Use a loss L(β,γ)=E[C]+λ·max(0,τ−m_F) with τ=0.95 and λ=100 to bias toward high feasible mass. 8) Evaluate each parameter set in noiseless statevector simulator to compute exact expectations and draw Nshots=5000 samples for empirical frequencies (feasible mass m_F, p_exact). 9) Compare QAOA outputs to Gurobi reference (expected cost, probability mass on classical optimum).",
+  "experiment_output": "Outputs include exact expectation values of the classical cost E[C] computed from the statevector, feasible mass m_F (total probability on feasible states), empirical/sample-based frequencies (Nshots=5000) including the empirical probability p_exact of the Gurobi-optimal bitstring, and rankings of most probable bitstrings. Baseline: Gurobi global optimum and objective value. Reported metrics: p_exact across QAOA layers (e.g., p_exact ≈ 0.0166 for p=1, ≈0.1730 for p=3), feasible mass, and distribution modes; results reported in tables/summary comments.",
+  "experiment_parameters": {
+    "n_qubits": 11,
+    "search_space_size": 2048,
+    "cost_coefficients": [
+      1,
+      2,
+      0,
+      0,
+      6,
+      0,
+      0,
+      1,
+      -5,
+      -5,
+      -5
+    ],
+    "cost_identity_shift": 15,
+    "QAOA_layers_tested": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "mixer_parameterization": "β treated as integer Grover iteration counts per layer (r ≥ 0)",
+    "phase_parameterization": "γ continuous in (0, π], optimized with L-BFGS-B",
+    "feasible_mass_threshold_tau": 0.95,
+    "feasible_mass_penalty_lambda": 100,
+    "simulator": "Qiskit Aer AerSimulator (statevector)",
+    "transpile_optimization_level": 1,
+    "shots_for_sampling": 5000,
+    "classical_optimizer_for_gamma_refinement": "L-BFGS-B",
+    "grid_search_over_beta": "coarse discrete sweep over plausible Grover iteration counts"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit Aer AerSimulator",
+    "simulator_method": "statevector",
+    "transpile_optimization_level": 1,
+    "qpu_model": null,
+    "cloud_provider": null
+  },
+  "reproducibility_notes": null,
+  "key_findings": [
+    "[supported] A Grover-style feasibility-aware mixer combined with a diagonal cost Hamiltonian can increase the quantum probability mass on the classical global optimum in an 11-qubit microgrid design instance.",
+    "[supported] On the tested 11-qubit instance (2^11 = 2048 search space) the classical optimal bitstring 11110111011 (cost = -5) attains empirical probabilities of ~0.0166 at 1 QAOA layer, (not among top-5) at 2 layers, ~0.1730 at 3 layers, and ~0.1172 at 4 layers (noiseless statevector simulation, Nshots=5000 sampling).",
+    "[supported] The Grover mixer concentrates amplitude into the feasible subspace (higher feasible mass) and thus improves the signal-to-noise ratio between feasible and infeasible states, enabling the phase-separator to better discriminate low-cost feasible solutions.",
+    "[supported] A mixed discrete–continuous optimisation strategy (coarse grid over integer Grover-iteration counts β followed by continuous refinement of γ angles with L-BFGS-B) is an effective pragmatic workflow for this ansatz in simulation.",
+    "[supported] The implementation uses an explicit oracle that marks exactly the classically feasible states and a diagonal cost operator built from single-qubit Z terms with an identity shift (+15) to keep energies nonnegative.",
+    "[supported] Behaviour is non-monotonic with circuit depth: increasing layer count can both improve and degrade the probability of the classical optimum depending on parameter alignment (observed on layers 1–4).",
+    "[speculative] The authors argue feasibility-focused mixing is a promising pathway to scale constrained combinatorial QAOA and to guide future hardware validation, but no hardware or large-scale empirical scaling results are presented.",
+    "[speculative] The paper suggests that smoother mixers, improved parameterisations, and targeted search heuristics could mitigate the discrete/complex optimisation landscape introduced by integer Grover iterations."
+  ],
+  "results_summary": "The paper proposes and simulates an 11-qubit QAOA variant that uses a Grover-style feasibility oracle as the mixer and a diagonal cost Hamiltonian to solve a constrained microgrid expansion MILP derived from a PyPSA model. In noiseless statevector simulation with a grid+refine parameter search and a feasibility-mass penalty, the classical global optimum (found by Gurobi) is present at shallow depth and is most strongly amplified at three QAOA layers (empirical probability ≈0.173). The Grover mixer concentrates amplitude in the feasible subspace, improving signal-to-noise for cost discrimination, but performance varies non-monotonically with depth and the study is limited to simulations on a compact 11-qubit instance (no hardware/noise or large-scale scaling claims).",
+  "performance_claims": [
+    "Problem size: 11 qubits (search space 2^11 = 2048).",
+    "Classical global optimum (Gurobi): bitstring 11110111011 with objective value -5.",
+    "Sampling: Nshots = 5000 from noiseless statevector-derived distribution.",
+    "Empirical probability of classical optimum: 1 layer -> 0.0166; 2 layers -> not among top-5; 3 layers -> 0.1730; 4 layers -> 0.1172.",
+    "At 3 layers the classical optimum was essentially tied with another top empirical outcome (00000000000) with p ≈ 0.1750.",
+    "An implemented cost Hamiltonian uses raw coefficient vector as Z-weights and an identity offset of +15 to shift energies nonnegative."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The work demonstrates a proof-of-concept increase in probability mass on a classical optimum for a small (11-qubit) instance in noiseless simulation, but does not claim or demonstrate a computational or scaling advantage over classical solvers; hardware noise, runtime, and large-N scaling are not addressed, so any suggestion of quantum advantage remains speculative.",
+  "limitations": [
+    "Small problem size (11 qubits / 2048 classical states): results are demonstrated only on a modest instance and may not generalise to larger microgrid models (author-stated).",
+    "Noiseless statevector simulation: experiments ignore hardware noise, decoherence, gate errors and other realistic device imperfections (author-stated).",
+    "Discrete treatment of the Grover-iteration parameter β creates a non‑smooth, mixed discrete–continuous optimisation landscape that complicates optimisation and gradient-based methods (author-stated).",
+    "Non-monotonic dependence on circuit depth and parameters: increasing QAOA depth can both improve and worsen probability mass on the true optimum, indicating sensitivity of the approach to parameter choices (author-stated).",
+    "Grover mixer marks feasibility but not objective quality: the oracle preserves/enhances feasible subspace but cost discrimination is left to phase separators, which can fail to focus amplitude on the true optimum (author-stated/inferred).",
+    "[inferred] Circuit-depth and gate-count overhead of implementing a Grover oracle + diffusion may be large on hardware, limiting near-term applicability.",
+    "[inferred] The approach's sampling requirements and shot-noise behavior on hardware were not characterised; finite-shot effects could reduce observed amplification of the optimum.",
+    "[inferred] Implementation choices (e.g. using raw coefficient vector as Z-weights and adding an identity offset of +15) may influence dynamics and require tuning for other instances.",
+    "[inferred] The feasibility oracle construction assumes ability to mark all feasible states exactly; building such oracles for larger or more complex MILPs may be challenging (ancilla/workspace, classical-quantum coupling).",
+    "[inferred] Dependence on hyperparameters in optimisation workflow (grid ranges for β, threshold τ=0.95, penalty λ=100, shot count) introduces practical tuning burden and possible sensitivity."
+  ],
+  "open_questions": [
+    "How does the Grover-mixer QAOA scale with problem size (larger numbers of binary variables / realistic microgrid instances)?",
+    "How robust is the proposed method to realistic hardware noise, limited qubit connectivity, and finite-shot sampling?",
+    "Can the discrete Grover-count parametrisation be relaxed or smoothed to enable gradient-based optimisation while preserving feasibility amplification?",
+    "What are efficient, hardware-friendly constructions of the feasibility oracle and diffusion operator for larger MILP-derived constraints?",
+    "How many Grover iterations per layer are optimal in practice, and how does that scale with the feasible fraction f = |F|/2^n?",
+    "How sensitive are results to implementation choices such as the identity offset, cost-to-Z mapping, and penalty parameters (τ, λ)?",
+    "Can alternative mixers achieve similar feasibility focusing while yielding smoother optimisation landscapes (and better trainability)?",
+    "How does Grover-mixer QAOA compare (in run-time, solution quality, resource cost) to classical heuristics and specialised MILP solvers on larger and more diverse problem instances?",
+    "What are the trade-offs between preserving feasible subspace concentration versus exploring diverse feasible candidates for multi-objective or robust planning?",
+    "How to integrate this approach into near-real-time microgrid reconfiguration workflows, considering time constraints and update frequency?"
+  ],
+  "future_work": [
+    "Investigations into improved parametrisations (mixed discrete–continuous strategies) to handle integer Grover counts more smoothly.",
+    "Design and testing of smoother mixers that target feasibility while improving trainability and enabling gradient-based optimisation.",
+    "Development of more targeted search heuristics for the discrete β search (beyond coarse grid + refine) to better navigate the mixed optimisation landscape.",
+    "Scaling experiments and hardware validation: running the approach on noisy quantum hardware and larger problem instances to assess practical performance.",
+    "Exploration of parameter-selection sensitivity (e.g. identity offsets, penalty thresholds, shot counts) and development of robust default choices or adaptive schemes."
+  ],
+  "topic_tags": [],
+  "methodology_tags": [
+    "variational-nisq",
+    "grover-search",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "medium",
+  "relevance_phase3": "medium",
+  "key_ideas": [
+    "#idea:quantum-advantage — A Grover-style feasibility-aware mixer combined with a diagonal cost Hamiltonian and QAOA layers can substantially increase the empirical probability mass on a known classical global optimum in an 11-qubit microgrid expansion instance (e.g., p_exact ~0.0166 at p=1 up to ~0.1730 at p=3 in noiseless simulation).",
+    "#idea:hybrid-approach — A two-stage 'grid + refine' classical search (coarse discrete grid over Grover iteration counts β followed by continuous L-BFGS-B optimization of γ) is effective to tune the discrete-continuous parameterization of the Grover-enhanced QAOA.",
+    "#idea:near-term-feasibility — The Grover-iterator mixer uses an integer-count parameterization (discrete β as number of Grover iterations) and a feasibility-penalty loss to steer probability mass into feasible subspaces, a pragmatic design intended for NISQ-era circuits and constrained combinatorial problems.",
+    "#idea:hybrid-approach — Using a soft feasible-mass penalty (λ=100, target τ=0.95) in the classical loss biases optimization toward parameter regions with high feasible-subspace signal-to-noise, improving practical recoverability of feasible/optimal bitstrings in sampling.",
+    "#idea:quantum-advantage — Benchmarking against a classical MILP solver (Gurobi) in statevector simulation provides a concrete baseline: the method improves sampling probability of the known optimum but is only demonstrated on a small (n=11) instance."
+  ],
+  "contradictions": [],
+  "limitation_tags": [
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:no-empirical-validation",
+    "limitation:simulation-only"
+  ]
+}

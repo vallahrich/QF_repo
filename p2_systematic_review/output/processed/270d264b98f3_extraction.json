@@ -1,0 +1,199 @@
+{
+  "source_type": "peer-reviewed-empirical",
+  "source_type_confidence": "high",
+  "reasoning": "Appears in IEEE TRANSACTIONS (journal header, DOI, received/accepted dates, recommended for acceptance), includes abstract, methods, simulations (Qiskit) and results, and full citations—indicating a peer‑reviewed empirical research article.",
+  "title": "Quantum Option Proﬁt and Loss Encoding for Risk Assessment",
+  "authors": [
+    "Jinjing Shi",
+    "Bingjie Yuan",
+    "Yuhu Lu",
+    "Shichao Zhang",
+    "Xuelong Li"
+  ],
+  "year": "2026",
+  "journal_or_venue": "IEEE Transactions on Emerging Topics in Computational Intelligence",
+  "doi": "10.1109/TETCI.2025.3593781",
+  "abstract_summary": "The paper introduces QOPLE (Quantum Option Profit and Loss Encoding) and a Quantum Option Risk Assessment (QORA) model to encode option profit-and-loss distributions and compute Value at Risk for European call options on quantum hardware. By using MLE-based amplitude estimation and binary search, the approach targets NISQ devices, reducing ancillary qubit and controlled-operation requirements while retaining a quadratic speedup over classical Monte Carlo; Qiskit simulations report up to 99% accuracy and at least 15% fewer ancillary qubits compared to existing quantum algorithms.",
+  "methodology_description": "The paper proposes a circuit-level methodology for option risk assessment based on a new Quantum Option Profit and Loss Encoding (QOPLE) operator A = V P L and an associated Quantum Option Risk Assessment (QORA) workflow. L loads a truncated-and-discretized Black–Scholes–Merton (log-normal) distribution of the underlying asset price into an n-qubit register using Qiskit uncertainty-modeling circuits; P computes option payoff (PnL) by comparing each discretized price to the strike K and encoding the zero/non-zero payoff via an auxiliary qubit; V performs a controlled comparison of each payoff to a threshold l and flips a target qubit when PnL ≤ l, thereby encoding the cumulative distribution P[PT ≤ l] into the target amplitude. Amplitude (probability) of the target qubit is estimated using an amplitude-amplification sampling strategy combined with maximum-likelihood estimation (MLE) rather than phase-estimation-based QAE: multiple Grover-style amplification counts fq (exponentially increasing sequence) are applied, each followed by Nq projective measurements; the collected counts form a likelihood function L(h; θa) which is maximized to recover the amplitude a = sin^2 θa. A classical binary search over l (with bounds set to PnL min/max) is used, calling the quantum CDF-estimation subroutine repeatedly until the smallest l with P[PT ≤ l] ≥ α is found (VaR at confidence α). Experiments are simulations implemented in IBM Qiskit: option distributions are truncated to ±3σ, discretized with 2^n equidistant samples, and loaded into n-qubit registers; parameters reported include n (sampling qubits varied e.g. 3..7), MLE amplification schedule m = 6 producing fq = {0,1,2,4,8,16,32}, Nq = 100 per fq, α = 0.95, and classical Monte Carlo baseline with 10,000 samples. Results reported include estimated VaR, relative error vs classical Monte Carlo, CDF plots and resource comparisons (ancillary qubits and controlled-amplification counts) between MLE-based amplitude estimation and standard QAE.",
+  "algorithms_used": [
+    "QOPLE (Quantum Option Profit and Loss Encoding)",
+    "QORA (Quantum Option Risk Assessment)",
+    "Amplitude amplification (Grover-style)",
+    "MLE-based Amplitude Estimation (Amplitude estimation without phase estimation)",
+    "Quantum Amplitude Estimation (QAE) (as baseline / comparison)",
+    "Binary search (classical) for VaR"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Simulation using IBM Qiskit (uncertainty-modeling module) on classical simulator; no physical QPU specified. Simulated European call options generated from Black–Scholes–Merton log-normal distribution, truncated to ±3σ and discretized into 2^n samples.",
+  "dataset_used": "Synthetic option price distributions generated from the Black–Scholes–Merton model (log-normal ST), truncated to ±3 standard deviations around the mean and discretized into 2^n equidistant samples. Two example European call option parameterizations were tested (S0=2.0, σ=0.4, T=40/365, r=0.05) with strikes K=1.896 and K=1.5.",
+  "experiment_input": {
+    "source": "simulated from Black–Scholes–Merton model (not real market data)",
+    "size": "discretized to 2^n samples (n varied; examples: n=3,4,...,7; up to 128 samples when n=7)",
+    "preprocessing": "truncate ST to [STmin, STmax] = mean ± 3σ, equidistant sampling across interval, compute sample probabilities from log-normal PDF, normalize probabilities, map samples to integer indices i and linear mapping to ST (example for n=3: ST = 0.229*i + 1.209)."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "1) Choose sampling resolution n and compute discretized ST samples and their probabilities from BSM log-normal distribution (truncated ±3σ).",
+      "2) Use Qiskit uncertainty-modeling routines to implement L and load the discrete distribution into an n-qubit register.",
+      "3) Implement comparator circuit P: compare each encoded ST to encoded strike K (z-register) and set auxiliary qubit c to mark ST ≤ K (maps payoffs to 0 vs positive).",
+      "4) Implement comparator circuit V: controlled by c, compare payoff PT to threshold l (encoded in s-register) and flip the target qubit when PT ≤ l; prepare state A = V P L.",
+      "5) For a chosen l, perform amplitude amplification sequence with amplification counts fq (exponentially increasing sequence) using Grover-type operations; for each fq perform Nq projective measurements on the target qubit to collect counts hq.",
+      "6) Build likelihood L(h; θa) from measurement counts and perform classical MLE to estimate θa (hence amplitude a = sin^2 θa) — this yields estimate of P[PT ≤ l].",
+      "7) Use a classical binary search over l (bounds = min/max PnL) and repeat steps 2–6 until smallest l with estimated P[PT ≤ l] ≥ α is found (VaR).",
+      "8) Compare quantum-estimated VaR against classical Monte Carlo baseline (10,000 samples) and against standard QAE where used."
+    ],
+    "parameters_and_iterations": {
+      "amplification_sequence": "fq ∈ {0,1,2,4,8,16,32} (exponential sequence, m=6 implying 7 terms)",
+      "measurements_per_fq": "Nq = 100",
+      "binary_search_repeats": "depends on discretization and desired precision; theoretical complexity O(log2((lmax-lmin)/ε))",
+      "VaR_confidence": "α = 0.95",
+      "MLE_repetitions_per_l": "probability measured three times per l and averaged (per text)"
+    }
+  },
+  "experiment_output": {
+    "format": "Estimated VaR (value of l) at confidence level α; estimated cumulative probability P[PT ≤ l]; plots of loaded price distribution, PnL distribution, and CDFs; resource metrics (ancillary qubits, number of controlled-amplification operations); relative error vs classical Monte Carlo baseline.",
+    "metrics_reported": [
+      "VaR value at α (numeric)",
+      "Relative error compared to classical Monte Carlo (%)",
+      "Accuracy statements (e.g., up to 99% accuracy; relative error within 1% for n=7)",
+      "Quantum resource use: ancillary qubit counts and controlled-amplification counts; reduction percentages vs QAE (ancillas reduced by ≥15%, controlled amplifications reduced ~3× in their comparison)"
+    ],
+    "baselines": [
+      "Classical Monte Carlo with 10,000 samples",
+      "Standard QAE (phase-estimation based) for comparison"
+    ]
+  },
+  "experiment_parameters": {
+    "sampling_qubits_n": [
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "amplification_levels_m": 6,
+    "amplification_sequence_fq": [
+      0,
+      1,
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "measurements_per_fq_Nq": 100,
+    "VaR_confidence_alpha": 0.95,
+    "classical_baseline_samples": 10000,
+    "distribution_truncation": "±3σ around mean",
+    "discretization": "2^n equidistant samples",
+    "MLE_repeats_per_l": 3,
+    "example_option_params": {
+      "S0": 2.0,
+      "sigma": 0.4,
+      "T_days": 40,
+      "T_years": "40/365",
+      "r": 0.05,
+      "strike_examples": [
+        1.896,
+        1.5
+      ]
+    }
+  },
+  "hardware_details": {
+    "simulator": "Qiskit (IBM Qiskit simulator / uncertainty modeling module)",
+    "qpu_model": null,
+    "cloud_provider": "IBM"
+  },
+  "reproducibility_notes": null,
+  "key_findings": [
+    "[speculative] The paper introduces QOPLE (Quantum Option Profit and Loss Encoding), a three-step operator decomposition A = V P L that (i) loads option price distributions (L), (ii) computes option profit-and-loss (P), and (iii) computes cumulative distribution function (V) for PnL.",
+    "[supported] The authors built a QORA (Quantum Option Risk Assessment) model that combines QOPLE with amplitude estimation based on maximum likelihood estimation (MLE) and binary search to estimate Value-at-Risk (VaR).",
+    "[supported] Qiskit simulations of European call options show the proposed pipeline can reproduce option price distributions and payoff distributions (figures provided), demonstrating feasibility of the encoding and the V/P/L operations.",
+    "[supported] Simulations report up to 99% accuracy in VaR estimation when sampling-qubit configuration is appropriately chosen.",
+    "[supported] For the tested instances, when using n = 7 sampling qubits the relative error between the quantum simulation result and a classical Monte Carlo baseline (10,000 samples) was within 1%.",
+    "[supported] The MLE-based amplitude estimation in simulation shows smaller and smoother estimation errors than a conventional QAE implementation for the tested settings (figure comparing QAE vs MLE).",
+    "[speculative] The authors claim the approach preserves the quadratic sample-complexity advantage of amplitude-estimation methods versus classical Monte Carlo (O(1/ε) vs O(1/ε^2)) and therefore offers potential quadratic speedup for VaR estimation.",
+    "[speculative] The paper argues that adopting the MLE-based amplitude estimation reduces resource demands (ancillary qubits and controlled-amplification operations) relative to phase-estimation-based QAE, making the model more suitable for NISQ-era devices.",
+    "[speculative] The authors present a resource-analysis claim that their MLE approach reduces required ancillary qubits by at least ~15% and reduces controlled-amplification operations by about three times compared to a traditional QAE design (table and analytic comparison).",
+    "[speculative] The model’s worst-case qubit-width bounds are analyzed (e.g., V operation requiring up to ~3n+2 qubits), and the authors claim the scheme scales and remains adaptable by increasing encoding qubits to handle larger payoff ranges."
+  ],
+  "results_summary": "The paper proposes QOPLE, a circuit construction to encode option profit-and-loss distributions into quantum states (operators L,P,V), and combines it with a QORA pipeline that uses MLE-based amplitude estimation plus binary search to compute VaR for European call options. Qiskit simulations demonstrate feasibility: the distribution loading and payoff encoding were realized, MLE-based amplitude estimation performed better than a conventional QAE baseline in their tests, and VaR estimates approached classical Monte Carlo results (within 1% relative error for n=7 sampling qubits). The authors further argue (via analytic resource comparisons) that the MLE approach reduces ancillary-qubit and controlled-operation demands (claimed ~15% fewer ancilla and ~3x fewer controlled amplifications), making the method more NISQ-friendly and theoretically retaining the quadratic sample-complexity advantage of quantum amplitude estimation.",
+  "performance_claims": [
+    "Up to 99% accuracy in VaR estimation when sampling qubits are appropriately configured (reported from Qiskit simulations).",
+    "Relative error ≤ 1% between QORA and classical Monte Carlo (10,000 samples) when using n = 7 sampling qubits (reported for the tested instances).",
+    "MLE amplitude-estimation used an exponentially increasing amplification sequence fq = {0,1,2,4,8,16,32} with total measurement queries per fq set to Nq = 100 in experiments (parameter settings used in simulations).",
+    "Authors claim at least ~15% reduction in ancillary qubits and approximately 3× fewer controlled amplification operations for the MLE-based design versus phase-estimation-based QAE (resource comparison table).",
+    "Analytic query/complexity relations provided: classical Monte Carlo sample complexity O(1/ε^2) vs QAE O(1/ε) (used to motivate quadratic speedup claim)."
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper claims potential quadratic speedup (O(1/ε) vs O(1/ε^2)) inherited from amplitude-estimation techniques, but provides no empirical runtime or hardware demonstration of end-to-end quantum speedup on real quantum devices — only Qiskit simulations and analytic resource comparisons. Therefore the claimed advantage remains theoretical rather than experimentally demonstrated.",
+  "limitations": [
+    "NISQ hardware limitations (noise, limited qubit counts and gate depth) restrict near-term realization of true quantum advantage (author-stated).",
+    "Demonstrations are performed on Qiskit simulations rather than noisy quantum hardware, so results do not reflect realistic device noise or calibration errors [inferred].",
+    "Model ignores transaction costs, margins, premiums and other real-world trading frictions for simplicity (author-stated).",
+    "Work focuses on European call options only; other option types (American, path-dependent, exotic) are not treated (author-stated).",
+    "The algorithm relies on the Black–Scholes–Merton log-normal assumption to load the underlying price distribution, which may be invalid for markets with fat tails or non-lognormal behaviour (author-stated and [inferred]).",
+    "Distribution truncation (three standard deviations around the mean) may under-represent extreme tail events relevant to risk measurement (author-described truncation; [inferred] limitation).",
+    "Scalability is unclear: experiments use small numbers of sampling qubits (examples up to n=7); performance and resource requirements for practical, large-scale problems are not demonstrated (author-stated experimental scope; [inferred]).",
+    "Although the L operator is argued to be loadable with structured circuits, parts of the paper refer to O(2^n) complexity for distribution loading—potential exponential resource growth for naïve implementations ([inferred] ambiguity/limitation).",
+    "Circuit depth and controlled operations required for multi-factor or high-dimensional derivative models can exceed current hardware capabilities (author-stated).",
+    "Binary-search-based VaR search and repeated amplitude estimations imply multiple queries and measurements, introducing classical/quantum query overhead that may be significant in practice ([inferred]).",
+    "The MLE-based amplitude estimation reduces ancilla and controlled operations compared to phase-estimation QAE, but still requires careful choice of amplification sequence and many measurements; robustness to sequence design and measurement noise is not fully characterized ([inferred]).",
+    "Resource claims (e.g., ≥15% ancilla reduction) are based on comparisons in the paper but may not generalize across all option instances and larger problem sizes ([inferred])."
+  ],
+  "open_questions": [
+    "How robust is QORA/QOPLE to noise, decoherence, gate errors and readout errors on real NISQ devices? (How do results degrade on hardware vs ideal simulation?)",
+    "Can the QOPLE encoding and QORA model be extended to American options, path-dependent/exotic derivatives, or multi-period/multi-factor risk models?",
+    "How to incorporate real-world trading frictions (premiums, transaction costs, margin requirements) into the quantum encoding and VaR estimation pipeline?",
+    "How sensitive are results to violations of the Black–Scholes log-normal assumption (e.g., heavy tails, stochastic volatility, jumps)?",
+    "What are the detailed resource (qubit, gate count, depth) scalings for practical problem sizes (realistic strikes, maturities, portfolio sizes) and the crossover point where quantum advantage appears in practice?",
+    "How to efficiently implement the distribution-loading operator L for large n in practice while controlling circuit depth and noise accumulation?",
+    "How should the amplitude amplification sequence and MLE measurement schedule be optimally designed for a given precision/noise budget?",
+    "Can the theoretical quadratic speedup (O(1/epsilon) vs O(1/epsilon^2)) be observed end-to-end in realistic, noisy hardware and end-to-end financial workflows?",
+    "How to integrate QORA into existing risk-management systems, including data pipelines, stress-testing, and regulatory reporting?",
+    "How does the algorithm perform for portfolio-level VaR with many instruments and correlated underlyings, including conditional or scenario-based VaR?"
+  ],
+  "future_work": [
+    "Expand application of quantum algorithms in option risk assessment.",
+    "Explore broader financial scenarios and more complex option contracts (e.g., other option styles, exotic derivatives).",
+    "Further adapt and optimize quantum algorithms for risk measurement under NISQ resource constraints (improving resource utilization and stability)."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "risk-management",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "grover-search",
+    "hybrid-quantum-classical",
+    "qft-phase-estimation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — The QORA workflow using MLE-based amplitude estimation claims to retain a quadratic speedup over classical Monte Carlo for VaR estimation while reporting up to 99% accuracy on simulated European call examples.",
+    "#idea:near-term-feasibility — Introduces an MLE-based amplitude-estimation protocol (Grover-style amplification counts + classical MLE) designed to reduce ancillary-qubit and controlled-operation overheads relative to phase-estimation-based QAE, targeting NISQ-era feasibility.",
+    "#idea:hybrid-approach — Uses a hybrid pipeline: quantum circuits to encode truncated/discretized log-normal asset distributions and to mark payoffs; classical MLE for amplitude recovery and classical binary search to find VaR thresholds.",
+    "#limitation:simulation-only — All experiments are classical Qiskit simulations on discretized synthetic Black–Scholes samples (n up to 7); no runs on physical QPUs.",
+    "#limitation:data-encoding — State preparation relies on truncation and discrete loading (Qiskit uncertainty-modeling); cost and scaling of accurate distribution loading are practical limitations noted by the methodology.",
+    "#limitation:qubit-count — Demonstrations are small-scale (sampling qubits n up to 7) so practical qubit requirements for realistic option portfolios / higher-resolution discretizations remain untested."
+  ],
+  "contradictions": [
+    "The paper asserts a quadratic speedup over classical Monte Carlo but validates only on small, simulated instances (n ≤ 7) and does not account for state-preparation overheads; this raises a scalability contradiction between the claimed asymptotic advantage and the presented empirical evidence.",
+    "While claiming NISQ applicability via reduced ancilla and controlled-amplification counts, experiments are simulation-only with no noise/real-hardware results, leaving an unresolved contradiction between near-term feasibility claims and lack of hardware validation."
+  ]
+}

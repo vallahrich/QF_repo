@@ -1,0 +1,189 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes an arXiv identifier (arXiv:2410.16265v1), date, author affiliation and the structure of a manuscript but no journal or conference venue; these cues indicate an arXiv preprint.",
+  "title": "Quantifying the advantages of applying quantum approximate algorithms to portfolio optimisation",
+  "authors": [
+    "Haomu Yuan",
+    "Christopher K. Long",
+    "Hugo V. Lepage",
+    "Crispin H. W. Barnes"
+  ],
+  "year": "2024",
+  "journal_or_venue": "arXiv preprint (arXiv:2410.16265)",
+  "doi": "",
+  "abstract_summary": "The authors present an end-to-end QAOA-based solver for the Discrete Global Minimum Variance Portfolio (DGMVP), including binary block encoding, cost Hamiltonian construction, and a novel hard-mixing operator built from two- and three-qubit excitations. They benchmark optimisation strategies (COBYLA and dual annealing, with layerwise schemes), and study the effects of thermal-relaxation and measurement noise, finding dual annealing with unfrozen layerwise optimisation most robust; realistic thermal noise rules out near-term quantum advantage, but improved hardware could enable favourable scaling in shots required to find the global minimum.",
+  "methodology_description": "The authors develop an end-to-end quantum approximate optimisation pipeline to solve the discrete global minimum variance portfolio (DGMVP). They map the DGMVP objective w^T Σ w with budget and integer-lot constraints into a Pauli-Z Hamiltonian using a fixed-length binary block encoding (l qubits per asset, weight coefficients bk = 2^{k-1} a, a = 1/(2^l - 1)). They design cost operator U(C, γ) = exp(-i γ C) (with C expressed as sums of commuting Z-strings) and a bespoke hard mixer ˆM_L(β) built from two- and three-qubit excitation operators (Sk and Pk) composed to enforce the budget constraint and enable binary arithmetic (exchange, carry/borrow) between asset blocks; they introduce and exploit a “quantum bridge” phenomenon when composing these excitations. Initial-state strategies include max-biased, ranked warm-started (rounding the continuous GMVP solution and distributing remainders), approximated equal-weighted and random-weighted states. The alternating ansatz applies p layers of cost and hard-mixing unitaries to the initial state. Parameter optimisation is performed classically, comparing Dual Annealing (DA) and COBYLA; they investigate layerwise optimisation variants (frozen vs unfrozen) and tune optimisation hyperparameters (number of shots Nm used to estimate expectations during optimisation; total optimiser function-evaluations cap I; final measurement shots NM). Simulations include shot-based noisy sampling (finite Nm) and exact statevector expectation evaluation (to remove sampling noise), scaling studies in number of assets n and per-asset binary block length l, and thermal-relaxation noise tests using Qiskit’s noise model (T1 ~ N(50 μs, 10 μs), T2 ~ N(70 μs, 10 μs)). Evaluation metrics are mean approximation ratio (α_mean and α_k%_mean), minimal-value approximation ratio (α_min), probability of measuring minimal value (P_min) and probability of measuring the global minimum (P_gm). Baselines are the classical warm-started (rounded GMVP) and max-bias portfolios. Post-selection filtering (enforcing budget constraint on measured bitstrings) is applied and compared under noisy conditions.",
+  "algorithms_used": [
+    "QAOA (Quantum Approximate Optimization Algorithm / Quantum Alternating Operator Ansatz)",
+    "Custom hard-mixer using two- and three-qubit excitation operators (Sk, Pk)",
+    "Dual Annealing (classical optimiser)",
+    "COBYLA (classical optimiser)",
+    "Layerwise optimisation (frozen and unfrozen variants)",
+    "Post-selection filtering"
+  ],
+  "frameworks": [
+    "Qiskit (thermal-relaxation noise model, simulators/statevector)"
+  ],
+  "experimental_setup": "All experiments are numerical simulations (statevector and shot-based). Cost operator circuits have O(N) depth in number of qubits; mixing operator depth scales O(L) where L is mixer distance parameter (typically L=1 used). Optimisation uses shot-based expectation estimates with Nm shots during optimisation (common Nm values: 16, 24, 256, 1024, 32768 depending on experiments) and NM final measurement shots (commonly 2^16 = 65536; very large NM used in some landscape scans up to 2^22). Layer counts p were varied (reported up to p=10 in some landscape scans; scaling and main results focus on p≤5). Dual Annealing used soft caps on function-evaluations I (typical I=2000 or 5000 per layer; linear-growth variants also tested). Noise studies used Qiskit thermal-relaxation noise with T1~N(50 μs,10 μs), T2~N(70 μs,10 μs) and post-selection to enforce budget constraint.",
+  "dataset_used": "Historical price data for selected US equities (subset of 32 stocks from NASDAQ and NYSE). Daily adjusted-close prices over the date range 2023-03-01 to 2023-06-30 (≈100 trading days) used to build covariance matrices.",
+  "experiment_input": {
+    "source": "Daily adjusted-close prices for selected US stocks (NASDAQ/NYSE)",
+    "date_range": "2023-03-01 to 2023-06-30",
+    "number_of_assets": "Experiments used variable n; up to 32-stock pool was available; reported scaling experiments used n in small ranges (e.g. 3..6 and 4..6) and examples with n=4,8",
+    "time_series_length": "≈100 days (daily adjusted-close prices)",
+    "preprocessing": "Covariance matrices Σ computed from price time series (σ_ij = cov(P_i(T), P_j(T))). For warm-start initialisation, the continuous GMVP solution is computed and rounded using the binary precision a to produce ranked warm-start portfolios; other preprocessing includes binary block encoding of integer lot counts (l qubits per asset) and normalisation a = 1/(2^l - 1)."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "Compute covariance matrix Σ from selected asset prices",
+      "Choose binary block length l and encode each asset weight w_i as integer x_i = sum_k b_k z_k^i with bk = 2^{k-1} a",
+      "Construct cost Hamiltonian C mapping the quadratic objective w^T Σ w into sums of Pauli-Z strings (single- and two-qubit Z-strings) and constant offsets omitted",
+      "Design cost operator U(C, γ) = exp(-i γ C) (commuting Z-strings implemented as Rz rotations and controlled-phase circuits)",
+      "Design hard mixing operator ˆM_L(β) composed of layers of two- and three-qubit excitation unitaries e^{-iβ S_k} and e^{-iβ P_k} (stacked to exploit quantum-bridge to generate required support for exchange and carry/borrow operations); use L=1 (nearest-neighbour) in most runs",
+      "Prepare initial state UI|0> using one of: max-biased, ranked warm-start (rounded GMVP), approximated equal-weighted, or random-weighted",
+      "Form QAOA-style alternating ansatz |γ, β> = Π_{j=1..p} U(B, β_j) U(C, γ_j) |init>, with p layers; use unfrozen-layerwise or frozen-layerwise schedules to build up p",
+      "Estimate expectation values ⟨C⟩ during optimisation via shot-based sampling (Nm shots per evaluation) or compute exact statevector expectation when needed for analysis",
+      "Optimise parameters (γ, β) with classical optimisers: Dual Annealing (DA) with budget I of function evaluations per added layer, and COBYLA (local) for comparison; compare optimisation strategies and hyperparameters (Nm, I)",
+      "After optimisation perform post-optimisation sampling with NM shots (or statevector reconstruction) to compute final metrics; apply post-selection to filter samples violating budget constraint when analysing noisy circuits",
+      "Perform scaling sweeps over n and l, and thermal-relaxation noise simulations using Qiskit noise model (T1/T2 distributions) to assess robustness and shot overhead"
+    ],
+    "parameters_tuned": [
+      "number of layers p",
+      "number of shots during optimisation Nm",
+      "final measurement shots NM",
+      "DA budget I (max expectation evaluations per new layer)",
+      "binary block length l (precision)",
+      "mixer distance L (mixing operator ˆM_L(β))",
+      "initial state choice",
+      "use of post-selection",
+      "noise model parameters (T1, T2 distributions)"
+    ]
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "α_mean: mean-value approximation ratio (normalised between f_min and f_max; lower is better)",
+      "α_k%_mean: k-th percentile of α_mean (e.g., α_5%, α_20%, α_100%)",
+      "α_min: minimal-value approximation ratio (best measured sample relative to global min)",
+      "P_min: probability of measuring the minimal value (fraction of shots yielding the measured minimum)",
+      "P_gm: probability of measuring the true global minimum",
+      "post-selection probability P_ps (fraction of measured bitstrings satisfying budget constraint)"
+    ],
+    "baselines": [
+      "Max-biased portfolio (all-in on one asset)",
+      "Ranked warm-started portfolio (rounded continuous GMVP)"
+    ],
+    "output_format": "Numerical metrics, distributions over repeated (stochastic) trials, plots of loss landscapes, scaling fits (power-law fits for 1/P_gm versus feasible-region size B(n,l))"
+  },
+  "experiment_parameters": {
+    "qubits": "n * l (number of assets times binary block length); examples used n up to 6 in scaling plots and pool of 32 for covariance sampling",
+    "layers_p": "varied; typical main experiments used p up to 5; some landscape scans used p up to 10",
+    "shots_Nm_optimisation": "typical Nm = 16 (primary), other Nm tested: 4, 8, 24, 256, 1024, 32768 (landscape scans)",
+    "shots_NM_final": "typical NM = 2^16 = 65536; landscape scans used NM up to 2^22 = 4,194,304",
+    "optimisers": "Dual Annealing (DA) with I (e.g., I = 2000 or I = 5000 per added layer), COBYLA (local, derivative-free)",
+    "mixing_operator": "hard mixer ˆM_L(β) built from two- and three-qubit excitations; L=1 used primarily (ˆM1(β))",
+    "binary_precision": "a = 1 / (2^l - 1)",
+    "noise_model": "Qiskit thermal-relaxation model with T1 ~ Normal(50 μs, 10 μs), T2 ~ Normal(70 μs, 10 μs) and constraint T2 ≤ 2 T1",
+    "feasible_region_sizes": "unconstrained: 2^{l n}; constrained (budget): B(n, l) = binomial(2^l + n - 2, n - 1)"
+  },
+  "hardware_details": {
+    "simulator": "Qiskit (statevector simulations and Qiskit thermal-relaxation noise model)",
+    "quantum_hardware": "no physical QPU used (all numerical simulation)",
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "The manuscript describes algorithms, encodings, optimisation hyperparameters, and the financial data time window, and specifies use of Qiskit's thermal-relaxation noise model (T1/T2 distributions). However, no code repository or explicit stock list and random seeds are provided in the text. Reproduction appears feasible using described methods (binary-block encoding, cost Hamiltonian construction, hard-mixer circuits, DA/COBYLA settings, Qiskit noise model) but would require reimplementation and selection of the exact stock subset and initial random seeds.",
+  "key_findings": [
+    "[supported] The authors present an end-to-end QAOA-based solver for the Discrete Global Minimum Variance Portfolio (DGMVP) problem including encoding, cost Hamiltonian, ansatz, and classical optimisation pipeline.",
+    "[supported] They design and evaluate several initial-state preparations for the DGMVP (max-biased, ranked warm-start, approximated equal-weighted, random) and find ranked warm-start and max-biased states perform best in their simulations.",
+    "[supported] A cost Hamiltonian and corresponding U(C,γ) implementing the DGMVP objective in a binary-block encoding is constructed; the authors show the circuit depth scales linearly in the number of qubits for dense covariance matrices.",
+    "[supported] They introduce a hard mixing operator based on two- and three-qubit excitation operators (and a derived 'quantum bridge' mechanism) that preserves the budget constraint and empirically yields better optimisation behaviour than broader soft mixers in their tests.",
+    "[supported] Comparative numerical experiments show Dual Annealing (DA) combined with an unfrozen layerwise optimisation strategy outperforms COBYLA and fixed-layer optimisation in the presence of stochastic measurement noise (for their problem instances and chosen hyperparameters).",
+    "[supported] The authors report that using DA with a layerwise routine (I = 2000, Nm = 16 shots per expectation estimate per layer in their experiments) provides robust performance across tested instances.",
+    "[supported] They observe that realistic thermal-relaxation noise (simulated T1/T2 distributions near current device levels) substantially degrades performance and that post-selection (filtering out states violating constraints) mitigates but increases measurement requirements by roughly an order of magnitude.",
+    "[supported] They numerically fit the scaling of the inverse probability to sample the global minimum 1/P_gm versus constrained feasible-region size and find favorable power-law exponents (e.g., fit exponent b ≈ 0.76±0.30 and b ≈ 0.51±0.09 for certain configurations), indicating more favourable scaling than uniform constrained sampling in their simulations.",
+    "[speculative] The paper suggests that, in a regime where thermal-relaxation is sufficiently low (i.e., future improved hardware or error-corrected machines), stochastic measurement noise will become the dominant limitation and there may be a quantum advantage in sample complexity for finding the DGMVP.",
+    "[supported] They conclude that, with current realistic noise levels, thermal-relaxation noise precludes practical quantum advantage for this application, and large error-rate improvements or fault tolerance are required for realistic quantum-finance use-cases."
+  ],
+  "results_summary": "The authors develop a complete QAOA pipeline for the Discrete Global Minimum Variance Portfolio (DGMVP) problem: binary block encoding, a cost Hamiltonian, several initial-state preparations, and a hard mixing operator built from two- and three-qubit excitations (introducing a 'quantum bridge' concept). Through extensive numerical simulations they benchmark optimisers (DA vs COBYLA), layerwise strategies, and noise models. They find DA with unfrozen layerwise optimisation is most robust; post-selection helps against noise but multiplies measurement cost; thermal-relaxation noise at realistically simulated levels eliminates near-term quantum advantage, though they observe promising sample-scaling behaviour under reduced-noise assumptions that suggests a potential (speculative) quantum advantage in the shot complexity for finding the global minimum on improved hardware.",
+  "performance_claims": [
+    "Dual Annealing (DA) with unfrozen-layerwise optimisation and hyperparameters I = 2000, Nm = 16 (shots per expectation during optimisation) gave robust performance across tested instances [supported by simulation].",
+    "Fitting inverse probability 1/\\bar{P_gm} to constrained feasible-region size produced exponents b ≈ 0.76 ± 0.30 (warm-start initial state) and b ≈ 0.51 ± 0.09 (max-bias initial state) for scaling in number of assets n, indicating sub-linear power-law scaling in their numerical data [supported by simulation].",
+    "For scaling in binary-block length l they report fit exponents b ≈ 0.66 ± 0.01 (warm-start) and b ≈ 1.11 ± 0.05 (max-bias) for 1/\\bar{P_gm}, indicating more favourable scaling with l when using warm-start states in their experiments [supported by simulation].",
+    "Post-selection to enforce budget constraints reduces noise-induced constraint violations but reduces the fraction of usable shots—authors report roughly an order-of-magnitude increase in shots required to maintain a fixed stochastic noise level when post-selection is applied under simulated thermal-relaxation noise [supported by simulation].",
+    "They find COBYLA optimization becomes unstable with low optimisation-shots Nm while DA remains comparatively stable, demonstrating DA's robustness to stochastic measurement noise in their tests [supported by simulation].",
+    "Under simulated realistic T1/T2 (T1 ~ N(50 μs, 10 μs), T2 ~ N(70 μs,10 μs)) thermal-relaxation noise, the QAOA performance degrades substantially and renders practical quantum advantage unlikely without substantial hardware improvements [supported by simulation]."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The authors present numerical evidence (statevector and noisy simulations) that the optimised QAOA circuits can have a favourable scaling in the number of shots required to obtain the global minimum compared to uniform constrained sampling, but they also demonstrate that realistic thermal-relaxation noise levels on current hardware eliminate practical advantage. Therefore any claim of quantum advantage is conditional on substantial future noise reduction or error correction and remains speculative rather than demonstrated.",
+  "limitations": [
+    "Realistic thermal-relaxation noise levels (T1/T2) preclude quantum advantage for the presented QAOA DGMVP solver (author-stated).",
+    "Post-selection to enforce the budget constraint reduces the fraction of usable measurement shots by roughly an order of magnitude, dramatically increasing measurement cost (author-stated).",
+    "Stochastic measurement noise (finite-shot estimation) significantly degrades the optimisation landscape and can cause classical optimisers to terminate at poor parameter values or fail to identify convergence (author-stated).",
+    "Even with improved classical optimisers (Dual Annealing), optimiser hyperparameters (number of shots Nm and allowed function evaluations I) must be large enough; otherwise optimisation quality degrades — an expensive tuning problem (author-stated/empirical).",
+    "The cost operator contains dense Pauli-Z couplings (dense covariance matrix), producing circuits with depth linear in qubit count (O(N)) and substantial gate requirements (author-stated).",
+    "The demonstrated numerical experiments reconstruct statevectors for final evaluation (exact expectation values) — an unrealistic assumption for hardware experiments and hides finite-shot/post-optimisation sampling effects (author-stated in methodology choices; implication of simulation approach).",
+    "[inferred] The three-qubit and multi-qubit excitation-based hard mixers (and their 'quantum-bridge' constructions) likely require many multi-qubit gates and nontrivial connectivity; practical hardware with limited connectivity/gate-fidelity may incur large overheads or prohibit implementation.",
+    "[inferred] The simulations are limited to small problem sizes (small n and l in presented figures); scalability to realistic portfolio sizes (tens-to-hundreds of assets) is not demonstrated and remains uncertain.",
+    "[inferred] The ansatz and mixer design sensitivity: the optimisation landscape remains rugged/noisy (risk of barren-plateau-like issues or poor gradient scaling) which could limit trainability at larger scale or depth.",
+    "[inferred] Fixing optimisation hyperparameters (Nm = 16, I = 2000) across all problem sizes is a pragmatic choice for the study but may hide instance-dependent performance and may not generalise to other n, l or market instances.",
+    "[inferred] Reliance on warm-start initial states for favourable scaling reduces the regime where a quantum algorithm demonstrably improves over classical initialization; effectiveness depends on quality of classical warm-starts and rounding."
+  ],
+  "open_questions": [
+    "How much must hardware error rates (coherence times, gate fidelities) improve — quantitatively — for this QAOA approach to produce a practical advantage for portfolio optimisation?",
+    "Can better error-mitigation or constraint-enforcement strategies be developed that reduce or avoid the large post-selection overhead while still preserving optimisation performance?",
+    "How will limited qubit connectivity and native gate sets on real devices affect the implementability and resource scaling of the proposed hard mixers (two-/three-qubit excitations) and the dense cost operator?",
+    "To what extent do the favourable sample-scaling trends observed (reduced 1/Pgm exponent) persist for much larger/realistic problem sizes (n and l beyond those numerically tested)?",
+    "Are there alternative ansatz / mixer designs (or improved implementations of the presented mixer) that retain the hard-constraint property but require fewer multi-qubit resources or are more noise-robust?",
+    "How robust are the observed optimisation gains to other classical optimisation algorithms, different hyperparameter regimes, or advanced measurement-allocation strategies (adaptive shot allocation, improved estimators, CVaR objectives)?",
+    "What is the practical trade-off between depth (number of QAOA layers), shot-budget, and fidelity on near-term devices for this problem class — i.e., what are optimal operating points in realistic hardware regimes?",
+    "Can the favourable scaling in the number of shots to obtain the global minimum (indicated numerically) translate into end-to-end wall-clock or cost advantages once hardware constraints, connectivity, and error-correction overheads are accounted for?",
+    "How does the proposed binary block encoding compare in practice (qubit count, depth, noise-susceptibility) to alternative encodings (one-hot, quasi-binary, domain-wall) for larger portfolios?",
+    "Are there hybrid (classical-quantum) protocols that combine warm-started classical pre-processing with low-depth QAOA that provide robust, hardware-feasible gains?"
+  ],
+  "future_work": [
+    "Use the simulation and design insights to tackle other portfolio models and constrained mixed quadratic integer programming problems with quantum approximate algorithms (explicitly mentioned by the authors).",
+    "Further exploration and design of mixing operators (the paper notes that mixing-operator design is an active research area and the presented hard-mixer could be extended/refined).",
+    "Investigate error-rate improvements, error-mitigation techniques, and the requirements for fault-tolerant quantum computation needed to make quantum finance applications viable (authors highlight drastic error-rate improvements are required)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical",
+    "error-mitigation"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — A QAOA-based end-to-end pipeline (binary block encoding + bespoke hard-mixer of two- and three-qubit excitations) can represent the discrete global minimum variance portfolio (DGMVP) and, in noiseless simulations, shows favourable scaling in the number of shots required to find the global minimum.",
+    "#idea:quantum-advantage — The bespoke hard-mixer and the reported 'quantum bridge' composition enable exchange and carry/borrow operations between asset blocks to enforce budget constraints within the variational ansatz.",
+    "#idea:hybrid-approach — Classical techniques (ranked warm-start from rounded continuous GMVP, large-shot classical post-processing/post-selection, and classical optimisers) are integral: Dual Annealing with unfrozen layerwise optimisation is identified as the most robust optimiser vs. COBYLA.",
+    "#idea:near-term-feasibility — Extensive noisy simulations using Qiskit's thermal-relaxation noise model indicate that realistic hardware noise rules out near-term quantum advantage despite algorithmic improvements; improved coherence and hardware needed for practical advantage.",
+    "#idea:hybrid-approach — Layerwise build-up schedules, large final measurement budgets (NM up to 2^22), and post-selection filtering are effective practical measures in simulation to improve observed probabilities of measuring the global minimum under finite-shot estimation.",
+    "#idea:near-term-feasibility — Data-encoding overhead (l qubits per asset) and circuit resource scaling (O(N) cost depth, O(L) mixer depth) create significant resource requirements that limit implementability on near-term devices."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — The authors show that realistic thermal-relaxation noise eliminates near-term quantum advantage for portfolio optimisation, contradicting optimistic claims in some recent literature that NISQ-era variational algorithms can already outperform classical solvers on finance tasks.",
+    "contradiction:scalability — Although noiseless simulations indicate favourable shot-scaling, noisy simulations demonstrate that circuit depth, encoding overhead, and limited coherence times prevent scaling to practical portfolio sizes on near-term hardware, contradicting assertions that these algorithms scale straightforwardly to real problems without substantial hardware improvements."
+  ],
+  "additional_limitation_tags": [
+    "limitation:noise",
+    "limitation:simulation-only",
+    "limitation:data-encoding",
+    "limitation:no-empirical-validation",
+    "limitation:qubit-count"
+  ]
+}

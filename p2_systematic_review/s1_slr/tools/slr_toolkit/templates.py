@@ -1,0 +1,266 @@
+"""Template generators — screening CSVs, extraction XLSX, protocol, codebook."""
+
+from __future__ import annotations
+
+import io
+import logging
+from pathlib import Path
+
+from openpyxl import Workbook
+
+from . import config
+from .utils import ensure_dir, safe_write_bytes, safe_write_text, style_xlsx_header
+
+log = logging.getLogger("slr_toolkit.templates")
+
+# ── Screening templates ────────────────────────────────────────────────────
+
+_TA_HEADER = "paper_id,decision_reviewer_A,decision_reviewer_B,conflict,final_decision,reason_code,notes\n"
+_FT_HEADER = "paper_id,decision_reviewer_A,decision_reviewer_B,conflict,final_decision,exclusion_reason,tier2_applicable,notes\n"
+_AI_SCREENING_HEADER = "paper_id,ai_decision,ai_confidence\n"
+
+
+def create_ta_decisions_template(*, force: bool = False) -> None:
+    """Create title/abstract screening template CSV."""
+    safe_write_text(config.TA_DECISIONS_TEMPLATE, _TA_HEADER, force=force)
+
+
+def create_ft_decisions_template(*, force: bool = False) -> None:
+    """Create full-text screening template CSV."""
+    safe_write_text(config.FT_DECISIONS_TEMPLATE, _FT_HEADER, force=force)
+
+
+def create_ai_screening_template(*, force: bool = False) -> None:
+    """Create AI screening decisions template CSV."""
+    safe_write_text(
+        config.AI_SCREENING_DECISIONS.parent / "ai_screening_decisions_template.csv",
+        _AI_SCREENING_HEADER,
+        force=force,
+    )
+
+
+# ── Extraction template ────────────────────────────────────────────────────
+
+_CODEBOOK_ROWS: list[tuple[str, str, str]] = [
+    ("paper_id", "Stable hash identifier", "auto-generated"),
+    ("title", "Full paper title", "free text"),
+    ("authors", "Semicolon-separated author list", "free text"),
+    ("year", "Publication year", "integer"),
+    ("venue", "Journal / conference / preprint server", "free text"),
+    ("doi", "Digital Object Identifier", "DOI string or empty"),
+    ("problem_family", "Finance problem addressed",
+     "portfolio_optimization | option_pricing | risk_analysis | credit_scoring | "
+     "fraud_detection | monte_carlo | time_series | other"),
+    ("quantum_method", "Algorithm / approach used",
+     "VQE | QAOA | QAE | Grover | HHL | quantum_walk | variational | hybrid_classical | other"),
+    ("evaluation_type", "How results were obtained",
+     "real_hardware | simulator | analytical | hybrid"),
+    ("NISQ_vs_FT", "Target hardware regime",
+     "NISQ | fault_tolerant | both | unclear"),
+    ("qubit_count", "Number of qubits used/projected", "integer or N/A"),
+    ("gate_depth", "Circuit depth (if reported)", "integer or N/A"),
+    ("baseline_strength", "Quality of classical baseline",
+     "state_of_art | reasonable | weak | none | unclear"),
+    ("advantage_claim", "Does the paper claim quantum advantage?",
+     "yes | no | projected | unclear"),
+    ("advantage_evidence", "Evidence supporting the claim",
+     "empirical | analytical | projected | none"),
+    ("hardware_or_sim", "Execution environment",
+     "ibm | google | ionq | simulator_statevector | simulator_noisy | other | N/A"),
+    ("dataset_description", "Data used for evaluation", "free text"),
+    # --- Tier 2 applicability flag ---
+    ("tier2_applicable", "Does this paper contain sufficient quantitative evaluation for Tier 2 (Hoefler framework) extraction?",
+     "yes | no"),
+    # --- Hoefler framework fields (Tier 2) ---
+    ("input_data_size", "Size/dimensionality of input data to the quantum algorithm",
+     "integer or description (e.g., '4 assets', '2^10 grid points') or N/A"),
+    ("output_type", "Nature of the quantum algorithm's output",
+     "scalar | vector | distribution_sample | expectation_value | other | N/A"),
+    ("io_bottleneck_discussed", "Does the paper discuss I/O bandwidth limitations?",
+     "yes | no"),
+    ("big_compute_small_data", "Does the workload fit the 'big compute on small data' pattern?",
+     "yes | no | unclear | N/A"),
+    ("speedup_type_detailed", "Speedup characterisation beyond asymptotic class",
+     "exponential | quartic | cubic | quadratic | sub-quadratic | none_claimed | unclear"),
+    ("speedup_constant_reported", "Are concrete constant factors or prefactors reported (not just big-O)?",
+     "yes | no"),
+    ("oracle_stateprep_cost_included", "Does the evaluation account for oracle construction and state preparation overhead?",
+     "yes | partial | no"),
+    ("end_to_end_overhead", "Does the evaluation include full end-to-end overhead (not just query complexity)?",
+     "yes | partial | no"),
+    ("crossover_time_estimated", "Is a crossover time explicitly estimated?",
+     "yes | no"),
+    ("crossover_time_value", "Reported crossover time (if estimated)",
+     "free text (e.g., '3.2 years', '< 2 weeks', 'not computed') or N/A"),
+    ("crossover_size_estimated", "Is a crossover problem size explicitly estimated?",
+     "yes | no"),
+    ("crossover_size_value", "Reported crossover problem size",
+     "free text (e.g., 'N > 10^6 assets', '2^50 grid points') or N/A"),
+    ("tier1_achievable", "Could the workload plausibly achieve Tier-1 crossover (≤ 2 weeks)?",
+     "yes | no | insufficient_data"),
+    ("tier2_finance_sla", "Does the paper assess against a finance-specific operational window?",
+     "yes_overnight | yes_intraday | yes_other | no"),
+    ("classical_baseline_detail", "Description of classical baseline used for comparison",
+     "free text (e.g., 'Monte Carlo on single CPU', 'GPU-accelerated QMC', 'analytical Black-Scholes') or N/A"),
+    ("classical_baseline_hardware", "Hardware specification of classical baseline",
+     "free text (e.g., 'NVIDIA A100', 'Intel Xeon 48-core', 'unspecified') or N/A"),
+    ("qubit_type", "Physical qubit technology assumed or used",
+     "superconducting | trapped_ion | photonic | neutral_atom | unspecified | N/A"),
+    ("error_correction_model", "Error correction assumptions",
+     "surface_code | other_code | error_mitigated_only | noiseless_simulation | unspecified"),
+    ("t_count_or_gate_cost", "T-count or dominant gate cost reported",
+     "free text with value or N/A"),
+    ("shots_or_samples", "Number of measurement shots or samples reported",
+     "integer or N/A"),
+]
+
+_EXTRACTION_COLUMNS: list[str] = [row[0] for row in _CODEBOOK_ROWS]
+
+_RUBRIC_COLUMNS: list[str] = [
+    "paper_id",
+    "q_methodology",
+    "q_reproducibility",
+    "q_classical_baseline_risk",  # risk that a weak baseline inflates perceived advantage
+    "q_scalability",
+    "q_advantage_evidence_risk",  # risk that advantage claims lack sufficient evidence
+    "q_io_bottleneck",            # I/O limitations acknowledged and addressed
+    "q_crossover_framing",        # Tier-1/Tier-2 crossover analysis present
+    "q_end_to_end",               # End-to-end overhead included
+]
+
+
+def create_extraction_template(*, force: bool = False) -> None:
+    """Create the extraction XLSX with Codebook, Extraction, and Rubric sheets."""
+    path = config.EXTRACTION_TEMPLATE
+    if path.exists() and not force:
+        log.info("Skipping (exists): %s", path)
+        return
+
+    wb = Workbook()
+
+    # -- Codebook sheet --
+    ws_cb = wb.active
+    assert ws_cb is not None
+    ws_cb.title = "Codebook"
+    ws_cb.append(["Column Name", "Definition", "Allowed Values"])
+    style_xlsx_header(ws_cb, 3)
+    ws_cb.freeze_panes = "A2"
+    for row in _CODEBOOK_ROWS:
+        ws_cb.append(list(row))
+    ws_cb.column_dimensions["A"].width = 22
+    ws_cb.column_dimensions["B"].width = 40
+    ws_cb.column_dimensions["C"].width = 60
+
+    # -- Extraction sheet --
+    ws_ex = wb.create_sheet("Extraction")
+    ws_ex.append(_EXTRACTION_COLUMNS)
+    style_xlsx_header(ws_ex, len(_EXTRACTION_COLUMNS))
+    ws_ex.freeze_panes = "A2"
+    for i, col_name in enumerate(_EXTRACTION_COLUMNS, start=1):
+        ws_ex.column_dimensions[ws_ex.cell(row=1, column=i).column_letter].width = 20
+
+    # -- Rubric sheet --
+    ws_rb = wb.create_sheet("Rubric")
+    ws_rb.append(_RUBRIC_COLUMNS)
+    style_xlsx_header(ws_rb, len(_RUBRIC_COLUMNS))
+    ws_rb.freeze_panes = "A2"
+    for i, col_name in enumerate(_RUBRIC_COLUMNS, start=1):
+        ws_rb.column_dimensions[ws_rb.cell(row=1, column=i).column_letter].width = 20
+
+    ensure_dir(path.parent)
+    buf = io.BytesIO()
+    wb.save(buf)
+    safe_write_bytes(path, buf.getvalue(), force=True)  # already checked above
+
+
+# ── Protocol & amendments ──────────────────────────────────────────────────
+
+def create_protocol(*, force: bool = False) -> None:
+    """Write protocol skeleton to 01_protocol/protocol.md."""
+    # Protocol is shipped as a static file in the repo; this function
+    # ensures it exists during `init`.  The content lives in the repo
+    # itself (01_protocol/protocol.md) and is only generated if
+    # the file is missing.
+    if config.PROTOCOL_MD.exists() and not force:
+        log.info("Skipping (exists): %s", config.PROTOCOL_MD)
+        return
+    # If somehow deleted, re-create a minimal stub.
+    safe_write_text(
+        config.PROTOCOL_MD,
+        "# SLR Protocol v1.0\n\nSee README.md for full details.\n",
+        force=force,
+    )
+
+
+def create_amendments_log(*, force: bool = False) -> None:
+    """Ensure amendments_log.csv exists."""
+    safe_write_text(
+        config.AMENDMENTS_CSV,
+        "date,version,section,change_description,author\n",
+        force=force,
+    )
+
+
+def create_codebook_md(*, force: bool = False) -> None:
+    """Ensure codebook.md exists."""
+    if config.CODEBOOK_MD.exists() and not force:
+        log.info("Skipping (exists): %s", config.CODEBOOK_MD)
+        return
+    # File is shipped in the repo; stub if missing.
+    safe_write_text(
+        config.CODEBOOK_MD,
+        "# Extraction Codebook\n\nSee extraction_template.xlsx Codebook sheet.\n",
+        force=force,
+    )
+
+
+def create_topic_taxonomy_md(*, force: bool = False) -> None:
+    """Ensure topic_taxonomy.md exists."""
+    if config.TOPIC_TAXONOMY_MD.exists() and not force:
+        log.info("Skipping (exists): %s", config.TOPIC_TAXONOMY_MD)
+        return
+    safe_write_text(
+        config.TOPIC_TAXONOMY_MD,
+        "# Topic Taxonomy\n\n"
+        "Draft controlled taxonomy for LLM-assisted thematic coding.\n\n"
+        "## Controlled Topics\n\n"
+        "- portfolio_optimization: Asset allocation, portfolio construction, rebalancing, selection.\n"
+        "- derivative_pricing: Option pricing, structured products, Greeks, valuation.\n"
+        "- risk_management: Market risk, credit risk, CVaR, stress testing, exposure.\n"
+        "- fraud_and_detection: Fraud detection, AML, anomaly detection in finance.\n"
+        "- forecasting_and_prediction: Time series forecasting, return prediction, regime prediction.\n"
+        "- trading_and_execution: Trading strategies, execution, market microstructure.\n"
+        "- insurance_and_actuarial: Insurance, actuarial science, reinsurance.\n"
+        "- credit_and_lending: Credit scoring, default prediction, lending decisions.\n"
+        "- quantum_ml_for_finance: QML methods applied to financial tasks.\n"
+        "- optimization_methods: Generic optimization methods with explicit finance application.\n"
+        "- simulation_and_monte_carlo: Monte Carlo, amplitude estimation, stochastic simulation.\n"
+        "- benchmarking_and_advantage: Benchmarking, complexity, utility, advantage claims in finance.\n\n"
+        "## Method Families\n\n"
+        "- qaoa_or_optimization\n"
+        "- variational_or_vqe\n"
+        "- amplitude_estimation\n"
+        "- quantum_ml\n"
+        "- quantum_walk_or_search\n"
+        "- linear_systems_or_hhl\n"
+        "- hybrid_unspecified\n"
+        "- other_gate_based\n\n"
+        "## Evaluation Types\n\n"
+        "- simulator\n"
+        "- real_hardware\n"
+        "- analytical\n"
+        "- benchmark_comparison\n"
+        "- conceptual_only\n",
+        force=force,
+    )
+
+
+# ── Convenience: create all ────────────────────────────────────────────────
+
+def create_all_templates(*, force: bool = False) -> None:
+    """Create every template file (idempotent unless *force*)."""
+    create_ta_decisions_template(force=force)
+    create_ft_decisions_template(force=force)
+    create_ai_screening_template(force=force)
+    create_protocol(force=force)
+    create_amendments_log(force=force)

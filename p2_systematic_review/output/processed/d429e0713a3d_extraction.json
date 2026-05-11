@@ -1,0 +1,227 @@
+{
+  "source_type": "other",
+  "source_type_confidence": "high",
+  "reasoning": "Document is a PhD dissertation (title page, examiners, date of disputation, extensive chapters, acknowledgements and CV). It is not formatted as a journal article, conference paper, preprint or industry report, so it falls outside the listed categories.",
+  "title": "Quantum Computing in Option Pricing",
+  "authors": [
+    "Tom Frederik Ewen"
+  ],
+  "year": "2025",
+  "journal_or_venue": "Doctoral Dissertation, Fachbereich Mathematik, RPTU Kaiserslautern-Landau",
+  "doi": "",
+  "abstract_summary": "This dissertation develops and compares quantum algorithms for option pricing, focusing on amplitude estimation to accelerate Monte Carlo methods and adaptations of Fourier-based pricing using the Quantum Fourier Transform. It presents a genetic quantum architecture search to automate construction of efficient payoff circuits, proposes conditional parameterized quantum circuits for Monte Carlo integration, and benchmarks methods with respect to accuracy, scalability and quantum-hardware requirements.",
+  "methodology_description": "This work explored quantum approaches to option pricing by following two main directions: (1) a Fourier-based method that adapts the classical Carr–Madan FFT pricing to quantum hardware by replacing the FFT with the Quantum Fourier Transform (QFT) and deriving suitable damped Fourier representations; and (2) a Monte-Carlo–based approach that improves classical Monte-Carlo via Amplitude Estimation (AE). For (2) the project developed an automated pipeline to learn good parameterized quantum circuits (PQCs) for option payoff functions using a multi-objective genetic architecture search (QAS). The QAS optimizes Pareto fronts over (i) approximation quality (MSE) and (ii) circuit-complexity measures (depth, number of two-qubit gates/CNOTs, number of input encodings). Learned PQCs were converted to conditional PQCs (CPQCs) by replacing data-encoding rotations with controlled fixed rotations across discretization registers; these CPQCs encode a discretized distribution for the underlying into the control register. Expected payoffs were then read out either by repeated measurements (shot estimates) or by Amplitude Estimation. Experiments were conducted in classical simulation (statevector and noisy backends), using automatic differentiation (jax) for parameter training of PQCs, and comparing methods across varying numbers of discretization qubits, damping factors (α), noise models and shot budgets. ZX-calculus–based graph mutations were also investigated as an alternative mutation space for QAS.",
+  "algorithms_used": [
+    "Quantum Fourier Transform (QFT)",
+    "Discrete Fourier Transform / FFT (classical baseline)",
+    "Amplitude Estimation (AE)",
+    "Amplitude Amplification / Grover operator",
+    "Variational / Parameterized Quantum Circuits (VQA/PQC)",
+    "Genetic Programming / Genetic Quantum Architecture Search (multi-objective)",
+    "ZX-calculus rewrites (local complementation, pivoting, etc.)",
+    "Hadamard test",
+    "State preparation (arbitrary amplitude loading - discussed as bottleneck)"
+  ],
+  "frameworks": [
+    "jax",
+    "jaxopt",
+    "PennyLane",
+    "pyzx",
+    "sympy",
+    "Qiskit (qiskit, qiskit-aer, qiskit-finance)"
+  ],
+  "experimental_setup": "All numerical experiments were performed in classical simulation. Automatic differentiation via jax/jaxopt was used to train PQC parameters. Quantum circuits were represented via PennyLane and pyzx (ZX-diagrams). Simulators: Qiskit Aer StatevectorSimulator for shot-noise emulation and Qiskit GenericBackendV2 with the default noise model for device-noise emulation. Experiments ran on a classical 48-core machine (training of 48 models in parallel per generation).",
+  "dataset_used": "Synthetic payoff datasets (no market data). Payoff functions include European call, basket call, basket call with variable weight, rainbow call and an Asian barrier spread. Inputs were generated on equidistant grids over chosen ranges (typically underlying prices S in [50,200]; for 2D/3D cases grids over [50,200]×[50,200] (and [0,1] for weight) ). Typical dataset sizes: K=400 (2D grid 20x20 or 1D 400 equally spaced), and for the 3D basket-weight case K=8000.",
+  "experiment_input": {
+    "source": "synthetic (constructed payoff functions)",
+    "size": "typically K=400 for 1D/2D problems, K=8000 for 3D example",
+    "preprocessing": "inputs scaled to encoding ranges (for PQCs inputs scaled to [0,π] to avoid periodicity issues); discretization for CPQCs: equidistant grid in log-price between chosen min and max (commonly 50–200); for QFT pricing two discretizations schemes evaluated (versions 1 and 2) with step sizes tied to number of discretization qubits; characteristic functions used analytically (Black–Scholes example) where relevant."
+  },
+  "experiment_process": {
+    "overview": "1) Design/initialize candidate PQCs (or ZX-diagrams) as circuit templates. 2) Run multi-objective genetic QAS: identify non-dominated Pareto population; select N candidates per generation (N=48); for each candidate perform mutations (circuit-based mutations or ZX-mutations); train parameters (gradient-based via jax/jaxopt) to minimize MSE on training grid; evaluate fitness vector (MSE, depth, #CNOTs, #input-encodings); update Pareto front and repeat for many generations. 3) For selected PQCs convert to CPQCs by replacing data encodings with controlled fixed-rotation sequences (discretization registers). 4) For CPQC option pricing either (a) prepare distribution superposition and extract expected payoff amplitude via Amplitude Estimation or (b) measure repeatedly (shots) to estimate probabilities. 5) QFT-based approach: use analytic characteristic function, build damped FT (choose α), discretize integral per Carr–Madan-style grid, prepare amplitude vectors x, apply inverse QFT, extract DFT entries either via Hadamard test (real-part extraction) or by measuring probabilities (alternative discretization), apply scaling to obtain prices. 6) Compare methods across metrics (MSE, circuit depth, #CNOTs), perform noisy vs ideal simulations.",
+    "training_details": "Parameter optimization uses automatic differentiation (jax) and jaxopt optimizers (exact optimizer names not hardcoded in text); gradients obtained by autodiff; classical training loop executed per-candidate. In VAns variant, additional remove-gate heuristic uses a relative-loss threshold (varied between 0 and 0.1) to prune identity-like gates.",
+    "mutations": "Circuit-based: add/remove/simplify gates, add blocks (Z-X-Z, Z-Y-Z, SX-Z, input encodings), remove insignificant gates by loss impact. ZX-based: local complementation, inverse local complementation, pivoting, phase-gadget addition, edge flip/add/remove/split/swap, ensure graph-like and test extractability. Mutations retried up to m attempts until extractable (m configurable).",
+    "AE usage": "AE considered for QMCI readout; shot-based estimates also used. AE requires reflection operators (S_χ and S_0) and Grover operator Q; practical AE not run on hardware in these experiments (simulated)."
+  },
+  "experiment_output": {
+    "metrics_reported": [
+      "Mean Squared Error (MSE) vs target payoff",
+      "Circuit depth",
+      "Number of two-qubit gates / CNOT gates",
+      "Number of input-encoding gates",
+      "Pareto fronts of the multi-objective optimization",
+      "Option price absolute error vs analytic benchmark (for Black–Scholes)",
+      "Scaling plots (error / depth / CNOTs vs discretization qubits)",
+      "Shot-noise and device-noise sensitivity plots"
+    ],
+    "baselines": [
+      "Classical FFT-based Carr–Madan implementation (benchmark)",
+      "Qiskit Finance amplitude-encoding approach (Stamatopoulos et al. style)"
+    ],
+    "output_format": "Quantitative metrics and plots (Pareto front projections, 2D/3D error / depth / gate-count plots, surface visualizations of learned payoff approximations, tables of best circuits and their metrics)"
+  },
+  "experiment_parameters": {
+    "models_trained_in_parallel": 48,
+    "generations_reported_examples": {
+      "European_call_circuit_based": 486,
+      "European_call_VAns": 131,
+      "European_call_ZX": 360,
+      "other_examples": "varied (see tables in text)"
+    },
+    "mutation_retries": "m (configurable; algorithm retries up to m attempts per mutation until extractable)",
+    "mutations_per_candidate": "varied per set up (configurable M)",
+    "training_time_allocations": {
+      "European_Call": "24 hours",
+      "European_Basket": "24 hours",
+      "European_Rainbow": "36 hours",
+      "Asian_Barrier": "72 hours",
+      "Basket_with_weight": "72 hours"
+    },
+    "discretization_ranges": {
+      "underlying_price": "[50,200]",
+      "basket_weight": "[0,1]"
+    },
+    "discretization_qubits_range": "typically 3 to 15 qubits explored (examples used 3..15)",
+    "shots": 1000,
+    "damping_alpha_values_tested": [
+      0.1,
+      0.5,
+      1.0,
+      2.5
+    ],
+    "optimizers": "jaxopt optimizers (gradient-based autodiff); SPSA mentioned as option for real hardware",
+    "simulator_noise_model": "Qiskit GenericBackendV2 default noise model used for device-noise emulation"
+  },
+  "hardware_details": {
+    "classical": "48-core CPU used to parallelize training (48 models in parallel)",
+    "simulators": [
+      "Qiskit Aer StatevectorSimulator (used for shot-noise emulation)",
+      "Qiskit GenericBackendV2 with default noise model (used for device-noise emulation)"
+    ],
+    "real_qpu": "None (all experiments performed in classical simulation)"
+  },
+  "reproducibility_notes": "Code and implementation are available (link given in text): https://gitlab.cc-asp.fraunhofer.de/itwm-fm-qc-public/cvqa. The dissertation lists used libraries (jax, jaxopt, pennylane, pyzx, sympy, qiskit) and simulator/backends; parameter choices, dataset grids and training-time budgets are documented in the text/tables. Exact random seeds and final trained parameter checkpoints are not explicitly cited in the text, but the code repository is indicated.",
+  "key_findings": [
+    "[speculative] Amplitude Estimation (AE) offers a theoretical quadratic speedup for Monte-Carlo (MC) integration (error scaling O(1/N) vs classical O(1/√N)).",
+    "[supported] Conditional Parameterized Quantum Circuits (CPQCs) can be constructed from trained PQCs and used to encode an input distribution so that a single quantum circuit yields the expected payoff (QMCI) for that distribution.",
+    "[supported] A multi-objective genetic Quantum Architecture Search (QAS) procedure can automatically find Pareto-optimal parameterized circuit structures (trade-offs between MSE and circuit complexity) for option payoff approximation.",
+    "[supported] Variational/Variable-Ansatz (VAns)-based QAS produced circuits with the lowest empirical MSE in the tested examples compared to the other automated approaches.",
+    "[supported] ZX-calculus based mutations (local complement, pivot, phase gadget add, edge operations) are usable for QAS; empirical tests quantify their success rates and impacts on function-approximation performance.",
+    "[supported] Two different FFT-style discretizations for QFT-based option pricing were implemented; the second discretization (version 2) demonstrates substantially faster numerical convergence in the Black–Scholes test (fewer qubits needed for a given accuracy) in simulation.",
+    "[supported] The QFT-based adaptation of classical FFT pricing methods can produce much lower pricing error (in simulation) than the tested PQC/AE-based approaches, given idealized assumptions (noise-free or very low noise, efficient state/distribution loading).",
+    "[supported] The QFT approach requires efficient state/distribution loading and very low device noise (practically fault-tolerant hardware) to realize its advantages; simulations show it becomes preferable only under those conditions.",
+    "[supported] The CPQC/AE pipeline (automated payoff circuit → controlled encoding → AE) works in simulation to output expected payoffs, but its practical success is highly sensitive to state/distribution-loading cost and device noise.",
+    "[supported] Circuit resource scaling analyses (simulated transpilation counts) show QFT-based circuits have much lower asymptotic depth (O(n^2) for QFT) than classical FFT computational effort would suggest, but overall end-to-end scaling must include state loading and repeated measurements.",
+    "[supported] Empirical experiments on simulated noise models indicate that circuits optimized for lower depth produce more robust payoff approximations under realistic device noise than circuits optimized only for raw MSE in noise-free simulation.",
+    "[speculative] ZX-diagram-based QAS appears promising for low-complexity circuits, but extraction and mapping back to device-native circuits require more work; further research is needed to assess benefits on actual hardware."
+  ],
+  "results_summary": "This work explores two main quantum approaches to option pricing: (1) a QFT-based adaptation of classical FFT pricing methods and (2) a Monte-Carlo-focused pipeline using automated PQC discovery (genetic QAS) and Conditional PQCs combined with Amplitude Estimation. The author(s) implemented multi-objective genetic search that yields Pareto fronts of PQC architectures (tradeoffs between MSE, depth, two-qubit gates, and number of encodings), demonstrated the automatic discovery of viable payoff circuits, and developed CPQCs to encode input distributions for QMCI. Numerical simulation experiments (noise-free and noisy backends) show that QFT-based pricing attains the best accuracy under ideal state-loading and low-noise assumptions, while CPQC/AE approaches produce practical circuits but are more sensitive to state preparation and hardware noise. ZX-calculus based mutations are feasible and sometimes beneficial. A recurring conclusion is that significant practical quantum advantage requires either efficient state/distribution loading and/or fault-tolerant or much lower-noise devices.",
+  "performance_claims": [
+    "AE theoretical error scaling improvement: quantum AE → O(1/N) vs classical MC → O(1/√N) [speculative].",
+    "QFT can be implemented with O(n^2) gates for n qubits (cited as Coppersmith result) vs classical FFT complexity O(n 2^n) when comparing naive counts — implying exponential difference in representation (the paper emphasizes the QFT 'is in some sense even faster') [speculative].",
+    "In simulation, version 2 of the QFT discretization reached discretization-error saturation with ~7 qubits (2^7 amplitudes), whereas the version 1 discretization needed ~16 qubits for comparable accuracy (empirical result reported) [supported].",
+    "Empirical Pareto results: VAns-based QAS yielded lower MSE models (example: European call MSE ~0.0396) compared to circuit-based and ZX-based variants in the presented experiments [supported].",
+    "Empirical observation: QFT-based pricing produced much lower absolute pricing errors (figures shown) than the PQC-based AE methods in simulated experiments provided sufficient qubits and idealized loading [supported].",
+    "Resource scaling fits (empirical transpile counts): single-qubit and two-qubit gate counts and depth show dominant terms scaling like O(2^n) with qubit count n for the end-to-end QFT pipelines; version-specific coefficients were observed with version 1 generally needing fewer two-qubit gates than version 2 in the reported transpilation [supported].",
+    "Empirical noise sensitivity: circuits optimized for minimal depth retained much more accuracy under device-noise simulations than circuits optimized solely for MSE in noise-free runs [supported]."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The thesis presents theoretical reasons and simulation evidence that quantum methods (QFT-based or AE-based) can outperform classical approaches in principle, but emphasizes practical constraints: efficient state/distribution preparation and low-noise or fault-tolerant hardware are required. Thus, a scalable, practical quantum advantage for option pricing is not demonstrated empirically on real noisy hardware and remains conditional/speculative.",
+  "limitations": [
+    "Quantum hardware noise (measurement errors, bit flips, decoherence) limits practical implementation and accuracy of algorithms (explicit).",
+    "Shot noise / stochastic measurement means many repetitions are required to estimate amplitudes/probabilities (explicit).",
+    "Current NISQ devices limit circuit width (qubit count), circuit depth (coherence time) and two-qubit gate counts (error rates) — constraining feasible algorithms (explicit).",
+    "All arithmetic on quantum computers must be reversible, making basic numerical operations and payoff encodings difficult and costly (explicit).",
+    "Efficient state preparation / loading arbitrary amplitude vectors (and distributions) is an unsolved bottleneck for both QFT-based and AE/CPQC approaches (explicit).",
+    "Amplitude Estimation (AE) and related methods require expensive controlled/reflection operations and good oracles; implementing oracles and reflections is often hard and model-dependent (explicit).",
+    "Hadamard-test-based extraction of real parts (for QFT method) introduces many controlled operations and is expensive/error-prone on hardware (explicit).",
+    "QFT-based pricing requires analytic characteristic functions (or at least reliable tractable formulas); not all underlying models satisfy this (explicit).",
+    "QFT pricing requires selecting a dampening factor alpha and cutoffs; inappropriate choices or lack of moment conditions (finite moments) break correctness/accuracy (explicit).",
+    "Numerical quadrature / truncation and discretization in both QFT variants introduce approximation errors and require careful parameter choice (Δ, N) to balance error sources (explicit).",
+    "ZX-diagram-based mutations sometimes produce non-extractable diagrams; extraction to circuits is not guaranteed (explicit).",
+    "Circuit extraction from ZX-diagrams is nontrivial and may fail after mutations — complicating ZX-based QAS (explicit).",
+    "QAS (genetic search) is computationally expensive because each candidate's evaluation requires parameter optimization (explicit).",
+    "The multi-objective selection used is crude; Pareto-front size and selection/filling strategies are ad hoc and may be suboptimal (explicit).",
+    "Barren plateaus and vanishing gradients during optimization of large parameterized circuits impede reliable training (explicit).",
+    "Classical simulators impose strong limits on circuit sizes (so most experiments are simulation-only) and therefore cannot demonstrate quantum advantage (explicit).",
+    "AE and QFT approaches need very low device error rates (near fault-tolerant) and/or efficient state loading to realize practical gains — otherwise classical methods may remain superior (explicit).",
+    "[inferred] The Hadamard test and AE increase circuit complexity substantially, which may negate practical benefits on NISQ hardware even when asymptotic advantages exist.",
+    "[inferred] PQC expressivity/periodicity (trigonometric encodings) can make point-wise approximation of non-periodic payoffs problematic unless careful input scaling/buffering is used.",
+    "[inferred] Multi-asset or higher-dimensional payoffs increase required discretization qubits exponentially, making direct CPQC/QFT scaling challenging for many-asset derivatives.",
+    "[inferred] The genetic QAS lacked a robust crossover operator — limiting evolutionary search power and variety of architectures explored."
+  ],
+  "open_questions": [
+    "How to efficiently prepare arbitrary amplitude states or load classical distributions (distribution loading/state preparation) on quantum hardware at scale?",
+    "Can state/distribution loading be approximated in a controlled way that preserves practical pricing accuracy while reducing loading cost?",
+    "Which hardware-aware constraints (native gate set, topology, per-qubit error rates) should be incorporated into QAS to yield circuits that perform better on real devices?",
+    "Can ZX-diagram mutations be designed that both explore useful new linear maps and preserve extractability (gFlow) with higher success rates?",
+    "How to translate evolved ZX-diagrams reliably into CPQCs suitable for AE and practical execution on hardware?",
+    "How to design crossover operators (circuit recombination) that produce meaningful offspring circuits in circuit-based QAS?",
+    "How much practical benefit does hardware-aware QAS (taking gate set/topology/noise into account) deliver compared to topology-agnostic search?",
+    "What are efficient multi-objective selection strategies (beyond the crude sampling/selection used) that scale with Pareto-front size and predicable training budgets?",
+    "How to mitigate barren plateaus in the context of architectures produced by QAS (architectural choices to avoid vanishing gradients)?",
+    "What are the minimal hardware requirements (shots, error rates, qubits) for AE or QFT-based pricing to beat classical methods in realistic finance workloads?",
+    "Can QFT-based pricing be generalized beyond European calls (other payoffs), and if so, how must the analytic/numeric transformations be adapted?",
+    "What are the best strategies to choose the dampening parameter alpha and discretization grids for QFT-based pricing for arbitrary underlying models?",
+    "How to extract complex-valued DFT/QFT outputs with minimal additional controlled operations (alternatives to Hadamard test) on NISQ devices?",
+    "How do approximation error sources (PQC payoff approximation, distribution truncation/discretization, measurement noise) compound in realistic end-to-end pricing applications?",
+    "Can AE variants (iterative, MLE-based) be tuned to be significantly more NISQ-robust and still maintain quantum advantage for pricing tasks?"
+  ],
+  "future_work": [
+    "Develop and test hardware-aware QAS that incorporates gate set, connectivity and per-qubit error rates to produce circuits tailored to specific devices (explicit).",
+    "Improve and study state/distribution loading methods (or approximate loaders) to reduce the state preparation bottleneck for both QFT and CPQC approaches (explicit).",
+    "Investigate ZX-diagram mutations that preserve gFlow or otherwise guarantee extractability; expand ZX→circuit extraction techniques (explicit).",
+    "Translate optimized ZX-diagrams into CPQCs and evaluate performance and extractability robustness (explicit).",
+    "Perform experiments on actual quantum hardware to measure the benefits of hardware-aware QAS and to quantify practical noise/shot effects (explicit).",
+    "Explore improvements to the multi-objective selection process in QAS (adopt more principled multiobjective optimization methods) (explicit).",
+    "Research methods to reduce or avoid barren plateaus for QAS-produced architectures (explicit).",
+    "Adapt QFT-based option pricing to other payoff types and models; analyze constraints (characteristic function availability and moment conditions) and practical parameter choices such as alpha (explicit).",
+    "Design mutations or heuristics that conditionally select mutation types based on ZX/circuit properties to increase success rates and impact (inferred -> suggested explicitly).",
+    "Study practical AE implementations (iterative/AEs variants) and their noise-robust tuning for option-pricing workloads on near-term devices (explicit)."
+  ],
+  "topic_tags": [
+    "derivative-pricing",
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "qft-phase-estimation",
+    "variational-nisq",
+    "quantum-ml",
+    "hybrid-quantum-classical",
+    "grover-search"
+  ],
+  "idea_tags": [
+    "idea:quantum-advantage",
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:classical-vs-quantum",
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:quantum-advantage — Amplitude Estimation (AE) can in principle accelerate Monte Carlo integration for option pricing, offering reduced sample complexity compared with shot-based estimation.",
+    "#idea:quantum-advantage — A QFT-based adaptation of Carr–Madan FFT pricing is proposed, replacing FFT with QFT and using damped Fourier representations to compute prices on a quantum device.",
+    "#idea:hybrid-approach — A multi-objective genetic quantum architecture search (QAS) automates design of parameterized quantum circuits (PQCs) trading off MSE vs circuit complexity, with classical optimizers (jax/jaxopt) training parameters.",
+    "#idea:hybrid-approach — Learned PQCs are converted to conditional PQCs (CPQCs) that encode discretized distributions; expected payoffs are extracted via either shots or AE, demonstrating a hybrid QPU-CPU workflow.",
+    "#idea:near-term-feasibility — Detailed noisy and ideal statevector simulations quantify how circuit depth, CNOT count and discretization qubits affect error and sensitivity to shot/device noise, informing NISQ feasibility assessments."
+  ],
+  "contradictions": [
+    "contradiction:classical-vs-quantum — The dissertation highlights substantial overheads (notably arbitrary amplitude/state preparation and deep reflection operators for AE) that offset QFT/AE theoretical speedups, bringing quantum methods closer to classical baselines in practical settings.",
+    "contradiction:scalability — Experiments are limited to small discretizations (K up to 8000 in 3D synthetic grids) and classical simulation; scaling plots and reported resource counts (depth, CNOTs) suggest significant growth in hardware requirements, contradicting any implicit claim that methods are immediately scalable to market-sized problems.",
+    "contradiction:classical-vs-quantum — Benchmarks against classical Carr–Madan FFT show that classical baselines remain competitive when accounting for state-preparation costs and noise — the quantum advantage is conditional and not demonstrated on hardware."
+  ],
+  "limitation_tags": [
+    "limitation:qubit-count",
+    "limitation:noise",
+    "limitation:data-encoding",
+    "limitation:no-empirical-validation",
+    "limitation:simulation-only"
+  ]
+}

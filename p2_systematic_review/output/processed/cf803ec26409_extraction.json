@@ -1,0 +1,215 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document displays an arXiv identifier (arXiv:2304.06915v2 [quant-ph] 24 Jan 2024) and has the structure and metadata typical of an arXiv submission (abstract, sections, references, acknowledgments) rather than a peer-reviewed journal or formal conference proceedings.",
+  "title": "QUASI-BINARY ENCODING BASED QUANTUM ALTERNATING OPERATOR ANSATZ",
+  "authors": [
+    "Bingren Chen",
+    "Hanqing Wu",
+    "Haomu Yuan",
+    "Lei Wu",
+    "Xin Li"
+  ],
+  "year": "2024",
+  "journal_or_venue": "arXiv preprint arXiv:2304.06915v2",
+  "doi": "",
+  "abstract_summary": "The paper introduces QB-QAOA, a hard-constraint QAOA method using a novel quasi-binary encoding that represents bounded integer variables with O(log R) qubits and a custom mixer that preserves the sum and bounds constraints. It demonstrates the approach on portfolio optimization problems (incorporating CVaR-QAOA and parameter scheduling) and proposes an iterative precision-increasing scheme to refine solutions when qubit resources are limited.",
+  "methodology_description": "The paper proposes QB-QAOA, a hard-constraint QAOA variant using a novel quasi-binary encoding for integer/bounded/sum-constrained quadratic optimization (portfolio optimization). Each integer variable yi ∈ [0,Ri] is encoded with at most 2·⌈log2(Ri+1)⌉ qubits via a quasi-binary bit-splitting scheme. The phase-separation Hamiltonian C is constructed by substituting the binary encoding into the quadratic cost and mapping variables to Pauli-Z operators. A bespoke mixing Hamiltonian B (Eq. 12) is introduced that preserves the sum constraint; it is implemented in practice via ring XY mixers (pairwise XY terms among qubits representing the same power-of-two) and ring XYY three-qubit mixers (two lower-power qubits with one higher-power qubit). The initial feasible computational basis state is produced via a greedy allocation and X gates. Objective estimation uses either Normal-QAOA (sample mean) or CVaR-QAOA (mean of best τ fraction, τ=0.05). Classical parameter optimization is done with COBYLA (1000 iterations per start) using several parameter-scheduling strategies (random multi-start Sample20, Optimized Linear Schedule (OLS), Iterative OLS (IOLS), and Iterative QAOA (IQAOA)). A precision-increasing iterative procedure is also proposed: run QB-QAOA at coarse precision α(0), center a narrower bound window around the solution, reduce α by a factor λ (recommend λ with integer reciprocal) and repeat to refine precision while keeping qubit count fixed. Experiments and numerical simulations were performed in Qiskit on portfolio instances (6 NASDAQ assets and random Chinese-stock subsets), exploring p ∈ {1,2,4,8,16}, multiple repeats, measuring approximation ratio, cumulative cost distributions and a mixer \"mixability\" fidelity metric.",
+  "algorithms_used": [
+    "Quantum Approximate Optimization Algorithm (QAOA)",
+    "Quantum Alternating Operator Ansatz (hard-constraint QAOA / QAOAz)",
+    "CVaR-QAOA (tail-averaged objective)",
+    "Quasi-binary encoding (proposed encoding scheme)",
+    "Ring XY mixer",
+    "Ring XYY mixer (proposed)",
+    "Parameter scheduling: Sample20, OLS, IOLS, IQAOA",
+    "Classical optimizer: COBYLA",
+    "Brute-force baseline",
+    "Precision-increasing iterative refinement (proposed)"
+  ],
+  "frameworks": [
+    "Qiskit"
+  ],
+  "experimental_setup": "Simulations were implemented in Qiskit. Key settings: measurement shots K = 1,000,000 for objective estimation; QAOA layer depths p ∈ {1,2,4,8,16}; COBYLA optimizer with 1000 iterations per start (Sample20 uses 20 random starts); CVaR tail τ = 0.05 when using CVaR-QAOA; parameter scheduling strategies (Sample20, OLS, IOLS, IQAOA) applied. Repeated trials: Instance 1 repeated 33 times; Instance 2 ran 320 experiments across parameter configs. Precision-increasing iterative method used λ = 0.5 in the reported example and six iterations.",
+  "dataset_used": "Two financial datasets: (1) Daily closing prices for six NASDAQ stocks (AAPL, AMZN, GOOGL, MSFT, NVDA, TSLA) for 2022-12-02 to 2023-02-28 (sourced from Yahoo Finance). (2) Chinese Shanghai and Shenzhen exchange equities: daily data from 2023-05-04 to 2023-08-08 accessed via the QStock package; subsets of 4–8 stocks randomly sampled from 4,836 stocks for Instance 2.",
+  "experiment_input": {
+    "sources": [
+      "Yahoo Finance (NASDAQ stock closing prices, 2022-12-02 to 2023-02-28)",
+      "QStock (Shanghai/Shenzhen exchanges, 2023-05-04 to 2023-08-08)"
+    ],
+    "size": [
+      "Instance 1: 6 assets (NASDAQ)",
+      "Instance 2: random subsets of 4–8 assets from 4,836 available (Chinese market); experiments limited to cases with total qubit count ≤ 20 for some sweeps"
+    ],
+    "preprocessing": "Daily returns computed from closing prices; compute expected returns vector E and covariance matrix Σ; transform portfolio Markowitz formulation into a quadratic discrete optimization (using precision parameter α to discretize weights); bounds per asset set as integer multiples of α; for QB-QAOA compute Ri = (Ui - Li)/α and apply quasi-binary encoding; initial feasible integer solution produced by a greedy allocation algorithm."
+  },
+  "experiment_process": {
+    "pipeline_steps": [
+      "1) Formulate constrained quadratic integer optimization (portfolio) and rescale using precision α.",
+      "2) Shift variables yi = xi - Li and compute Ri = Ui - Li.",
+      "3) Encode each yi with quasi-binary encoding into binary qubits bi,j,k (at most 2·⌈log2(Ri+1)⌉ qubits per variable).",
+      "4) Construct phase-separation Hamiltonian C by substituting encoding into quadratic objective and mapping to Pauli-Z operators.",
+      "5) Construct mixing Hamiltonian B (Eq. 12) that preserves sum and bounds; decompose into implementable circuits using ring XY and ring XYY mixers following Algorithm 2.",
+      "6) Prepare an initial feasible computational basis state via greedy allocation and X gates.",
+      "7) Run p-layer QB-QAOA: alternate UC(γ) = exp(-i γ C) and UB(β) = exp(-i β B) for p layers (p in {1,2,4,8,16}).",
+      "8) Measure the final state K times (K = 1,000,000) and estimate objective either by Normal-QAOA (sample mean) or CVaR-QAOA (mean of best τK samples, τ = 0.05).",
+      "9) Optimize parameters (⃗β,⃗γ) with COBYLA using parameter-scheduling initializations (Sample20, OLS, IOLS, IQAOA); Sample20 uses 20 random starts over specified ranges.",
+      "10) Evaluate performance metrics (approximation ratio, cumulative cost distribution, mixability M_p).",
+      "11) Optionally apply precision-increasing iterative refinement: after solving at precision α(k), center a narrower bound window around the discrete solution, reduce precision α(k+1)=λ·α(k) (λ typically 0.5), re-encode and rerun QB-QAOA for finer precision."
+    ],
+    "parameters_varying_in_experiments": [
+      "p (circuit depth): 1,2,4,8,16",
+      "precision α: examples α=0.5 (instance 1), α=0.05 (instance 2), iterative reductions by λ",
+      "shots: K = 1,000,000",
+      "risk factor q: example q = 18.415 leading to target return µ = 2‰",
+      "optimizer: COBYLA, 1000 iterations per start; Sample20 uses 20 starts",
+      "CVaR tail τ = 0.05",
+      "repetition counts: 33 repeats for instance 1, 320 experiments for instance 2"
+    ]
+  },
+  "experiment_output": {
+    "formats": [
+      "Empirical distributions of sampled portfolio costs (cumulative distribution plots)",
+      "Approximation ratio ar = (C_worst - C_algo_avg) / (C_worst - C_optimal) per run",
+      "Mixability fidelity metric M_p(|ψ⟩,|ϕ⟩) estimated over discrete parameter grid",
+      "Counts/histograms of measured bitstrings (feasible-state support)"
+    ],
+    "baselines": [
+      "Brute-force optimal enumeration (exact optimal and worst costs used to compute approximation ratio)"
+    ],
+    "reported_results_examples": [
+      "Approximation ratios: Normal-QAOA in experiments ∼0.791–0.905; CVaR-QAOA ∼0.907–0.994 (ranges reported across parameter schedules and p)",
+      "Mixability images illustrating reachability between feasible encodings as p increases",
+      "Precision-increasing iterative experiment showing progressive improvement and convergence of cost distributions across iterations"
+    ]
+  },
+  "experiment_parameters": {
+    "qubits": {
+      "instance_1": 18,
+      "example_upper": "up to 96 qubits would be required for α=0.001 in the 6-asset example (not executed)",
+      "per_asset_formula": "≤ 2·⌈log2(Ri+1)⌉ qubits per variable (quasi-binary encoding)"
+    },
+    "depth_p": [
+      1,
+      2,
+      4,
+      8,
+      16
+    ],
+    "shots": 1000000,
+    "optimizer": "COBYLA",
+    "optimizer_iterations_per_start": 1000,
+    "parameter_scheduling_methods": [
+      "Sample20 (20 random starts)",
+      "Optimized Linear Schedule (OLS)",
+      "Iterative Optimized Linear Schedule (IOLS)",
+      "Iterative QAOA (IQAOA)"
+    ],
+    "CVaR_tail_tau": 0.05,
+    "precision_alpha_examples": {
+      "instance_1": 0.5,
+      "instance_2": 0.05
+    },
+    "precision_iteration": {
+      "lambda": 0.5,
+      "iterations_reported": 6
+    },
+    "risk_factor_q_example": 18.415
+  },
+  "hardware_details": {
+    "simulator": "Qiskit (simulator backend unspecified in paper)",
+    "backend": "unspecified (classical simulator via Qiskit)",
+    "qpu_model": null,
+    "cloud_provider": null
+  },
+  "reproducibility_notes": "Data sources are specified (Yahoo Finance for NASDAQ subset and QStock for Chinese market), and many experimental parameters are reported (p values, shots, optimizer, CVaR τ, parameter-scheduling methods, number of repeats). However, no public code repository or explicit circuit files, random seeds, or exact Qiskit backend/back-end options were provided. The paper includes algorithm pseudocode (GreedyAllocation, Algorithm 2 mixing construction, Algorithm 3 iterative method) and Hamiltonian formulas, which should help reimplementation, but reproducing exact numerical results requires implementation details of the phase-separation Hamiltonian construction, decomposition choices, and any numerical scaling factors (η) that were used but not fully enumerated. Overall, partial reproducibility is possible from the information provided but would require significant reimplementation effort; no code link was provided.",
+  "key_findings": [
+    "[speculative] Quasi-binary encoding: a novel encoding that represents an integer variable yi in [0, Ri] using at most O(log Ri) qubits (specifically at most 2·ceil(log2(Ri+1)) qubits in worst case) and can represent any integer in the range.",
+    "[supported] Quasi-binary encoding reduces qubit counts compared with naive one-hot/Hodson encodings in the tested examples (authors show qubit-count plots and examples).",
+    "[supported] A tailored mixing Hamiltonian / mixer (combination of ring XY and ring XYY components) can be constructed for the quasi-binary encoding to preserve the sum constraint (hard-constraint QAOA); simulations show transitions only among feasible states.",
+    "[supported] The mixing circuit can be decomposed into CNOTs and multi-control RX gates and its circuit depth can vary between constant and linear depending on problem structure (authors present an explicit circuit construction and depth analysis).",
+    "[supported] CVaR-QAOA outperforms Normal-QAOA for the portfolio instances studied (empirical simulation results reported).",
+    "[supported] Parameter scheduling matters: among the scheduling heuristics tested (Sample20, OLS, IOLS, IQAOA), iterative methods (IOLS/IQAOA) combined with CVaR tend to give the best empirical performance in the authors' experiments; IQAOA performed best in many CVaR experiments.",
+    "[supported] Empirical performance on the presented portfolio instances: Normal-QAOA approximation ratios observed in simulations ranged roughly 0.79–0.91; CVaR-QAOA approximation ratios ranged roughly 0.91–0.99, with performance improving as depth p increased (authors' repeated simulations reported these ranges).",
+    "[supported] Precision-increasing iterative procedure (reduce α, re-center bounds around previous solution with shrink factor λ) empirically improves solution quality while keeping the same qubit count; example: λ=0.5, six iterations on an 18-qubit instance produced progressively better CDFs of cost (authors' simulation).",
+    "[speculative] Claim of uniqueness: the paper asserts quasi-binary encoding is the only encoding satisfying three properties simultaneously (logarithmic qubit scaling, bound-constraint support, and hard-constraint QAOA compatibility).",
+    "[speculative] The approach is presented as broadly applicable to portfolio optimization instances that can be discretized with fixed precision and sum/bound constraints (theoretical applicability claim backed by examples but not large-scale empirical validation)."
+  ],
+  "results_summary": "The paper introduces QB-QAOA, a QAOA-style algorithm using a new quasi-binary integer encoding plus a custom mixer (ring XY + ring XYY) that enforces bound and global-sum constraints in a hard-constraint manner. The encoding aims to keep qubit counts logarithmic in each variable's range. The authors implement and simulate the approach on small portfolio-optimization instances (Qiskit): they show the proposed mixer preserves feasibility, report that CVaR-QAOA plus iterative parameter scheduling (IOLS/IQAOA) yields higher approximation ratios than Normal-QAOA, and demonstrate an iterative precision-increasing workflow that improves solution quality while holding qubit count fixed. Results are empirical on small instances (up to ~18 qubits in reported examples).",
+  "performance_claims": [
+    "QB-QAOA requires at most 2·log2(Ui − Li + 1) qubits to encode variable xi (claim presented; paper shows example plots).",
+    "Example: with Ri=1000 (α=1‰) the quasi-binary encoding uses 16 qubits per asset in the authors' scheme (comparison: binary would use 10 qubits, Hodson/one-hot would use many more).",
+    "Mixing operator preserves sum constraint: in a 6-qubit demonstration (t=0.3) measurements after applying the mixer were only on states whose decoded sum equals the initial sum (empirical measurement counts shown).",
+    "Normal-QAOA approximation ratio observed in experiments: approximately 0.791–0.905 (33 repeats, various parameter schedules and depths).",
+    "CVaR-QAOA approximation ratio observed in experiments: approximately 0.907–0.994 (same experimental regime).",
+    "Practical recommendation from simulations: CVaR-QAOA combined with IQAOA or IOLS and depth p≥8 can reach approximation ratio ≈0.99 on the tested 6-asset instance (empirical claim).",
+    "Precision-increasing iterative method: with λ=0.5 and six iterations on an 18-qubit instance the authors saw a monotonic improvement in the cost CDFs; by iteration 4 the worst solution beat the best solution from iteration 1 (empirical observation).",
+    "Simulations reported use K=10^6 measurement samples for objective estimation and multiple parameter-scheduling heuristics (Sample20, OLS, IOLS, IQAOA) with COBYLA optimization (1000 iterations per start)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper presents algorithmic encodings and mixers plus small-instance Qiskit simulations showing feasibility and improved empirical approximation ratios for specific portfolio instances. It does not provide evidence of a computational or scaling advantage over classical algorithms (no runtime or scaling proofs, and no large-instance benchmarking against state-of-the-art classical solvers). Thus any claim of quantum advantage remains speculative based on the presented small-scale simulations.",
+  "limitations": [
+    "Requires nontrivial circuit depth for the mixer: mixing operator circuit depth ranges from constant to linear depending on problem structure (explicit).",
+    "Limited qubit resources on current simulators / quantum hardware force coarse precision (explicit): high-precision runs (small α) require many qubits (e.g., 96 qubits in Instance 1 at α=0.001), exceeding typical device limits.",
+    "Parameter optimization is difficult in practice (explicit): classical optimizers (COBYLA) can get trapped in local optima and suffer barren-plateau phenomena for large p (observed degradation at p=16).",
+    "Precision-increasing iterative method can fall into local optima if the iteration factor λ is too small (explicit).",
+    "Quasi-binary encoding requires additional splitting heuristics when some Ri are much larger than others to satisfy mixer design constraints (explicit): encoding needs further improvement in these special cases.",
+    "Some general mixer-construction methods require knowledge of the full feasible set F and are impractical (explicit): limits applicability of prior general constructions.",
+    "Experiments were limited to small instances / small total qubit counts (explicit): many experiments excluded cases with total qubits > 20, so scalability beyond these sizes is untested.",
+    "[inferred] The proposed mixer and decomposition into multi-control RX and CNOTs may lead to large gate counts and deep circuits that are challenging on noisy intermediate-scale quantum (NISQ) devices.",
+    "[inferred] The study primarily used noiseless simulator experiments; robustness to real-device noise and hardware constraints is unassessed.",
+    "[inferred] Choice of hyperparameters (e.g., iteration factor λ, tail fraction τ in CVaR, risk factor q, scaling factor for Hamiltonian η) lacks systematic selection rules and can materially affect outcomes.",
+    "[inferred] Theoretical guarantees of mixer connectibility / reachability under quasi-binary encoding (beyond empirical mixability experiments) are not given.",
+    "[inferred] The trade-offs between quasi-binary encoding and other encodings (binary, one-hot, Hodson, Palmer, quantum-walk) at larger scales remain unquantified."
+  ],
+  "open_questions": [
+    "How does QB-QAOA scale in practice to larger problem sizes (larger n and/or finer precision) on realistic quantum hardware?",
+    "How robust is the proposed mixer circuit and quasi-binary encoding to hardware noise, limited connectivity, and gate errors on NISQ devices?",
+    "What are the optimal strategies (algorithms and hyperparameters) for classical parameter optimization of QB-QAOA at higher p to avoid barren plateaus and local optima?",
+    "What is the best systematic way to choose the iteration factor λ and the number of iterations in the precision-increasing iterative method to balance precision improvement against risk of getting trapped in local optima?",
+    "Can the quasi-binary encoding and the proposed mixer be generalized to arbitrary bound patterns and heterogeneous Ri without ad-hoc splitting heuristics?",
+    "What are the exact gate count and depth scalings (asymptotic resource estimates) for the mixer decomposition in terms of number of qubits and variable ranges?",
+    "Are there theoretical guarantees (connectivity/reachability proofs) that the ring XY and ring XYY mixer construction span the feasible subspace for arbitrary instances under quasi-binary encoding?",
+    "How does QB-QAOA compare empirically and resource-wise with alternative encodings and constrained-QAOA constructions on larger and more diverse financial instances?",
+    "Does the precision-increasing iterative method converge to the global optimum as precision is refined, or can earlier coarse solutions trap later iterations systematically?",
+    "How sensitive are solution qualities to choices like CVaR tail τ, risk factor q, and Hamiltonian scaling η in practical financial use cases?"
+  ],
+  "future_work": [
+    "Improve the quasi-binary encoding to better handle cases where gaps between Ri of some variables are very large (explicit).",
+    "Refine and study the precision-increasing iterative method (implicit/explicit): determine practical choices for iteration factor λ, convergence behavior, and safeguards against local optima.",
+    "Investigate parameter-scheduling and optimization strategies (e.g., IOLS, IQAOA) further in the QB-QAOA context to mitigate barren-plateau and local-optima issues (implicit).",
+    "Explore adaptations of the mixer construction and circuit decompositions to reduce gate depth and improve implementability on NISQ hardware (implicit).",
+    "Expand empirical evaluation to larger and more diverse portfolio optimization instances and to real quantum hardware to assess scalability and noise robustness (implied)."
+  ],
+  "topic_tags": [
+    "portfolio-optimization",
+    "risk-management"
+  ],
+  "methodology_tags": [
+    "variational-nisq",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "simulator",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Quasi-binary encoding represents bounded integer portfolio weights using O(log R) qubits per variable, reducing required qubit counts compared to naive binary encodings.",
+    "#idea:near-term-feasibility — A bespoke hard-constraint mixing Hamiltonian (ring XY and ring XYY mixers) preserves sum and bound constraints, enabling feasible-state support throughout QAOA evolution.",
+    "#idea:hybrid-approach — Classical optimization (COBYLA) with parameter-scheduling (Sample20, OLS, IOLS, IQAOA) is used to tune QAOA parameters in a hybrid loop.",
+    "#idea:hybrid-approach — Precision-increasing iterative refinement uses repeated classical re-encoding (narrowing bounds and reducing discretization step) to improve solution precision while keeping qubit count fixed.",
+    "#idea:near-term-feasibility — Integration of CVaR-QAOA (tail averaging, τ=0.05) for risk-aware objectives; experiments report approximation ratios, cumulative cost distributions and a mixability fidelity metric on Qiskit simulations for small asset sets."
+  ],
+  "contradictions": [
+    "contradiction:scalability — The paper claims qubit-efficiency (O(log R)) via quasi-binary encoding, but experiments are limited to small instances (≤20 qubits in sweeps, 4–8 assets) and rely on iterative classical precision refinement, which suggests limited practical scaling to realistic large portfolios.",
+    "contradiction:scalability — The qubit savings come at the cost of more complex bespoke mixers (pairwise XY and three-qubit XYY terms) and deeper circuits; this trade-off may negate the touted scaling benefits on real noisy hardware, a point not resolved by noiseless simulator results."
+  ]
+}

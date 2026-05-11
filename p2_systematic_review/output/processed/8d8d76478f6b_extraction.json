@@ -1,0 +1,172 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "Document includes an arXiv identifier and date (arXiv:2601.03953v1), structured like a manuscript (abstract, methods, results, references) but published on arXiv rather than a journal or conference proceedings, indicating a preprint.",
+  "title": "Quantum Monte Carlo Simulations for predicting electron-positron pair production via the linear Breit-Wheeler process",
+  "authors": [
+    "Lucas Ivan Iñigo Gamiz",
+    "Óscar Amaro",
+    "Efstratios Koukoutsis",
+    "Marija Vranic"
+  ],
+  "year": "2026",
+  "journal_or_venue": "arXiv preprint arXiv:2601.03953",
+  "doi": "",
+  "abstract_summary": "The authors develop a NISQ-aware quantum Monte Carlo integration using iterative quantum amplitude estimation to predict electron-positron pair yields from head-on photon collisions via the linear Breit–Wheeler process. They demonstrate high agreement with theoretical predictions in ideal emulators, report up to ~90% accuracy on IonQ trapped-ion hardware, and discuss practical state-preparation and polynomial-embedding approximations as well as pathways for hybrid integration with classical simulation codes.",
+  "methodology_description": "The authors develop a hybrid quantum-classical Monte Carlo integration (QMCI) to estimate electron-positron pair production via the linear Breit–Wheeler process. The workflow consists of: (1) preparing a quantum state encoding the energy distribution of one photon beam (work register) using alternative state-preparation methods (variational ansatz with CNOT-Ry rings, a Fourier Series Loader (FSL) with a truncated Fourier series, and Qiskit's native initializer for ideal simulations); (2) approximating the Breit–Wheeler pair-production probability / cross-section over the relevant energy interval by a low-order polynomial (they use a second-degree polynomial in examples) and rescaling it to [0,1]; (3) embedding that polynomial into an ancilla qubit by means of controlled Ry rotations implemented via Qiskit’s PolynomialPauliRotations; (4) amplifying and estimating the amplitude of the ancilla-\"good\" state using Iterative Quantum Amplitude Estimation (IQAE, Grinko et al. formulation) which applies powers of the Grover operator determined by the FindNextK procedure; and (5) post-processing the measured amplitude to recover the expected pair-production probability and multiply by the number of interacting photons to obtain the expected number of pairs. Classical components include polynomial fitting via SciPy.optimize.curve_fit and baseline classical Monte Carlo using NumPy random samples with the same total number of oracle queries/samples as the quantum runs. The methodology is validated in ideal simulators across parameter sweeps (monoenergetic beam energy 2–10 MeV, Gaussian beam mean 6 MeV and σ varied, skewness varied) and with runs on IonQ’s Forte-Enterprise trapped-ion QPU (transpiled Qiskit circuits). Performance comparisons against analytic expectations and against classical Monte Carlo are reported (relative error and mean accuracy metrics).",
+  "algorithms_used": [
+    "Iterative Quantum Amplitude Estimation (IQAE, Grinko et al.)",
+    "Amplitude amplification / Grover operator",
+    "Variational Quantum Circuit state preparation (CNOT-Ry ring ansatz)",
+    "Fourier Series Loader (FSL) state preparation",
+    "PolynomialPauliRotations (polynomial embedding via controlled Ry rotations)",
+    "Classical Monte Carlo (NumPy)",
+    "SciPy curve_fit (for polynomial approximation)"
+  ],
+  "frameworks": [
+    "Qiskit (Qiskit Algorithms, PolynomialPauliRotations, IterativeAmplitudeEstimation)",
+    "SciPy (optimize.curve_fit)",
+    "NumPy"
+  ],
+  "experimental_setup": "Ideal quantum simulations/emulators (Qiskit-based) for method development and comparisons across state-preparation methods; and real-hardware runs on IonQ Forte-Enterprise trapped-ion QPU. QPU runs used circuits transpiled for the backend; work register reduced to 3 qubits for QPU experiments. Six QPU simulations were executed with 6144 shots each. Physical QPU: 36 physical qubits, all-to-all connectivity, median one-qubit gate error 0.02%, median two-qubit gate error 0.45%.",
+  "dataset_used": "",
+  "experiment_input": "Simulation inputs (not a real-world dataset): two colliding photon beams (head-on geometry). One beam monoenergetic with energy varied (2–10 MeV in scans); the other beam with a discretised Gaussian-like energy distribution (mean 6 MeV, σ varied from 0.1 to 1.0, skewness varied from -2 to +2 in tests). Number of photons per beam: 1e12; photon density: 6e19 cm^-3. The theoretical Breit–Wheeler cross-section is computed classically over the energy grid, then fit to a low-order polynomial (typically degree 2), rescaled to [0,1], and discretised to match the quantum register resolution (number of basis states determined by number of qubits).",
+  "experiment_process": "Pipeline: (1) compute analytic Breit–Wheeler cross-section and per-energy pair-production probability on a classical machine; (2) fit the probability function to a low-degree polynomial using SciPy.curve_fit and rescale to [0,1]; (3) prepare the work-register quantum state encoding the energy distribution using one of: (a) variational CNOT-Ry ring ansatz; (b) Fourier Series Loader with truncation order m; or (c) Qiskit native initializer (ideal only); (4) implement polynomial embedding via PolynomialPauliRotations — i.e., apply controlled Ry(2 arcsin(sqrt(p(x)))) rotations on an ancilla conditioned on work-register basis states; (5) build the oracle A and Grover operator Q and perform Iterative Quantum Amplitude Estimation (IQAE) using Qiskit’s IterativeAmplitudeEstimation implementation (FindNextK subroutine used to select Grover powers k); (6) measure the ancilla multiple times (shots) to obtain frequencies, estimate amplitude a = sin^2(theta_a), and translate back to expected probability via the inverse scaling; (7) post-process to compute expected number of pairs Npairs = Nint * E[p(X)], compare to analytic result and to classical MC with the same number of samples/oracle calls. Parameters varied in experiments include number of qubits (3–6 in examples), FSL truncation order m (example m=4), variational circuit layer count L, polynomial degree (2 used), and number of shots (6144 in QPU runs).",
+  "experiment_output": "Outputs are numeric estimates of expected electron-positron pair counts and associated relative errors versus analytic predictions. Reported metrics: absolute and relative error (%) against analytic expectation, mean percentage error across parameter sweeps, and mean accuracy. Comparisons versus a classical Monte Carlo baseline with the same number of oracle calls/samples are provided (table of mean % error). For hardware runs, reported QPU accuracies (e.g., mean accuracy ~87% relative to theoretical predictions) and trends across monoenergetic beam energy scans are shown.",
+  "experiment_parameters": {
+    "poly_approximation_degree": 2,
+    "state_prep_methods": [
+      "variational CNOT-Ry ring",
+      "Fourier Series Loader (FSL)",
+      "Qiskit native initializer (ideal)"
+    ],
+    "FSL_truncation_order_m": 4,
+    "work_register_qubits": "varied (examples: 3, 5, 6); QPU experiments used 3",
+    "shots_per_run": 6144,
+    "number_of_QPU_simulations": 6,
+    "monoenergetic_beam_energy_range_MeV": [
+      2,
+      10
+    ],
+    "gaussian_beam_mean_MeV": 6,
+    "gaussian_beam_sigma_range_MeV": [
+      0.1,
+      1.0
+    ],
+    "gaussian_skewness_range": [
+      -2,
+      2
+    ],
+    "number_of_photons_per_beam": 1000000000000.0,
+    "photon_density_cm3": 6e+19,
+    "QPU_physical_qubits": 36,
+    "median_one_qubit_error_pct": 0.02,
+    "median_two_qubit_error_pct": 0.45
+  },
+  "hardware_details": {
+    "simulator": "Qiskit-based ideal quantum simulator / cloud provider ideal backend (used for idealized comparisons)",
+    "QPU_model": "IonQ Forte-Enterprise (trapped-ion)",
+    "QPU_details": {
+      "physical_qubits": 36,
+      "connectivity": "all-to-all",
+      "median_one_qubit_gate_error": "0.02%",
+      "median_two_qubit_gate_error": "0.45%"
+    },
+    "cloud_provider": "IonQ (IonQ cloud for Forte-Enterprise access)",
+    "circuit_tooling": "Circuits prepared and transpiled using Qiskit; PolynomialPauliRotations and IterativeAmplitudeEstimation from Qiskit Algorithms used; classical fitting via SciPy; random sampling via NumPy"
+  },
+  "reproducibility_notes": "The paper describes implementation details (state-preparation methods, polynomial approximation, use of Qiskit PolynomialPauliRotations and IterativeAmplitudeEstimation, SciPy/NumPy usage) and lists numeric parameters used in experiments (qubit counts, shot counts, energy ranges). However, no public code repository or data archive is referenced in the text. Reproducibility would require reimplementation using Qiskit (Algorithms module), SciPy, and access to IonQ cloud for hardware replication. Contacting the corresponding authors or requesting their code would be needed for exact reproduction.",
+  "key_findings": [
+    "[supported] A quantum Monte Carlo integration (QMCI) workflow using iterative quantum amplitude estimation (IQAE) can be implemented to predict electron-positron pair yields from the linear Breit–Wheeler (LBW) process.",
+    "[supported] In ideal (noise-free) quantum simulations the QMCI implementation reproduces the theoretical/analytic LBW predictions with very high accuracy (reported mean accuracy ≈ 99.8% vs analytic).",
+    "[supported] Different state-preparation strategies were tested (Qiskit native initialisation, a variational circuit ansatz, and a Fourier Series Loader (FSL)) and all produced low relative errors in ideal simulations (relative errors < 1% in studied cases).",
+    "[supported] The Fourier Series Loader (FSL) approach achieved the lowest mean error in the presented ideal comparisons (mean error 0.115% in the listed experiment), while the Qiskit native initialiser and the variational approach had mean errors 0.156% and 0.167% respectively (same-resource comparison in Table 1).",
+    "[supported] The polynomial embedding of the LBW probability (via Qiskit's PolynomialPauliRotations) introduces approximation error; the mean error between the original polynomial and this embedding was reported as 0.69%.",
+    "[supported] Comparison to a classical Monte Carlo (MC) routine with the same number of oracle calls/samples showed the QMCI runs had lower mean % error vs analytic (classical: 0.191% vs quantum methods: 0.115–0.167% depending on state prep) for the tested instance.",
+    "[supported] The algorithm was executed on real trapped-ion hardware (IonQ Forte Enterprise) with reduced register size; hardware experiments produced results following the expected trends and achieved mean accuracy ≈ 87% relative to theory (some runs reported up to ≈90% accuracy).",
+    "[supported] Practical hardware experiments used three qubits in the work register (circuit transpiled to IonQ backend) and ran with 6144 shots per simulation in reported runs.",
+    "[speculative] The authors claim that IQAE (and QMC in general) can provide a quadratic sampling speedup over classical Monte Carlo in principle, but note that in this study the quadratic speedup is not observed because of polynomial approximation and NISQ resource constraints.",
+    "[speculative] The method can be integrated into classical HPC PIC (particle-in-cell) codes/QED modules to accelerate QED Monte Carlo sampling in larger plasma and collider simulations; pursuing multivariable extensions (energy profiles for both beams, spin, polarization) is proposed as next steps.",
+    "[supported] Behavioural details observed: (a) increasing the number of qubits improves discretisation resolution but may increase variational ansatz overfitting; (b) FSL accuracy depends on truncation order (limited by qubit count); (c) FSL performed worse on negatively skewed distributions in tests but overall accuracy remained >99% in ideal simulations.",
+    "[speculative] With improved error mitigation / more qubits / error-correcting techniques and better function embedding (quantum arithmetic), the authors assert the approach could realize the theoretical quadratic speedup in practice."
+  ],
+  "results_summary": "The paper presents a NISQ-aware quantum Monte Carlo integration pipeline for predicting electron-positron pair production via the linear Breit–Wheeler process, built around iterative quantum amplitude estimation (IQAE). In ideal (simulated) quantum runs the approach reproduces analytic LBW predictions with very high fidelity (mean ≈99.8% accuracy), and different state-preparation schemes (variational, Fourier Series Loader, Qiskit native) were benchmarked. When compared to a classical Monte Carlo with the same number of queries, the quantum approach showed lower mean error in the tested instance. The authors also ran experiments on IonQ Forte hardware (reduced register size), obtaining results that track theoretical trends with mean ≈87% accuracy (up to ≈90% reported). The study highlights sources of error (polynomial approximation of the cross-section and state preparation) and discusses limitations on demonstrating the theoretical quadratic speedup due to NISQ constraints, while proposing extensions toward integration with classical PIC/QED modules and multivariable problems.",
+  "performance_claims": [
+    "Ideal simulation mean accuracy vs analytic: 99.8%",
+    "Relative mean error (Table 1) for classical MC (same queries): 0.191%",
+    "Relative mean error (Table 1) Qiskit initialisation: 0.156%",
+    "Relative mean error (Table 1) Variational initialisation: 0.167%",
+    "Relative mean error (Table 1) Fourier Series Loader (FSL): 0.115%",
+    "Mean error of polynomial embedding (PolynomialPauliRotations) vs original polynomial: 0.69%",
+    "Quantum hardware (IonQ Forte) reported mean accuracy ≈ 87% relative to theoretical predictions (individual runs reported up to ≈90%)",
+    "Hardware experiments: 3 qubits in work register; 6144 shots per simulation; 6 simulations performed on QPU varying monoenergetic beam energies (3, 6, 9 MeV reported)",
+    "IonQ device specs cited: 36 physical qubits, one-qubit median gate error 0.02%, two-qubit median error 0.450% (reported device characteristics cited for context)"
+  ],
+  "quantum_advantage_claim": "theoretical",
+  "quantum_advantage_detail": "The paper cites the well-known theoretical quadratic sampling speedup of quantum amplitude estimation over classical Monte Carlo. The authors observe improved accuracy versus a classical MC baseline for the same number of queries in their tested instances, but they explicitly state that a provable/quadratic speedup is not demonstrated in practice in this work due to approximation errors (polynomial embedding) and NISQ hardware limitations. Thus the advantage remains theoretical/speculative in this study.",
+  "limitations": [
+    "Accuracy of the QMC predictions is constrained by the approximations required to embed the Breit–Wheeler cross section as a low-order polynomial and by approximations in state initialisation (author-stated).",
+    "The work uses a univariate formulation (single varying energy distribution); multivariable extensions (e.g., varying energy profiles for both beams, spin, polarisation) are not implemented (author-stated).",
+    "Experimental / physical modelling assumptions are simplified: head-on geometry where all photons interact, neglect of additional radiation emission and other pair-production mechanisms (Bethe–Heitler, Trident), which limits realism of results (author-stated).",
+    "Polynomial embedding via Qiskit's PolynomialPauliRotations introduces approximation error (mean error reported ≈ 0.69%) and limits fidelity of the algorithm (author-stated).",
+    "Fourier Series Loader (FSL) accuracy is limited by the truncation order, which itself is limited by the number of qubits, producing errors for certain distributions (author-stated).",
+    "Variational state-preparation ansatz has limitations: it enforces symmetry so cannot readily represent skewed distributions, tends to overfit and perform poorly as working-register qubit count increases (struggles beyond ~6 qubits) (author-stated).",
+    "Qiskit native initialisation uses operations not supported on current quantum hardware, limiting portability of that initialisation method to QPUs (author-stated).",
+    "NISQ-era hardware constraints (limited qubit counts, gate errors, circuit depth) limit achievable accuracy; hardware runs reported mean accuracy ~87% (author-stated).",
+    "[inferred] The reported experiments do not demonstrate the theoretical quadratic speedup in practice — the polynomial and state-preparation approximations (and NISQ constraints) remove the observed speedup in this work.",
+    "[inferred] Scaling to more complex/multivariate SFQED problems is likely to incur large resource (qubit, gate depth) and approximation burdens that were not quantified here.",
+    "[inferred] Embedding the exact Breit–Wheeler cross section would require quantum arithmetic with deep circuits impractical for NISQ devices, so a tradeoff between implementability and fidelity remains (author discusses but practical resource estimates absent).",
+    "[inferred] The experimental QPU evaluation is limited in scope (few qubits in work register, limited shot counts, single hardware platform), so results may not generalise across other hardware types or larger problems.",
+    "[inferred] Error propagation: total error is the sum of IQAE estimation error and approximation error (ϵ_tot = ϵ_IQAE + ϵ_approx), but quantitative balancing and how to control both in practice is not fully addressed."
+  ],
+  "open_questions": [
+    "How can the polynomial-approximation error and state-preparation error be reduced enough to (i) recover the theoretical quadratic speedup and (ii) achieve production-grade accuracy in SFQED Monte Carlo modules?",
+    "What are the resource requirements (qubit counts, gate depth, shot counts) to scale the algorithm to multivariable problems (e.g., both beam energy profiles, spin, polarisation) while keeping errors acceptable?",
+    "How can one efficiently embed more complex, non-polynomial functions (like the exact Breit–Wheeler cross section) on quantum hardware without incurring prohibitive circuit depth? Is practical quantum arithmetic feasible for this use-case?",
+    "What state-preparation techniques can represent skewed or otherwise non-symmetric distributions accurately on NISQ hardware without overfitting when qubit counts increase?",
+    "How will noise, gate errors, and limited connectivity in different hardware platforms affect the performance and portability of the proposed QMC module?",
+    "What error-mitigation or error-correction strategies (and associated overhead) are necessary to bring hardware accuracy from ~87% toward the >99% levels seen in simulators?",
+    "How can the quantum Monte Carlo module be practically integrated into existing classical PIC/HPC codes (SFQED modules) — what are the software and workflow requirements and overheads for hybrid HPC–QPUs?",
+    "Given the simplified physical model used (head-on, full overlap, neglected processes), how robust are QMC predictions when more realistic experimental geometries and competing pair-production channels are included?",
+    "What is the optimal tradeoff between truncation order (for FSL) and number of qubits to achieve a target fidelity for a given distribution family?",
+    "Can the variational ansatz be adapted or replaced to avoid overfitting and permit accurate loading of a broader class of probability distributions at larger qubit counts?"
+  ],
+  "future_work": [
+    "Expand the algorithm to multiple variables (multivariate extensions such as varying energy profiles for both particle species, spin, polarisation).",
+    "Adapt QMC to SFQED modules within classical simulation codes to enable integration between HPC and quantum processing units (hybrid classical–quantum workflows).",
+    "Prepare and adapt the approach for future collider and experimental scenarios (more realistic geometries and additional pair-production mechanisms).",
+    "Investigate use of more qubits, error-correcting algorithms, and increased number of shots on hardware to improve accuracy.",
+    "Explore pathways for integrating the quantum Monte Carlo module with classical simulation codes and workflows (practical integration and interface design).",
+    "Assess alternative or improved state-preparation methods and polynomial/function embedding approaches to reduce approximation error and broaden the class of representable distributions."
+  ],
+  "topic_tags": [
+    "simulation-monte-carlo"
+  ],
+  "methodology_tags": [
+    "amplitude-estimation",
+    "hybrid-quantum-classical",
+    "variational-nisq",
+    "grover-search"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [
+    "contradiction:scalability"
+  ],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:near-term-feasibility — Demonstrates a NISQ-aware quantum Monte Carlo integration (QMCI) using Iterative Quantum Amplitude Estimation with validation on ideal simulators and real IonQ trapped-ion hardware, reporting up to ~90% accuracy on-device.",
+    "#idea:hybrid-approach — Employs classical preprocessing (low-degree polynomial fitting of the Breit–Wheeler cross-section) and classical post-processing combined with quantum amplitude estimation, enabling reduced quantum resource requirements and integration with classical simulation codes.",
+    "#idea:near-term-feasibility — Uses practical state-preparation approximations (variational CNOT-Ry ansatz, Fourier Series Loader truncation, and discretisation) and reduces the work register (3 qubits on QPU) to make experiments feasible on current hardware.",
+    "#idea:hybrid-approach — Benchmarks QMCI against a classical Monte Carlo baseline using the same number of oracle calls/samples, providing direct comparative error and accuracy metrics."
+  ],
+  "contradictions": [
+    "contradiction:scalability — The study requires aggressive resource reductions (work register reduced to 3 qubits on QPU) and low-order polynomial / FSL truncations to run on hardware, indicating the approach does not yet scale to high-resolution or large real-world Monte Carlo problems and tempering optimistic scaling expectations for amplitude-estimation approaches."
+  ]
+}

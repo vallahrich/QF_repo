@@ -1,0 +1,166 @@
+---
+aliases:
+- Parameter Setting in Quantum Approximate Optimization of Weighted Problems
+- Parameter Setting Quantum Approximate
+authors:
+- Shree Hari Sureshbabu
+- Dylan Herman
+- Ruslan Shaydulin
+- Joao Basso
+- Shouvanik Chakrabarti
+- Yue Sun
+- Marco Pistoia
+auto_detected: true
+classification: ''
+contradiction_flags: []
+doi: ''
+evaluation_type: simulator
+evidence_type: ''
+has_quantitative_results: true
+idea_tags:
+- idea:near-term-feasibility
+- idea:hybrid-approach
+journal_or_venue: arXiv preprint (arXiv:2305.15201)
+methodology_tags:
+- variational-nisq
+- hybrid-quantum-classical
+paper_type: ''
+quantum_advantage_claim: not-applicable
+related_papers: []
+relevance_phase1: high
+relevance_phase3: high
+source_type: preprint
+source_type_confidence: high
+step1_date: unknown_pre_2026-05-02
+step1_model: gpt-5-mini
+step2_date: unknown_pre_2026-05-02
+step2_model: gpt-5-mini
+step3_date: unknown_pre_2026-05-02
+step3_model: gpt-5-mini
+step4_date: unknown_pre_2026-05-02
+step4_model: gpt-5-mini
+step5_date: unknown_pre_2026-05-02
+step5_model: gpt-5-mini
+step6_date: unknown_pre_2026-05-02
+step6_model: gpt-5-mini
+steps_completed:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+tags:
+- topic/portfolio-optimization
+- method/variational-nisq
+- method/hybrid-quantum-classical
+- idea/near-term-feasibility
+- idea/hybrid-approach
+title: Parameter Setting in Quantum Approximate Optimization of Weighted Problems
+topic_tags:
+- portfolio-optimization
+year: '2024'
+zotero_key: ''
+---
+
+## Abstract summary
+The paper develops parameter-setting heuristics for QAOA applied to weighted combinatorial problems. It derives analytically optimal p=1 parameters for weighted MaxCut (finite exponential weights and arbitrary distributions in the infinite-size limit), proves that weighted and unweighted QAOA landscapes correspond under a simple parameter rescaling using the second moment of weights, establishes concentration results, and validates the rules numerically across many graphs. A general rescaling heuristic is also proposed and shown to speed up local optimization (e.g., for constrained portfolio optimization).
+## Methodology
+The authors combine analytical derivations and numerical experiments. Analytically, they derive closed-form expressions for the p=1 QAOA energy for weighted MaxCut on triangle-free (D+1)-regular graphs with i.i.d. edge weights using a known trigonometric form of the p=1 QAOA objective, then optimize the expected objective over the weight distribution (explicit finite-size result for exponential weights; infinite-size limit for arbitrary distributions). They prove concentration results for the p=1 objective using McDiarmid's inequality for bounded-support weights and sub-Gaussian/Lipschitz arguments for Gaussian weights. For general p they extend prior large-girth regular-graph recursion techniques to show that, after a simple rescaling (by sqrt(E[w^2])), the weighted QAOA landscape corresponds to the unweighted case in the infinite-size limit, and derive parameter-rescaling rules. Numerically, they validate the rescaling rules on two empirical tasks: (1) MaxCut on a large dataset of 34,701 weighted graphs (various sizes up to 20 nodes), comparing (a) fully optimized parameters, (b) a prior transfer rule, and (c) two proposed rescaling rules for parameters at p in {1,2,3}; (2) constrained portfolio (mean-variance) optimization with a budget constraint using xy-mixer QAOA (p=1) on 280 randomly generated portfolio instances (7–20 assets) from Qiskit Finance. For portfolio experiments they rescale the objective according to their heuristic, initialize the QAOA state as the Hamming-weight-k Dicke state, use classical local optimization (BOBYQA via NLopt) starting from SK-inspired parameters, and compare optimizer convergence and solution quality with and without rescaling.
+
+**Algorithms used:** QAOA, Quantum Alternating Operator Ansatz (xy-mixer variant), BOBYQA (classical optimizer)
+**Frameworks:** QAOAKit (dataset / utilities), Qiskit (qiskit.finance RandomDataProvider), NLopt (BOBYQA implementation)
+
+**Experimental setup:** Classical numerical simulation/benchmarking using QAOAKit and Qiskit-generated instances; no quantum hardware is reported. Parameter optimization performed with NLopt/BOBYQA; expectations and energies evaluated via classical simulation of QAOA circuits (exact/analytic evaluation of expected energies rather than sampling from a QPU).
+
+**Dataset:** For portfolio experiments: random mean-variance portfolio instances generated with Qiskit Finance RandomDataProvider — 280 portfolios total (20 instances per qubit size) with number of assets (qubits) between 7 and 20. For MaxCut experiments: a dataset of 34,701 weighted graphs (regular and non-regular, up to 20 nodes) from Ref. [9], provided via QAOAKit; edge weights drawn i.i.d. from distributions: Uniform[0,1], Uniform[-1,1], Exponential(λ=0.2), and Cauchy.
+## Experiment details
+### Input
+MaxCut dataset: source = QAOAKit / Ref. [9], size = 34,701 graphs, node counts up to 20, edge weights sampled i.i.d. from four distributions (Uniform+, Uniform±, Exponential λ=0.2, Cauchy). Portfolio dataset: source = Qiskit Finance RandomDataProvider, size = 280 instances (20 instances for each N in 7..20), each instance represented as covariance matrix Σ and expected returns µ; preprocessing for both experiments includes rescaling objectives according to the paper's rules (MaxCut weights scaled by sqrt(mean w^2) per graph, general polynomial objectives scaled by RMS of coefficient magnitudes per degree as in Equation (8)).
+
+### Process
+MaxCut pipeline: (1) For each graph compute scaling factor s = sqrt((1/|E|) Σ_{e in E} w_e^2) and rescale edge weights w_e -> w_e / s. (2) Set QAOA parameters using unweighted-graph parameters (β_inf, γ_inf) with γ scaled according to formulae (two variants tested: γ = γ_inf * sqrt(D^{-1} * (1/|E| Σ w_e^2)) and γ = γ_inf * (1/|E| Σ w_e^2)^{ -1/2 } * arctan(1/sqrt(D-1)). (3) Optionally run a local optimizer starting near the proposed parameters to refine. (4) Compare approximation ratio to fully optimized parameters and to prior transfer method. Portfolio pipeline: (1) Construct mean-variance objective with budget equality constraint; encode as spin Hamiltonian and apply xy Hamming-weight-preserving mixer; (2) Rescale objective using Equation (8) (per-instance scaling); (3) Initialize QAOA at p=1 with Dicke initial state and parameters γ_init=1, β_init=π/4 (SK-based); (4) Optimize parameters using BOBYQA (NLopt) with xtol=ftol=1e-8; (5) Measure optimizer iterations to converge and final objective value; compare rescaled vs original objective and ablated rescaling (ignore linear term µ).
+
+### Output
+Reported metrics and outputs include approximation ratio (median across instances) for MaxCut, optimality gap relative to fully optimized parameters (difference in approximation ratio in percentage points), distributions of gaps across weight distributions and p values, and performance profiles for portfolio optimization showing fraction of instances solved versus number of optimizer iterations. Baselines include fully optimized QAOA parameters and the prior parameter-transfer heuristic from Ref. [9]. Numerical results also report median differences and factors of improvement (e.g., 7.4x fewer iterations on average for portfolio rescaling).
+
+### Parameters
+- MaxCut: {'graph_count': 34701, 'node_count': 'up to 20', 'p_values': [1, 2, 3], 'weight_distributions': ['Uniform[0,1]', 'Uniform[-1,1]', 'Exponential(lambda=0.2)', 'Cauchy'], 'parameter_methods_compared': ['Fully optimized', 'Ref.[9] median-transfer', 'Proposed rescaling (variant 1, eq.86)', 'Proposed rescaling (variant 2 with arctan, eq.87)'], 'initial_parameters_for_local_opt': 'from unweighted infinite-size tables (β_inf,γ_inf) or median tables in referenced works'}
+- Portfolio: {'instance_count': 280, 'assets_qubits_range': [7, 20], 'instances_per_size': 20, 'p': 1, 'mixer': 'xy Hamming-weight-preserving', 'initial_state': 'uniform superposition over Hamming weight k (Dicke state)', 'initial_parameters': {'gamma': 1, 'beta': 0.7853981633974483}, 'optimizer': 'BOBYQA (NLopt)', 'optimizer_tolerances': {'xtol': 1e-08, 'ftol': 1e-08}}
+- shots: not specified (expectation values evaluated analytically / via classical simulation)
+- rescaling_rule_reference: Equations (6) and (8) in paper (divide by sqrt(mean w^2) or RMS of coefficients per degree)
+
+### Hardware
+N/A
+
+### Reproducibility
+Datasets referenced are available: the MaxCut weighted-graph dataset is from Ref. [9] and accessible via QAOAKit; portfolio instances were generated via Qiskit Finance RandomDataProvider (public). Optimization tools used (NLopt/BOBYQA) are public. The paper cites parameter tables for unweighted infinite-size parameters from prior work. The authors do not provide an explicit public code repository in the preprint; reproduction would require reimplementation using QAOAKit/Qiskit, the described rescaling rules, and NLopt with the specified tolerances.
+## Findings
+- [speculative] For p = 1 QAOA on weighted MaxCut on triangle-free (D+1)-regular graphs, the authors derive analytically the optimal γ in expectation for weights drawn i.i.d.; for exponential weights (finite size) γ* = 1/√E[w^2] · √((D+3)/2).
+- [speculative] In the infinite-size limit (D → ∞) for p = 1 and any i.i.d. weight distribution with finite second moment, the expected QAOA objective is maximized at γ* = 1/√E[w^2] (after scaling γ = Θ(D^{-1/2})).
+- [speculative] For general depth p ≥ 1 on large-girth regular graphs with i.i.d. edge weights, the weighted MaxCut QAOA energy landscape is related to the unweighted MaxCut landscape by a simple rescaling of γ by √E[w^2]; thus parameters optimal for the unweighted case can be rescaled to obtain parameters for the weighted case (theorem connecting ϑ_p and ν_p).
+- [speculative] The p = 1 QAOA objective for weighted MaxCut concentrates sharply around its expectation for random weights (proved concentration bounds for bounded-support and Gaussian weights), implying the parameter-setting rules based on expectations hold with high probability.
+- [supported] Numerical experiments on a dataset of 34,701 weighted graphs (up to 20 nodes; multiple weight distributions and non-regular graphs) show that the proposed parameter rescaling methods yield QAOA energies whose median performance is close to that achieved by directly optimized parameters.
+- [supported] Across tested graphs, depths p ∈ {1,2,3} and weight distributions, the proposed scheme achieved solutions on average 1.1 percentage points away from optimized-parameter solutions, improving over 3.5 percentage points for the prior heuristic from Ref. [9].
+- [supported] For exponential and Cauchy weight distributions the proposed rescaling methods notably outperform the prior method: median disparity reduced by a factor of ~3 (exponential) and ~6 (Cauchy) in one comparison; in another reported case an ~8× reduction in optimality gap at p=3 for Cauchy-distributed weights.
+- [supported] For a constrained portfolio optimization problem solved with xy-QAOA (p = 1) on 280 randomly generated instances (7–20 assets), the proposed general heuristic rescaling of the objective improved the optimizer geometry and reduced the number of BOBYQA iterations to converge to a fixed local optimum by 7.4× on average.
+- [speculative] A biased version of the Sherrington–Kirkpatrick (SK) model with nonzero mean couplings behaves trivially in the thermodynamic limit unless the bias µ(N) decays as O(N^{-1/2}); otherwise the mean term dominates and the problem reduces to a trivial solution.
+- [speculative] The rescaling insight generalizes to higher-order polynomial objectives (k-local/hypergraph problems), motivating a general heuristic that divides the objective by a root-mean-square of coefficients per interaction order before parameter optimization.
+
+**Results summary:** This work develops both theoretical and empirical parameter-setting heuristics for QAOA on weighted combinatorial optimization problems. The authors derive analytical parameter scalings: for p=1 they obtain closed-form optimal γ in expectation (finite-size for exponential weights and in the infinite-size limit for general distributions), and for arbitrary depth p they prove that the weighted MaxCut QAOA landscape converges to the unweighted landscape under a √E[w^2] rescaling of γ on large-girth regular graphs. They also prove concentration results showing these expectations apply with high probability for random weights. Empirically, on a large dataset of weighted graphs their rescaling heuristics produce QAOA energies very close to those from directly optimized parameters (median ≈1.1 percentage points worse vs. 3.5 p.p. for a prior heuristic). A general rescaling heuristic is further validated on constrained portfolio optimization with xy-QAOA, reducing optimizer iterations by ≈7.4×.
+
+**Performance claims:**
+- On a dataset of 34,701 weighted graphs and p ∈ {1,2,3}, the proposed parameter scheme yields solutions on average 1.1 percentage points away from solutions obtained with optimized parameters (median), compared with 3.5 percentage points using the prior method of Ref. [9].
+- For weights drawn from the exponential distribution, the median disparity from optimized parameters is reduced by a factor of ~3 (from 3.6 p.p. to 1.0 p.p.) relative to Ref. [9].
+- For weights drawn from the Cauchy distribution, the median disparity from optimized parameters is reduced by a factor of ≈6 (from 20.7 p.p. to 3.3 p.p.) relative to Ref. [9]; an ~8× reduction in optimality gap at p=3 is reported for one comparison.
+- For p = 1 and exponential-distributed edge weights on triangle-free (D+1)-regular graphs (finite size), the expected-optimal γ* = 1/√E[w^2] · √((D+3)/2) (analytical formula).
+- In the infinite-size limit for p = 1, optimal γ scales as γ* = 1/√E[w^2] when γ = Θ(D^{-1/2]) (theoretical result).
+- Concentration bounds: for bounded-support weights, typical relative deviations from the mean of the QAOA objective are of order ~exp(−ϵ^2 D^2); for Gaussian weights the bound is ~exp(−ϵ D / log D) (theoretical).
+- On 280 portfolio instances (7–20 assets) with xy-QAOA (p = 1), the rescaling heuristic reduced the number of iterations of the BOBYQA optimizer to reach the same local optimum by 7.4× on average.
+## Quantum advantage claim
+**Classification:** not-applicable
+
+The paper focuses on parameter-setting heuristics and theoretical analysis of QAOA parameter scaling for weighted problems; it does not claim or demonstrate quantum computational advantage over classical algorithms in finance or optimization. The results concern improved parameter transfer and empirical closeness to directly optimized QAOA performance, not superiority to classical methods.
+## Limitations
+- High-girth / triangle-free graph assumption (girth > 2p + 1) inherited from prior work — analytical results require graphs with large girth and may not hold for graphs with short cycles.
+- Regularity and i.i.d. edge-weight assumptions — the theorems assume (D+1)-regular graphs with independently and identically distributed edge weights.
+- Infinite-size / large-degree limits for some results — the correspondence between weighted and unweighted QAOA landscapes and some optimal-parameter derivations are proven in the infinite-size (D → ∞ or N → ∞) limit and thus lack finite-size rigorous guarantees.
+- Finite-second-moment requirement for weight distributions — analytical proofs (concentration, scaling) require distributions with finite second moment, excluding certain heavy-tailed distributions.
+- Cauchy / heavy-tailed distributions not covered by theoretical guarantees — numerical results show degraded performance for Cauchy weights, and the theory does not cover infinite-variance cases.
+- Concentration results require additional technical conditions (e.g., for Gaussian weights the proof uses log(N) = o(D log(D))) which limit direct applicability to all graph regimes.
+- Analysis focuses on transverse-field mixer (B = sum X_j) — rigorous analytical results are provided for that mixer; extensions to other mixers (e.g., xy mixer for constrained problems) are treated heuristically/numerically without formal guarantees.
+- Closed-form iterations and techniques do not apply to complete graphs — the methods used for large-girth sparse graphs do not extend directly to dense/complete graphs.
+- [inferred] Numerical validation is limited to small instances (up to 20 qubits / nodes) — scalability and behaviour on significantly larger problem sizes are not empirically established.
+- [inferred] Practical hardware effects (noise, finite sampling, device errors) are not considered in the analysis or numerical experiments, so robustness to realistic quantum hardware is unknown.
+- [inferred] The theoretical results assume γ scales as Θ(D^{-1/2}) in derivations; applicability when optimal γ deviates from that scaling is not proven.
+- [inferred] The parameter-setting heuristics are justified in expectation or with high probability over random weights, but worst-case instances (where optimal parameters may be far from origin) are not addressed.
+## Open questions
+- How can the analytical parameter-scaling results be generalized to graphs that are non-regular, have short cycles (low girth), or otherwise violate the high-girth assumption?
+- Can rigorous theoretical guarantees be developed for QAOA parameter setting when the mixer is not the transverse-field (e.g., xy mixer) or for other constrained/structured mixers?
+- What is the theoretical behavior of QAOA for weighted problems with heavy-tailed or infinite-variance weight distributions (e.g., true Cauchy), and can the methods be extended to such cases?
+- How does parameter transfer/rescaling perform for correlated (non-i.i.d.) edge weights, and can the analysis be extended to such settings?
+- What are the properties and scaling limits of the biased SK model in the non-trivial regime where µ(N) = O(N^{-1/2})? (The authors explicitly leave study of this regime open.)
+- Can the closed-form iterations or other analytical techniques be adapted to dense or complete graphs (e.g., complete SK-like instances) where locality arguments fail?
+- How robust are the proposed rescaling heuristics and parameter-transfer rules to realistic hardware noise, finite sampling, and optimization noise in practical quantum devices?
+- Can the empirical success of the heuristics on small instances be extended and validated on larger problem sizes and in production-relevant datasets?
+- Is there a unifying theoretical framework that explains scale-dependence of parameterized quantum circuits across QAOA, quantum kernels, and quantum neural networks?
+
+**Future work:**
+- Study the biased SK model in the non-trivial regime µ(N) = O(N^{-1/2}) and characterize its properties and limits (explicitly mentioned by the authors).
+- Develop a unifying theory of parameterized quantum circuits that explains scale-dependence across QAOA, quantum kernel methods, and quantum neural network initialization — the authors note this as a promising direction requiring new mathematical techniques.
+## Key ideas
+- #idea:near-term-feasibility — Analytic closed-form p=1 QAOA parameters derived for weighted MaxCut on triangle-free regular graphs and in the infinite-size limit, enabling principled parameter choices for NISQ-era QAOA.
+- #idea:near-term-feasibility — A simple per-instance rescaling rule (scale by sqrt(E[w^2]) / RMS of coefficients) maps weighted QAOA landscapes to the unweighted case in the infinite-size limit and yields effective parameter transfer.
+- #idea:hybrid-approach — Rescaled parameters serve as strong initial points for classical local optimizers (BOBYQA), dramatically reducing optimizer iterations and improving convergence in constrained portfolio (xy-mixer QAOA) problems (e.g., reported ~7.4x fewer iterations on average).
+- #idea:near-term-feasibility — Extensive numerical validation: 34,701 weighted MaxCut graphs (up to 20 nodes) across four weight distributions and 280 mean-variance portfolio instances (7–20 assets) demonstrate that rescaling achieves approximation ratios close to fully optimized parameters while speeding up tuning.
+- #limitation:simulation-only — All experiments are classical simulations / analytic expectation evaluations (no experiments on quantum hardware), so hardware noise and sampling overheads are not assessed.
+- #limitation:qubit-count — Empirical validation limited to small instances (<=20 qubits/assets), leaving open scalability to larger, practically relevant portfolio sizes.
+- #limitation:no-empirical-validation — Lack of real-QPU results means practical effects of state preparation (e.g., Dicke state), circuit depth, and noise on proposed heuristics remain untested.
+## Contradictions
+<!-- Step 6 output — where this paper contradicts others -->
+
+## Notable quotes
+<!-- Researcher-added — verbatim quotes with page references -->
+
+## Researcher notes
+<!-- Researcher-added — not LLM generated -->

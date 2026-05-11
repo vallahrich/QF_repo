@@ -1,0 +1,210 @@
+{
+  "source_type": "preprint",
+  "source_type_confidence": "high",
+  "reasoning": "The document includes an arXiv identifier (arXiv:2208.11380v1) and 'v1' date, standard preprint metadata; it has academic structure (abstract, methods, results, citations) but no journal or conference venue, indicating an arXiv preprint rather than peer-reviewed publication.",
+  "title": "Financial Index Tracking via Quantum Computing with Cardinality Constraints",
+  "authors": [
+    "Samuel Palmer",
+    "Konstantinos Karagiannis",
+    "Adam Florence",
+    "Asier Rodriguez",
+    "Román Orús",
+    "Harish Naik",
+    "Samuel Mugel"
+  ],
+  "year": "2022",
+  "journal_or_venue": "arXiv preprint arXiv:2208.11380",
+  "doi": "",
+  "abstract_summary": "The paper presents a method to encode nonlinear cardinality constraints into a QUBO formulation solvable by quantum annealing, enabling exact cardinality-constrained portfolio optimization. Applied to index tracking and enhanced index tracking for the Nasdaq-100 and S&P 500 using D-Wave's hybrid solver, the approach yields much smaller portfolios that closely track indices and can materially improve risk-return profiles (e.g., Sharpe ratio) while retaining high tracking fidelity.",
+  "methodology_description": "The authors formulate the cardinality-constrained portfolio optimization and index-tracking problems as discrete Markowitz-style objectives encoded as quadratic unconstrained binary optimization (QUBO) problems suitable for quantum annealing. Asset weights are discretized via a binary encoding: each asset weight ω_i is represented by D binary variables x_{i,d} with a chosen resolution K (units of investment). Binary indicator variables z_i mark whether an asset is active; an exact cardinality constraint is enforced by adding the quadratic penalty (1·z - C)^2, and a fully-invested constraint is enforced via (1·ω - 1)^2. The tracking objective minimizes cumulative (or per-timestep) return deviation from an index; the standard mean-variance term ω^T Σ ω is included for enhanced tracking using a tunable risk-ratio parameter λ to trade off tracking vs covariance minimization. Coupling terms between z_i and the discrete holding variables ensure holdings are only present when z_i=1. The resulting QUBO (only quadratic and linear terms after the chosen encoding and reductions) is solved with D-Wave's Leap Hybrid quantum annealing service. Multiple parameter sweeps were performed across cardinalities C and resolutions K, and multiple samples per configuration were collected and evaluated using metrics including cumulative tracking error (CTE), mean/median relative errors, volatility error, timestep return correlation, and Sharpe-ratio improvement; for enhanced tracking a 90-day rolling covariance was used to form Σ_t and λ was varied (e.g. 0, 0.05, 0.1, 0.2, 0.5).",
+  "algorithms_used": [
+    "Quantum Annealing (D-Wave Hybrid Solver)",
+    "Quadratic Unconstrained Binary Optimization (QUBO) formulation",
+    "Discrete/binary encoding of portfolio weights",
+    "Markowitz mean-variance optimization (embedded as quadratic term)",
+    "Penalty-method constraint encoding (quadratic penalties for full-investment and exact cardinality)"
+  ],
+  "frameworks": [
+    "D-Wave Leap Hybrid (D-Wave hybrid quantum annealing service)"
+  ],
+  "experimental_setup": "QUBO problems constructed from discretized Markowitz/tracking objectives with binary encoding of weights and explicit binary indicator variables for cardinality. The QUBOs were solved using D-Wave's LEAP Hybrid solver. For each (C, K) configuration the authors collected multiple samples (20 samples for main tracking experiments; 10 samples for some enhanced tracking experiments). Problem sizes ranged (examples) from 100 to 500 assets (S&P 500 and Nasdaq-100 experiments). Upper bounds on single-asset holdings (20%) were used to reduce required binary depth. Covariance matrices for enhanced tracking used a 90-day rolling window. The D-Wave Leap Hybrid service (hybrid quantum-classical annealer) was used to obtain feasible solutions.",
+  "dataset_used": "Daily asset returns for the Nasdaq-100 and S&P 500 indices over the period 2021-06-01 to 2022-05-28. Index tickers referenced: Nasdaq-100 (NDX / NDK) and S&P 500 (GSPC).",
+  "experiment_input": {
+    "data_source": "Daily market data for the Nasdaq-100 and S&P 500 indices (tickers given), period JUN-01-2021 to MAY-28-2022",
+    "num_assets": "Experiments on 100-asset (Nasdaq-100) and 500-asset (S&P 500) universes",
+    "preprocessing": "Compute daily returns; use log-returns for cumulative tracking metrics (additive property). For enhanced tracking compute per-timestep covariance matrices Σ_t using a 90-day rolling window. Impose maximum single-asset holding of 20% (rounded to integer units in chosen resolution). Discretize weights into K units per asset and encode via binary variables; add binary indicator variables z_i and penalty terms for full-investment and exact cardinality.",
+    "resolutions_tested": [
+      31,
+      63,
+      127,
+      255
+    ],
+    "cardinalities_tested": [
+      25,
+      50,
+      75,
+      100
+    ]
+  },
+  "experiment_process": {
+    "steps": [
+      "Formulate the discrete portfolio/tracking objective: tracking error term (per-timestep or cumulative), mean-variance term ω^T Σ ω, and full-investment constraint.",
+      "Introduce binary indicator variables z_i and add exact cardinality quadratic penalty (1·z - C)^2.",
+      "Encode each discrete asset weight ω_i by D binary variables x_{i,d} with resolution K (ω_i = (1/K) Σ 2^d x_{i,d}), and add coupling terms between z_i and x_{i,d} to enforce that holdings require z_i=1.",
+      "Reduce any higher-order terms into quadratic form via the chosen encoding so the objective is a QUBO (only linear and quadratic terms remain).",
+      "Sweep hyperparameters: cardinality C and resolution K; for enhanced tracking sweep risk-ratio λ across values (example set: 0, 0.05, 0.1, 0.2, 0.5).",
+      "Submit QUBO to D-Wave Leap Hybrid solver and collect multiple samples per configuration (20 samples typical; 10 for some enhanced experiments).",
+      "Filter/select feasible solutions that satisfy all constraints (feasibility success rate reported per configuration).",
+      "Evaluate selected portfolios on metrics: cumulative tracking error (CTE), mean/median relative return errors, volatility error, timestep return correlation, Sharpe ratio improvement, and a combined enhancement score (Sharpe improvement divided by CTE).",
+      "Compare best-performing portfolios across parameter settings and report holdings, tracking performance, and enhancement metrics."
+    ],
+    "parameters_tuned": [
+      "Cardinality C (e.g., 25, 50, 75, ...)",
+      "Resolution K (e.g., 31, 63, 127, 255)",
+      "Risk-ratio λ for enhanced tracking (e.g., 0 → 0.5)",
+      "Maximum single-asset holding (20% bound)",
+      "Number of binary bits D per asset determined by Kmax"
+    ],
+    "samples_per_configuration": 20,
+    "enhanced_samples_per_configuration": 10
+  },
+  "experiment_output": {
+    "output_type": "Discrete portfolio solutions (indicator vector z and discretized weights ω), and associated performance metrics",
+    "reported_metrics": [
+      "Cumulative tracking error (ϵCTE)",
+      "Mean relative error (MRE) over timesteps",
+      "Median relative error (MdRE) over timesteps",
+      "Volatility error (relative risk difference)",
+      "Timestep return correlation with target index",
+      "Sharpe ratio improvement (median relative error of per-timestep Sharpe)",
+      "Enhancement score (Sharpe improvement / CTE)",
+      "Success rate of feasible solutions among collected samples"
+    ],
+    "baselines": "Target index returns/Sharpe (Nasdaq-100 or S&P 500); unconstrained/resolution variants compared across C and K"
+  },
+  "experiment_parameters": {
+    "num_samples": 20,
+    "enhanced_num_samples": 10,
+    "resolutions_K_tested": [
+      31,
+      63,
+      127,
+      255
+    ],
+    "cardinalities_C_tested": [
+      25,
+      50,
+      75,
+      100
+    ],
+    "lambda_values_tested": [
+      0.0,
+      0.05,
+      0.1,
+      0.2,
+      0.5
+    ],
+    "max_single_asset_holding_percent": 20,
+    "rolling_covariance_window_days": 90,
+    "datasets": [
+      "Nasdaq-100 (NDX/NDK), 100 assets",
+      "S&P 500 (GSPC), 500 assets"
+    ],
+    "qubits_estimates": "Total qubits per problem computed as N*(D+1) where D is bits per asset; Table I in paper lists example totals (e.g., for N=100,K=63 => D=4? and total qubits computed accordingly)"
+  },
+  "hardware_details": {
+    "solver_service": "D-Wave Leap Hybrid (hybrid quantum-classical annealing service)",
+    "qpu_model": "Not specified in paper (D-Wave hybrid service used; platform QPU unspecified)",
+    "provider": "D-Wave Systems (LEAP cloud service)",
+    "notes": "Authors reference modern D-Wave Hybrid Solver annealer and state the platform cap of ~4000 qubits for sizing context, but do not provide a specific QPU model or machine configuration."
+  },
+  "reproducibility_notes": "The paper does not provide public code or explicit data files. Input datasets are standard market indices (Nasdaq-100, S&P 500) with explicit date ranges (2021-06-01 to 2022-05-28) and the QUBO formulation is described in detail (equations for encoding, penalties, and objective). Reproducing results requires access to D-Wave Leap Hybrid service (proprietary) and re-implementation of the QUBO construction with the same encoding choices (resolutions K, cardinalities C, penalty weights, and risk-ratio λ). The paper does not list exact penalty weight hyperparameters (e.g. γ numeric values) or the full QUBO coefficients in machine-readable form, which will require tuning to replicate exactly.",
+  "key_findings": [
+    "[supported] The authors present a QUBO formulation that encodes non-linear cardinality constraints (exact enforcement of a fixed number C of selected assets) by introducing binary indicator variables and interactions with discretized asset-holding binaries, enabling the problem to be solved on a quantum annealer.",
+    "[supported] The formulation was executed on D-Wave's Leap Hybrid solver and produced feasible solutions with high success rates for the tested problem sizes (reported success rates in Table III often near 100% for many parameter combinations).",
+    "[supported] Index-tracking experiments were performed for the Nasdaq-100 and S&P 500 universes: the method produced compact tracking portfolios (e.g., C=25 for NDX and C=50 for S&P500) with low cumulative tracking error (examples: best NDX ϵCTE = 0.00012; S&P500 best ϵCTE = 0.00021) and small volatility deviations versus the target index.",
+    "[supported] Enhancement (combined tracking + mean-variance objective) experiments show trade-offs: small incorporation of mean-variance (λ≈0.05) yielded improved risk profiles while maintaining strong correlation to index returns (example: λ=0.05 gave ~36% median Sharpe improvement, ~20% volatility improvement, and ~94% timestep returns correlation in one reported run).",
+    "[supported] If mean-variance is prioritized more strongly (e.g., λ=0.5), the method can produce much larger Sharpe improvements (reported up to ~2x or 100% improvement in Sharpe) at the expense of increased tracking error and deviation from the index.",
+    "[supported] The authors scaled experiments to large problem instances (examples and resource accounting given up to 500 assets / various binary resolutions; Table I shows qubit requirements up to thousands for large settings) and report it is feasible using modern hybrid annealing resources.",
+    "[supported] The approach exploits discretized weight encoding with bounded holdings (e.g., max single-asset holding 20%) to reduce required binary depth and qubit resources.",
+    "[speculative] The paper claims that enabling exact cardinality constraints with quantum annealing 'opens the doors to new applications for creating innovative portfolios and exchange-traded funds (ETFs)' and suggests immediate practical commercial value.",
+    "[speculative] The authors suggest that quantum annealing provides a practical way around classical difficulties for non-convex cardinality-constrained portfolio optimization (implying an advantage over classical heuristics), but no direct head-to-head comparisons with classical methods are provided in the paper.",
+    "[speculative] Future extensions (not executed here) are recommended such as including dividend reinvestment, transaction costs, minimum holding periods and other product features for real-world ETF construction."
+  ],
+  "results_summary": "The paper formulates an exact QUBO encoding for cardinality-constrained portfolio optimization by coupling binary asset-selection indicators with discretized holding binaries, making the problem quadratic and tractable for quantum annealing. The authors ran experiments on D-Wave's Leap Hybrid solver for Nasdaq-100 and S&P 500 universes, demonstrating high feasibility rates and producing small tracking portfolios (e.g., 25–75 assets for NDX, 50 assets for S&P500) that achieve low cumulative tracking error and small volatility deviations. They further explored 'enhanced index tracking' by blending tracking and mean-variance objectives, reporting sizable Sharpe-ratio improvements for particular risk-weightings (with trade-offs in tracking fidelity when mean-variance is emphasized). The work presents empirical evidence that their encoding and the hybrid annealer can produce practical, constrained portfolios, and argues potential applicability to ETF construction and related financial products.",
+  "performance_claims": [
+    "Best Nasdaq-100 cumulative tracking error ϵCTE = 0.00012 (reported for C=25, K=63 and also for C=75,K=127 in some runs).",
+    "Best S&P 500 cumulative tracking error ϵCTE = 0.00021 (reported for C=50, various resolutions).",
+    "Reported success/feasibility rates of finding constraint-satisfying solutions in 20-sample runs: many parameter settings reported ≈100% success; some settings reported 80% or 40% (see Table III).",
+    "Enhanced tracking: λ=0.05 run reported ~36% median Sharpe improvement, ~20.86% volatility improvement, ~94% returns correlation; enhancement score (Sharpe/ϵCTE) reported as 20.65 in that best-sample case (Table IV).",
+    "Stronger mean-variance emphasis (λ=0.5) reported over 100% improvement in Sharpe ratio (≈2×) for the best-sample, with larger tracking error (ϵCTE up to 0.01688 reported in Table IV) and still ~89–91% returns correlation in reported examples.",
+    "Resource accounting: problem sizes mapped to qubit counts via N*(D+1) where examples given in Table I show e.g., for N=500, D=5 → ~3000 qubits (authors note D-Wave hybrid solver cap around ~4000 qubits at time of writing)."
+  ],
+  "quantum_advantage_claim": "speculative",
+  "quantum_advantage_detail": "The paper asserts that quantum annealing enables direct, exact enforcement of cardinality constraints and solves non-convex cardinality-constrained portfolio optimization instances that are difficult for classical algorithms; however, it does not present direct empirical comparisons to classical solvers or benchmarks demonstrating an unequivocal performance advantage (speed, quality, or scaling). Thus the claim of practical quantum advantage is presented as a promising outcome but remains speculative without head-to-head classical baselines.",
+  "limitations": [
+    "Qubit / solver resource limits: current experiments are constrained by available quantum-solver resources (authors note D-Wave solvers capped at ~4000 logical qubits at time of writing)",
+    "Dependence on D-Wave Leap Hybrid solver (single hardware/software provider) and hybrid quantum-annealing workflow",
+    "Discrete encoding / resolution trade-offs: choice of resolution K affects search-space size and solution quality; higher K increases search complexity while lower K reduces fidelity",
+    "Requirement on resolution vs cardinality (K / C ≥ 1) which constrains feasible combinations of K and C and limits representable portfolios",
+    "Need to set asset holding upper bounds (Kmax) to reduce qubit requirements; this imposes modeling constraints that may bias solutions",
+    "Limited asset universes tested: experiments only on Nasdaq-100 and S&P 500 (authors tested 100–500 asset cases); generalizability to other markets or larger universes not demonstrated",
+    "Limited time window / dataset: returns data from JUN-01-2021 to MAY-28-2022 only, which may not capture other market regimes or provide robust out-of-sample validation",
+    "Sampling and stochasticity: results are based on a finite number of solver samples (20 samples typically); variability in solutions and success rates (some configurations have lower success) limits reproducibility and reliability",
+    "No head-to-head comparison to state-of-the-art classical methods in terms of solution quality, runtime, or cost — performance/advantage vs classical heuristics is not quantified",
+    "Model simplifications: the implemented objective omits practical features such as transaction costs, dividend reinvestment, rebalancing costs/timing, and multiple asset classes",
+    "Inferred: No explicit out-of-sample testing/results reported (authors assert cumulative tracking error metric gives robustness but do not report out-of-sample backtests)",
+    "Inferred: Potential sensitivity to hyperparameters (γ, λ, K, C) and the chosen encoding/penalty weights; stability and parameter selection procedures are not fully specified",
+    "Inferred: Discretization is an approximation to continuous-weight portfolios; approximation error from discretization (finite K) is not fully characterized",
+    "Inferred: Embedding/chain overheads, noise and real-hardware constraints (annealer embedding, chain breaks) and their effect on solution quality are not quantified"
+  ],
+  "open_questions": [
+    "How does the quantum-annealing approach compare quantitatively to best-in-class classical optimization heuristics and commercial solvers (quality of solution, runtime, consistency, cost)?",
+    "What is the scalability limit in practice (in assets and resolution) for producing reliable feasible solutions on current and near-term quantum annealers?",
+    "How sensitive are results to choices of resolution K, cardinality C, and penalty/regularization hyperparameters (γ, λ)? What are principled procedures to set them?",
+    "How robust are the constructed tracking and enhanced-tracking portfolios out-of-sample across different market regimes, stress periods, and longer historical windows?",
+    "What is the impact of including realistic frictions (transaction costs, bid-ask spreads, taxes), dividend reinvestment, and discrete rebalancing schedules on solution feasibility and quality?",
+    "Can the exact cardinality encoding presented be extended to more complex real-world constraints (group/sector constraints, turnover limits, minimum holding periods) while remaining solvable on quantum hardware?",
+    "What is the economic significance of the reported Sharpe/risk improvements once practical implementation costs and operational constraints are included?",
+    "How do hardware-related factors (noise, embedding overhead, chain strengths) affect solution optimality and repeatability, and how can they be mitigated?",
+    "Can this methodology be adapted to multi-period or dynamic portfolio optimization problems rather than single-period static formulations?",
+    "How transferable are the findings across different asset classes (fixed income, commodities, FX) and mixed-asset ETFs?",
+    "Inferred: What automated model-selection or calibration pipelines are needed to choose K and Kmax such that both resource constraints and approximation fidelity are balanced?",
+    "Inferred: Is there a demonstrable quantum advantage (in quality or speed) for practical cardinality-constrained portfolio problems at real-world scales?"
+  ],
+  "future_work": [
+    "Further enhance the complexity of the index tracking model (authors suggest more complex objective formulations)",
+    "Include dividend reinvestment in the optimization model",
+    "Include transaction costs for re-balancing events",
+    "Extend experiments to other types of assets for building advanced ETF products",
+    "Explore additional practical constraints (implicitly suggested by desire to develop advanced ETFs and production-ready solutions)"
+  ],
+  "topic_tags": [
+    "portfolio-optimization"
+  ],
+  "methodology_tags": [
+    "quantum-annealing-qubo",
+    "hybrid-quantum-classical"
+  ],
+  "idea_tags": [
+    "idea:near-term-feasibility",
+    "idea:hybrid-approach"
+  ],
+  "contradiction_flags": [],
+  "has_quantitative_results": true,
+  "evaluation_type": "real-hardware",
+  "related_papers": [],
+  "relevance_phase1": "high",
+  "relevance_phase3": "high",
+  "key_ideas": [
+    "#idea:hybrid-approach — Formulate exact cardinality-constrained index-tracking as a QUBO (binary weight encoding + z indicators + quadratic penalty) and solve with D-Wave's Leap Hybrid service.",
+    "#idea:near-term-feasibility — Demonstrated on real market data (Nasdaq-100 and S&P500, 100–500 assets) with multiple samples per configuration, reporting concrete metrics (CTE, MRE, volatility error, correlation, Sharpe improvement).",
+    "#idea:hybrid-approach — Enhanced tracking by adding a mean-variance term with tunable risk-ratio λ to trade off tracking error vs covariance minimization, yielding portfolios with improved Sharpe ratios while maintaining tracking fidelity.",
+    "#idea:hybrid-approach — Binary discretization/resolution (K ∈ {31,63,127,255}) provides a clear trade-off: higher resolution improves fidelity but increases QUBO size and combinatorial complexity.",
+    "#limitation:data-encoding — Discretizing continuous weights into binary variables introduces approximation error and increases problem dimensionality; encoding cost is a practical constraint on fidelity.",
+    "#limitation:qubit-count — Although solved via a hybrid service, the discrete encoding (many binary variables per asset) and multiple coupling terms imply large logical problem sizes that would be challenging for pure QPUs without hybridization.",
+    "#idea:hybrid-approach — Exact cardinality enforced via quadratic penalty (1·z - C)^2 enables sparse, small portfolios that still closely track indices (useful for practical index-tracking/selective replication).",
+    "#idea:near-term-feasibility — Empirical workflow includes feasibility-success reporting and parameter sweeps (C, K, λ); provides a reproducible experimental protocol for further comparison."
+  ],
+  "contradictions": []
+}

@@ -1,0 +1,716 @@
+{
+  "paper_id": "9700e75505fd",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "9700e75505fd_hybrid_quantum_classical_algorithms_for_loan_collection_optimization_with_loan_l.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.85,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 0,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.problem_instance.dataset_specification: \"600 loanees; 5 actions per loanee; h_{i,j} estimated from Q-learning on historical loanee data; l_{i,j} derived from repayment/default history, collection expenses, credit losses, economic conditions, interest rate, and tax policy; A_{i,i'} estimated from internal transactions between loanees.\" is not of type 'object', 'null'",
+      "Schema error at experiments.0.quantum_resources.error_correction: None is not of type 'object'",
+      "Schema error at experiments.1.problem_instance.dataset_specification: \"h_{i,j} sampled from P(i,j) ∝ (log10(j+2) − (1−r_i) log10(j+1))/C with r_i drawn from Poisson(mean 0.7); A_{i,i'} generated from an Erdős-Rényi ensemble with N nodes and mean degree 2.\" is not of type 'object', 'null'",
+      "Schema error at experiments.1.quantum_resources.error_correction: None is not of type 'object'"
+    ],
+    "quality_details": {
+      "score": 0.85,
+      "completeness": 0.85,
+      "num_experiments": 2,
+      "experiment_scores": [
+        0.85,
+        0.85
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": true
+  },
+  "paper_metadata": {
+    "title": "Hybrid Quantum-Classical Algorithms for Loan Collection Optimization with Loan Loss Provisions",
+    "authors": [
+      "Jirawat Tangpanitanon",
+      "Jirawat Saiphet",
+      "Pantita Palittapongarnpim",
+      "Poompong Chaiwongkhot",
+      "Pinn Prugsanapan",
+      "Nuntanut Raksasri",
+      "Yarnvith Raksri",
+      "Pairash Thajchayapong",
+      "Thiparat Chotibut"
+    ],
+    "year": 2022,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "credit-lending",
+    "secondary_silos": [
+      "risk-management"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Hybrid quantum-classical loan collection optimization on a real proprietary Kasikornbank dataset, using divide-and-conquer community detection, QAOA on each subproblem, and greedy provision reduction to reduce LLP while maximizing expected net profit and network welfare.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "divide-and-conquer + QAOA + Greedy Provision Reduction (GPR)",
+        "ansatz": null,
+        "optimizer": "COBYLA",
+        "num_layers": 2,
+        "convergence_criteria": "minimize Energy(θ) using COBYLA; QAOA parameters optimized until ⟨H_A⟩_θ is minimized at θ_opt",
+        "hyperparameters": {
+          "N": 600,
+          "M": 5,
+          "epsilon": "ϵ ∈ [0, 1)",
+          "nu": 7,
+          "T": 2,
+          "J": 1,
+          "lambda": null,
+          "eta": null
+        },
+        "parameter_initialization": "θ initialized as a vector of size 2T with randomized real numbers in [0, 1)",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": "[0, 1) for initial randomized parameters"
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "Each loanee i is represented by M binary qubits/variables x_{i,j}; action j is taken if x_{i,j}=1. The QAOA uses up to ν×M qubits per subgraph, with one qubit per loanee-action pair.",
+        "objective_function": "Y = (1−ϵ) Σ_i Σ_j h_{i,j} x_{i,j} + ϵ Σ_{⟨i,i'⟩} A_{i,i'} (1−x_{i,1})(1−x_{i',1})",
+        "constraints_handling": "Local one-hot constraint Σ_j x_{i,j}=1 enforced by number-preserving QAOA Hamiltonians; LLP global constraint Σ_i Σ_j l_{i,j} x_{i,j} ≤ L handled by post-optimization Greedy Provision Reduction (soft constraint in practice).",
+        "num_binary_variables": 3000,
+        "problem_hamiltonian": "H_A = −(1−ϵ) Σ_i Σ_j h_{i,j} n̂_{i,j} − ϵ Σ_{⟨i,i'⟩} A_{i,i'} (1−n̂_{i,1})(1−n̂_{i',1}); H_B = −(J/2) Σ_i [Σ_j (X̂_{i,j} X̂_{i,j+1} + Ŷ_{i,j+1} Ŷ_{i,j})] with periodic boundary conditions"
+      },
+      "problem_instance": {
+        "description": "Personal loan collection optimization for 600 loanees with 5 possible collection actions per loanee, using a proprietary bank transaction network and bank-specific expected profit/provision estimates.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 600,
+        "data_type": "proprietary",
+        "dataset_name": "Kasikornbank personal loan dataset",
+        "dataset_specification": {
+          "description": "600 loanees; 5 actions per loanee; h_{i,j} estimated from Q-learning on historical loanee data; l_{i,j} derived from repayment/default history, collection expenses, credit losses, economic conditions, interest rate, and tax policy; A_{i,i'} estimated from internal transactions between loanees."
+        },
+        "data_preprocessing_details": "Community detection via Clauset-Newman-Moore greedy modularity maximization and Louvain method; recursive subdivision with edge-node insertion until subgraph size ≤ ν; no further preprocessing details reported.",
+        "evaluation_methodology": "Performance evaluated by comparing hybrid algorithm against standalone classical GPR baseline; results reported as Y and total provision versus GPR steps k, versus ϵ, and versus number of DPO actions N_f."
+      },
+      "quantum_resources": {
+        "num_qubits": 35,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": 4,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_statevector",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "mitigation_details": null,
+        "is_noisy": false
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "COBYLA",
+        "classical_preprocessing": "Graph/community detection and recursive divide-and-conquer partitioning; construction of subproblem Hamiltonians from h_{i,j} and A_{i,i'}; initialization of QAOA parameters randomly in [0, 1).",
+        "classical_postprocessing": "State reconstruction by combining compatible bitstrings across subgraphs; Greedy Provision Reduction iteratively adjusts actions to reduce LLP while preserving objective value as much as possible."
+      },
+      "results": [
+        {
+          "metric_name": "dataset_size",
+          "value": 600,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "loanees",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_actions",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "actions per loanee",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": 35,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "logical qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_variational_params",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_layers",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "subgraph_size_threshold",
+          "value": 7,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "loanees",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "objective_value_y",
+          "value": 120,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "objective_value_y",
+          "value": 140,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "total_provision",
+          "value": 5.4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "total_provision",
+          "value": 4.4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "provision_reduction",
+          "value": 18.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "objective_value_y",
+          "value": 175,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "objective_value_y",
+          "value": 200,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "expected_profit_improvement",
+          "value": 70,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "provision_reduction_vs_highest_possible",
+          "value": 57.4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "dpo_actions",
+          "value": 30,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "actions",
+          "higher_is_better": null,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "dpo_actions",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "actions",
+          "higher_is_better": null,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "expected_profit",
+          "value": 175,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "expected_profit",
+          "value": 200,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "objective_value_y",
+          "value": 10,
+          "unit": "arbitrary units"
+        },
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "objective_value_y",
+          "value": 100,
+          "unit": "arbitrary units"
+        },
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "total_provision",
+          "value": 5.4,
+          "unit": "arbitrary units"
+        },
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "total_provision",
+          "value": 4.4,
+          "unit": "arbitrary units"
+        },
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "expected_profit",
+          "value": 120,
+          "unit": "arbitrary units"
+        },
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "expected_profit",
+          "value": 200,
+          "unit": "arbitrary units"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "The paper reports an empirical improvement in expected net profit of approximately 70% when QAOA is included in the hybrid pipeline, but does not claim a computational speedup."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 600,
+          "num_qubits": 35,
+          "metric_name": "dataset_size",
+          "metric_value": 600
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Benchmark of the same hybrid quantum-classical loan collection algorithm on a simulated dataset with synthetic h_{i,j} and synthetic association network A_{i,i'} to test generality.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "divide-and-conquer + QAOA + Greedy Provision Reduction (GPR)",
+        "ansatz": null,
+        "optimizer": "COBYLA",
+        "num_layers": 2,
+        "convergence_criteria": "minimize Energy(θ) using COBYLA; QAOA parameters optimized until ⟨H_A⟩_θ is minimized at θ_opt",
+        "hyperparameters": {
+          "N": 600,
+          "M": 5,
+          "epsilon": "ϵ ∈ [0, 1)",
+          "nu": 7,
+          "T": 2,
+          "J": 1,
+          "lambda": null,
+          "eta": null
+        },
+        "parameter_initialization": "θ initialized as a vector of size 2T with randomized real numbers in [0, 1)",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": "[0, 1) for initial randomized parameters"
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "Each loanee i is represented by M binary qubits/variables x_{i,j}; action j is taken if x_{i,j}=1. The QAOA uses up to ν×M qubits per subgraph, with one qubit per loanee-action pair.",
+        "objective_function": "Y = (1−ϵ) Σ_i Σ_j h_{i,j} x_{i,j} + ϵ Σ_{⟨i,i'⟩} A_{i,i'} (1−x_{i,1})(1−x_{i',1})",
+        "constraints_handling": "Local one-hot constraint Σ_j x_{i,j}=1 enforced by number-preserving QAOA Hamiltonians; LLP global constraint Σ_i Σ_j l_{i,j} x_{i,j} ≤ L handled by post-optimization Greedy Provision Reduction (soft constraint in practice).",
+        "num_binary_variables": 3000,
+        "problem_hamiltonian": "H_A = −(1−ϵ) Σ_i Σ_j h_{i,j} n̂_{i,j} − ϵ Σ_{⟨i,i'⟩} A_{i,i'} (1−n̂_{i,1})(1−n̂_{i',1}); H_B = −(J/2) Σ_i [Σ_j (X̂_{i,j} X̂_{i,j+1} + Ŷ_{i,j+1} Ŷ_{i,j})] with periodic boundary conditions"
+      },
+      "problem_instance": {
+        "description": "Synthetic loan collection instance with N=600 loanees and M=5 actions, using modified Benford-law sampled h_{i,j} and Erdős-Rényi association network.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 600,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "h_{i,j} sampled from P(i,j) ∝ (log10(j+2) − (1−r_i) log10(j+1))/C with r_i drawn from Poisson(mean 0.7); A_{i,i'} generated from an Erdős-Rényi ensemble with N nodes and mean degree 2."
+        },
+        "data_preprocessing_details": "No additional preprocessing reported beyond synthetic generation.",
+        "evaluation_methodology": "Compared hybrid algorithm against standalone classical GPR on the same synthetic instance; results reported as total net profit versus number of DPO actions."
+      },
+      "quantum_resources": {
+        "num_qubits": 35,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": 4,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_statevector",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "mitigation_details": null,
+        "is_noisy": false
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "COBYLA",
+        "classical_preprocessing": "Synthetic data generation; community detection and recursive partitioning; random initialization of QAOA parameters in [0, 1).",
+        "classical_postprocessing": "State reconstruction and Greedy Provision Reduction."
+      },
+      "results": [
+        {
+          "metric_name": "dataset_size",
+          "value": 600,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "loanees",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_actions",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "actions per loanee",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": 35,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "logical qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_variational_params",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "objective_value_y",
+          "value": 120,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "objective_value_y",
+          "value": 140,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "total_provision",
+          "value": 5.4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "total_provision",
+          "value": 4.4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "provision_reduction",
+          "value": 18.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "objective_value_y",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "objective_value_y",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "expected_profit_improvement",
+          "value": 70,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "provision_reduction_vs_highest_possible",
+          "value": 57.4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "dpo_actions",
+          "value": 20,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "actions",
+          "higher_is_better": null,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "dpo_actions",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "actions",
+          "higher_is_better": null,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "expected_profit",
+          "value": 175,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "expected_profit",
+          "value": 200,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "arbitrary units",
+          "higher_is_better": true,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "objective_value_y",
+          "value": 10,
+          "unit": "arbitrary units"
+        },
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "objective_value_y",
+          "value": 100,
+          "unit": "arbitrary units"
+        },
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "total_provision",
+          "value": 5.4,
+          "unit": "arbitrary units"
+        },
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "total_provision",
+          "value": 4.4,
+          "unit": "arbitrary units"
+        },
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "expected_profit",
+          "value": 120,
+          "unit": "arbitrary units"
+        },
+        {
+          "method_name": "standalone_classical_gpr",
+          "metric_name": "expected_profit",
+          "value": 200,
+          "unit": "arbitrary units"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "The synthetic benchmark reports the same qualitative improvement as the real-data experiment: higher expected net profit with the hybrid method, but no computational speedup claim."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 600,
+          "num_qubits": 35,
+          "metric_name": "dataset_size",
+          "metric_value": 600
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    }
+  ]
+}

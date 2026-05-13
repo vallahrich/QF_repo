@@ -1,0 +1,445 @@
+{
+  "paper_id": "5a5bcd7b5e90",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "5a5bcd7b5e90_algorithmic_approach_to_adiabatic_quantum_optimization.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.833,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 1,
+    "validation_warnings": 1,
+    "validation_error_details": [
+      "Schema error at experiments.0.implementation_details.convergence_data.iterations_to_converge: 'All 50 instances solved within 13 iterations; average 3.0 iterations; 30 instances solved in 2 iterations' is not of type 'integer', 'null'"
+    ],
+    "validation_warning_details": [
+      "paper_metadata.year=2011 outside expected range [2015, 2027]"
+    ],
+    "quality_details": {
+      "score": 0.833,
+      "completeness": 0.833,
+      "num_experiments": 1,
+      "experiment_scores": [
+        0.833
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 0.3333333333333333
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Algorithmic approach to adiabatic quantum optimization",
+    "authors": [
+      "Neil G. Dickson",
+      "Mohammad H. Amin"
+    ],
+    "year": 2011,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": [
+      "simulation-monte-carlo"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Hybrid iterative adiabatic optimization algorithm tested on 64-qubit maximum independent set instances with highly degenerate local minima, using repeated short anneals and QMC-based sampling to update single-qubit tunneling amplitudes until the perturbative anticrossing is removed.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "iterative adiabatic quantum optimization with adaptive single-qubit tunneling penalties",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": "Stop when a sufficient result is returned; in simulations, instances were considered solved when either the adiabatic time ta < 16 µs or the probability of states descending to the global minimum exceeded 0.005",
+        "hyperparameters": {
+          "r": 500,
+          "tf": "0.08 µs",
+          "beta_schedule": "beta = 1/(kappa + 1)",
+          "feasible_range_delta_i": "[1/4, 8]",
+          "initial_delta_i": 1,
+          "success_threshold_ta": "16 µs",
+          "success_threshold_global_minimum_probability": 0.005
+        },
+        "parameter_initialization": "Initialize all tunneling amplitudes Delta_i = 1",
+        "optimizer_settings": {
+          "update_rule": "Delta_i,new = Delta_i,old^(1-beta) * mu_i^(-beta)",
+          "rescaling": "Rescale all Delta_i values to remain within [1/4, 8]",
+          "sampling_per_iteration": 500
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "Binary variable x_i assigned to each graph node; x_i = 1 indicates inclusion in the independent set",
+        "objective_function": "E(x) = -sum_i x_i + c * sum_(i,j in E) x_i x_j, with c > 1",
+        "constraints_handling": "Constraint enforced via penalty term c * sum x_i x_j; feasible independent sets correspond to zero penalty",
+        "num_binary_variables": 64,
+        "problem_hamiltonian": "HP = sum_i h_i sigma_z^i + sum_(i,j) J_ij sigma_z^i sigma_z^j, with h_i = (-n_i c + 2)/4 and J_ij = c/4 for edges"
+      },
+      "problem_instance": {
+        "description": "Randomly generated 64-node graph instances of maximum independent set, engineered to have a unique MIS of size 20 and 10^5 to 10^6 highly degenerate local minima",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "Graph generation procedure: start with 64 nodes and 220 random edges; find an independent set of size 20; add edges to make it maximal; iteratively search for other size-20 independent sets and add edges to eliminate them while preserving the target MIS"
+        },
+        "data_preprocessing_details": "Depth-first search over independent sets; edge additions used to enforce maximality and uniqueness of the MIS",
+        "evaluation_methodology": "50 generated hard instances evaluated by QMC simulation; performance tracked over iterations; all instances solved within 13 iterations"
+      },
+      "quantum_resources": {
+        "num_qubits": 64,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 500,
+        "num_variational_params": 64,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": null,
+        "device_name": null,
+        "framework": "Quantum Monte Carlo simulation"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "Generate hard MIS instances; compute mu_i from sampled local minima; perform gradient descent on non-minimum samples to identify minima wells",
+        "classical_postprocessing": "Determine whether the instance is solved based on adiabatic time or probability mass in the global-minimum basin; update Delta_i values iteratively",
+        "total_execution_time": null,
+        "quantum_execution_time": "tf = 0.08 µs per anneal, repeated r = 500 times per iteration",
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": "All 50 instances solved within 13 iterations; average 3.0 iterations; 30 instances solved in 2 iterations",
+          "final_loss_value": null,
+          "loss_curve_shape": "Number of unsolved instances decreases monotonically with iterations",
+          "variance_across_runs": null,
+          "num_independent_runs": 50
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_qubits",
+          "value": 64,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_nodes",
+          "value": 64,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "nodes",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_edges_initial",
+          "value": 220,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "edges",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "mis_size",
+          "value": 20,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "nodes in independent set",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "local_minima_count",
+          "value": 550000,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "count",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "local_minima_count",
+          "value": 1000000,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "count",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "maximal_independent_sets_count",
+          "value": 100000,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "count",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "maximal_independent_sets_count",
+          "value": 1000000,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "count",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "anneal_time_per_run",
+          "value": 0.08,
+          "uncertainty": null,
+          "num_runs": 500,
+          "unit": "microseconds",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "shots_per_iteration",
+          "value": 500,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "samples",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "success_threshold_ta",
+          "value": 16,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "microseconds",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "success_threshold_global_minimum_probability",
+          "value": 0.005,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "iterations_to_converge_average",
+          "value": 3.0,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "iterations_to_converge_max",
+          "value": 13,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "instances_solved_within_2_iterations",
+          "value": 30,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "instances",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "instances_solved_total",
+          "value": 50,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "instances",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "unsolved_instances_after_final_iteration",
+          "value": 0,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "instances",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "feasible_range_delta_i_min",
+          "value": 0.25,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "delta_i",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "feasible_range_delta_i_max",
+          "value": 8,
+          "uncertainty": null,
+          "num_runs": 50,
+          "unit": "delta_i",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "graph_generation_instances",
+          "value": 51,
+          "uncertainty": null,
+          "num_runs": 51,
+          "unit": "instances",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "excluded_instances",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": 51,
+          "unit": "instances",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "uniform_random_graphs_tested",
+          "value": 80,
+          "uncertainty": null,
+          "num_runs": 80,
+          "unit": "instances",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "uniform_random_graphs_with_unique_mis",
+          "value": 7,
+          "uncertainty": null,
+          "num_runs": 80,
+          "unit": "instances",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "uniform_random_graph_nodes",
+          "value": 128,
+          "uncertainty": null,
+          "num_runs": 80,
+          "unit": "nodes",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "uniform_random_graph_edges",
+          "value": 1572,
+          "uncertainty": null,
+          "num_runs": 80,
+          "unit": "edges",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "uniform random graph generation",
+          "metric_name": "uniform_random_graphs_with_unique_mis",
+          "value": 7,
+          "unit": "instances"
+        },
+        {
+          "method_name": "depth-first search / classical graph search",
+          "metric_name": "graph_generation_instances",
+          "value": 51,
+          "unit": "instances"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "No classical-vs-quantum speedup claim is made; the paper reports a heuristic iterative AQO method that solves the constructed instances in a small number of iterations."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 64,
+          "num_qubits": 64,
+          "metric_name": "instances_solved_total",
+          "metric_value": 50
+        },
+        {
+          "problem_size": 64,
+          "num_qubits": 64,
+          "metric_name": "iterations_to_converge_average",
+          "metric_value": 3.0
+        },
+        {
+          "problem_size": 64,
+          "num_qubits": 64,
+          "metric_name": "iterations_to_converge_max",
+          "metric_value": 13
+        },
+        {
+          "problem_size": 128,
+          "num_qubits": 128,
+          "metric_name": "uniform_random_graphs_with_unique_mis",
+          "metric_value": 7
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": "Step 4 of the algorithm can be completed in O(r n^2) time on a single classical processor, or Theta(log(r n)) time with O(r n^2) classical processors",
+        "speedup_order": "none",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    }
+  ]
+}

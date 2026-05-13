@@ -1,0 +1,329 @@
+{
+  "paper_id": "a4777ce71497",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "a4777ce71497_quantum_amplitude_loading_for_rainbow_options_pricing.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.95,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 3,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.implementation_details.classical_postprocessing: ['Post-process IQAE estimate to recover expected payoff', 'Apply discounting classically'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.implementation_details.classical_preprocessing: ['Compute historical mean daily log-returns', 'Compute historical covariance matrix', 'Perform Cholesky decomposition', 'Classically compute expected payoff for validation including discretization and arithmetic precision'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.scalability_data.0.problem_size: '2 assets' is not of type 'number', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.95,
+      "completeness": 0.95,
+      "num_experiments": 1,
+      "experiment_scores": [
+        0.95
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Quantum Amplitude Loading for Rainbow Options Pricing",
+    "authors": [
+      "Francesca Cibrario",
+      "Or Samimi Golan",
+      "Giacomo Ranieri",
+      "Emanuele Dri",
+      "Mattia Ippoliti",
+      "Ron Cohen",
+      "Christian Mattia",
+      "Bartolomeo Montrucchio",
+      "Amir Naveh",
+      "Davide Corbelletto"
+    ],
+    "year": 2024,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "derivative-pricing",
+    "secondary_silos": [
+      "simulation-monte-carlo"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "End-to-end rainbow option pricing using iterative quantum amplitude estimation on an IBM QASM noiseless simulator, with two correlated assets, comparing direct vs integration exponential amplitude loading.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "Iterative Quantum Amplitude Estimation (IQAE) with delayed transition to price space",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "precision_epsilon": 0.01,
+          "confidence_interval_alpha": 0.05,
+          "shots": 1000,
+          "assets": 2,
+          "time_to_expiration_days": 250,
+          "strike_price": 190,
+          "arithmetic_rounding": "1 decimal place",
+          "gaussian_qubits_per_asset": 2,
+          "target_qubits": 1,
+          "comparator_qubits": 1,
+          "exponential_register_sized_to_match_arithmetic_output": true,
+          "methods_compared": [
+            "integration amplitude loading",
+            "direct exponential amplitude loading"
+          ]
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "Two standard Gaussian distributions are loaded in parallel, then correlated via affine transformation using the Cholesky factor of the historical log-returns covariance matrix. The payoff is encoded into the amplitude of a target qubit after a comparator and exponential amplitude-loading block. The maximum is computed in return space using argmax(log(S0) + R).",
+        "objective_function": "Price a call rainbow option with payoff v(M_t) = max(M_t - K, 0), implemented in return space as v(Z_t) = max(e^{Z_t} - K, 0) and post-processed via delayed strike subtraction.",
+        "constraints_handling": "Comparator-controlled branching between constant payoff branch and exponential-loading branch; no explicit penalty terms.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Two-asset rainbow call option with real-market initial prices and historical log-return statistics.",
+        "num_assets": 2,
+        "time_steps": 1,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": null,
+        "dataset_specification": {
+          "initial_prices": {
+            "asset_1": 193.97,
+            "asset_2": 189.12
+          },
+          "mean_daily_log_returns": {
+            "asset_1": 0.0005096,
+            "asset_2": 0.0006255
+          },
+          "covariance_matrix": [
+            [
+              0.000335,
+              0.000257
+            ],
+            [
+              0.000257,
+              0.000418
+            ]
+          ],
+          "strike_price": 190,
+          "time_to_expiration_days": 250
+        },
+        "data_preprocessing_details": [
+          "Use historical daily log-returns to estimate mean and covariance",
+          "Apply Cholesky decomposition to the covariance matrix",
+          "Discretize Gaussian distributions with 2 qubits per asset",
+          "Round arithmetic to one decimal place"
+        ],
+        "evaluation_methodology": "Run on IBM QASM noiseless simulator with 1000 shots; measure the objective qubit after IQAE; compare estimated payoff against classically computed expected payoff including discretization and arithmetic precision."
+      },
+      "quantum_resources": {
+        "num_qubits": 24,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 1000,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": "IBM",
+        "device_name": "IBM QASM simulator",
+        "framework": "Classiq Platform"
+      },
+      "noise_model": {
+        "noise_parameters": null,
+        "mitigation_details": null,
+        "is_noisy": false,
+        "noise_description": "noiseless simulator"
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": "https://dub.sh/code-repository",
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": [
+          "Compute historical mean daily log-returns",
+          "Compute historical covariance matrix",
+          "Perform Cholesky decomposition",
+          "Classically compute expected payoff for validation including discretization and arithmetic precision"
+        ],
+        "classical_postprocessing": [
+          "Post-process IQAE estimate to recover expected payoff",
+          "Apply discounting classically"
+        ]
+      },
+      "results": [
+        {
+          "metric_name": "price_error",
+          "value": 0.0,
+          "uncertainty": "within confidence interval; exact error not reported",
+          "num_runs": 1000,
+          "unit": "USD",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "expected_payoff",
+          "value": 23.0238,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "USD",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "precision_epsilon",
+          "value": 0.01,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "confidence_interval_alpha",
+          "value": 0.05,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "shots",
+          "value": 1000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "shots",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_assets",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "time_to_expiration",
+          "value": 250,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "days",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "strike_price",
+          "value": 190,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "USD",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gaussian_qubits_per_asset",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "arithmetic_rounding_precision",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "decimal_place",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": 24,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical expected payoff computation",
+          "metric_name": "expected_payoff",
+          "value": 23.0238,
+          "unit": "USD"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo simulation",
+          "conditions": "using amplitude estimation for expectation estimation; assuming the Grover operator can be implemented efficiently",
+          "is_demonstrated": false,
+          "caveats": "The paper states the quadratic sample-complexity advantage of amplitude estimation in principle, but does not demonstrate an end-to-end runtime speedup on hardware."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": "2 assets",
+          "num_qubits": 24,
+          "metric_name": "expected_payoff_validation",
+          "metric_value": 23.0238
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    }
+  ]
+}

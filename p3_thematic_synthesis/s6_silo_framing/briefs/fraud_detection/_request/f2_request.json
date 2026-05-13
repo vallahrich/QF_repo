@@ -1,0 +1,1550 @@
+{
+  "silo": "fraud_detection",
+  "generated_at": "2026-04-26T13:17:37.012406+00:00",
+  "prompt_template_version": "f2_v1",
+  "prompt_text": "# F2 — per-silo finance-framing aggregation\n\nYou are aggregating per-paper financial-framing extractions (the F1\noutput of the s6_silo_framing pipeline) into a per-silo synthesis.\nThe synthesis will be used as input to a researcher-authored finance\npreface for the silo chapter (Chapter 6 of the thesis).\n\n## Source\n\nYou will be given:\n- `silo` — the silo name (one of: portfolio_optimization,\n  derivative_pricing, risk_management, quantum_ml_finance,\n  fraud_detection, trading_execution, credit_lending,\n  simulation_monte_carlo)\n- `silo_paper_set` — the canonical list of paper_ids belonging to this\n  silo (used to validate your `*_supporting_paper_ids` outputs)\n- `coverage_stats` — pre-computed counts of how many papers in the silo\n  have each F1 field populated (you do NOT need to recount; trust these\n  numbers)\n- `f1_records` — a JSON array of F1 extractions, one per paper. Each\n  record contains:\n    paper_id, silos, problem_statement (or null),\n    classical_baseline (or null), classical_difficulty (or null),\n    business_stakes (or null), extraction_confidence, extraction_notes\n\nVerbatim quote evidence supporting each F1 statement was verified\nupstream against the original PDF text and is persisted alongside the\nrecords in `extractions/papers/{paper_id}.json`. You do not need to\nre-verify the prose — synthesise across what the F1 records say.\n\n## Task\n\nProduce ONE per-silo aggregation that synthesises across the F1 records\nand answers four questions for the silo as a whole:\n\n1. **What is the financial problem this silo addresses?** (Q1)\n2. **What classical baseline / state-of-the-art does the corpus treat\n   as the comparator?** (derived Q3)\n3. **Why is the problem hard classically?** (Q2)\n4. **What business stakes does the corpus mention?** (derived Q4 — may\n   be sparse; silence is a finding)\n\nFor each question, write 2–4 sentences in your own words that summarise\nthe dominant patterns and tensions across the silo. Then list the\n`paper_ids` that support each synthesised claim. Finally, produce a\nsingle `draft_finance_brief` of 200–400 words that the researcher can\nuse as a starting point for §(0) of the silo chapter.\n\n## Output schema\n\nReturn ONE JSON object with exactly these fields:\n\n```json\n{\n  \"silo\": \"<silo name>\",\n  \"synthesised_problem_statement\": \"<2-4 sentences>\",\n  \"problem_statement_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"synthesised_classical_baseline\": \"<2-4 sentences>\",\n  \"classical_baseline_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"synthesised_classical_difficulty\": \"<2-4 sentences>\",\n  \"classical_difficulty_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"synthesised_business_stakes\": null | \"<2-4 sentences>\",\n  \"business_stakes_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"silo_silence_flags\": [\"<short string>\", \"...\"],\n  \"draft_finance_brief\": \"<200-400 word paragraph>\"\n}\n```\n\n## Rules\n\n1. **Every supporting_paper_id must exist in `silo_paper_set`.** Any\n   paper_id you cite must be a paper_id that appears in the F1 records\n   you were given for this silo. The downstream sanitiser will drop\n   hallucinated IDs.\n\n2. **Cite only papers that actually support the claim you make.** Do\n   not pad supporting lists. 5–15 paper_ids per field is typical. If\n   only 3 papers support a specific claim, cite only those 3.\n\n3. **Synthesise dominant patterns; do not list every paper.** The\n   reader can see the F1 records; your job is to find the throughline.\n   Quote-level detail belongs in F1, not F2.\n\n4. **Acknowledge tensions when they exist.** If half the silo frames\n   the problem one way and half another, say so explicitly. Do not\n   force a single thesis where the corpus is divided.\n\n5. **Silence is a finding.** If `coverage_stats.n_papers_with_business_stakes`\n   is low (e.g. < 30%), that is itself a finding — record it in\n   `silo_silence_flags` and consider returning `null` for\n   `synthesised_business_stakes` if the populated records do not\n   converge on a coherent stake.\n\n6. **Do not import outside knowledge.** Synthesise only what the F1\n   records say. Do not import textbook context, do not introduce claims\n   that are not present in any F1 record.\n\n7. **`draft_finance_brief` must be self-contained prose.** It is not a\n   paraphrase of the four synthesised paragraphs. It is a researcher-\n   ready paragraph that names the financial problem, sketches the\n   classical baseline and difficulty, mentions stakes if substantively\n   present, and signals the tensions or silences. 200–400 words.\n   Academic register, no bullet points, no citation marks.\n\n8. **Output ONLY the JSON object.** No markdown wrapping, no prefatory\n   text, no commentary.\n\n## What to avoid\n\n- Generic summaries that could apply to any silo (\"quantum methods are\n  promising but face challenges\")\n- Listing every method tried by the silo (that is s4 thematic\n  synthesis territory, not s6 framing)\n- Inflating supporting_paper_id lists with weakly-related papers\n- Writing the draft_finance_brief as a thesis abstract — it should be\n  a finance preface, leading with the financial problem\n- Returning a single-sentence synthesis when the corpus contains 100+\n  papers worth of nuance\n",
+  "silo_paper_set": [
+    "01877ad38ab2",
+    "0525be4c60fb",
+    "0757b9aa9a3b",
+    "0e9ded454de6",
+    "11ff02556b47",
+    "14777484b99d",
+    "1be7c19fc967",
+    "1bf5fc02b95b",
+    "1de0ca5e8cf2",
+    "291abba8a19e",
+    "2a646809136c",
+    "2a9cd8a96604",
+    "2e35d78fa802",
+    "30c35313cb34",
+    "313a1d740d27",
+    "33ecea26692d",
+    "3506790b2a7a",
+    "35505140af55",
+    "36cd7ccae10c",
+    "378c2a73ea46",
+    "394c63b275d9",
+    "468c3327bdef",
+    "4715aa3cb8e4",
+    "4d0406b8b736",
+    "55400536a64e",
+    "58470ab028ef",
+    "58a29f9f57a7",
+    "5a3e1c66be6e",
+    "620d7dc5208d",
+    "6257d900d3ef",
+    "67ed9d74dd96",
+    "67f83161d410",
+    "6fe2aeb67e66",
+    "7012f13a70a3",
+    "71966c8a9dc7",
+    "71ed62112b8d",
+    "75c40280653d",
+    "76a87207ec32",
+    "76bf72482fcf",
+    "775d4b298ecd",
+    "77f0bbb6e5f3",
+    "7a159ec77866",
+    "7f91dcfbca63",
+    "80690e1e30a0",
+    "8372b98f0875",
+    "85e9109e6bb0",
+    "85fbbb9f2a42",
+    "86891f250a78",
+    "8d08019fb608",
+    "8fccc6cb2db6",
+    "8fec8d839e47",
+    "9242f9c3e9d3",
+    "924cd91fefd6",
+    "9352e26d9232",
+    "946a6e1b2725",
+    "95a7b64bceac",
+    "95ecf8c43fd1",
+    "9c09c81b2a12",
+    "9f6ab6f7c9d8",
+    "a2b17048118b",
+    "a5b68f8e6d90",
+    "a7b3e49448d1",
+    "ac9a031452bb",
+    "b0f18b08964e",
+    "b17e753ba135",
+    "b253d747bcc9",
+    "b4634f8d9776",
+    "ba8b763050ae",
+    "ba8e571f1e45",
+    "bcfb2bcd887f",
+    "c368d34620bf",
+    "c408224c2f59",
+    "c43a47ce0c1a",
+    "c6d03068fd05",
+    "c7451962353b",
+    "c8872ea43678",
+    "c94ec3a9d152",
+    "cb19eb039ea0",
+    "cbc953d2f213",
+    "cd5dc35d5f39",
+    "cf0d84ba3b6a",
+    "cf9049abcad1",
+    "d0176849806b",
+    "d186493da11a",
+    "d1e6a91e7f11",
+    "d388ccd2fff8",
+    "d7449b1ba0c5",
+    "dda7775da9aa",
+    "e0da2160fe63",
+    "e36d3ea67d07",
+    "e513378d8c92",
+    "e6d5993eabdd",
+    "e9b892fcd6fc",
+    "f054252b17db",
+    "f3cb59fe38ac",
+    "f6c404e63d0f",
+    "f85bdc99d9eb",
+    "f8669d109a5f",
+    "f88bb4cc0c22",
+    "f9e5b6ee139d",
+    "fd31c17753a0",
+    "fdc49be32988"
+  ],
+  "n_papers_in_silo_projection": 105,
+  "coverage_stats": {
+    "n_papers_in_silo_with_f1": 102,
+    "n_papers_with_problem_statement": 99,
+    "n_papers_with_classical_baseline": 100,
+    "n_papers_with_classical_difficulty": 99,
+    "n_papers_with_business_stakes": 96,
+    "confidence_distribution": {
+      "high": 95,
+      "medium": 6,
+      "low": 1
+    }
+  },
+  "f1_records": [
+    {
+      "paper_id": "01877ad38ab2",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the task as fraud detection in the financial payment industry, using real card payment transactions to classify fraud versus non-fraud. It also emphasizes selecting informative features to improve fraud prevention decisions.",
+      "classical_baseline": "The paper compares QSVM against a domain-expert rule-based fraud model and against classical supervised machine-learning methods, especially Random Forest and XGBoost. It also treats these classical approaches as the state of the art for fraud detection in this setting.",
+      "classical_difficulty": "The paper says fraud detection is hard because the industry must balance false positives against monetary loss from fraud, while criminals keep developing more complex schemes. It also says classical and quantum methods need heavy preprocessing, and that quantum hardware limits the number of qubits and forces drastic dimensionality reduction.",
+      "business_stakes": "The paper explicitly ties fraud detection to customer experience, monetary loss, and payment-processing trade-offs. It also notes that false alerts disrupt payments and may require manual customer interaction, and that latency matters for integration into production systems.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Clear motivation in abstract and introduction; explicit classical baselines and difficulty statements are present."
+    },
+    {
+      "paper_id": "0525be4c60fb",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames U.S. healthcare billing as a problem of inefficient, inaccurate, and fraud-prone coding and claims processing. It says the system must handle large, complex datasets and that errors, delays, and fraudulent billing practices worsen billing outcomes.",
+      "classical_baseline": "The paper treats manual interventions and traditional computational methods, including legacy or cloud-based systems, as the classical baseline. It also contrasts quantum methods with classical search and optimization approaches.",
+      "classical_difficulty": "The paper says the classical problem is hard because the billing optimization is a binary optimization problem that can be NP-hard, and because fraud detection over large claim sets can take linear time or even minutes to hours on classical systems. It also notes that classical processing of large healthcare datasets faces significant computational resource demands.",
+      "business_stakes": "The paper says billing errors can cause claim denials, incorrect reimbursements, lost revenue, delayed payments, and financial losses. It also says fraud inflates healthcare costs, raises premiums and out-of-pocket expenses, and creates administrative burdens that reduce profitability and economic productivity.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and centered on healthcare billing and fraud detection; classical baseline is stated clearly."
+    },
+    {
+      "paper_id": "0757b9aa9a3b",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the financial problem as selecting a relevant subset of features for credit card fraud detection and credit default prediction so that machine learning models perform better and more efficiently. It treats feature selection as especially important in high-dimensional transaction and credit data where redundant or irrelevant variables can obscure the signal.",
+      "classical_baseline": "The paper compares its quantum feature-selection approach against classical feature-selection methods, especially Random Forest feature importance and mutual information plus Spearman correlation. It also discusses standard filter, wrapper, and embedded feature-selection methods as the broader classical baseline.",
+      "classical_difficulty": "The paper says classical feature selection becomes NP-hard and computationally infeasible as the number of features grows, because the solution space expands exponentially and exhaustive search is not practical. It also says some classical information-based formulations require expensive conditional mutual information calculations and can become costly in time and memory on large datasets.",
+      "business_stakes": "The paper says these feature-selection improvements matter for financial services because the metrics used are widely used in the industry, and even small performance gains can translate into significant revenue growth for financial institutions. It also frames the task as part of financial risk assessment applications.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly finance-applied but centered on feature selection rather than a market/portfolio problem."
+    },
+    {
+      "paper_id": "0e9ded454de6",
+      "silos": [
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the problem as the need for secure, scalable, and computationally efficient financial systems for FinTech and digital assets, especially as transaction volumes and digital asset ecosystems grow. It says existing computational frameworks struggle to process, secure, and optimize complex financial operations, including real-time risk assessment, portfolio optimization, transaction verification, market forecasting, fraud detection, and asset pricing.",
+      "classical_baseline": "The baseline is traditional or existing classical computational models and frameworks used for financial processing, security, optimization, and cryptography. The paper contrasts these with quantum computing as a new paradigm that goes beyond classical limitations.",
+      "classical_difficulty": "The paper says the classical approach becomes inefficient because financial data are growing exponentially, transaction volumes are surging, and current frameworks are limited by classical encryption and other classical constraints. It also says the relevant solution spaces are computationally intractable for classical computers.",
+      "business_stakes": "The paper says the stakes include faster transaction speed, improved systemic resilience, financial inclusion, and better security for digital asset networks. It also frames the problem around safeguarding systems against future quantum decryption capabilities.",
+      "extraction_confidence": "medium",
+      "extraction_notes": "Motivation is concentrated in the abstract and opening introduction; framing is broad FinTech/digital-assets rather than a single finance task."
+    },
+    {
+      "paper_id": "11ff02556b47",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the financial problem as using quantum support vector methods to classify fraudulent credit card transactions and to perform regression on a financial market dataset. It presents these as real-world industrial tasks that the authors want to address with quantum kernels on near-term hardware.",
+      "classical_baseline": "For classification, the paper compares QSVC against a classical SVM using a Gaussian kernel. For regression, it compares QSVR against a classical SVR using a Gaussian kernel.",
+      "classical_difficulty": "The paper says the financial data are noisy and volatile, with random fluctuations and external shocks making prediction harder. More generally, it emphasizes that NISQ devices are error-prone and that noise can degrade quantum kernels, while larger numbers of qubits and two-qubit gates can make training more difficult.",
+      "business_stakes": "The paper says it aims to bridge quantum computing applications and real-world industrial needs, and it specifically notes that financial data are affected by volatility, random fluctuations, and supply-chain disruptions that move commodity prices. It also frames the work as relevant to early practical applications on near-term devices.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Paper gives explicit finance framing in abstract/introduction; classical baseline is clearly Gaussian-kernel SVM/SVR; difficulty is mostly about noisy financial data and NISQ noise rather than algorithmic hardness."
+    },
+    {
+      "paper_id": "14777484b99d",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames anomaly detection as the task of finding data patterns that do not conform to expected behavior, with unsupervised anomaly detection being especially important because it does not require labeled data. It focuses on the Local Outlier Factor (LOF) algorithm as a widely used unsupervised method for identifying abnormal points.",
+      "classical_baseline": "The classical baseline is the standard LOF algorithm, which the paper describes as a three-step procedure: find each point’s k-distance neighborhood, compute local reachability density, and then compute the local outlier factor to decide whether a point is anomalous. The paper compares its quantum method against this classical LOF counterpart.",
+      "classical_difficulty": "The paper says the classical LOF algorithm is computationally expensive and time-consuming on big data sets. It gives the step complexities as O(m2nk) for the neighborhood search and O(mk) for the later steps, and uses this to motivate the quantum approach.",
+      "business_stakes": "The paper explicitly links anomaly detection to fraud detection, including credit card fraud detection. It does not discuss broader business metrics such as latency, cost, or regulation.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is algorithmic but does state classical LOF framing and its computational cost."
+    },
+    {
+      "paper_id": "1be7c19fc967",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames credit fraud detection in digital finance as increasingly difficult because fraud is becoming more complex while transaction volumes and real-time payment systems are growing. It argues that existing rule-based and machine-learning systems are not sufficient for modern fraud patterns and need smarter, adaptive, real-time approaches.",
+      "classical_baseline": "The paper treats traditional rule-based fraud detection and conventional machine-learning models as the baseline. It also explicitly compares against a traditional machine learning baseline model trained only on historical fraud datasets, including a random forest model.",
+      "classical_difficulty": "The paper says classical approaches struggle with novel and evolving fraud, depend on labelled data, are vulnerable to adversarial manipulation, cannot generate realistic synthetic data for rare fraud types, and face latency and scalability issues in high-frequency environments. It also says imbalanced datasets lead to high false negatives, and black-box models are hard to interpret for compliance.",
+      "business_stakes": "The paper says real-time fraud detection is a technical and strategic imperative for banks, fintechs, and regulators, and that false positives can cause customer dissatisfaction and transaction friction. It also notes that fraud can cost institutions billions annually and that deployment must align with compliance frameworks such as PCI-DSS and GDPR.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and repeated across abstract, introduction, and conclusion; paper is partly conceptual but still states clear baseline and difficulty framing."
+    },
+    {
+      "paper_id": "1bf5fc02b95b",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the financial task as anomaly detection in transaction data, specifically identifying fraudulent financial transactions from mostly normal data. It treats this as a setting where the model is trained on non-anomalous examples and must flag deviations as anomalies.",
+      "classical_baseline": "The paper compares its quantum approach against classical autoencoders and, more broadly, against reconstruction-based autoencoder methods used for anomaly detection. It also references prior quantum autoencoder designs as comparison points in its experiments.",
+      "classical_difficulty": "The paper says anomaly detection is hard because anomalous labels are scarce and the data are highly imbalanced, so supervised methods often fail when anomalies are rare or unseen during training. For fraud detection specifically, it also notes that the dataset is imbalanced, making rare fraudulent activity difficult to detect.",
+      "business_stakes": "The paper does not discuss business stakes in detail. It only indicates that fraud detection is a real-world financial application and that the method is intended for practical anomaly detection tasks.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; financial framing is brief and centered on fraud detection as anomaly detection."
+    },
+    {
+      "paper_id": "1de0ca5e8cf2",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames cross-border intelligent payment supervision as a financial problem where regulators must handle complex payment data and transaction patterns, especially for identifying transaction risks and abnormal transactions. It says existing regulatory mechanisms and traditional algorithms struggle to process these data efficiently.",
+      "classical_baseline": "The paper compares its approach against traditional algorithms and classical K-Means clustering for transaction clustering and abnormal transaction recognition. It also refers more generally to existing regulatory models for cross-border payments.",
+      "classical_difficulty": "The paper says the classical setting is hard because payment data are complex and large-scale, and traditional algorithms have limits in processing speed, data scale, and system complexity. It also says the existing system has low processing efficiency and a high false positive rate, and that practical quantum application is constrained by hardware and cost.",
+      "business_stakes": "The paper says the stakes are better supervision of cross-border payments, including improved efficiency and accuracy in payment risk identification, reduced false positives, and more refined regulatory tools. It also links the problem to different countries' regulatory requirements and the need for harmonized standards.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and conclusion; framing is about cross-border payment supervision and abnormal transaction/risk identification."
+    },
+    {
+      "paper_id": "291abba8a19e",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames fraud detection in IoT-assisted financial settings as a pressing challenge because connected devices expand the attack surface and adversaries can inject, eavesdrop, spoof identities, or mount man-in-the-middle attacks. It argues that the desired solution is not just a high-accuracy detector, but a framework that also provides anomaly detection, verifiability, auditability, and identity trust.",
+      "classical_baseline": "The paper treats conventional fraud-detection pipelines, including classical machine-learning models and blockchain-only or ML-only approaches, as the main baseline. It explicitly compares against Random Forest and XGBoost, and also discusses existing blockchain and ML-based solutions as the prior state of the art.",
+      "classical_difficulty": "The paper says classical fraud detectors struggle under adversarial manipulation and also suffer from drift, class imbalance, and high deployment cost. It further notes that the problem is constrained by scalability, latency, and resource limits in IoT/NISQ settings.",
+      "business_stakes": "The paper says the stakes are real-world IoT finance deployments where trust, provenance, and tamper-evident logs are required. It also emphasizes latency, throughput, and resource constraints for deployment, and says these capabilities are indispensable in adversarial IoT finance.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is assurance- and deployment-focused rather than accuracy-only."
+    },
+    {
+      "paper_id": "2a646809136c",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames bank account fraud detection as a critical financial and security problem because fraud is growing, causes major losses, and is difficult to detect with existing approaches. It also treats fraud as an evolving threat that changes over time and can evade conventional systems.",
+      "classical_baseline": "The paper compares against traditional rule-based and statistical fraud detection methods, and also treats XGBoost as the classical state-of-the-art benchmark. It presents classical machine learning as the current standard for fraud detection.",
+      "classical_difficulty": "The paper says traditional methods are slow to adapt to changing fraud patterns, costly in manpower and training, and ineffective on imbalanced, high-dimensional fraud data. It also says current methods struggle because fraud patterns evolve and because some newer fraud techniques are exceptionally hard to detect.",
+      "business_stakes": "The paper says fraud causes major monetary losses and can affect corporate sustainability and organizational revenue. It also notes that fraud detection matters because it can minimize losses and because many companies still suffer significant losses from weak detection systems.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is partly algorithmic but includes clear fraud-framing and classical baseline statements."
+    },
+    {
+      "paper_id": "2a9cd8a96604",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames anomaly detection as the task of identifying data points or patterns that deviate from normal behavior, and it treats one-class classification as the setting where only normal data are available for training. It also notes that anomaly detection appears in finance among other domains.",
+      "classical_baseline": "The paper treats support vector data description and its deep-learning variant as the main classical baselines for anomaly detection. It also compares against a quantum autoencoder-based one-class classifier as a quantum baseline, but the classical state of the art it discusses is SVDD and DSVDD.",
+      "classical_difficulty": "The paper says kernel-based SVDD has poor computational scaling because it requires constructing and manipulating the kernel matrix, and it also needs support vectors to be stored in memory. More generally, it says AD is harder than binary classification because anomalies are rare, so training has limited label information and must use unsupervised learning.",
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in the introduction; finance is mentioned only as one application area, not as a finance-specific use case."
+    },
+    {
+      "paper_id": "2e35d78fa802",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the financial problem as automating auditing and consistency checks in financial documents by finding which values in tables sum to other values. It treats this as discovering sum structures in financial reports and numerical tables.",
+      "classical_baseline": "The paper contrasts its approach with exact deterministic subset-sum algorithms and with rule-based table-specific heuristics for finding sums in financial tables. It also mentions dynamic programming as an exact classical method.",
+      "classical_difficulty": "The paper says the problem is NP-hard, and that classical solving algorithms are therefore not practical for real applications. It also says that the size of tables and the magnitude of their entries make many algorithmic approaches impractical, and that rule-based methods do not generalize well.",
+      "business_stakes": "The paper says the task is time- and labour-intensive for auditors, mistakes are easy to make on large numbers of tables, and that the method could directly benefit auditors in their daily work. It also frames the problem as part of compliance and financial regulation checks.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is focused on auditing/table-sum detection rather than broader finance."
+    },
+    {
+      "paper_id": "30c35313cb34",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as portfolio optimization and related financial decision-making under increasing market complexity, including risk assessment and asset allocation. It also treats derivative pricing, credit risk assessment, and scenario analysis as connected financial tasks that quantum computing may help address.",
+      "classical_baseline": "The paper treats classical portfolio theory and Monte Carlo simulation as the main baseline, especially Markowitz’s Modern Portfolio Theory and traditional computational models. It also references classical optimization methods for asset allocation and risk assessment as the approaches quantum computing is meant to complement or improve upon.",
+      "classical_difficulty": "The paper says the classical approaches struggle with scalability, computational complexity, and market uncertainty. In particular, they require large computational resources for high-dimensional problems and Monte Carlo methods can be very demanding for complex instruments.",
+      "business_stakes": "The paper suggests that the stakes include faster decision-making, improved risk management, and broader impacts on financial markets. It also mentions regulatory and ethical concerns as practical issues for adoption.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and centered on portfolio optimization; paper also broadens to risk, pricing, credit risk, and fraud detection in later sections."
+    },
+    {
+      "paper_id": "313a1d740d27",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as real-time anomaly detection in high-velocity data streams, with financial security as one of the main application areas. It emphasizes detecting subtle deviations in complex, high-dimensional streaming data, including fraudulent activities in financial transactions.",
+      "classical_baseline": "The paper compares against classical anomaly-detection methods including statistical models, kernel-based methods such as one-class SVMs, deep learning approaches, and other established baselines like k-nearest neighbors, local outlier factor, Gaussian mixture models, kernel density estimation, isolation forests, random subset ensembles, autoencoders, and PCA. It treats these as the current state of the art for streaming anomaly detection.",
+      "classical_difficulty": "The paper says classical methods struggle with high-dimensional, non-linear, and evolving streaming data, and that kernel methods in particular face scalability limits because they require storing support vectors and computing kernel matrices with quadratic or cubic scaling. It also notes that supervised methods need labeled anomalies that are rarely available, unsupervised methods can produce too many false positives, and deep learning can be computationally demanding and hard to interpret.",
+      "business_stakes": "The paper links the problem to operational settings where timely detection matters, especially financial transaction monitoring, and says anomalies may indicate fraud, security breaches, system failures, or other critical events. It also notes that latency-sensitive applications require response times that challenge current systems.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in the introduction and conclusion; finance appears as one application domain rather than the sole focus."
+    },
+    {
+      "paper_id": "33ecea26692d",
+      "silos": [
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames quantum computing as a way to address several finance tasks, especially portfolio optimization, derivative pricing, Monte Carlo assessment, risk analysis, fraud detection, and quantum machine learning. It says these problems arise in a financial industry that is becoming more data-intensive and more complex, where classical methods can be slow.",
+      "classical_baseline": "The paper treats classical computing methods as the baseline, including traditional algorithms for portfolio optimization, Monte Carlo simulation, Black-Scholes-style pricing, Value at Risk, and standard fraud-detection or machine-learning approaches. It also explicitly names quadratic programming, gradient descent, and batch techniques as classical approaches.",
+      "classical_difficulty": "The paper says classical methods become slow or cumbersome as data size, model complexity, and portfolio size increase. It also says some calculations are computationally infeasible, that Monte Carlo methods can be costly and slow to converge, and that batch techniques struggle with large, complicated portfolios.",
+      "business_stakes": "The paper says the stakes include faster decision-making, improved risk management, better pricing, fraud prevention, and even long-term profit for financial institutions. It also mentions regulation and compliance concerns around data protection and fraud detection.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is broad and survey-like; the paper discusses many finance applications and repeatedly contrasts them with classical methods."
+    },
+    {
+      "paper_id": "3506790b2a7a",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames financial fraud detection as a critical task for protecting transaction security and financial-system integrity, especially as fraudulent schemes become more sophisticated and transaction data become more complex. It says the goal is to detect anomalous or unauthorized transaction activity, including rare fraudulent patterns hidden within large volumes of normal transactions.",
+      "classical_baseline": "The paper treats traditional rule-driven systems and statistical modeling as the older baseline, and it also compares against conventional deep learning models such as CNNs and RNNs. In the related-work framing, it presents deep learning as the main classical state of the art before the proposed hybrid quantum approach.",
+      "classical_difficulty": "The paper says classical methods struggle because transaction data are high-dimensional, highly dynamic, imbalanced, and adversarially changing. It also states that RNN-based models can suffer from vanishing or exploding gradients on long sequences, and that traditional deep learning has difficulty capturing nonlinear relationships and generalizing to new fraud patterns.",
+      "business_stakes": "The paper explicitly links fraud detection to fund security, financial-system integrity, user confidence, regulatory burden, and operational costs. It also notes that false positives can reject legitimate transactions and increase manual verification costs.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Clear motivation in abstract and introduction; paper is strongly framed around imbalanced fraud detection and classical limitations."
+    },
+    {
+      "paper_id": "35505140af55",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the problem as detecting fraud in real-time payment systems, where transactions are fast-moving and fraud must be identified quickly. It emphasizes that the setting includes severely imbalanced and nonlinear transaction data, making reliable fraud detection difficult.",
+      "classical_baseline": "The paper treats rule engines, decision trees, random forests, logistic regression, support vector machines, XGBoost, and deep neural networks as the classical baselines for fraud detection. It compares the quantum models against these traditional machine-learning approaches.",
+      "classical_difficulty": "The paper says classical methods struggle with delayed detection, high latency, low scalability, false positives, and poor performance on imbalanced data. It also says they require significant processing power as transaction volume and dimensionality increase, and that feature engineering is not scalable as fraud evolves.",
+      "business_stakes": "The paper says delayed detection can cause substantial financial losses, and that false negatives in RTP systems create financial and reputational damage. It also notes that in high-throughput payment systems, even small added latency is very detrimental.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and conclusion; paper also includes regulatory and latency stakes."
+    },
+    {
+      "paper_id": "36cd7ccae10c",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the problem as a lack of scalable, efficient, and accurate financial risk modeling systems that can combine AI and quantum computing to predict and mitigate risk in real time. It specifically points to portfolio management, fraud detection, and credit risk assessment as the main application areas.",
+      "classical_baseline": "The paper treats classical computational models and traditional machine learning as the baseline, including Monte Carlo simulations, the Markowitz mean-variance framework, and standard models such as logistic regression, decision trees, random forests, and support vector machines. These are presented as the existing approaches that quantum-enhanced AI is meant to improve upon.",
+      "classical_difficulty": "The paper says classical methods struggle with scale, high dimensionality, non-linear dependencies, and real-time demands. It also says some financial problems become intractable for classical computing, and that classical optimization methods do not scale efficiently as complexity grows.",
+      "business_stakes": "The paper says the stakes include real-time decision-making in volatile markets, better risk mitigation, improved lending decisions, reduced exposure to defaults, and competitive advantage for financial institutions. It also mentions regulatory compliance and the high costs of quantum infrastructure.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and broad; paper is largely a review/position piece with repeated framing across abstract and introduction."
+    },
+    {
+      "paper_id": "378c2a73ea46",
+      "silos": [
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames finance as facing large, nonlinear, high-dimensional data problems together with growing cyber risk. It says these pressures make financial prediction, fraud detection, portfolio optimization, and secure transaction handling difficult for classical methods.",
+      "classical_baseline": "The paper treats classical support vector machines, classical portfolio optimization methods such as mean-variance optimization, traditional PCA, classical RNNs, and conventional cryptographic systems like RSA and ECC as the baselines. It repeatedly contrasts its quantum methods against these classical approaches.",
+      "classical_difficulty": "The paper says classical methods struggle with high-dimensional financial data, nonlinear relationships, and large search spaces, making them computationally expensive and less accurate. It also says classical cryptography is vulnerable to quantum attacks, and that classical approaches become cumbersome or scale poorly as problem size grows.",
+      "business_stakes": "The paper says the stakes include faster responses in financial applications, better risk management, and protection of sensitive transaction and customer data. It also frames the issue as important for financial institutions operating in real time and preparing for post-quantum threats.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and broad; paper is a survey-plus-proposed-framework article with repeated finance framing across abstract and introduction."
+    },
+    {
+      "paper_id": "394c63b275d9",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames credit card fraud detection as a major financial-security problem in the digital economy, especially because fraud is rare, evolving, and difficult to detect accurately in large, complex, imbalanced transaction data. It presents the task as distinguishing legitimate from fraudulent transactions in a way that protects users, financial institutions, and the broader economy.",
+      "classical_baseline": "The paper treats traditional machine learning methods as the main classical baseline, and also compares against traditional feature selection with K-Best. It contrasts these with deep learning and ensemble methods as other non-quantum approaches used for fraud detection.",
+      "classical_difficulty": "The paper says classical methods struggle with large, complex, and imbalanced datasets, which limits accuracy and makes rare fraud events hard to detect. It also states that traditional approaches can be computationally expensive, slow, and prone to overfitting, underfitting, and poor generalization on new data.",
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and conclusion; paper is strongly framed around credit card fraud detection and class imbalance."
+    },
+    {
+      "paper_id": "468c3327bdef",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the problem as US banks needing to prevent increasingly sophisticated financial crime and fraud in a digital, real-time banking environment. It also treats financial security as a broader challenge that includes fraud detection, cyber threats, encryption protection, and risk management.",
+      "classical_baseline": "The paper says banks currently rely on conventional computing, rule-based systems, machine learning models, and traditional encryption such as RSA and ECC to detect fraud and protect data. It also mentions existing security frameworks and traditional risk models as the current baseline.",
+      "classical_difficulty": "The paper says classical approaches struggle with massive transaction volumes, high-speed processing, evolving fraud tactics, false positives and false negatives, limited response time, and the inability to keep up with real-time payments. It also says current encryption will become vulnerable to quantum attacks.",
+      "business_stakes": "The paper says the stakes include protecting sensitive customer data, maintaining financial system integrity, and staying compliant with banking regulations. It also emphasizes customer experience and operational efficiency because false positives and delayed security checks can create discontent and unnecessary delays.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Paper is strongly finance-framed, but the abstract is clearly misaligned with the title and appears to discuss food production; motivation is instead taken from the introduction and conclusion."
+    },
+    {
+      "paper_id": "4715aa3cb8e4",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames credit card fraud detection as a highly imbalanced classification problem for financial institutions, where the goal is to identify fraudulent transactions while preserving legitimate purchases. It emphasizes that the benchmark is the Kaggle credit card fraud dataset and that the key objective is improving minority-class sensitivity, especially recall and PR-AUC.",
+      "classical_baseline": "The paper compares its hybrid model against tuned classical baselines on the same fraud benchmark, especially a classical neural network, logistic regression, XGBoost, and SVM. The main direct baseline is a parity-matched classical neural network that shares the same trunk and head, differing only in the middle layer.",
+      "classical_difficulty": "The paper says the task is hard classically because the data are extremely imbalanced, fraud patterns change over time, and production systems face tight latency budgets. It also says that even after imbalance handling, classical methods have a limitation in finding high-dimensional feature relationships and patterns in the data.",
+      "business_stakes": "The paper explicitly says fraud detection has real financial consequences: missed fraud becomes a chargeback, false alarms block legitimate purchases, and a small recall gain can translate into large savings for a financial institution. It also notes that deployment must respect latency and cost trade-offs.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and finance-specific; the paper also discusses latency and cost trade-offs."
+    },
+    {
+      "paper_id": "4d0406b8b736",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the problem as building fraud detection systems for fintech that can handle large volumes of financial transactions and identify complex, subtle fraudulent patterns. It emphasizes detecting and preventing financial crimes such as identity theft, money laundering, synthetic identities, collusion, and fraudulent transactions in high-dimensional, noisy transaction data.",
+      "classical_baseline": "The paper treats traditional rule-based systems and classical machine learning models as the baseline for fraud detection. It specifically mentions decision trees, support vector machines, random forests, gradient boosting machines, deep learning, and other classical anomaly-detection methods as the existing approaches being compared against.",
+      "classical_difficulty": "The paper says classical approaches struggle with high-dimensional, heterogeneous, noisy, sparse, and imbalanced financial data, and that real-time fraud detection is difficult because of the sheer volume and velocity of transactions. It also notes computational overhead, feature-engineering burden, overfitting, and high false-positive rates as practical limitations.",
+      "business_stakes": "The paper says fraud losses can be very large and that better detection matters for security, trust, compliance, and operational burden. It also mentions that false positives can create unnecessary investigations and costs for financial institutions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and repeated across abstract and introduction; paper is strongly application-framed but also somewhat review-like."
+    },
+    {
+      "paper_id": "55400536a64e",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as detecting anomalies, fraud, and manipulative behavior in securities transactions within financial systems. It says this is needed because digital finance is growing quickly and transaction volumes are becoming large, sensitive, and hard to monitor in real time.",
+      "classical_baseline": "The paper treats traditional anomaly detection as rule-based systems, statistical models, and conventional machine-learning methods such as decision trees, SVM, clustering, LSTM, and KNN. These are the main baselines it compares against and contrasts with the proposed QNN approach.",
+      "classical_difficulty": "The paper says classical methods struggle with evolving fraud patterns, nonlinear and high-dimensional data, and real-time trading environments. It also says some deep-learning approaches need large datasets and substantial infrastructure, and that conventional monitoring systems lack the complexity needed to identify abnormalities in large sensitive datasets.",
+      "business_stakes": "The paper links the problem to the reliability and security of financial markets and to the detection of fraudulent or manipulative trading behavior. It also mentions real-world threats such as insider trading, market manipulation, fraud, and cyber threats.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and problem statement; paper is strongly framed around fraud/anomaly detection with clear classical baselines."
+    },
+    {
+      "paper_id": "58470ab028ef",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames credit card fraud detection as an anomaly detection task in financial security, where the goal is to identify unauthorized transactions that can cause significant financial losses. It emphasizes that the core challenge is distinguishing fraudulent transactions from genuine ones in highly imbalanced transaction datasets.",
+      "classical_baseline": "The paper treats traditional detection systems and classical autoencoders as the main classical baselines for fraud detection. It also explicitly compares against logistic regression, a classical autoencoder, and other classical machine learning methods in related work and model comparison.",
+      "classical_difficulty": "The paper says the problem is hard classically because fraudulent transactions are rare and look similar to genuine ones, and because the datasets are highly imbalanced. It also states that classical models struggle with scalability and performance degradation on high-noise, high-dimensional data.",
+      "business_stakes": "The paper says credit card fraud has extensive financial implications and can undermine public trust, potentially destabilizing economic systems and impacting the broader cost of living. It also frames robust detection as important for financial organizations and real-time financial fraud detection systems.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Clear motivation in abstract and introduction; classical framing is explicit and finance-specific."
+    },
+    {
+      "paper_id": "58a29f9f57a7",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the problem as detecting fraudulent transactions in modern financial systems, especially in electronic payment and banking environments where fraud patterns keep changing. It says existing systems struggle with large, highly imbalanced transaction data and need to classify transactions as legitimate or fraudulent in near real time.",
+      "classical_baseline": "The paper treats rule-based methods and standard machine learning classifiers such as SVM, decision trees, random forests, logistic regression, and KNN as the classical baseline. It also explicitly compares against legacy fraud detection systems and classical-only models.",
+      "classical_difficulty": "The paper says classical fraud detection is hard because fraud patterns evolve, the data are highly imbalanced and high-dimensional, and legacy systems respond slowly. It also says these methods rely on manual feature engineering and fixed thresholds, which makes them inflexible and prone to false negatives and poor real-time scaling.",
+      "business_stakes": "The paper says fraud undermines public trust and financial stability, and that the economy is losing large sums of money. It also frames faster and more accurate detection as important for secure financial practice and digital communications.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly fraud-detection framed with clear classical baseline and difficulty statements."
+    },
+    {
+      "paper_id": "5a3e1c66be6e",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the problem as securing smart vaults in banking against advanced intrusions and cyberattacks. It says the goal is to detect normal versus anomalous access events in heterogeneous security data from sensors, biometrics, access logs, and network traffic.",
+      "classical_baseline": "The paper compares against traditional intrusion detection systems and classical machine learning-based IDS, including conventional techniques such as SVM-based intrusion detection. It also explicitly mentions a SVM baseline in the results.",
+      "classical_difficulty": "The paper says classical machine learning-based systems and traditional IDS struggle to capture intricate, complex intrusion patterns in the high-dimensional data produced by smart vault systems. It also states that processing heterogeneous smart-vault data in real time efficiently remains a problem, and that the quantum feature encoding and kernel computation are computationally expensive.",
+      "business_stakes": "The paper ties the problem to banking security and critical financial infrastructures, and says the system is intended for real-time operational use in smart vault environments. It also notes that alerts and response protocols should be triggered when an intrusion is detected.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and conclusion; paper is focused on smart-vault intrusion detection rather than broader finance."
+    },
+    {
+      "paper_id": "620d7dc5208d",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames quantum computing as a way to improve several financial services use cases at Intesa Sanpaolo, including credit scoring, fraud detection, option pricing, investment recommendation, and dynamic portfolio optimization. It also says the bank is exploring quantum use cases across its operations, especially where a quantum approach may eventually provide an advantage over classical algorithms.",
+      "classical_baseline": "The paper treats classical algorithms and classical solutions as the baseline for the financial use cases it discusses. It explicitly contrasts quantum approaches with classical counterparts in credit risk analysis, fraud detection, portfolio optimization, and related tasks.",
+      "classical_difficulty": "The paper says quantum computing may help with problems that are not classically tractable, and that classical solutions already have issues in some finance tasks. It specifically mentions unbalanced datasets for fraud detection and difficulty choosing meaningful input features for credit scoring, and more generally says some problems may be hard to solve efficiently with classical computers.",
+      "business_stakes": "The paper says the use cases have broad societal impact from a financial inclusion point of view, and that fraud detection protects people involved in transactions while credit scoring supports a more transparent credit admission process. It also frames the work as relevant to banking operations and financial services more broadly.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is broad and partly corporate/strategic rather than a single technical problem; finance framing is explicit in the introduction and later use-case discussion."
+    },
+    {
+      "paper_id": "6257d900d3ef",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the task as detecting fraud in cross-border financial transactions, where payments pass through multiple compliance checks and fraudulent activity can be hidden among legitimate transfers. It emphasizes classifying transactions as genuine or fraudulent in a setting with complex, high-dimensional, cross-border patterns.",
+      "classical_baseline": "The classical baseline is a Support Vector Machine, specifically a Support Vector Classifier with an RBF kernel. The paper treats this as the established classical approach for separating legitimate from fraudulent transactions.",
+      "classical_difficulty": "The paper says classical SVMs struggle when fraud patterns become more sophisticated and the data becomes very high-dimensional. It also says the kernel trick increases computation cost and makes it difficult to find precise settings and recognize intricate patterns, which lowers performance.",
+      "business_stakes": "The paper says cross-border fraud causes substantial losses and that better detection can save bank time and money while reducing customer frustration. It also frames the problem in terms of compliance and safeguarding against fraud, money laundering, and sanctions violations.",
+      "extraction_confidence": "high",
+      "extraction_notes": "motivation is explicit in abstract and introduction; paper is clearly fraud-detection focused"
+    },
+    {
+      "paper_id": "67ed9d74dd96",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the financial problem as credit card fraud detection: classifying a transaction as normal or fraudulent from transaction data. It presents this as a practical challenge for financial institutions.",
+      "classical_baseline": "The paper contrasts its approach with human judgment-based fraud detection and with machine-learning-based fraud detection on credit card transaction data. It also treats the original compact Hadamard classifier as the baseline quantum method that requires exact state preparation with exponentially many gates.",
+      "classical_difficulty": "The paper says the classical/human approach is costly in human resources, and that machine-learning approaches can require more time and epochs to converge for stable prediction. For the quantum baseline, it says exact state preparation needs an exponential number of gates, which is a bottleneck for practical use.",
+      "business_stakes": "The paper explicitly says credit card fraud causes serious losses for financial institutions and links the problem to customer protection, financial crime prevention, and corporate-finance impacts. It also cites projected fraud losses reaching $49.3 billion by 2030.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in the fraud-detection subsection and conclusion; paper also covers non-finance Iris classification, but finance framing is clear."
+    },
+    {
+      "paper_id": "67f83161d410",
+      "silos": [
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": null,
+      "classical_baseline": "The paper treats classical Monte Carlo integration, numerical PDE/ODE solvers, branch-and-bound and interior-point methods, and classical machine learning methods as the main classical baselines. For some use cases it also names specific classical approaches such as least-squares Monte Carlo, simulated annealing, and deep learning or clustering methods.",
+      "classical_difficulty": "The paper says the classical difficulty is mainly scaling: many finance problems are high-dimensional, stochastic, and require large amounts of computation and time, while some classical methods become intractable or require exponential resources in dimension. It also notes that data loading, training, and numerical solution of PDEs can be expensive, and that some quantum advantages depend on assumptions such as sparse, well-conditioned matrices or efficient data access.",
+      "business_stakes": "The paper says the stakes include regulatory compliance, capital and risk requirements, customer retention, data security, and practical financial decision-making. It also explicitly links risk metrics to Basel III and says better efficiency and accuracy can support loan-related decisions and financial projections.",
+      "extraction_confidence": "high",
+      "extraction_notes": "survey paper with broad finance framing; motivation is explicit in abstract, introduction, and section 2"
+    },
+    {
+      "paper_id": "6fe2aeb67e66",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as finding near-term uses for quantum computing in asset management, especially in portfolio optimization, pricing and risk simulation, targeted machine learning tasks, and trading/routing decisions. It also treats migration to post-quantum cryptography as an immediate security problem for financial firms.",
+      "classical_baseline": "The paper treats strong classical baselines as the standard for judging any quantum pilot. It explicitly compares quantum approaches against the best classical tools for portfolio optimization, pricing and risk, and ML tasks.",
+      "classical_difficulty": "The paper says the hard part is that fully reliable, large-scale quantum machines are not yet available, so current work must rely on small, noisy NISQ devices and hybrid methods. It also notes that data encoding, error mitigation, and end-to-end runtime overhead must be managed, and that some tasks need careful benchmarking because speedups are only meaningful if quality and constraints hold.",
+      "business_stakes": "The paper says firms should act now because attackers can steal encrypted data today and decrypt it later, creating immediate security risk. It also frames the work in terms of ROI, cost, and operational integration, including faster run times, better fills or slippage, and speedups for stress testing.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Practitioner brief with explicit motivation; framing is broad and operational rather than a single research problem."
+    },
+    {
+      "paper_id": "7012f13a70a3",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as unsupervised anomaly detection for financial fraud, where the goal is to identify fraudulent transaction activity from unlabeled data and separate it from normal patterns. It uses a simulated credit-card transaction dataset as the concrete finance use case.",
+      "classical_baseline": "The classical reference point is the standard classical rbf-OCSVM, which the paper compares against the quantum projected-kernel OCSVM variants. The paper also mentions a model that labels everything as normal as a simple comparison point.",
+      "classical_difficulty": "The paper says traditional anomaly-detection approaches can be computationally expensive or depend on expert rules, and that the classical OCSVM baseline is outperformed by the quantum-enhanced models on the test data in the small-data, high-anomaly regime. It also notes that the data are highly imbalanced, which makes evaluation and detection harder.",
+      "business_stakes": "The paper says anomaly detection is relevant because it can accelerate the discovery of criminal activities, and it specifically motivates the finance use case as fraud detection. It does not discuss regulation, costs, or market impact in detail.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; finance framing is centered on fraud detection and classical baseline is clearly stated."
+    },
+    {
+      "paper_id": "71966c8a9dc7",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the financial problem as managing risk in finance using big data, especially for predictive modelling and real-time assessment. It emphasizes identifying, assessing, and controlling risks such as market changes, liquidity problems, credit problems, fraud, and operational or compliance risks.",
+      "classical_baseline": "The paper contrasts big-data-driven risk assessment with traditional financial risk management, which relied on historical data, regular reports, and simple statistical models. It also treats Value at Risk, scenario analysis, and stress tests as standard tools used by financial managers.",
+      "classical_difficulty": "The paper says the traditional approach was slow, reactive, and limited, and that it could not handle the scale, speed, and diversity of modern financial data well. It also notes that older methods often assumed future risks would resemble the past, which is less suitable for today's complex and fast-moving markets.",
+      "business_stakes": "The paper says risk management protects institutions from losses, helps save capital, supports long-term profits, and improves compliance and trust. It also states that delays in risk systems can cause big financial losses, penalties, reputational damage, and legal trouble.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Paper is a broad review with explicit motivation in abstract/introduction and repeated restatements in later sections."
+    },
+    {
+      "paper_id": "71ed62112b8d",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames finance as a set of problems where quantum computing may help with risk management, portfolio optimization, option pricing, fraud detection, credit risk analysis, market forecasting, and Monte Carlo simulation. It presents these as tasks involving large datasets, complex patterns, and intricate computations.",
+      "classical_baseline": "The paper contrasts quantum approaches with conventional or classical computing methods, including classical linear algorithms, classical machine learning algorithms, established optimization algorithms, established risk models, and classical Monte Carlo methods. It treats these as the current baseline in finance.",
+      "classical_difficulty": "The paper says classical methods are limited in scale, accuracy, and speed for finance tasks. It describes small-scale limits for optimization and derivative pricing, limited scalability for fraud detection, and computational complexity or slowness for Monte Carlo simulation and large-scale optimization.",
+      "business_stakes": "The paper says these finance applications matter because they support better decision-making, reduced risk, improved pricing and risk assessment, and real-time stress testing. It also notes that financial institutions face security, compliance, and control requirements that make deployment choices important.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is broad and survey-like; the paper discusses many finance use cases rather than one specific problem."
+    },
+    {
+      "paper_id": "75c40280653d",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the problem as automating financial analysis in banking so that banks can process large volumes of financial data more efficiently and make better decisions. It also treats this as relevant to evaluating financial fitness, creditworthiness, loan approvals, investment strategies, and risk management.",
+      "classical_baseline": "The paper compares against traditional or conventional financial analysis and monetary assessment methods, including manual data analysis and classical methods such as regression analysis or neural networks. These are presented as the existing state of practice in banking before QML.",
+      "classical_difficulty": "The paper says the classical approach is hard because it is time-consuming, error-prone, resource-intensive, and based on human judgment. It also says conventional systems struggle with large, complex datasets and can produce biased or wrong conclusions when trained on limited or inaccurate data.",
+      "business_stakes": "The paper says the stakes include reducing financial loss, improving customer trust, lowering operational charges, and adhering to regulatory compliance requirements. It also links faster decision-making to responding to changing market situations.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit but repetitive and somewhat garbled/OCR-corrupted; framing is banking-wide rather than silo-specific."
+    },
+    {
+      "paper_id": "76a87207ec32",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as anomaly detection for financial fraud analysis, specifically detecting anomalous bank transactions in a real-world dataset. It describes the method as identifying anomalies by comparing a new data point to the distribution of genuine data and flagging it when the anomaly score exceeds a threshold.",
+      "classical_baseline": "The paper compares against the classical anomaly detection / AD-PCA algorithm, which it treats as the classical counterpart. It also references classical baselines in related work for financial fraud detection, but the main direct comparison is to the classical AD-PCA algorithm.",
+      "classical_difficulty": "The paper says the classical AD-PCA algorithm requires O(md2) operations, and that conventional computational methods face significant challenges as data volume grows. It also emphasizes that fully quantum formulations at a high level are not enough to establish practical advantage on real datasets, motivating detailed resource analysis.",
+      "business_stakes": "The paper says anomaly detection is important in finance because timely identification of anomalies is essential to mitigate adverse outcomes, and it frames the application as a utility-scale fraud detection task on bank transactions. It also notes that the dataset is highly imbalanced, with about 2% fraudulent transactions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "motivation is explicit in abstract/introduction; classical baseline and difficulty are stated directly; business stakes are mentioned briefly"
+    },
+    {
+      "paper_id": "76bf72482fcf",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames financial fraud detection as a difficult task because digital financial transactions are growing quickly and fraudsters keep changing their tactics. It focuses on detecting credit card and transactional fraud in modern digital payment and online financial services.",
+      "classical_baseline": "The paper treats traditional rule-based systems as the older baseline, and compares them with classical machine learning methods such as logistic regression, decision trees, random forests, gradient boosting, and deep neural networks. It also contrasts these classical approaches with quantum and hybrid models.",
+      "classical_difficulty": "The paper says the older rule-based approach cannot adapt dynamically to changing fraud patterns, and that classical methods must handle noisy, high-dimensional, and highly imbalanced transaction data. It also notes that some classical models face increased computational complexity and reduced interpretability.",
+      "business_stakes": "The paper says financial fraud is an economic burden for institutions and consumers, and that false negatives are especially costly because financial risk is more significant. It also frames deployment concerns around real-world financial systems, regulatory standards, and operational feasibility.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is a comparative review with some algorithmic framing, but the financial problem and classical limitations are clearly stated."
+    },
+    {
+      "paper_id": "775d4b298ecd",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames anomaly detection as identifying irregular patterns in consumer electronics and related cyber-physical systems, including financial fraud. It treats credit card fraud detection as one application of this broader anomaly-detection problem.",
+      "classical_baseline": "The paper compares against classical machine learning and classical anomaly-detection methods such as clustering, one-class SVMs, decision trees, neural networks, deep neural networks, convolutional neural networks, deep support vector data description, and classical kernel methods. In the fraud-detection case study, it also compares against unsupervised kernel-based benchmark methods and classical kernel methods.",
+      "classical_difficulty": "The paper says classical anomaly-detection models are resource-intensive, slow to train, prone to overfitting, and struggle to adapt to new anomalies. For the fraud-detection case study, it also says classical kernel methods require Gram-matrix computation that scales as O(N^2s), with additional O(Ns) and O(NdNs) costs for new data and inference, which increases reaction time.",
+      "business_stakes": "The paper says anomaly detection is needed to safeguard against threats that can cause data breaches or system failures, and in the fraud case study it explicitly notes that better fraud detection could save money. It also says the fraud-detection method should be used for re-checking transactions and top-priority cases rather than mass real-time evaluation because of reaction-time costs.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Paper is a broad survey; fraud framing is present but embedded in a wider anomaly-detection/consumer-electronics discussion."
+    },
+    {
+      "paper_id": "77f0bbb6e5f3",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames blockchain transaction clustering as a problem because blockchain data is high-dimensional, noisy, temporally entangled, and hard to cluster with conventional methods. It also treats interpretability as a core problem, especially for sensitive financial uses such as fraud detection, AML, and DeFi monitoring.",
+      "classical_baseline": "The paper compares against conventional clustering methods, especially K-means, and uses classical internal clustering metrics to establish a baseline partition quality. It also contrasts quantum-enhanced approaches with Monte Carlo-based quantum random features.",
+      "classical_difficulty": "The paper says conventional clustering struggles because blockchain data are high-dimensional, temporally entangled, and noisy, which leads to suboptimal performance and opaque results. It also says the quantum-assisted models still lack transparency, so the main difficulty is both clustering quality and interpretability on complex data.",
+      "business_stakes": "The paper explicitly ties the problem to sensitive financial and governance settings, including fraud detection, AML, DeFi monitoring, and blockchain governance. It also says the approach is meant to support decision-making and actionable insights.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Clear motivation in abstract and introduction; framing is blockchain analytics with explicit fraud/AML relevance."
+    },
+    {
+      "paper_id": "7a159ec77866",
+      "silos": [
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as using quantum computing in finance, especially high-frequency trading and fraud detection, to help optimize services, improve targeting and prediction, reduce risk, and provide security against fraud. It also presents quantum computing as relevant to trade optimization, portfolio rebalancing, and risk profiling in financial services.",
+      "classical_baseline": "The paper treats traditional computers and traditional algorithms as the baseline, and it also refers to existing financial methods such as black-Scholes-Merton for pricing and Monte Carlo simulations for risk analysis. It contrasts quantum computing with these conventional approaches in finance and trading.",
+      "classical_difficulty": "The paper says traditional computing is limited by its bit-based processing and by the need to test many possible connections or solutions sequentially. As the number of variables grows, memory and time demands increase immensely, leading to unrealistic runtimes or inaccurate and costly estimations; it also says Monte Carlo simulations are constrained by scaling of predicted error.",
+      "business_stakes": "The paper says the stakes include better customer service, reduced fraud losses, improved compliance, faster response to market volatility, lower capital needs, and reduced costs from trading and compliance. It also notes that poor fraud detection and data management can cause large revenue losses for financial institutions.",
+      "extraction_confidence": "medium",
+      "extraction_notes": "motivation is broad and somewhat repetitive; paper is largely a general overview with finance examples rather than a focused technical finance study"
+    },
+    {
+      "paper_id": "7f91dcfbca63",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as anomaly detection: identifying unusual patterns or events in data, including financial fraud. It also treats the problem as selecting outliers from a dataset, with the goal of improving anomaly detection accuracy.",
+      "classical_baseline": "The paper compares its approach against traditional anomaly detection methods, especially statistical, density-based, and machine-learning-based algorithms. In the benchmarks it specifically uses robust covariance, One-Class SVM, SGD One-Class SVM, Isolation Forest, and Local Outlier Factor as the classical baselines.",
+      "classical_difficulty": "The paper says current gate-based quantum anomaly detection is limited by noisy, number-limited qubits, which affects practicality for larger or higher-dimensional datasets. It also notes that the proposed QUBO becomes hard to run on near-term QPUs because the outlier-selection penalty creates all-to-all quadratic interactions.",
+      "business_stakes": "The paper says anomaly detection is used in finance and that anomalies can indicate fraud, which requires attention. It also highlights a credit card fraud dataset with a highly imbalanced fraud class, implying the practical importance of detecting rare fraudulent transactions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract/introduction; paper is primarily algorithmic but includes clear anomaly-detection and fraud framing."
+    },
+    {
+      "paper_id": "80690e1e30a0",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the problem as protecting financial IT infrastructures from evolving real-time cyber threats, including anomaly/fraud detection, secure communication, and risk modeling. It argues that financial institutions need faster detection and mitigation to avoid serious disruption and damage.",
+      "classical_baseline": "The paper treats classical cybersecurity mechanisms as the baseline for threat detection and mitigation, and classical Monte Carlo as the baseline for risk estimation. It also explicitly compares its CV-QNN discussion against traditional intrusion-detection systems such as Gaussian mixture models and support-vector machines.",
+      "classical_difficulty": "The paper says classical approaches are limited by processing power and scalability, and that their detection latency and false-positive rates worsen against polymorphic or AI-driven payloads. For Monte Carlo, it says classical methods need very large numbers of experiments to reach desired precision, and for quantum deployment it notes latency and hardware complexity concerns in high-frequency trading environments.",
+      "business_stakes": "The paper says the stakes include preventing significant damage and catastrophic disruptions to financial institutions, protecting sensitive data, and maintaining secure communication and real-time response. It also mentions latency penalties in TLS handshakes and end-to-end detection pipelines in high-frequency trading environments.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and conclusion; paper is framed around financial cybersecurity rather than pure finance."
+    },
+    {
+      "paper_id": "8372b98f0875",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames fraud detection as an anomaly-detection problem in credit card transactions, where the goal is to identify fraudulent events among mostly genuine samples. It emphasizes the unsupervised setting, where potential fraud is treated as outliers in a highly imbalanced dataset.",
+      "classical_baseline": "The paper compares against classical supervised and unsupervised machine-learning baselines, focusing especially on kernel-based methods. For the unsupervised benchmark it uses one-class SVM with radial basis function kernels, and for context it also reports logistic regression and support vector classification.",
+      "classical_difficulty": null,
+      "business_stakes": "The paper explicitly links better fraud detection to financial savings and says that improved detection can return substantial money to the economy. It also notes that unsupervised methods may help detect new fraud types and discusses the need for low-latency inference for real-time use.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and finance-specific; classical difficulty and business stakes are both directly stated."
+    },
+    {
+      "paper_id": "85e9109e6bb0",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the task as financial fraud detection, treated as a classification problem on credit card transactions. It emphasizes that the dataset is highly imbalanced, with fraudulent transactions being a very small minority of the data.",
+      "classical_baseline": "The paper compares against XGBoost as the main conventional baseline, and also discusses parallelized XGBoost on multiple CPU cores and on GPU as stronger classical implementations. It also mentions traditional boosting methods such as AdaBoost in the background.",
+      "classical_difficulty": "The paper says the main difficulty is extreme class imbalance in fraud detection, where the minority class is rare. It also says that boosting weight selection is hard because choosing which weak classifiers to include and how strongly to weight them should minimize redundant information, which leads to a naturally quadratic structure.",
+      "business_stakes": "The paper notes that finance is a highly regulated sector where compliance matters, and that algorithmic decisions may need to be explainable to avoid legal difficulties. It also frames fraud detection as an application where efficient and scalable training is valuable.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper also includes regulatory framing for finance."
+    },
+    {
+      "paper_id": "85fbbb9f2a42",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the financial task as binary classification on real-world-style tabular finance data, specifically credit card default prediction and bank fraud detection. It says the datasets are meant to represent imbalanced financial behavior and transactional information, and that the goal is to classify whether a client defaults or whether a user is a fraudster.",
+      "classical_baseline": "The paper treats standard classical machine-learning classifiers as the baseline, including logistic regression, decision tree, naïve Bayes, k-nearest neighbors, and SVM. It also says these classical models are applied without dimensionality reduction in the baseline comparison.",
+      "classical_difficulty": "The paper says the main classical difficulty is that the datasets are imbalanced and that the minority class provides little information, which makes classification harder. It also notes that some classical methods do not converge or predict only the majority class, and that logistic regression needs many samples to be stable.",
+      "business_stakes": "The paper says the work is motivated by business use and industry constraints, especially the need to handle big datasets on current NISQ devices and to be practical in a business context. It also mentions a bank using QML for risk assessment.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is finance-adjacent but framed as QML classification on credit/fraud datasets rather than a finance-domain method paper."
+    },
+    {
+      "paper_id": "86891f250a78",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": null,
+      "classical_baseline": null,
+      "classical_difficulty": null,
+      "business_stakes": null,
+      "extraction_confidence": "low",
+      "extraction_notes": "paper is a survey; finance is only a brief application overview and does not state a specific finance problem framing for this paper"
+    },
+    {
+      "paper_id": "8d08019fb608",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames quantitative finance as a set of use cases where quantum machine learning may help with portfolio optimization, market prediction and trading, pricing, and risk management. It also explicitly includes fraud detection and underwriting among the finance applications it surveys.",
+      "classical_baseline": "The paper treats classical finance and classical machine learning methods as the baseline, including Markowitz mean-variance portfolio optimization, Monte Carlo simulation for option pricing, Black-Scholes for European options, and classical ML methods such as neural networks, SVMs, and regression for prediction and classification tasks. It also compares quantum methods against conventional commercial solvers and classical hedging or risk models in several places.",
+      "classical_difficulty": "The paper says the classical difficulty comes from computational complexity, scaling, and data/market uncertainty. Examples include the need to estimate means and covariances for portfolio optimization, the computational cost of Monte Carlo for complex options, the curse of dimensionality in machine learning and PDE-based pricing, and the fact that market prediction is inherently uncertain. It also notes that some classical methods become computationally expensive on large datasets or in high-dimensional settings.",
+      "business_stakes": "The paper mentions practical stakes such as regulatory requirements in constrained portfolio optimization, capital requirements in risk management, and the need to safeguard financial markets, institutions, and investors from fraud. It also notes that incorrect ML decisions can have serious consequences in financial transactions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Survey paper with explicit motivation in abstract/introduction and many classical baselines discussed across use cases."
+    },
+    {
+      "paper_id": "8fccc6cb2db6",
+      "silos": [
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames quantum computing as a way to improve several financial-services tasks, especially portfolio construction and risk analysis, and also mentions fraud detection, trading strategies, and derivative pricing. It presents these as operational problems where faster and more accurate computation could help financial institutions.",
+      "classical_baseline": "The paper treats conventional compute resources and manual calculation as the baseline. It contrasts quantum approaches with conventional cloud-based compute resources, and with the current process of choosing among many investment combinations and running Monte Carlo methods classically.",
+      "classical_difficulty": "The paper says the classical difficulty is that these financial tasks are expensive, time-consuming, and complex, with many possible combinations or scenarios to evaluate. It also says the relevant Monte Carlo approach is heuristic rather than exact, and that conventional compute resources are slower than the quantum or quantum-inspired alternatives discussed.",
+      "business_stakes": "The paper says the stakes include better operational efficiency, reduced risk, and faster decision-making for financial institutions. It also suggests that improved quantum capability could materially affect security and trust in financial systems, though this is framed more as cyber-risk than as direct business performance.",
+      "extraction_confidence": "medium",
+      "extraction_notes": "Magazine feature rather than a research paper; framing is broad and mixed across several finance use cases, with some sections focused on cyber-security rather than a single technical problem."
+    },
+    {
+      "paper_id": "8fec8d839e47",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the problem as protecting critical financial infrastructure from advanced cyber threats, including advanced persistent threats, data breaches, and sophisticated DeFi fraud. It also treats financial risk management as needing secure, transparent, and real-time detection and monitoring.",
+      "classical_baseline": "The paper compares against traditional risk management models such as Value at Risk and against classical AI approaches, including XGBoost and neural networks. It also references standalone QSVMs as a stronger classical-style benchmark in the related-work discussion and experiments.",
+      "classical_difficulty": "The paper says classical risk models struggle with high-speed, intricate data, and that classical AI has computational limits and centralized vulnerabilities. It also states that the target threats can be computationally intractable for classical models because of the curse of dimensionality.",
+      "business_stakes": "The paper emphasizes real-world stakes around regulatory compliance, data exposure, and production use in banking, fintech, and critical infrastructure protection. It also highlights the need for low overhead and real-time monitoring.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly framed around financial cybersecurity/fraud and risk management."
+    },
+    {
+      "paper_id": "9242f9c3e9d3",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the problem as detecting fraudulent financial transactions and improving financial risk assessment and optimization in the face of large-scale, changing fraud patterns. It says current fraud detection systems struggle with scalability, computational efficiency, accuracy, and adaptability.",
+      "classical_baseline": "The paper compares against conventional fraud detection systems and standard deep learning / traditional machine learning models. It also refers to conventional approaches in financial fraud detection as the baseline state of the art.",
+      "classical_difficulty": "According to the paper, the classical approach is hard because large transaction volumes make conventional methods inefficient and hard to scale, while standard deep learning still has long processing times, high false positives, and difficulty detecting sophisticated or changing fraud patterns. The paper also says these approaches have limited adaptability and computational efficiency.",
+      "business_stakes": "The paper says the stakes include protecting the basic interests of individuals and financial organizations, maintaining financial security, and avoiding unnecessary transaction blocks and delays. It also frames the work as relevant to real-time financial decision-making and risk management.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and repeated across abstract, introduction, and conclusion; paper is strongly framed around fraud detection and risk management."
+    },
+    {
+      "paper_id": "924cd91fefd6",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames credit card fraud detection as a major financial-security problem that requires rapid and accurate identification of fraudulent transactions in very large, highly imbalanced datasets. It emphasizes that the task is especially important because fraud causes substantial losses and customer inconvenience, and because digital payments are growing quickly.",
+      "classical_baseline": "The paper treats traditional machine learning and other classical fraud-detection methods as the baseline, including rule-based/statistical methods and supervised ML models such as logistic regression, random forests, gradient boosting, and decision trees. It also explicitly compares against classical neural-network-style processing in the hybrid setup by using a classical NN after the quantum circuit.",
+      "classical_difficulty": "The paper says the classical difficulty is that fraud detection must work on large-scale, highly imbalanced transaction data while minimizing false positives, and that traditional ML struggles with scalability and computational efficiency. It also notes that the rarity of fraud makes the task hard and that current quantum hardware limitations force hybrid processing.",
+      "business_stakes": "The paper says the stakes include direct monetary losses, increased operational costs, reputational damage, customer stress and inconvenience, and loss of trust in digital payment systems. It also links fraud prevention to financial inclusion and economic growth.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is finance-framed but also algorithm-heavy."
+    },
+    {
+      "paper_id": "9352e26d9232",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as detecting fraudulent housing or property insurance claims using machine learning, with the goal of identifying suspicious claims and preventing losses from fraudulent activity. It also treats fraud detection more generally as analyzing patterns and anomalies in data to determine whether fraud has occurred.",
+      "classical_baseline": "The paper compares its quantum approach against classical support vector machines, treating classical SVM as the baseline method for classification and pattern recognition. It also discusses the kernel trick as the classical SVM mechanism for handling feature mappings.",
+      "classical_difficulty": "The paper says fraud detection is challenging because the patterns may be complex and can be difficult to analyze. It also states that when the feature space becomes large, traditional methods can struggle, and that state preparation for QML algorithms can be challenging.",
+      "business_stakes": "The paper says fraud detection matters because fraudulent claims create business losses, and it also notes large financial losses from fraud across industries. For insurance specifically, it states that the total cost of insurance fraud is estimated to be more than forty billion dollars.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is partly tutorial-style but does state a clear fraud-detection framing and classical SVM baseline."
+    },
+    {
+      "paper_id": "946a6e1b2725",
+      "silos": [
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames finance as one of several application areas where quantum-enhanced AI may help with complex, data-driven tasks. In the finance-specific discussion, it says quantum optimization can be applied to portfolio management, fraud detection, and derivative pricing.",
+      "classical_baseline": "The paper treats classical machine learning and classical optimization as the baseline. It describes classical ML methods such as SVMs, decision trees, neural networks, PCA, and k-means, and says quantum methods are being explored because these classical approaches face scalability, optimization, and data-handling limits.",
+      "classical_difficulty": "The paper says classical ML becomes difficult because growing data volume and dimensionality make traditional algorithms computationally expensive, and many models rely on optimization that can get stuck in local minima or saddle points. It also says high-quality labeled data can be scarce or expensive, and that complex models are hard to interpret.",
+      "business_stakes": null,
+      "extraction_confidence": "medium",
+      "extraction_notes": "Paper is a broad review; finance is mentioned only briefly in a general applications section, with no finance-specific classical baseline or stakes."
+    },
+    {
+      "paper_id": "95a7b64bceac",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the problem as forecasting and managing risk in volatile financial markets with huge, interdependent data streams. It also treats market prediction, portfolio allocation, derivative pricing, credit risk assessment, and fraud detection as related financial tasks to be improved.",
+      "classical_baseline": "The paper compares against conventional computational models, traditional machine learning and statistical models, and mainstream financial models such as Black-Scholes, Markowitz mean-variance, Black-Litterman, and classical Monte Carlo. It also mentions LSTM, ARIMA, Random Forest, and SVM as classical baselines in the results.",
+      "classical_difficulty": "The paper says classical approaches struggle with large, high-dimensional financial data, nonlinear dependencies, and the need for high-quality historical data. It also says VaR and Monte Carlo methods have computational complexity that blocks real-time risk assessment, and that large-scale simulation and optimization can be too computationally expensive for high-frequency trading.",
+      "business_stakes": "The paper says the goal is to support financial institutions and real-world deployment, with faster real-time decision-making, stress testing, and risk measurement. It also mentions high-frequency trading environments and regulatory aspects as practical concerns.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and conclusion; paper is broad and mixes several finance tasks in one framing."
+    },
+    {
+      "paper_id": "95ecf8c43fd1",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as binary classification of fraudulent financial transactions, motivated by the growing complexity and volume of transactions and the need to detect fraud in financial institutions. It also treats fraud detection as a practical, high-stakes security problem for operational deployment.",
+      "classical_baseline": "The paper compares quantum and quantum-hybrid models against standard supervised classical machine-learning baselines for fraud detection, especially tree-based ensemble methods. It treats these classical models as the robust reference point for operational fraud detection.",
+      "classical_difficulty": "The paper says classical fraud detection is challenged by the escalating complexity of fraudulent schemes, the sheer volume of data, and inefficiencies such as high false-positive rates. It also notes that current systems are being pushed to their boundaries by these factors.",
+      "business_stakes": "The paper explicitly links fraud detection to financial loss, reputational damage, customer churn, and operational false-alarm costs. It also emphasizes that low false positives matter in an operational setting and that the domain is high-stakes.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, discussion, and conclusion; paper is a technical report with clear fraud-detection framing."
+    },
+    {
+      "paper_id": "9c09c81b2a12",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the problem as improving retail serverless application performance by applying AI-driven DevOps in quantum computing environments. It specifically targets retail scenarios such as dynamic pricing optimization, inventory management, and fraud detection.",
+      "classical_baseline": "The paper contrasts its approach with traditional computing architectures and traditional DevOps tools and practices designed for classical computing environments. It also treats traditional methods as the baseline for deployment efficiency and resource use in retail systems.",
+      "classical_difficulty": "The paper says classical approaches struggle with the computational complexity of modern retail operations and that traditional DevOps lacks abstractions for quantum resource management. It also notes that retail workloads involve real-time processing, variable traffic, and millions of interactions, which make the setting hard to manage efficiently.",
+      "business_stakes": "The paper says the retail sector faces major losses from inefficient inventory management and suboptimal pricing, and it frames the work as relevant to cost optimization, operational efficiency, and ROI. It also mentions sub-second fraud detection requirements and positive ROI within eight months for medium-scale implementations.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and retail-focused; fraud detection is one of several scenarios rather than the sole focus."
+    },
+    {
+      "paper_id": "9f6ab6f7c9d8",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames financial fraud in transactions as a growing and increasingly complex problem for financial institutions and for enterprises and individuals in the digital economy. It says the goal is financial transaction risk assessment and prediction, including fraud detection, anomaly detection, and reducing expected financial losses.",
+      "classical_baseline": "The paper treats conventional rule-based fraud detection systems as the older baseline, and it also discusses standard machine learning approaches such as supervised and unsupervised ML, including gradient boosting, neural networks, autoencoders, clustering, and other benchmark models like DT, RF, KNN, and LR. It also explicitly says that, until quantum computing is more available, scalable classical models are the practical solution.",
+      "classical_difficulty": "The paper says fraud detection is hard because fraud patterns keep evolving, the data are highly imbalanced, models must be updated repeatedly, and decisions may be needed within milliseconds. It also says there is a difficult trade-off between precision and scalability, and that existing methods face computationally expensive procedures and high computational costs.",
+      "business_stakes": "The paper says fraud causes money loss, erodes consumers' confidence in financial institutions, and can lead to expected financial losses if not detected. It also frames the task as important for operational efficiency and resource use in financial institutions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and problem statement; paper also states practical latency and scalability concerns."
+    },
+    {
+      "paper_id": "a2b17048118b",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the problem as detecting fraudulent insurance claims in the home insurance sector, where fraudulent activity creates losses and false alarms must be distinguished from legitimate claims. It presents fraud detection as a binary classification task over claim and customer data.",
+      "classical_baseline": "The paper compares quantum methods against a rule-based domain expert model and classical machine learning methods, specifically XGBoost, SVM, and KNN. It treats these as the classical reference points for fraud detection performance.",
+      "classical_difficulty": "The paper says fraud detection requires careful examination of data to uncover indicators of fraud, and that traditional heuristic approaches depend on deep understanding of fraud patterns and expertise. It also says classical feature maps can be computationally expensive as problem size increases, and that more features require more memory and computing resources to train.",
+      "business_stakes": "The paper says fraud causes substantial financial losses and erodes trust, and that detecting and preventing fraud is important for safeguarding assets and protecting customers from financial harm. It also frames the work as improving financial security in the insurance business.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is focused on insurance claim fraud detection with a clear classical comparison."
+    },
+    {
+      "paper_id": "a5b68f8e6d90",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as detecting credit fraud in finance, with an emphasis on building an accurate and quick fraud detection system. It treats fraud detection as a financial security and risk-management problem over transaction data.",
+      "classical_baseline": "The paper compares its quantum models against classical machine learning fraud detection approaches, especially classical support vector machines and other standard classifiers used for credit-card fraud detection. It also frames classical machine learning fraud detection as already widely used in production.",
+      "classical_difficulty": "The paper says fraud detection is hard because it needs real-time analysis of large amounts of data, fraud is often detected only after it occurs, and the training data can be redundant. It also argues that classical approaches are less scalable and more computationally expensive than the quantum alternatives it discusses.",
+      "business_stakes": "The paper explicitly links fraud losses to consumer costs and broader economic harm, and says real-time detection is needed to mitigate large losses. It also notes that implementation depends on computing cost and available hardware resources.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in the introduction and abstract; paper is comparative and includes both finance framing and quantum-method framing."
+    },
+    {
+      "paper_id": "a7b3e49448d1",
+      "silos": [
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as a domain with difficult computational tasks in risk management, portfolio allocation, cryptography, financial modeling, and trading-related simulation. It presents quantum computing as a way to address these finance problems and reviews the current state of that convergence.",
+      "classical_baseline": "The paper treats classical computing methods as the baseline, especially high-performance computing, Markowitz mean-variance portfolio optimization, classical Monte Carlo simulation, and conventional cryptosystems such as RSA and ECC. It also contrasts quantum methods with classical heuristics and classical machine learning approaches.",
+      "classical_difficulty": "The paper says classical methods struggle with large-scale combinatorial problems, stochastic simulations, high-dimensional datasets, and computational complexity. It also says Monte Carlo methods are computationally expensive, and that some quantum advantages are still debated or unavailable for many problems.",
+      "business_stakes": "The paper says the stakes include financial security, fraud prevention, and protecting financial data and decentralized financial systems from quantum attacks. It also links the technology to risk evaluation, market forecasting, and high-frequency trading.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Review paper with explicit motivation across abstract, introduction, and conclusion; framing is broad and multi-application rather than one specific finance task."
+    },
+    {
+      "paper_id": "ac9a031452bb",
+      "silos": [
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as using hybrid quantum-classical methods for predictive business intelligence and decision optimization in finance, especially for tasks like financial forecasting, market risk modeling, fraud screening, and portfolio construction. It also treats portfolio construction and related financial decisions as combinatorial optimization problems that must be handled under real-world constraints.",
+      "classical_baseline": "The paper treats classical machine learning, deep learning, and classical optimization as the baseline systems, and in finance it specifically contrasts quantum methods with classical risk assessment models, classical local search, and classical classifiers. It also describes classical post-processing, feasibility repair, and classical solvers as the standard components that remain in place around the quantum subroutines.",
+      "classical_difficulty": "The paper says the classical difficulty comes from exponential growth in combinations, nonlinear and non-separable relationships, non-stationary markets, and latency or scalability limits. For finance specifically, it says classical models can be unstable and opaque on non-stationary markets, and that portfolio construction involves many competing factors and rugged optimization landscapes.",
+      "business_stakes": "The paper explicitly links the financial use cases to real stakes such as reducing false positives and catastrophic false negatives, making earlier informed capital-allocation decisions, and improving robustness under market stress. It also mentions regulatory exposure and transaction costs as part of the portfolio problem.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Paper is broad and architecture-heavy, but it contains explicit finance framing in multiple sections; portfolio/risk/fraud/trading stakes are mentioned alongside general enterprise claims."
+    },
+    {
+      "paper_id": "b0f18b08964e",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the problem as financial risk management in complex, interconnected financial markets, where institutions need to identify, assess, and mitigate market, credit, liquidity, and operational risks. It also treats portfolio optimisation, derivative pricing, and credit risk modelling as related financial tasks within that broader risk-management setting.",
+      "classical_baseline": "The paper treats traditional financial risk management approaches as the classical baseline, especially statistical methods, Monte Carlo simulations, and risk models such as VaR, credit scoring, and event tree analysis. It also refers more generally to classical computing as the current approach used for these tasks.",
+      "classical_difficulty": "The paper says classical computing struggles with the scale and complexity of modern financial markets, especially the large data volumes and heavy calculations needed for accurate risk assessment. It also says classical methods can be too slow for real-time analysis and may rely on simplifying assumptions that miss nonlinearity, leading to inaccurate or biased risk estimates.",
+      "business_stakes": "The paper says poor risk management can have profound consequences, and it also links the problem to mispricing or misallocation of capital. It further notes that timely risk assessment is needed to mitigate adverse events in fast-moving markets.",
+      "extraction_confidence": "high",
+      "extraction_notes": "The paper is a theoretical review; motivation is explicit in the abstract and introduction, with broad finance framing rather than a single narrow task."
+    },
+    {
+      "paper_id": "b17e753ba135",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the task as fraud detection in transaction data, specifically identifying groups of accounts with fraudulent behavior in a bank’s transaction network. It says the goal is to uncover hidden community structure so the bank can assess fraud risk within those communities.",
+      "classical_baseline": "The paper compares its approach against the Louvain algorithm and simulated annealing (SA) as classical methods for community detection. It also treats modularity maximization as the underlying classical formulation for the community-detection problem.",
+      "classical_difficulty": "The paper says the classical Louvain method is heuristic and sensitive to initial conditions, which can make results vary across runs. It also says simulated annealing is much slower, and that real bank transaction networks can be so large that they exceed the capacity of algorithms like Louvain for real-time processing.",
+      "business_stakes": "The paper says fraud causes major financial losses and affects social credit, and that anti-fraud methods must support business decisions in banks. It also says the resulting community structure has practical value because it identifies a high-risk community and covers nearly 70% of fraudulent accounts.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is framed around anti-fraud community detection with clear classical comparisons."
+    },
+    {
+      "paper_id": "b253d747bcc9",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames fraud detection as an anomaly-detection problem in credit card transactions, where the goal is to separate nominal (genuine) samples from anomalous (fraudulent) ones. It emphasizes the unsupervised setting, where potential fraud events are labeled as outliers rather than relying on prior fraud labels.",
+      "classical_baseline": "The paper compares against classical machine-learning benchmarks for fraud detection, especially kernel-based methods. For the unsupervised baseline, it uses one-class support vector machines with radial basis function kernels; it also reports supervised logistic regression and support vector classification as context.",
+      "classical_difficulty": "The paper says the problem is challenging because the datasets have many features and strong correlations, and because the data are highly imbalanced. It also notes that classical kernel methods require Gram-matrix evaluation that scales as O(Ns^2), and that large feature spaces can lead to overfitting or reduced average precision.",
+      "business_stakes": "The paper explicitly ties fraud detection performance to financial savings and mentions the scale of fraud prevention in the UK. It also says that better detection can help catch new fraud types and discusses real-time or low-latency constraints for practical deployment.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and finance-specific; classical difficulty and business stakes are both directly stated."
+    },
+    {
+      "paper_id": "b4634f8d9776",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames credit card fraud detection as a financial classification problem where fraudulent transactions must be identified from highly imbalanced transaction data. It also treats high-dimensional feature classification as part of the challenge, especially under practical constraints on automated detection systems.",
+      "classical_baseline": "The paper compares its approach against traditional machine learning methods, especially classical support vector machines and traditional undersampling for class imbalance. It also cites prior machine-learning-based fraud detection methods as the established baseline context.",
+      "classical_difficulty": "The paper says the main classical difficulty is severe class imbalance, which makes models biased toward the majority class and harms fraud detection. It also says that reducing training sample sizes while keeping accuracy is important because it lowers model complexity and computational costs, and that high-dimensional features increase complexity and costs.",
+      "business_stakes": "The paper says fraud detection matters because credit cards are a major payment method and because missing fraud has a higher cost than false alarms. It also frames the work as relevant to financial risk control and low false-negative detection.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract/introduction; paper is focused on credit card fraud detection with clear imbalance and cost framing."
+    },
+    {
+      "paper_id": "ba8b763050ae",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the task as detecting credit card fraud in transaction data, especially in the setting of growing digital payments and increasingly sophisticated fraudulent activity. It also emphasizes that the data are highly imbalanced and that practical fraud detection needs to be more accurate, efficient, and robust.",
+      "classical_baseline": "The paper compares quantum approaches against traditional machine learning and classical neural-network methods for fraud detection. It explicitly lists classical methods such as decision trees, KNN, logistic regression, SVM, random forest, XGBoost, and a conventional neural network.",
+      "classical_difficulty": "The paper says fraud is hard to detect because fraudulent transactions are made to look real, and because the transaction data are highly imbalanced. It also says traditional methods are weak against increasing fraud sophistication and dynamics, and that classical methods are slow compared with quantum algorithms.",
+      "business_stakes": "The paper links the problem to real-world digital payments and the security of financial institutions and consumers. It says fraud creates major security difficulties and that stolen funds can be taken quickly without the owner's awareness.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit but somewhat repetitive; the paper mixes problem framing with method claims and literature-review commentary."
+    },
+    {
+      "paper_id": "ba8e571f1e45",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames financial fraud detection in home banking and digital payments as a binary classification problem, where banks and financial institutions need to identify illegal transactions more effectively. It emphasizes that the task is especially challenging because the data are highly unbalanced, with fraud as the minority class.",
+      "classical_baseline": "The paper compares the quantum approach against standard classical machine-learning classifiers: Logistic Regression, Random Forest, XGBoost, Support Vector Machine, and Neural Networks. It treats these as the main classical methods for the fraud-detection task.",
+      "classical_difficulty": "The paper says the main difficulty is that fraud detection is highly imbalanced, so classical models are not always satisfactory. It also notes that accuracy can be misleading in this setting because a model can score well by predicting the majority class, and that the minority fraud class is the one that matters most.",
+      "business_stakes": "The paper states that fraud causes large monetary losses and that banks and financial institutions must provide more effective illegal-transaction detection services. It also mentions that false positives are costly in this application.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Clear motivation in abstract and introduction; classical difficulty is explicitly tied to class imbalance and metric choice."
+    },
+    {
+      "paper_id": "bcfb2bcd887f",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as detecting financial fraud in transaction streams, especially when fraud patterns involve temporal dependencies, network correlations, and coordinated adversarial behavior. It emphasizes real-time fraud detection over high-volume financial transactions.",
+      "classical_baseline": "The paper treats classical fraud detection methods as the baseline, specifically logistic regression, random forest, SVM, and XGBoost, with XGBoost presented as the best classical approach. It also describes these as state-of-the-art methods with extensive feature engineering and hyperparameter tuning.",
+      "classical_difficulty": "The paper says classical fraud detection struggles with multi-scale temporal dependencies, network-correlation explosion, and adversarial adaptation. It also states that the computational complexity of analyzing these correlations scales exponentially with network size, making classical algorithms intractable under real-time constraints.",
+      "business_stakes": "The paper links fraud detection to high transaction volume, operational cost savings, and real-time processing needs. It says that reducing false positives can save substantial costs for financial institutions and that real-time detection may be computationally infeasible classically.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and repeated across abstract, introduction, discussion, and conclusion; paper is strongly framed around fraud detection with clear classical baseline and difficulty statements."
+    },
+    {
+      "paper_id": "c368d34620bf",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as detecting credit card fraud in transaction data, with an emphasis on catching fraudulent transactions automatically rather than only after they have already occurred. It also treats the problem as one of choosing an appropriate detection technique for different kinds of datasets, especially highly imbalanced and time-series data.",
+      "classical_baseline": "The paper compares quantum-augmented SVM against standard machine learning classifiers used for credit card fraud detection, including logistic regression, random forests, neural networks, k-nearest neighbors, and related methods. It also contrasts quantum machine learning with conventional machine learning as the non-quantum baseline.",
+      "classical_difficulty": "The paper says fraud detection is difficult because fraudulent transactions are far fewer than legitimate ones, creating severe class imbalance. It also says conventional machine learning is challenged by time-series, high-dimensional, and extremely imbalanced datasets, and that quantum approaches are costly and difficult to express in the required QUBO form.",
+      "business_stakes": "The paper says credit card fraud causes yearly losses of billions of dollars and that businesses need payment systems that can accept a wide variety of payment options. It also frames the trade-off as one of speed, accuracy, and cost of computation for an ideal business solution.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper mixes general fraud context with algorithm comparison, but framing is clear."
+    },
+    {
+      "paper_id": "c408224c2f59",
+      "silos": [
+        "credit_lending",
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the target problems as automating credit card fraud detection and loan eligibility prediction in a rapidly growing digital financial environment. It presents these as complex financial tasks that need more accurate and reliable decision-making models.",
+      "classical_baseline": "The paper treats classical machine learning and deep neural network models as the main baseline for these tasks, and it compares QFDNN against standard classifiers such as logistic regression, KNN, SVM, ANN, random forest, and gradient boosting. It also discusses existing classical ML/DNN approaches for fraud detection and credit scoring as the prior state of the art.",
+      "classical_difficulty": "The paper says classical methods struggle because financial data are complex and high-dimensional, which leads to scalability problems, overfitting, and high computational cost. It also says financial data can be noisy, incomplete, biased, and of inconsistent quality, and that feature selection and integration into existing infrastructures add further difficulty.",
+      "business_stakes": "The paper says the applications matter for trust, sustainability, social responsibility, and security in social financial technology, and that the goal is to support real-world financial decision-making. It also mentions regulatory compliance as a concern for DNN-based financial models.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is application-focused and compares against standard classical ML baselines."
+    },
+    {
+      "paper_id": "c43a47ce0c1a",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames fraud detection as a crucial task for securing financial systems and protecting against fraudulent activity, especially in online banking and e-commerce. It focuses on detecting fraudulent transactions in highly imbalanced transaction data and improving detection performance on complex, evolving fraud patterns.",
+      "classical_baseline": "The paper compares against conventional fraud detection approaches, including rule-based systems and classical machine learning methods. It also lists common classical techniques such as logistic regression, decision trees, random forests, support vector machines, neural networks, anomaly detection, and statistical methods.",
+      "classical_difficulty": "The paper says classical fraud detection struggles with the evolving tactics of fraudsters, the vast size and complexity of modern datasets, and limited computational capability. It also states that traditional methods have trouble with scalability, real-time processing, and non-linear, high-dimensional patterns.",
+      "business_stakes": "The paper explicitly ties fraud detection to financial losses and operational consequences for banks, consumers, and e-commerce. It cites large transaction-fraud losses and says faster detection is needed for real-time decision-making in high-volume environments.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is finance-adjacent but framed around fraud detection rather than broader asset pricing or portfolio problems."
+    },
+    {
+      "paper_id": "c6d03068fd05",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the task as detecting fraudulent transactions in the financial sector, with an emphasis on doing so in a way that preserves privacy for sensitive financial data. It presents this as a secure and efficient fraud-detection problem for financial institutions and fintech applications.",
+      "classical_baseline": "The paper treats conventional fraud detection methods and existing quantum machine learning fraud-detection models as the comparison point. It also contrasts its approach with a standalone centrally trained QNN and with existing QML frameworks that do not include privacy-preserving federated learning.",
+      "classical_difficulty": "The paper says fraud detection involves complex transaction patterns, sensitive data, and real-time challenges. It also notes that traditional fraud detection systems face latency issues, and that the framework must handle quantum noise and distributed-client variability.",
+      "business_stakes": "The paper explicitly ties the problem to privacy, security, and financial consequences. It says false negatives can be costly, and that protecting sensitive financial data is essential for financial institutions and fintech services.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper also discusses privacy and false-positive/false-negative costs."
+    },
+    {
+      "paper_id": "c7451962353b",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the financial problem as helping institutions make better decisions under uncertainty by improving risk management and portfolio optimization. It also treats related finance tasks such as option pricing, fraud detection, credit scoring, and risk simulation as part of the same broader quantum-finance opportunity.",
+      "classical_baseline": "The paper treats conventional computers and classical statistical or optimization models as the baseline for finance. It specifically mentions mean-variance models, linear programming, regression models, and classical solvers as the traditional approaches being compared against.",
+      "classical_difficulty": "The paper says classical computing struggles when the number of possible portfolio combinations grows very large, making optimal solutions too slow to compute in reasonable time. It also says classical techniques are computationally expensive for higher asset dimensions and that traditional models are not often scalable for large portfolios or complex risk analyses.",
+      "business_stakes": "The paper says the stakes include better investment decisions, real-time portfolio rebalancing, risk mitigation, stress testing, and regulatory compliance. It also notes that faster risk analysis can help institutions avoid losses and support market stability.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and repeated across abstract, introduction, and conclusion; paper is broad and includes multiple finance applications beyond the main title focus."
+    },
+    {
+      "paper_id": "c8872ea43678",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames financial fraud detection as a persistent and increasingly complex problem because fraudulent activity is dynamic, adversarial, and embedded in high-dimensional, imbalanced transaction data. It focuses on using quantum machine learning to improve pattern recognition and classification of fraudulent versus legitimate transactions.",
+      "classical_baseline": "The paper treats conventional machine learning methods as the baseline for fraud detection, specifically mentioning decision trees, SVMs, and neural networks, and it directly compares its quantum models against a classical SVM. It also references classical baselines such as Random Forests and Logistic Regression in the related-work discussion.",
+      "classical_difficulty": "The paper says classical methods struggle with imbalanced data, data sparsity, intricate decision boundaries, and the need for rapid computation. It also states that these bottlenecks are especially problematic for real-time, high-dimensional anomaly detection and that fraud is often concealed within massive datasets.",
+      "business_stakes": "The paper links the problem to real-time fraud detection and financial security, saying rapid detection is necessary in time-sensitive financial applications and that the work is relevant to high-stakes financial contexts and enterprise-level fraud detection systems.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly framed around fraud detection with some related-work discussion of classical limitations."
+    },
+    {
+      "paper_id": "c94ec3a9d152",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames phishing as a common cybercrime that seeks users' financial and personal information and causes losses, identity theft, and business disruption. It says the study is aimed at improving phishing website detection because existing systems are still imprecise and ineffective against evolving attacks.",
+      "classical_baseline": "The paper treats traditional blocklist-based URL detection and other existing phishing detection methods as the baseline state of the art. It also compares against prior deep learning and hybrid models such as DNN-LSTM, CNN-based methods, and other phishing detectors in its experiments.",
+      "classical_difficulty": "The paper says classical approaches struggle because blocklists cannot keep up with malicious URLs that are not listed, and because attackers keep changing tactics. It also states that some prior hybrid and CNN-based methods are too computationally complex, have limited scalability, or are not suitable for real-time use.",
+      "business_stakes": "The paper says phishing leads to financial losses, data breaches, reputational damage, and economic instability, and that better detection is needed to protect users and businesses from these consequences. It also mentions real-time use cases such as browser plugins and messaging applications.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and repeated across abstract, introduction, and conclusion; paper is strongly phishing-detection focused with clear classical-difficulty statements."
+    },
+    {
+      "paper_id": "cb19eb039ea0",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": null,
+      "classical_baseline": null,
+      "classical_difficulty": null,
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is comparative and includes classical baselines in related work."
+    },
+    {
+      "paper_id": "cbc953d2f213",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames fraud detection in cybersecurity as a growing challenge in today’s digital environment because of expanding data volumes and increasingly sophisticated cyber threats. It focuses on improving the detection and classification of fraudulent transactions, especially for financial institutions.",
+      "classical_baseline": "The paper treats traditional computer methods and classical machine learning models as the baseline for fraud detection. It also compares its results against prior classical machine learning approaches such as Random Forest, GAN-based methods, autoencoders, and AdaBoost on the same credit card fraud dataset.",
+      "classical_difficulty": "The paper says classical machine learning struggles with scalability and speed as data grows, and that these methods require increasing computational resources. It also says they can demand substantial feature engineering and parameter optimization and may not work well in real-time situations.",
+      "business_stakes": "The paper says fraud and cyber threats are a threat to individuals, companies, and financial institutions, and that false categorizations can have severe repercussions for clients and enterprises. It also emphasizes the need for strong solutions for financial institutions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and conclusion; framing is clear and finance-relevant but centered on cybersecurity fraud detection."
+    },
+    {
+      "paper_id": "cd5dc35d5f39",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper studies credit card fraud detection in a real-world transaction dataset from a Brazilian fintech, and frames the task as classifying fraudulent versus non-fraudulent transactions. It also says the work is aimed at general fault detection in financial systems.",
+      "classical_baseline": "The paper compares quantum-assisted restricted Boltzmann machine training against a strictly classical training approach based on Persistent Contrastive Divergence. It also treats simulated annealing-assisted training as an intermediate comparator, but the classical baseline is the PCD-trained RBM.",
+      "classical_difficulty": "The paper says RBM training is non-trivial because the partition function is intractable, making direct computation of the joint probability unfeasible for large problems on classical computers. It also notes that the negative phase requires sampling the joint distribution, which is intractable, so classical training relies on approximations such as Gibbs sampling and PCD.",
+      "business_stakes": "The paper emphasizes that the use case is economically relevant as quantum computing efficiency and availability improve, and it notes that the fraud-detection metric choice was guided by the anti-fraud team. It also frames the work as relevant to financial systems more broadly.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Clear motivation in abstract and introduction; classical difficulty is explicitly stated in RBM training terms."
+    },
+    {
+      "paper_id": "cf0d84ba3b6a",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the task as detecting fraudulent credit card transactions in online financial transactions, with the goal of helping credit card firms identify fraud accurately and precisely. It also says the motivation is to track fraud transactions to provide better reliability.",
+      "classical_baseline": "The paper compares two approaches for fraud detection: a hybrid quantum neural network and a TDA mapper-based approach. It also frames the hybrid model as combining a classical neural network with a quantum neural network.",
+      "classical_difficulty": "The paper says the data are highly skewed, with frauds making up only a tiny fraction of transactions, which makes the classification setting imbalanced. It also notes that the input-encoding hurdle is handled in the hybrid approach, implying encoding is a challenge in this setting.",
+      "business_stakes": "The paper links fraud detection to the needs of credit card firms and says better fraud tracking is needed to provide better reliability. It also suggests that improved methods could help with larger and more complicated data and improve over existing models.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is brief but explicit in abstract and poster relevance; paper is mostly an experimental poster with limited classical-difficulty discussion."
+    },
+    {
+      "paper_id": "cf9049abcad1",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the task as detecting fraudulent seller networks in e-commerce by modeling buyer, seller, product, and review relations as a graph and assigning sellers anomaly scores. It emphasizes that the goal is to rank sellers by fraud likelihood and identify anomalous subnetworks or fraud rings.",
+      "classical_baseline": "The paper contrasts its approach with traditional anomaly detection, rule-based filters, and classical machine learning classifiers such as logistic regression and random forests on engineered features. It also mentions graph-based metrics like clustering coefficients, community detection, and PageRank as earlier handcrafted graph analytics.",
+      "classical_difficulty": "The paper says classical methods struggle because they treat transactions in isolation and cannot capture coordinated, networked fraud. It also notes that handcrafted graph metrics lack end-to-end learning, and that scaling GNN-style fraud detection itself creates latency and resource challenges.",
+      "business_stakes": "The paper says the fraud schemes are large-scale and that the platform context creates practical deployment constraints around continuous monitoring and low latency. It also mentions privacy, consumer protection, and regulatory compliance as real-world concerns.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is a broad framework/review but still states the fraud problem and classical limitations clearly."
+    },
+    {
+      "paper_id": "d0176849806b",
+      "silos": [
+        "fraud_detection",
+        "portfolio_optimization"
+      ],
+      "problem_statement": "The paper frames FinTech as needing computational systems that can handle high-dimensional data under strict performance constraints, including workloads such as portfolio optimization and fraud detection. It also says these workloads need simultaneous access in shared quantum environments.",
+      "classical_baseline": "The paper treats classical high-performance computing and distributed architectures as the existing approach for these FinTech workloads. It also contrasts its proposal with the current practice of dedicating scarce quantum devices to individual workflows.",
+      "classical_difficulty": "The paper says classical HPC and distributed systems struggle with growing market complexity, quantum-related cryptographic challenges, and ultra-low-latency analytics. It also says the current quantum hardware is scarce, expensive, noisy, and limited in qubit count, so dedicating whole devices to one workflow is infeasible.",
+      "business_stakes": "The paper says the stakes include supporting real-time, latency-sensitive FinTech pipelines and enabling scalable, secure, cost-efficient quantum-as-a-service ecosystems. It also frames the work as helping industrial adoption of quantum computing in FinTech.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is concentrated in the abstract and opening introduction; framing is broad FinTech infrastructure rather than a single finance task."
+    },
+    {
+      "paper_id": "d186493da11a",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames class imbalance as a major machine-learning problem in real-world domains including finance, where underrepresented target classes can bias training and hurt predictive performance. It emphasizes that this is especially important for tasks like fraud detection, where accurate identification of rare cases matters.",
+      "classical_baseline": "The paper treats conventional resampling methods such as undersampling, oversampling, and SMOTE as the main classical baseline for handling imbalance, and also compares against standard machine-learning classifiers such as SVM, Random Forest, XGBoost, Extra Trees, Gradient Boosted Trees, AdaBoost, ensemble models, and stacking models. It also discusses cost-sensitive learning and thresholding as alternative classical approaches.",
+      "classical_difficulty": "The paper says classical imbalance-handling methods can lose information, overfit, and still leave some imbalance-related performance problems unresolved. It also states that traditional methods face computational inefficiency and limited scalability, and that stable performance on high-dimensional imbalanced datasets remains challenging.",
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; finance is mentioned as an application domain, but the paper’s concrete experiments are on food, bank customers, and credit card fraud datasets."
+    },
+    {
+      "paper_id": "d1e6a91e7f11",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames financial fraud detection as a need to prevent major financial losses and protect the reputation of financial institutions. It focuses on detecting fraudulent activity in digital financial transactions and on identifying fraud within complex transaction networks.",
+      "classical_baseline": "The paper treats conventional rule-based methods and classical graph neural networks, especially GraphSAGE, as the classical baselines. It compares QGNNs against classical GNNs on a real-world fraud dataset.",
+      "classical_difficulty": "The paper says classical methods struggle because fraud tactics keep changing, and graph-based classical algorithms have trouble with explosive data growth, complex dynamics, non-linear structures, and large solution spaces. It also says conventional methods struggle to capture the intricate relationships and patterns in fraud networks.",
+      "business_stakes": "The paper explicitly links fraud detection to avoiding financial losses, protecting institutional reputation, and improving the security of financial systems. It also says fraud poses threats to global industries and economies.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Clear motivation in abstract and introduction; classical baseline and difficulty are explicitly stated."
+    },
+    {
+      "paper_id": "d388ccd2fff8",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the financial problem as using quantum machine learning to improve financial risk analysis, portfolio optimization, fraud detection, and market forecasting. It also treats financial modelling as a hard optimization and simulation problem that classical methods struggle to handle at scale.",
+      "classical_baseline": "The paper compares against classical machine learning, classical optimization, and classical simulation methods such as brute-force search, classical SVMs, and traditional Monte Carlo simulations. In finance, it also contrasts quantum methods with conventional risk assessment, portfolio optimization, and market forecasting approaches.",
+      "classical_difficulty": "The paper says the classical financial problem is hard because it involves large, high-dimensional datasets, many possible combinations, and substantial processing time. It also says classical methods can be slow, resource-intensive, and struggle to scale to real-time or large-market problems.",
+      "business_stakes": "The paper explicitly links these finance applications to risk management, investment strategy, and financial security. It says better methods could improve decision-making, reduce risk, and support faster, more accurate financial modelling and fraud detection.",
+      "extraction_confidence": "high",
+      "extraction_notes": "paper is a broad survey/chapter; finance framing is spread across multiple sections rather than a single motivation paragraph"
+    },
+    {
+      "paper_id": "d7449b1ba0c5",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as credit card transaction fraud detection, especially in a highly imbalanced setting where fraud is rare and subtle. It emphasizes that the goal is to improve detection quality, particularly the precision-recall trade-off for rare fraudulent transactions.",
+      "classical_baseline": "The paper compares against rule-based screening as the traditional non-ML approach, and against classical machine-learning classifiers such as logistic regression, linear discriminants, nearest neighbours, boosted trees, and a published classical benchmark on the same dataset. In the results, the main published baseline is the CAD model from the recent literature.",
+      "classical_difficulty": "The paper says classical fraud-detection methods are hard because fraud is extremely rare, the signals are high-dimensional and sparse, and the data distribution shifts over time. It also says weak anomalies can be overwhelmed by noise or lost through regularization or dimensionality reduction, and that models may need frequent retraining and monitoring.",
+      "business_stakes": "The paper says better fraud detection can reduce false positives, lower manual-review and customer-complaint costs, and improve customer trust and satisfaction. It also states that even marginal efficiency gains can have large economic impact at scale.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and fairly detailed; paper also mixes algorithmic and operational framing, but the financial problem is clear."
+    },
+    {
+      "paper_id": "dda7775da9aa",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames credit card fraud detection as a mission-critical financial classification problem, especially because fraudulent transactions are extremely rare and fraud patterns keep changing. It asks how quantum machine learning models can be designed automatically and efficiently to handle this kind of imbalanced, real-world classification task.",
+      "classical_baseline": "The paper treats manually designed quantum circuits and randomly initialized circuits as the main existing baseline approaches, and it also contrasts its method with several manually crafted QML architectures from prior fraud-detection work. It notes that standard supervised learning pipelines can be biased on imbalanced fraud data, and that oversampling methods like SMOTE only rebalance the data rather than solve the architectural problem.",
+      "classical_difficulty": "The paper says the problem is hard because fraud data are extremely imbalanced, fraud behavior changes over time, and quantum circuit design itself is fragile. It also says manual circuit design does not scale, random circuit trials require extensive simulation and often fail to converge, and the search space of circuits is large under practical qubit, parameter, and simulation constraints.",
+      "business_stakes": "The paper explicitly frames fraud detection as a high-stakes financial security problem. It says misclassification costs are high, and that low false-positive-rate sensitivity matters in financial security contexts.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly application-framed around credit card fraud detection and compares against manually designed QML baselines."
+    },
+    {
+      "paper_id": "e0da2160fe63",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the financial problem as detecting several kinds of fraudulent activity in financial transaction networks, including market anomaly screening, synthetic identity fraud, collusive stock manipulation, and anti-money laundering. It treats these as graph problems over transaction data, where suspicious structures such as dense subgraphs, cliques, or isomorphic patterns indicate fraud.",
+      "classical_baseline": "The paper compares against standard classical graph and AML methods for each task, including community detection algorithms, dense subgraph algorithms, clique enumeration algorithms, and subgraph isomorphism matching algorithms. It also mentions rule-based AML systems and supervised machine learning models as classical baselines for anti-money laundering.",
+      "classical_difficulty": "The paper says these financial graph problems are hard because they have NP-hard structure, and because classical methods face severe search-space explosion on large, irregular transaction networks. For AML specifically, it says rule-based review is inefficient and delayed, supervised learning suffers from class imbalance, and graph methods struggle to meet accuracy and real-time requirements.",
+      "business_stakes": "The paper emphasizes financial security and the need for real-time detection in massive transaction datasets, and it frames the problems as critical industry challenges. It also notes that delayed alerts, false positives, and missed reports hinder automatic identification of suspicious activity.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly finance-framed and focused on fraud detection/AML graph analytics."
+    },
+    {
+      "paper_id": "e36d3ea67d07",
+      "silos": [
+        "fraud_detection",
+        "risk_management",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the problem as making real-time decisions under uncertainty with probabilistic databases, especially when the data are high-dimensional and have complicated correlations. It also says this matters for finance-related tasks such as risk assessment, fraud detection, and algorithmic trading.",
+      "classical_baseline": "The classical baseline is probabilistic databases and classical Bayesian inference, including Bayesian inference, Markov models, and Monte Carlo simulation. The paper also compares against classical heuristic and metaheuristic algorithms for optimization.",
+      "classical_difficulty": "The paper says the classical approach is computationally inefficient, especially as uncertainty and data complexity grow. It specifically states that probabilistic query processing is NP-hard, that high-dimensional correlations are difficult to model, and that real-time updates add overhead that makes classical systems infeasible for dynamic decision support.",
+      "business_stakes": "The paper says the stakes are real-time risk assessment, fraud detection, and algorithmic trading in finance, where decisions must be made quickly under changing probabilities. It also mentions risk mitigation and real-time decision support as practical goals.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and repeated across abstract, introduction, and related work; paper is broad DSS framing with finance as one application area."
+    },
+    {
+      "paper_id": "e513378d8c92",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames e-commerce as a data-intensive setting where business decisions depend on large, heterogeneous data streams. It highlights personalization, dynamic pricing, inventory optimization, privacy-preserving learning, and fraud detection as core problems, with particular emphasis on fraud that adapts to defenses.",
+      "classical_baseline": "The paper treats classical AI and data-science methods as the baseline, including collaborative filtering, gradient boosting, deep learning, graph learning, learning-to-rank, stochastic optimization, and supervised or unsupervised fraud detection. It also compares against classical integer programming and other classical heuristics for optimization tasks.",
+      "classical_difficulty": "The paper says classical methods struggle with combinatorial recommendation spaces, large NP-hard optimization problems in near real time, secure cross-platform learning without raw data sharing, and fraud that is sophisticated or adversarial. It also notes practical constraints such as latency, retrain frequency, and the scarcity or adversarial nature of fraud labels.",
+      "business_stakes": "The paper explicitly ties these problems to revenue, margin, conversion, and customer lifetime value, and it notes that fraud and pricing decisions have economic consequences. It also mentions regulatory and privacy constraints that affect deployment.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and broad; paper is a survey/roadmap with multiple e-commerce problems, but the framing is clear enough to extract."
+    },
+    {
+      "paper_id": "e6d5993eabdd",
+      "silos": [
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the task as credit card fraud detection on sequential transaction data, with an emphasis on identifying fraudulent and non-fraudulent transactions accurately. It also says the model should capture temporal and behavioral patterns in the data to improve fraud detection performance.",
+      "classical_baseline": "The main classical baseline is a conventional LSTM model, and the paper also situates it among other classical fraud-detection approaches such as XGBoost, Random Forest, SVM, and deep learning models. For the direct benchmark, the paper compares the hybrid model against a purely classical LSTM trained on the same data and preprocessing pipeline.",
+      "classical_difficulty": "The paper says classical models are limited by computational constraints and by an inability to efficiently handle high-dimensional feature spaces. It also notes that fraud datasets are often severely imbalanced, which makes accurate classification difficult, and that false positives and false negatives are important to minimize.",
+      "business_stakes": "The paper says fraud detection matters because it has a critical impact on financial systems, and that false positives and false negatives have customer and banking consequences. It also mentions that fraud detection is important for real-world deployment and that data protection regulations affect preprocessing.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; baseline and difficulty are clearly stated."
+    },
+    {
+      "paper_id": "e9b892fcd6fc",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames credit card fraud detection as a major problem in online payments, where fraudulent activity threatens sensitive data, user trust, and causes financial losses. It also presents the task as classifying transactions as legal or fraudulent from transaction data.",
+      "classical_baseline": "The paper treats traditional machine learning, deep learning, and statistical analysis as the classical approaches for credit card fraud detection, and it explicitly compares against individual classifiers such as ELM, DBN, LSTM, RNN, and CNN. It also notes that supervised learning is the most used machine learning technique for noticing credit card fraud.",
+      "classical_difficulty": "The paper says current methods do not achieve both high efficiency and high accuracy, and that computer power constraints are limiting machine learning. It also says NISQ systems may not always be able to function effectively, and that the dataset is extremely imbalanced, which creates difficulty for fraud detection.",
+      "business_stakes": "The paper says fraud causes financial losses for consumers and threatens the credibility of card issuers and retailers. It also reports large global losses from credit card fraud.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is algorithmic but does state the fraud-detection problem and classical limitations clearly."
+    },
+    {
+      "paper_id": "f054252b17db",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the problem as real-time financial fraud detection and cyber-attack prevention in the U.S. healthcare sector. It says healthcare fraud and cyber-attacks are significant and that existing methods are not adequate for the evolving threats.",
+      "classical_baseline": "The paper treats rule-based systems, statistical methods, firewalls, and signature-based intrusion detection systems as the classical baseline. It also compares against traditional methods and classical SVM in its case-study discussion.",
+      "classical_difficulty": "The paper says classical fraud detection struggles with high-dimensional data, non-linear relationships, and adapting to new fraud patterns. For cybersecurity, it says signature-based IDS are limited because they rely on predefined signatures and cannot detect novel attack vectors in real time.",
+      "business_stakes": "The paper says the stakes include large fraud losses, disruption of healthcare services, and risks to patient safety. It also notes that healthcare fraud is a major cost burden and that deployment raises ethical and regulatory implications.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is healthcare-focused rather than general finance, but it clearly frames financial fraud in that sector."
+    },
+    {
+      "paper_id": "f3cb59fe38ac",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the financial problem as modeling financial networks and transaction relationships with graph neural networks for tasks such as fraud detection, credit scoring, risk assessment, and market prediction. It also presents quantum-natural language processing as a way to analyze risk-related financial data in banking more effectively.",
+      "classical_baseline": "The paper compares against traditional methods, including rule-based or simple feature-analysis systems in intrusion/fraud settings and conventional models for credit scoring, risk assessment, and recommendation. In the quantum-NLP section, it also contrasts its approach with traditional NLP models and their distributional methods.",
+      "classical_difficulty": "The paper says the hard part classically is that financial and risk data are complex, interconnected, and large-scale, so traditional methods miss subtle patterns or cannot handle the volume and complexity. It also notes that graph problems can be computationally expensive and that large graphs create scalability and memory challenges.",
+      "business_stakes": "The paper explicitly ties the financial framing to reducing financial losses, improving security, and supporting banking risk management. It also mentions real-time decision needs in fraud detection and the importance of timely efficiency for resource allocation and response.",
+      "extraction_confidence": "medium",
+      "extraction_notes": "paper is a broad GNN survey/chapter with finance framing spread across multiple sections; motivation is present but not concentrated in one finance-specific problem statement"
+    },
+    {
+      "paper_id": "f6c404e63d0f",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as finding sum structures in financial tables for automated auditing and consistency checking. It says this can be formulated as a subset sum problem: given a set of numbers and a target sum, find the subset that sums to the target.",
+      "classical_baseline": "The paper treats deterministic exact subset-sum algorithms and rule-based table-parsing approaches as the classical baselines. It also mentions dynamic programming methods for subset sum as exact classical algorithms, but says they are impractical for the intended financial tables.",
+      "classical_difficulty": "The paper says the problem is NP-hard and that classical solving algorithms are therefore not practical in many real applications. It further states that exact deterministic methods are exponential, and that dynamic programming is impractical because its space complexity depends on the target sum and financial tables can be large and contain very large values.",
+      "business_stakes": "The paper says manual auditing is highly time- and labour-intensive and that mistakes are easy to make when auditing many tables. It also frames the application as useful for smart auditing software and says it could directly benefit auditors in their daily work.",
+      "extraction_confidence": "high",
+      "extraction_notes": "motivation is explicit in abstract and introduction; paper is strongly auditing-focused with clear classical-difficulty statements"
+    },
+    {
+      "paper_id": "f85bdc99d9eb",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames finance as a collection of computationally challenging tasks, especially stochastic modeling, optimization, and machine learning. It highlights examples such as pricing and risk estimation, identifying anomalous transactions and customer preferences, portfolio selection, trading strategies, hedging, and other financial applications.",
+      "classical_baseline": "The paper treats the classical state of the art as the existing financial-industry toolkit: stochastic modeling, optimization algorithms, machine learning models, Monte Carlo integration, dynamic programming, regression-based methods, branch-and-bound, interior-point methods, and other standard classical techniques. It also explicitly contrasts quantum approaches with the classical counterpart in several places.",
+      "classical_difficulty": "The paper says many financial problems are computationally challenging, and that classical methods can suffer from unfavorable scaling in dimension, error, or tree size. It specifically notes that some methods require exponentially many samples or have exponential dependence on dimension, while others are already efficient classically, leaving little room for improvement.",
+      "business_stakes": "The paper says that in finance, computational time and accuracy can directly affect profit and loss, and that fast, accurate risk evaluation is crucial for hedging under volatile market conditions. It also says early and accurate fraud detection can avoid significant monetary loss and reputational damage.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Review paper with broad finance framing; motivation is explicit in abstract, introduction, and outlook."
+    },
+    {
+      "paper_id": "f8669d109a5f",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames finance as one of several domains that may benefit from quantum computing, especially for fraud detection, risk analysis, portfolio optimization, and market simulation. It presents these as complex financial tasks that quantum computing could help address more effectively than classical systems.",
+      "classical_baseline": "The paper contrasts quantum approaches with traditional finance methods that rely on rules-based systems, statistical analysis, and classical models and simulations. For risk estimation, it specifically names classic Monte Carlo simulation as the conventional baseline.",
+      "classical_difficulty": "The paper says classical methods are limited in detecting sophisticated fraud schemes, and that some financial tasks such as Value at Risk estimation are computationally demanding. It also says existing methods can fail to capture extreme tail losses adequately, and that practical quantum alternatives are still constrained by hardware and algorithmic development challenges.",
+      "business_stakes": "The paper says fraud detection is critical for banks to maintain trust and protect assets, and that better risk estimation affects profits and financial losses. It also notes that stronger encryption is needed to avoid financial loss from cyberattacks.",
+      "extraction_confidence": "medium",
+      "extraction_notes": "paper is a broad quantum-computing overview; finance framing is brief and mixed with many non-finance applications"
+    },
+    {
+      "paper_id": "f88bb4cc0c22",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as a set of data-intensive decision problems where machine learning is used for fraud detection, anti-money laundering, algorithmic trading, credit scoring, financial forecasting, portfolio optimization, risk assessment, and option pricing. It then positions quantum machine learning as a way to address these financial tasks by handling high-dimensional data and complex optimization or simulation problems more efficiently.",
+      "classical_baseline": "The paper treats classical machine learning as the main baseline, alongside traditional rule-based, statistical, and heuristic methods in specific finance tasks. It contrasts QML against classical ML methods such as SVMs, neural networks, gradient descent, evolutionary algorithms, Monte Carlo methods, and classical clustering or trading approaches.",
+      "classical_difficulty": "The paper says classical approaches struggle with scalability, adaptability, interpretability, and real-time performance in finance. It also notes that some financial problems become computationally prohibitive at large scale, that high-frequency trading has extreme latency requirements, and that classical simulation methods can be too slow for complex pricing and risk tasks.",
+      "business_stakes": "The paper explicitly links these methods to financial losses, market efficiency, and regulatory compliance. It says fraud detection lowers financial losses, algorithmic trading affects market liquidity and trading results, and low-latency trading can avoid significant losses; it also notes that better risk simulation can support regulatory compliance.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Review paper with broad finance framing; motivation is explicit but spread across abstract, introduction, and section headings."
+    },
+    {
+      "paper_id": "f9e5b6ee139d",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the financial problem as binary classification in financial services, with use cases including fraud detection, default prediction, credit scoring, and loan approval. It focuses on improving the quality and robustness of predictive models for these tasks.",
+      "classical_baseline": "The paper treats classical kernel methods and classical multiple kernel learning as the main baseline, especially SVMs built with RBF kernels and classical MKL. It also compares against single-kernel quantum models as a simpler state-of-the-art reference.",
+      "classical_difficulty": "The paper says that choosing a suitable kernel for a classical dataset is difficult, and that using a single arbitrary kernel may not fit a given dataset well. It also says kernel-based methods require finding the right kernel, and that quantum kernel methods can suffer from expensive iterative optimization, barren plateaus, overfitting, and exponential concentration as the number of qubits grows.",
+      "business_stakes": "The paper explicitly says that better discrimination quality matters for both business and customers because it increases true positives and reduces false positives. It also frames the work as potentially useful for industrial fraud-detection workflows and profitable near-term quantum utility in financial services.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly finance-framed but still method-heavy."
+    },
+    {
+      "paper_id": "fd31c17753a0",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames financial fraud detection as a binary classification task over transaction and user-behavior data, aiming to decide whether each transaction is fraudulent or normal. It emphasizes that the task must handle spatial, temporal, and relational patterns in large-scale financial data.",
+      "classical_baseline": "The paper treats manual rule-based methods and statistical analysis as the classical baseline, and also compares against traditional machine learning models such as logistic regression, decision tree, SVM, random forest, and GBM. It also contrasts its approach with classical optimization methods like gradient descent.",
+      "classical_difficulty": "The paper says classical methods are inadequate for large-scale, high-density, and complex financial market data, and that rule-based methods are rigid and require continuous manual updating. It also says statistical methods struggle with non-linear, high-dimensional, and large-volume data, while classical deep-learning training is slowed by computational efficiency and training-time bottlenecks; classical optimization can also get stuck in local optima.",
+      "business_stakes": "The paper says financial fraud causes substantial losses for market participants, undermines market stability and investor confidence, increases regulatory scrutiny, and raises operational and compliance costs. It also says better detection can reduce fraud-related economic losses and deployment costs for financial institutions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "motivation is explicit in abstract, introduction, and conclusion; paper is strongly framed around fraud detection with clear classical baselines and difficulty statements"
+    },
+    {
+      "paper_id": "fdc49be32988",
+      "silos": [
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames credit card fraud detection as a binary classification task and uses it as one of its benchmark real-world machine learning problems. It also presents the broader problem as making quantum neural networks practical for real-world datasets with many features.",
+      "classical_baseline": "The paper compares against prevailing QNN models, especially a conventional QNN built from a ZZFeatureMap and a RealAmplitudes variational circuit, and also against a classical MLPClassiﬁer. In the paper’s framing, these are the existing approaches the new model is meant to improve upon.",
+      "classical_difficulty": "The paper says the main classical/near-term difficulty is that current QNNs are too costly and do not scale well: circuit depth and qubit needs grow with the number of features, and the resulting gate complexity increases error rates and decoherence. It also says these issues make real-world datasets hard to handle and limit practical implementation on NISQ devices.",
+      "business_stakes": "The paper explicitly ties the work to real-world machine learning tasks and says the model is aimed at practical application on current quantum hardware. It does not discuss regulation, market impact, or financial losses in detail.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; finance-specific framing is limited to credit card fraud detection as a benchmark classification task."
+    }
+  ]
+}

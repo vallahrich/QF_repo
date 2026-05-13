@@ -1,0 +1,647 @@
+{
+  "paper_id": "5f3cabc4cfc6",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "5f3cabc4cfc6_an_introduction_to_financial_option_pricing_on_a_qudit_based_quantum_computer.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.75,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 6,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.quantum_resources.circuit_depth: 'Not explicitly reported; the paper states the comparator can be O(n) depth with O(n) carry ancillas or at least O(n^2) depth with O(1) carry ancillas, and the overall amplitude-estimation loop uses T=7 with m_l=2^(l-1).' is not of type 'integer', 'null'",
+      "Schema error at experiments.0.quantum_resources.num_qubits: 'Main register: n qudits plus 2 qubits (comparator and payoff); Fig. 6 explicitly uses a single asset qudit register with n=1 and Hilbert space dimension d=8 in the distribution plot, and the payoff-vs-d plot varies d. Exact total qubit-equivalent count is not reported.' is not of type 'integer', 'null'",
+      "Schema error at experiments.1.quantum_resources.circuit_depth: 'Not explicitly reported; same amplitude-estimation loop with T=7 and comparator/payoff subcircuits' is not of type 'integer', 'null'",
+      "Schema error at experiments.1.quantum_resources.num_qubits: 'Single asset register with n=1 qudit; exact d varies across the sweep. Comparator and payoff qubits are present. Exact qubit-equivalent count is not reported.' is not of type 'integer', 'null'",
+      "Schema error at experiments.2.quantum_resources.circuit_depth: 'Not explicitly reported; same amplitude-estimation loop with T=7 and comparator/payoff subcircuits' is not of type 'integer', 'null'",
+      "Schema error at experiments.2.quantum_resources.num_qubits: 'Single asset register with n=1 qudit; Fig. 7a uses a 10-dimensional asset price register. Comparator and payoff qubits are present. Exact total qubit-equivalent count is not reported.' is not of type 'integer', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.75,
+      "completeness": 0.75,
+      "num_experiments": 3,
+      "experiment_scores": [
+        0.75,
+        0.75,
+        0.75
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "An introduction to financial option pricing on a qudit-based quantum computer",
+    "authors": [
+      "Nicholas Bornman"
+    ],
+    "year": 2023,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "derivative-pricing",
+    "secondary_silos": [
+      "simulation-monte-carlo"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Numerical simulation of a qudit-based European call option pricing pipeline using a Black-Scholes-Merton log-normal asset distribution, Householder state preparation, qudit comparator/payoff encoding, and maximum-likelihood amplitude estimation without phase estimation.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "Amplitude estimation without phase estimation (maximum-likelihood estimation) applied to qudit-based option pricing",
+        "ansatz": null,
+        "optimizer": "maximum-likelihood estimation",
+        "num_layers": null,
+        "convergence_criteria": "Estimate theta_P1 by maximizing the likelihood over theta in [0, pi/2]",
+        "hyperparameters": {
+          "distribution_model": "Black-Scholes-Merton",
+          "drift_alpha": "r (risk-neutral measure)",
+          "volatility_sigma": 0.3,
+          "S0": 2.0,
+          "t": "365/365",
+          "strike_K": 1.7,
+          "shots_per_circuit_N": 100,
+          "cutoff_T": 7,
+          "m_l_sequence": "m0=0, m_l=2^(l-1) for l=1..T",
+          "oracle_queries_M": 26200,
+          "truncation_rule": "Smin=max(0, mu-3sigma), Smax=mu+3sigma",
+          "state_preparation_method": "Householder transformation",
+          "payoff_encoding": "controlled-Y rotations with shift/scale c and s=pi/4",
+          "c_parameter": null
+        },
+        "parameter_initialization": "Not reported; likelihood maximization over theta_P1",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": "[0, pi/2]"
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "A single asset price distribution is discretized over dn points using n qudits of dimension d; basis state |i> encodes sampled asset value s_i via s_i = Smin + (i + 1/2)omega. The probability amplitudes sqrt(p_i) are loaded into the qudit register. A comparator qubit marks whether i >= k for strike K, and a payoff qubit encodes the shifted/scaled payoff via controlled RY rotations.",
+        "objective_function": "European call payoff f(ST)=max(0, ST-K); estimate expected payoff nu = e^{-rT} E_P[f(ST)]",
+        "constraints_handling": "No explicit constraints; truncation of the asset domain to [Smin, Smax] and discretization to dn points",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": "At least 2 ancilla qubits are used in the main circuit: one comparator qubit and one payoff qubit; additional carry ancillas are used in the comparator subroutine but the exact count depends on the chosen comparator implementation"
+      },
+      "problem_instance": {
+        "description": "Single-asset European call option under the BSM model; simulation shown for two parameter sets and varying qudit dimension d.",
+        "num_assets": 1,
+        "time_steps": 1,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "Synthetic log-normal distribution from the BSM model; Fig. 6 uses S0=2.0, t=365/365, alpha=0.07, sigma=0.3, strike K=1.7; Fig. 7 uses S0=3.0, sigma=0.5, strike K=2.2. Asset domain truncated to three standard deviations around the mean and discretized into dn points."
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": "Main register: n qudits plus 2 qubits (comparator and payoff); Fig. 6 explicitly uses a single asset qudit register with n=1 and Hilbert space dimension d=8 in the distribution plot, and the payoff-vs-d plot varies d. Exact total qubit-equivalent count is not reported.",
+        "qubit_type": "not_specified",
+        "circuit_depth": "Not explicitly reported; the paper states the comparator can be O(n) depth with O(n) carry ancillas or at least O(n^2) depth with O(1) carry ancillas, and the overall amplitude-estimation loop uses T=7 with m_l=2^(l-1).",
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 100,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": null,
+        "device_name": null,
+        "framework": "custom Python package"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": false,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "Sample the BSM log-normal distribution, truncate to [Smin, Smax], discretize into dn points, normalize probabilities, compute strike index k, build Householder state-preparation matrix, and construct comparator/payoff subcircuits.",
+        "classical_postprocessing": "Use maximum-likelihood estimation on measurement counts to estimate theta_P1, map theta_P1 to P1, then recover expected payoff via Eq. 15 and discount to obtain option value.",
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "shots_per_circuit",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "shots",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "cutoff_t",
+          "value": 7,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": 26200,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "oracle calls",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "classical_monte_carlo_convergence_rate",
+          "value": 0.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "order exponent in O(M^-1/2)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "quantum_amplitude_estimation_convergence_rate",
+          "value": 1.0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "order exponent in O(M^-1)",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "asset",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "asset_register_dimension",
+          "value": 8,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "dimension",
+          "higher_is_better": true,
+          "data_source": "figure"
+        },
+        {
+          "metric_name": "asset_register_dimension",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "dimension",
+          "higher_is_better": true,
+          "data_source": "figure"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical_monte_carlo",
+          "metric_name": "convergence_rate",
+          "value": "O(M^-1/2)",
+          "unit": "asymptotic error scaling"
+        },
+        {
+          "method_name": "classical_finite_resource_discretization",
+          "metric_name": "expected_payoff",
+          "value": null,
+          "unit": null
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo integration",
+          "conditions": "Amplitude estimation without phase estimation; asymptotic regime in number of oracle calls M",
+          "is_demonstrated": true,
+          "caveats": "The paper notes this is a theoretical scaling claim; practical NISQ hardware noise and circuit depth may limit realization."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 8,
+          "num_qubits": null,
+          "metric_name": "asset_register_dimension",
+          "metric_value": 8
+        },
+        {
+          "problem_size": 10,
+          "num_qubits": null,
+          "metric_name": "asset_register_dimension",
+          "metric_value": 10
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": "Amplitude estimation without phase estimation scales as O(M^-1) error in the number of oracle calls M; state preparation and arbitrary unitary compilation are discussed as O(nd^n) primitive operations for qudit systems under straightforward decomposition.",
+        "classical_complexity": "Classical Monte Carlo error scales as O(M^-1/2)",
+        "speedup_order": "quadratic",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": "M = sum_{l=0}^T N(2m_l+1), with m_l = 2^(l-1) for l>=1 and m0=0",
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Scalability simulation of the same qudit-based European call pricing pipeline as a function of asset-register Hilbert space dimension d, comparing quantum simulation, finite-resource classical discretization, and analytic payoff.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "Amplitude estimation without phase estimation (maximum-likelihood estimation) applied to qudit-based option pricing",
+        "ansatz": null,
+        "optimizer": "maximum-likelihood estimation",
+        "num_layers": null,
+        "convergence_criteria": "Estimate theta_P1 by maximizing the likelihood over theta in [0, pi/2]",
+        "hyperparameters": {
+          "shots_per_circuit_N": 100,
+          "cutoff_T": 7,
+          "m_l_sequence": "m0=0, m_l=2^(l-1) for l=1..T",
+          "oracle_queries_M": 26200,
+          "state_preparation_method": "Householder transformation",
+          "payoff_encoding": "controlled-Y rotations with shift/scale c and s=pi/4"
+        },
+        "parameter_initialization": "Not reported",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": "[0, pi/2]"
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "Single-asset BSM distribution discretized into dn points; varying d changes the granularity of the encoded distribution and the total Hilbert space dimension.",
+        "objective_function": "European call payoff f(ST)=max(0, ST-K); estimate expected payoff nu = e^{-rT} E_P[f(ST)]",
+        "constraints_handling": "Truncation to three standard deviations around the mean and discretization to finite d",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": "Comparator and payoff qubits, plus comparator carry ancillas"
+      },
+      "problem_instance": {
+        "description": "Same single-asset European call option as exp_1, evaluated across different qudit dimensions d to study convergence toward the classical finite-resource result and analytic payoff.",
+        "num_assets": 1,
+        "time_steps": 1,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "BSM synthetic distribution; Fig. 6b compares analytic payoff, classical finite-register payoff, and quantum simulation as d increases. The figure caption states a single asset qudit register with Hilbert space dimension d."
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": "Single asset register with n=1 qudit; exact d varies across the sweep. Comparator and payoff qubits are present. Exact qubit-equivalent count is not reported.",
+        "qubit_type": "not_specified",
+        "circuit_depth": "Not explicitly reported; same amplitude-estimation loop with T=7 and comparator/payoff subcircuits",
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 100,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": null,
+        "device_name": null,
+        "framework": "custom Python package"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": false,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "For each d, discretize the BSM distribution, compute the classical finite-resource payoff, and run the same quantum pipeline.",
+        "classical_postprocessing": "Compare quantum estimated payoff against classical finite-resource payoff and analytic payoff.",
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "shots_per_circuit",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "shots",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "cutoff_t",
+          "value": 7,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": 26200,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "oracle calls",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "asset",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical_finite_resource_discretization",
+          "metric_name": "expected_payoff",
+          "value": null,
+          "unit": null
+        },
+        {
+          "method_name": "analytic_black_scholes_merton",
+          "metric_name": "expected_payoff",
+          "value": null,
+          "unit": null
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo integration",
+          "conditions": "Same amplitude-estimation-without-phase-estimation framework; asymptotic in oracle calls M",
+          "is_demonstrated": false,
+          "caveats": "This experiment is a scaling study over Hilbert space dimension d, not a direct runtime benchmark."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 8,
+          "num_qubits": null,
+          "metric_name": "hilbert_space_dimension",
+          "metric_value": 8
+        },
+        {
+          "problem_size": 10,
+          "num_qubits": null,
+          "metric_name": "hilbert_space_dimension",
+          "metric_value": 10
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_3",
+      "description": "Numerical simulation of the same qudit-based European call pricing pipeline for a more volatile underlying asset, again comparing quantum simulation, finite-resource classical discretization, and analytic payoff.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "Amplitude estimation without phase estimation (maximum-likelihood estimation) applied to qudit-based option pricing",
+        "ansatz": null,
+        "optimizer": "maximum-likelihood estimation",
+        "num_layers": null,
+        "convergence_criteria": "Estimate theta_P1 by maximizing the likelihood over theta in [0, pi/2]",
+        "hyperparameters": {
+          "S0": 3.0,
+          "volatility_sigma": 0.5,
+          "strike_K": 2.2,
+          "shots_per_circuit_N": 100,
+          "cutoff_T": 7,
+          "m_l_sequence": "m0=0, m_l=2^(l-1) for l=1..T",
+          "oracle_queries_M": 26200,
+          "truncation_rule": "Smin=max(0, mu-3sigma), Smax=mu+3sigma",
+          "state_preparation_method": "Householder transformation",
+          "payoff_encoding": "controlled-Y rotations with shift/scale c and s=pi/4"
+        },
+        "parameter_initialization": "Not reported",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": "[0, pi/2]"
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "Single-asset BSM distribution discretized into dn points; higher volatility broadens the distribution and increases tail mass, making truncation more significant.",
+        "objective_function": "European call payoff f(ST)=max(0, ST-K); estimate expected payoff nu = e^{-rT} E_P[f(ST)]",
+        "constraints_handling": "Truncation to three standard deviations around the mean and discretization to finite d",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": "Comparator and payoff qubits, plus comparator carry ancillas"
+      },
+      "problem_instance": {
+        "description": "Single-asset European call option under a more volatile BSM distribution; the paper states the same analytic distribution as Fig. 6 but with S0=3.0 and sigma=0.5, and strike K=2.2.",
+        "num_assets": 1,
+        "time_steps": 1,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "Synthetic BSM distribution with higher volatility; Fig. 7a shows sample points for a 10-dimensional asset price register."
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": "Single asset register with n=1 qudit; Fig. 7a uses a 10-dimensional asset price register. Comparator and payoff qubits are present. Exact total qubit-equivalent count is not reported.",
+        "qubit_type": "not_specified",
+        "circuit_depth": "Not explicitly reported; same amplitude-estimation loop with T=7 and comparator/payoff subcircuits",
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 100,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": null,
+        "device_name": null,
+        "framework": "custom Python package"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": false,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "Sample the higher-volatility BSM distribution, truncate to three standard deviations, discretize, and compute the classical finite-resource payoff.",
+        "classical_postprocessing": "Compare quantum estimated payoff against classical finite-resource payoff and analytic payoff.",
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "shots_per_circuit",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "shots",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "cutoff_t",
+          "value": 7,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": 26200,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "oracle calls",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "asset",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical_finite_resource_discretization",
+          "metric_name": "expected_payoff",
+          "value": null,
+          "unit": null
+        },
+        {
+          "method_name": "analytic_black_scholes_merton",
+          "metric_name": "expected_payoff",
+          "value": null,
+          "unit": null
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo integration",
+          "conditions": "Amplitude estimation without phase estimation; asymptotic regime in oracle calls M",
+          "is_demonstrated": false,
+          "caveats": "The more volatile case is used to illustrate truncation error sensitivity; no direct speed benchmark is reported."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 10,
+          "num_qubits": null,
+          "metric_name": "asset_register_dimension",
+          "metric_value": 10
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    }
+  ]
+}

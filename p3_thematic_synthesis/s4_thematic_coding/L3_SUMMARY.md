@@ -1,10 +1,10 @@
 # s4 L3 adversarial-check summary
 
-_Generated: 2026-05-06T17:51:06+00:00_  
+_Generated: 2026-04-22T18:58:59.081663+00:00_  
 _Script: `p3_thematic_synthesis/scripts/aggregate_l3.py`_  
-_Purpose: Post-freeze GL-10 gap G-03 hardening — 100% L3 adversarial-check coverage of the P2 corpus._
+_Purpose: In-freeze full L3 adversarial-check coverage of the P2 corpus, executed before R1 stratified review._
 
-_Freeze-boundary note: this May 2026 full-coverage L3 aggregation/propagation pass extends the earlier in-freeze L3 sample (108/654) for validation hardening. It is not an input to, or rerun of, the 2026-05-02 frozen thematic outputs._
+_Freeze-boundary note: this 2026-04-22 full-coverage L3 aggregation/propagation pass extends the earlier 2026-04-22 sample (108/654) to 100% coverage. Both precede the R1 stratified review (2026-04-23 → 2026-04-25) and the B1/B2 theme generation (2026-04-26), and feed into the 2026-05-02 frozen thematic outputs._
 
 ## Headline
 

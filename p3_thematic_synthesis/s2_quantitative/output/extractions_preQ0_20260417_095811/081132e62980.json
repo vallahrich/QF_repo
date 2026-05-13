@@ -1,0 +1,771 @@
+{
+  "paper_id": "081132e62980",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "081132e62980_quantum_algorithm_for_local_volatility_option_pricing_via_the_kolmogorov_equatio.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.483,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 6,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.quantum_resources.cnot_count: {'initial_state_preparation_payoff': '6n^2 - 4n + 6', 'initial_state_preparation_basis_state': 'at most n X gates for |S0>', 'swap_test': '7n CNOT operations', 'auxiliary_state_preparation': 'O(nw log nw) for smooth cut-off / piecewise polynomial preparation'} is not of type 'integer', 'null'",
+      "Schema error at experiments.0.quantum_resources.num_qubits: 'n + nw + ny' is not of type 'integer', 'null'",
+      "Schema error at experiments.0.quantum_resources.num_shots: 'O(1/epsilon_V0^2) via swap test; more specifically O(1/epsilon_st^2 log(1/delta)) copies for overlap estimation' is not of type 'integer', 'null'",
+      "Schema error at experiments.1.quantum_resources.num_qubits: 'n' is not of type 'integer', 'null'",
+      "Schema error at experiments.2.problem_instance.num_assets: 'd' is not of type 'integer', 'null'",
+      "Schema error at experiments.2.quantum_resources.num_qubits: 'dn + nw + ny' is not of type 'integer', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.483,
+      "completeness": 0.483,
+      "num_experiments": 3,
+      "experiment_scores": [
+        0.75,
+        0.35,
+        0.35
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 0.0,
+          "results": 0.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 0.0,
+          "results": 0.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Quantum Algorithm for Local-Volatility Option Pricing via the Kolmogorov Equation",
+    "authors": [
+      "Nikita Guseynov",
+      "Mikel Sanz",
+      "Ángel Rodríguez-Rozas",
+      "Nana Liu",
+      "Javier Gonzalez-Conde"
+    ],
+    "year": 2025,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "derivative-pricing",
+    "secondary_silos": [
+      "simulation-monte-carlo"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "End-to-end quantum simulation of the forward Kolmogorov PDE for a single-asset local-volatility European vanilla option, using Schrödingerisation, block-encoding/Hamiltonian simulation, and swap-test-based payoff recovery.",
+      "algorithm": {
+        "family": "quantum-simulation",
+        "variant": "Schrödingerisation-based Hamiltonian simulation of the forward Kolmogorov equation with time-dependent local volatility and swap-test retrieval",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "volatility_model": "local-volatility",
+          "volatility_form": "sigma(s, tau) = sum_{k=0..Ds} sum_{q=0..Dt} C_kq s^k tau^q",
+          "low_rank_separable_approximation": "sigma_lr(s, tau) = sum_{m=1..R} alpha_m r_m(s) q_m(tau)",
+          "rank_R_assumption": "R = O(1) or at most O(polylog(1/epsilon))",
+          "grid_points_per_dimension": "N = 2^n",
+          "finite_difference_scheme": "second-order central difference",
+          "periodic_boundary_conditions": true,
+          "schrodingerisation_precision": "epsilon_Schr",
+          "evolution_tolerance": "epsilon_evol",
+          "state_preparation_accuracy": "epsilon_prep",
+          "information_retrieval_error": "epsilon_V0",
+          "swap_test_accuracy": "epsilon_st",
+          "swap_test_failure_probability": "delta",
+          "clock_register_qubits": "ny",
+          "schrodingerisation_register_qubits": "nw",
+          "main_register_qubits": "n",
+          "sparsity_assumption": 5,
+          "block_encoding_parameters": "(2, c, epsilon_evol)",
+          "block_encoding_log_factor": "c = O(log n + log ny + log nw)",
+          "momentum_operator_order": 2,
+          "position_domain": "(a, b)",
+          "grid_spacing": "Delta x = (b - a)/(2^n - 1)",
+          "ancilla_state_psi": "psi(p_w) = zeta(p_w) e^{-p_w}",
+          "smooth_cutoff_options": [
+            "zeta(p_w) = (erf(a p) + 1)/2",
+            "zeta(p_w) = (eta * chi_[a_xi,b_xi])(p_w)"
+          ]
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "The asset-price distribution p(x,t) is encoded into amplitudes of an n-qubit register; the initial condition p(s,0)=delta(s-S0) is represented by the computational basis state |S0> or a sharply peaked Gaussian approximation. Auxiliary registers encode the Schrödingerisation qumode and clock dimension.",
+        "objective_function": "Compute the discounted option price V0 = e^{-int_0^T r(s) ds} E[C0(S_T) | S_0] by evolving the forward Kolmogorov PDE for p(s,t) and then evaluating the expected payoff via overlap with a payoff state.",
+        "constraints_handling": "Post-selection on positive momentum eigenvectors of the auxiliary qumode; periodic boundary conditions assumed on a sufficiently wide domain.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": "Pseudo-Hamiltonian H_LV from the forward PDE, embedded into a unitary Hamiltonian H = I ⊗ I_w ⊗ p_y + H_LVS(tau = x_y)."
+      },
+      "problem_instance": {
+        "description": "European vanilla call/put pricing under a local-volatility model; single-asset forward Kolmogorov PDE, with Black-Scholes used as an illustrative special case for overlap analysis and closed-form density.",
+        "num_assets": 1,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "No market dataset is used in the reported experiment; the paper uses model-based inputs (spot S0, strike K, maturity T, rates, and a polynomial/separable local-volatility surface)."
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": "n + nw + ny",
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": {
+          "initial_state_preparation_payoff": "6n^2 - 4n + 6",
+          "initial_state_preparation_basis_state": "at most n X gates for |S0>",
+          "swap_test": "7n CNOT operations",
+          "auxiliary_state_preparation": "O(nw log nw) for smooth cut-off / piecewise polynomial preparation"
+        },
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": "O(1/epsilon_V0^2) via swap test; more specifically O(1/epsilon_st^2 log(1/delta)) copies for overlap estimation",
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": false,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "Finite-difference time stepping and matrix-exponential action are discussed as classical baselines in Appendix B",
+        "classical_preprocessing": "Discretize the spatial domain; encode the initial delta-like condition; approximate the local-volatility surface by a polynomial or low-rank separable expansion; prepare payoff state via piecewise-polynomial state preparation.",
+        "classical_postprocessing": "Use a swap test to estimate overlaps |<C0|p(T)>|^2 and |<+^n|p(T)>|^2, then reconstruct the option price from the closed-form scaling relations; shot-noise and discretization errors are O(Nshots^{-1/2}) and O(2^{-n}), respectively."
+      },
+      "results": [
+        {
+          "metric_name": "oracle_queries",
+          "value": "O(log(1/epsilon_schr) * ||p(0)||^2 / ||p(T)||^2)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "query complexity",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": "O(log(1/epsilon_schr) * ||p(0)|| / ||p(T)||)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "query complexity with amplitude amplification",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "success_probability",
+          "value": "L_+(psi) * ||p(T)||^2 / ||p(0)||^2",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "success_probability",
+          "value": "1 - 2*epsilon_evol",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "price_error",
+          "value": "O(2^-n) + O(Nshots^-1/2)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "relative error",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "price_error",
+          "value": "O(Delta x)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "discretization error",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "price_error",
+          "value": "O(Nshots^-1/2)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "shot-noise error",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "convergence_rate",
+          "value": "first-order in Delta x",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "order",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "convergence_rate",
+          "value": "quadratic in sampling error",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "order",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": "O(gamma + log(gamma/epsilon_evol)/log log(gamma/epsilon_evol))",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "queries",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": "gamma = s * ||H||_max * T",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "definition",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": "gamma ~ s * sigma_max^2 * max(|a|,|b|)^2 * 2^(2n) * T",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "scaling",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": "O(s * ||H||_max * T + log(1/epsilon_evol)/log(e + log(1/epsilon_evol)/(s*||H||_max*T)))",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "gate-simulation complexity",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "success_probability",
+          "value": "at least 1 - 2*epsilon_evol",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "asset",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": "n + nw + ny",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "logical qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "cnot_count",
+          "value": "6n^2 - 4n + 6",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "CNOTs",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "cnot_count",
+          "value": "at most n X gates for |S0>",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "X gates",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "cnot_count",
+          "value": "7n",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "CNOT operations for swap test",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "cnot_count",
+          "value": "O(nw log nw)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "gate complexity for auxiliary state preparation",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "block_encoding_parameters",
+          "value": "(2, c, epsilon_evol)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "block_encoding_log_factor",
+          "value": "c = O(log n + log ny + log nw)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "scaling",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "sparsity_assumption",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "sparse rows per row",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "momentum_operator_order",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "finite-difference order",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "grid_spacing",
+          "value": "(b - a)/(2^n - 1)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "spacing",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "finite-difference time stepping",
+          "metric_name": "oracle_queries",
+          "value": "O(s * T * N^3)",
+          "unit": "FLOPs"
+        },
+        {
+          "method_name": "matrix-exponential action",
+          "metric_name": "oracle_queries",
+          "value": "O(s * T * N^3)",
+          "unit": "FLOPs"
+        },
+        {
+          "method_name": "finite-difference time stepping",
+          "metric_name": "price_error",
+          "value": "O(Delta t) + O(Delta x^g)",
+          "unit": "relative error"
+        },
+        {
+          "method_name": "matrix-exponential action",
+          "metric_name": "price_error",
+          "value": "O(||A||_max^2 * Delta t^2)",
+          "unit": "relative error"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic in number of grid points",
+          "baseline_method": "classical finite-difference time stepping / matrix-exponential action",
+          "conditions": "single-asset PDE discretized on N = 2^n grid points; asymptotic comparison in Appendix B",
+          "is_demonstrated": false,
+          "caveats": "The paper notes the dominant momentum-term norm scales as 2^(2n), limiting the achievable speedup to polynomial rather than exponential for the single-asset case."
+        },
+        {
+          "type": "theoretical",
+          "factor": "exponential in dimension",
+          "baseline_method": "classical methods suffering from curse of dimensionality",
+          "conditions": "multi-asset basket options / d-dimensional forward Kolmogorov PDEs",
+          "is_demonstrated": false,
+          "caveats": "Claim is asymptotic; no numerical benchmark is reported. The paper states linear scaling in d for initial-state preparation and polynomial evolution cost in d."
+        },
+        {
+          "type": "theoretical",
+          "factor": "O(N^2 polylog N) vs O(N^3)",
+          "baseline_method": "classical PDE solvers",
+          "conditions": "simplified scaling expressions for the single-asset forward PDE",
+          "is_demonstrated": false,
+          "caveats": "Presented as a simplified asymptotic comparison, not an empirical benchmark."
+        }
+      ],
+      "scalability_data": [],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Forward-vs-backward overlap analysis in the Black-Scholes special case, used to justify choosing the forward Kolmogorov formulation for quantum simulation.",
+      "algorithm": {
+        "family": "quantum-simulation",
+        "variant": "State-overlap comparison between forward and backward PDE solutions in the Black-Scholes model",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "model": "Black-Scholes",
+          "constant_volatility": true,
+          "discount_factor": "ignored in the overlap plot analysis",
+          "time_horizon": "maturity times up to T",
+          "state_encoding": "normalized quantum states for p(s,t) and C(s,t)"
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "The forward solution p(s,T) and backward solution C(s,T) are each normalized and encoded as quantum states; overlaps with the initial states are computed.",
+        "objective_function": "Compare |<p(0)|p(T)>| and |<C(0)|C(T)>| to assess which PDE formulation is more suitable for quantum simulation.",
+        "constraints_handling": "None beyond normalization and the assumed discretization of the state space.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null
+      },
+      "problem_instance": {
+        "description": "Black-Scholes single-asset option-pricing dynamics used as a diagnostic example for overlap decay.",
+        "num_assets": 1,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "Analytical Black-Scholes density and backward solution are used; no external dataset."
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": "n",
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": false,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "Compute analytical Black-Scholes forward density and backward solution; normalize both states.",
+        "classical_postprocessing": "Plot and compare overlaps; the paper reports forward overlap decays rapidly while backward overlap remains above about 0.995 for relevant maturities."
+      },
+      "results": [
+        {
+          "metric_name": "success_probability",
+          "value": "greater than 0.995",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "overlap / fidelity proxy",
+          "higher_is_better": true,
+          "data_source": "figure"
+        },
+        {
+          "metric_name": "success_probability",
+          "value": "exponentially decaying overlap for forward state",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "overlap",
+          "higher_is_better": true,
+          "data_source": "figure"
+        },
+        {
+          "metric_name": "success_probability",
+          "value": "approximately 0.995 to 1.0",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "overlap range for backward state",
+          "higher_is_better": true,
+          "data_source": "figure"
+        }
+      ],
+      "classical_baselines": [],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "forward formulation is more suitable for quantum simulation than backward formulation",
+          "baseline_method": "backward Kolmogorov / backward PDE formulation",
+          "conditions": "Black-Scholes single-asset diagnostic example; based on overlap decay of normalized states",
+          "is_demonstrated": true,
+          "caveats": "This is a suitability argument rather than a runtime speedup. The backward state remains very close to the initial state, making it hard to resolve on a quantum computer."
+        }
+      ],
+      "scalability_data": [],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_3",
+      "description": "Scalability analysis for a multi-asset forward Kolmogorov local-volatility model, showing polynomial dependence on dimension and linear initial-state preparation in d.",
+      "algorithm": {
+        "family": "quantum-simulation",
+        "variant": "Multi-asset forward Kolmogorov PDE simulation with Schrödingerisation and block-encoding",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "dimension_d": "d assets",
+          "qubits_per_asset": "n",
+          "total_register_qubits": "dn",
+          "cross_derivative_terms": true,
+          "operator_order": 2,
+          "sparsity_scaling": "Theta(d^2 s^2)",
+          "operator_norm_scaling": "Theta(d^2)",
+          "block_encoding_query_cost_scaling": "linear in d",
+          "evolution_cost_scaling": "O(d^5)"
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "Each asset is discretized on an n-qubit register; the full state space has dimension 2^(dn). The initial condition is a product of delta states |S_{1,0}> ⊗ ... ⊗ |S_{d,0}>.",
+        "objective_function": "Solve the d-asset forward Kolmogorov PDE and compute the expected payoff of a multi-asset European claim.",
+        "constraints_handling": "Not specified beyond the same discretization and boundary assumptions as the single-asset case.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": "Multi-asset forward Kolmogorov operator with drift, diffusion, and cross-derivative terms."
+      },
+      "problem_instance": {
+        "description": "General d-asset local-volatility pricing problem; representative multi-asset payoffs include arithmetic basket, spread/exchange, geometric basket, and digital options.",
+        "num_assets": "d",
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "No empirical dataset; the paper provides generic multi-asset payoff forms and asymptotic scaling only."
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": "dn + nw + ny",
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": false,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "Prepare each asset’s initial basis state independently; construct multi-asset payoff states as factorized or low-rank linear combinations of factorized terms.",
+        "classical_postprocessing": "No numerical benchmark run is reported; the paper states asymptotic scaling only."
+      },
+      "results": [
+        {
+          "metric_name": "num_underlyings",
+          "value": "d",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": "dn + nw + ny",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "logical qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": "O(d^5)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "evolution cost scaling in d",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": "Theta(d^2)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "operator norm scaling",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": "Theta(d^2 s^2)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "sparsity scaling",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "convergence_rate",
+          "value": "polynomial in d",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "scaling",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": "linear in d for block-encoding query cost",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "scaling",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": "O(dn) for initial condition preparation",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "gate complexity",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "exponential speedup with respect to dimension",
+          "baseline_method": "classical multi-asset PDE solvers suffering from curse of dimensionality",
+          "conditions": "high-dimensional basket options / d-asset forward Kolmogorov PDEs",
+          "is_demonstrated": false,
+          "caveats": "The paper’s explicit theorem states polynomial dependence in d for the quantum method and linear initial-state preparation in d; the exponential advantage is relative to classical scaling in the full state-space dimension 2^(dn), not a measured benchmark."
+        },
+        {
+          "type": "theoretical",
+          "factor": "O(d^5) evolution cost",
+          "baseline_method": "classical high-dimensional PDE methods",
+          "conditions": "assuming second-order derivative order, Theta(d^2) operator norm, Theta(d^2 s^2) sparsity, and linear-in-d block-encoding cost",
+          "is_demonstrated": false,
+          "caveats": "Asymptotic derivation only; no numerical experiments reported."
+        }
+      ],
+      "scalability_data": [],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    }
+  ]
+}

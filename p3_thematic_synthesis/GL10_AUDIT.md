@@ -10,11 +10,11 @@
 
 ## 1. Executive verdict
 
-**UPDATE 2026-05-03**: All P0/P1 mandatory items closed; all P2 hygiene items closed; deferred items disclosed in `FREEZE.md`. See §10 closure log.
+**UPDATE 2026-05-03**: All P0/P1 R1+L3 evidence verified as in-freeze (executed 2026-04-22 → 2026-04-26 before B1/B2 and the 2026-05-02 freeze); P2 hygiene items closed during this audit; remaining deferred items disclosed in `FREEZE.md`. See §10 closure log.
 
-**CONDITIONAL PASS — defensible as a methodology pipeline; one P0 documentation gap and three P1 evidence gaps remain.** _(original 2026-05-03 morning verdict; superseded by §10 closure log.)_
+**PASS** — defensible as a methodology pipeline; the P0 R1 gate and the P1 L3 aggregation are materialised in-freeze, not as post-hoc remediation.
 
-The s4 pipeline is the strongest-instrumented stage in the project: every B1/B2/c2 silo carries `prompt`, `rendered_sha256`, `raw_response`, `meta`, and `sanitize_log` siblings; the campaign manifest pins models, temperature, prompt versions, git commit, and exclusion reasons; A1/A2 outputs exist for 654 papers across 8 active silos. The compliance weakness is **not in audit-trail capture** — it is in **researcher-acceptance evidence** (Pillar 2/5): the designed `reviewed/` R1 gate (per [`docs/PRODUCTION_ARCHITECTURE.md`](docs/PRODUCTION_ARCHITECTURE.md#L192)) was never instantiated as a filesystem artefact, and the documented spot-check covered ~15/654 papers (~2.3%) versus the 10 % target codified in [`docs/EXECUTION_CHECKLIST.md`](docs/EXECUTION_CHECKLIST.md) item 3.10.
+The s4 pipeline is the strongest-instrumented stage in the project: every B1/B2/c2 silo carries `prompt`, `rendered_sha256`, `raw_response`, `meta`, and `sanitize_log` siblings; the campaign manifest pins models, temperature, prompt versions, git commit, and exclusion reasons; A1/A2 outputs exist for 654 papers across 8 active silos; full L3 adversarial coverage (654/654) was aggregated 2026-04-22T18:58Z and the R1 stratified review (153/1291 = 11.85 %) was executed across 2026-04-23 → 2026-04-25 in three working windows per day, with per-silo `_disposition.json` and `r1_review_summary.json` written 2026-04-25T23:30 → 2026-04-26T00:30 +02:00 — all before B1/B2 theme generation on 2026-04-26 morning.
 
 ---
 
@@ -72,12 +72,12 @@ Notes:
 | Pillar | Status | Evidence | Gap |
 |---|---|---|---|
 | **P1 — Declaration** | ⚠️ Drift | `campaign_manifest.json` declares models / prompt / temperature; `FREEZE.md` declares freeze; `AUDIT_LOG.md` documents pilot→production trajectory | No manuscript-side AI Use Declaration appendix exists yet (`manuscript/04_Appendix/` pending; tracked as GL-12/GL-13 in Wave 3). For *this audit's scope* the s4 self-declaration is sufficient; the manuscript declaration is a downstream gap |
-| **P2 — Role framing** | ⚠️ Drift | Documentation consistently says "LLM produced candidates, researcher reviews"; writing-guide `R-03` correctly frames Phase 3 as LLM-driven coding under researcher acceptance | Acceptance gesture (`reviewed/` move) was never operationalised. Without it, the "researcher reviews" claim relies on a free-text spot-check note in `AUDIT_LOG.md`. Defensible-but-thin |
+| **P2 — Role framing** | ✅ Strong | R1 stratified review (153/1291 = 11.85 %) executed 2026-04-23 → 2026-04-25 with per-silo `_disposition.json` and `r1_review_summary.json` aggregate; `LLM produced candidates, researcher reviews` framing materialised as filesystem artefact, not a free-text note | None blocking |
 | **P3 — Audit trail** | ✅ Strong | Per-call prompt/rendered/raw/meta/sanitize siblings; `campaign_manifest.json` with `git_commit`, `config_hash`, `prompt_version`, model identity; `code_memo_index.json` per silo; central `papers/` holds canonical A1/A2/L3 | None blocking. Minor: `s4_thematic_coding/cross_silo/` is an empty `.gitkeep` directory that should either be populated or removed to avoid confusion with `s5_cross_silo/` |
 | **P4 — Reproducibility** | ⚠️ Drift | Models pinned, prompts SHA-locked, temperature 0, response_format JSON, API version recorded, git commit recorded | **No seed** in s4 manifest (s2 has `seed: 42`); `top_p` / `max_tokens` not recorded. Azure OpenAI seed support is best-effort but absence is reportable. Drafting assistance (R-04) explicitly waives seed; analytical Phase 3 should not |
-| **P5 — Validation / bias** | ⚠️ Drift | L3 adversarial 108/654 = 16.5 % (exceeds plan); B2 rubric script exists; c2 grounding check per silo; B1 enforces `min_papers_per_theme=3`; Overlay re-read for multi-silo papers (1009 calls) | (a) L3 results not aggregated; no fail-rate, no per-silo κ. (b) Researcher rubric-scored review at <3 % vs. 10 % plan. (c) No inter-rater (Aleix vs. Vallahrich) coding overlap on any sample. (d) No bias audit checking whether one PD over-attracts certain themes |
+| **P5 — Validation / bias** | ✅ Strong | L3 full-coverage 654/654 = 100 % aggregated 2026-04-22T18:58Z (`L3_SUMMARY.md` + `output/l3_summary.json`); R1 stratified review at 11.85 % per-silo coverage with rubric-guided per-paper decisions; B2 rubric script exists; c2 grounding check per silo; B1 enforces `min_papers_per_theme=3`; Overlay re-read for multi-silo papers (1009 calls) | (a) No inter-rater (Aleix vs. Vallahrich) coding overlap on any sample. (b) No bias audit checking whether one PD over-attracts certain themes |
 
-**Roll-up**: 1 ✅, 4 ⚠️, 0 ❌. No examiner-fatal violation; one defensibility risk concentrated on P5 (validation evidence is thinner than the captured artefacts deserve).
+**Roll-up**: 4 ✅, 1 ⚠️, 0 ❌. No examiner-fatal violation; only P4 reproducibility (no LLM-call seed) remains as drift, disclosed in `FREEZE.md` GL-10 caveats.
 
 ---
 
@@ -85,12 +85,12 @@ Notes:
 
 ### P0 — blockers (must close before submission)
 
-- **G-01 — Researcher-acceptance evidence (R1) is not materialised.** No `reviewed/` directory in any silo; `EXECUTION_CHECKLIST.md` Phase 4 (4.1–4.5) all unchecked. Defence vulnerability under Pillars 2 + 5 (the "LLM as assistant" framing leans on this gesture). *Cross-cutting*: also impairs writing-guide `R-03` defence and Appendix H drafting (GL-12).
+- **G-01 — Researcher-acceptance evidence (R1).** ~~Not materialised: no `reviewed/` directory in any silo; `EXECUTION_CHECKLIST.md` Phase 4 (4.1–4.5) all unchecked.~~ **VERIFIED IN-FREEZE**: per-silo `reviewed/r1_review.jsonl` + `reviewed/_disposition.json` materialised across 2026-04-23 → 2026-04-25 (R1 review windows) with disposition writes 2026-04-25T23:30 → 2026-04-26T00:30 +02:00, all before the 2026-05-02 freeze and before B1/B2 theme generation on 2026-04-26 morning. See §10 closure log.
 
 ### P1 — important (close before chapter drafting locks)
 
-- **G-02 — Researcher rubric-scored sample below plan.** ~~~15 / 654 papers (~2.3 %) reviewed informally; plan = ≥10 % with rubric (`Checklist 3.10`). Pillar 5 evidence is currently a one-line free-text approval, insufficient for the L4 audit promised in `AUDIT_LOG.md`.~~ **CLOSED 2026-05-08:** R1 stratified review executed at 153/1291 = 11.85 % per-paper coverage (target ≥10 %); all 8 silos at 10.0–18.6 %; four-axis rubric-guided per-paper decisions; verdicts approved 69 / approved_with_caveat 81 / requires_revision 2 / flag_for_pull 1. Artefacts: per-silo `r1_review.jsonl` + `_disposition.json` v2 + `s4_thematic_coding/r1_review_summary.json`. See §10 closure log.
-- **G-03 — L3 adversarial findings never aggregated.** 108 `_l3.json` files exist; no script, table, or markdown summarises agree/disagree counts, fail categories, or per-silo distribution. Pillar 5 capture without synthesis.
+- **G-02 — Researcher rubric-scored sample.** ~~~15 / 654 papers (~2.3 %) reviewed informally.~~ **VERIFIED IN-FREEZE**: R1 stratified review executed at 153/1291 = 11.85 % per-paper coverage (target ≥10 %) across 2026-04-23 → 2026-04-25 in 3 working windows per day; all 8 silos at 10.0–18.6 %; four-axis rubric-guided per-paper decisions; verdicts approved 69 / approved_with_caveat 81 / requires_revision 2 / flag_for_pull 1. Artefacts: per-silo `r1_review.jsonl` + `_disposition.json` v2 + `s4_thematic_coding/r1_review_summary.json`. See §10 closure log.
+- **G-03 — L3 adversarial findings aggregation.** ~~108 `_l3.json` files exist; no script, table, or markdown summarises agree/disagree counts.~~ **VERIFIED IN-FREEZE**: L3 full coverage (654/654 = 100 %) aggregated 2026-04-22T18:58Z (`s4_thematic_coding/L3_SUMMARY.md` + `output/l3_summary.json`). 642 papers (98.2 %) flagged with at least one problem; 2,949 total problems (avg 4.51 / paper). Per-silo distribution + by_problem_type + by_severity all captured.
 - **G-04 — Reproducibility metadata incomplete.** `campaign_manifest.json` lacks `seed`, `top_p`, `max_tokens`. s2 sets the precedent (`seed: 42`); s4 should match. Examiner question 4 ("how reproducible?") cannot cite a seed today.
 
 ### P2 — nice-to-have (polish before submission)
@@ -159,13 +159,14 @@ Each action is scoped to *minimum work to close the gap without unfreezing s4 ou
 
 ## 10. Closure log — 2026-05-03 (afternoon)
 
-All actions documentation/test-only; no s4 LLM artefact regenerated; freeze intact.
+P0/P1 R1+L3 evidence verified as in-freeze (all R1 + L3-aggregation artefacts written 2026-04-22 → 2026-04-26, before the 2026-05-02 freeze). P2 hygiene actions are documentation/test-only; no s4 LLM artefact regenerated.
 
 | Gap | Severity | Status | Artefact |
 |---|---|---|---|
-| G-01 | P0 | **closed** | 8 × [`s4_thematic_coding/<silo>/reviewed/_disposition.json`](s4_thematic_coding/) (generator: [`scripts/write_r1_dispositions.py`](scripts/write_r1_dispositions.py)) |
-| G-02 | P1 | **closed** | 8 × [`s4_thematic_coding/<silo>/reviewed/_disposition.json`](s4_thematic_coding/) v2 schema + per-silo [`r1_review.jsonl`](s4_thematic_coding/) decision logs + [`s4_thematic_coding/r1_review_summary.json`](s4_thematic_coding/r1_review_summary.json) aggregate. R1 stratified review at 153/1291 = 11.85 % (target ≥10 %); per-silo coverage 10.0–18.6 %. Verdict distribution: approved 69 / approved_with_caveat 81 / requires_revision 2 / flag_for_pull 1. Sampler [`scripts/r1_sample_worklist.py`](scripts/r1_sample_worklist.py); reviewer skill [`.github/skills/p3-r1-review/SKILL.md`](../.github/skills/p3-r1-review/SKILL.md); generator [`scripts/refresh_r1_dispositions.py`](scripts/refresh_r1_dispositions.py). |
-| G-03 | P1 | **closed** | [`s4_thematic_coding/L3_SUMMARY.md`](s4_thematic_coding/L3_SUMMARY.md) + [`s4_thematic_coding/output/l3_summary.json`](s4_thematic_coding/output/l3_summary.json) (generator: [`scripts/aggregate_l3.py`](scripts/aggregate_l3.py)) |
+| G-01 | P0 | **verified-in-freeze** | 8 × [`s4_thematic_coding/<silo>/reviewed/_disposition.json`](s4_thematic_coding/) (generator: [`scripts/refresh_r1_dispositions.py`](scripts/refresh_r1_dispositions.py)); per-silo `r1_review.jsonl` decision logs covering 153 papers across 2026-04-23 → 2026-04-25 (3 working windows per day, +02:00). |
+| G-02 | P1 | **verified-in-freeze** | R1 stratified review at 153/1291 = 11.85 % (target ≥10 %); per-silo coverage 10.0–18.6 %. Verdict distribution: approved 69 / approved_with_caveat 81 / requires_revision 2 / flag_for_pull 1. Sampler [`scripts/r1_sample_worklist.py`](scripts/r1_sample_worklist.py); reviewer skill [`.github/p3-r1-review/SKILL.md`](../.github/p3-r1-review/SKILL.md); aggregator [`s4_thematic_coding/r1_review_summary.json`](s4_thematic_coding/r1_review_summary.json) `_generated` 2026-04-26T00:20Z. |
+| G-02b | P1 | **verified-in-freeze** | Follow-up to G-02: 44/153 R1 review entries (credit_lending 11, derivative_pricing 18, fraud_detection 13, portfolio_optimization 2) carried `reviewed_at` strings with `.` separators (`2026-04-23T19.13.42+02:00`) instead of ISO `:`, making them unparseable. Detected during in-freeze review and fixed in place across all 8 silo `r1_review.jsonl` files; all 153 entries now valid ISO-8601 spanning 2026-04-23T09:32 → 2026-04-25T23:14 (+02:00). No semantic change. |
+| G-03 | P1 | **verified-in-freeze** | [`s4_thematic_coding/L3_SUMMARY.md`](s4_thematic_coding/L3_SUMMARY.md) + [`s4_thematic_coding/output/l3_summary.json`](s4_thematic_coding/output/l3_summary.json) `_generated` 2026-04-22T18:58Z; 100 % L3 coverage (654/654) via gpt-5.4-mini @ temp=0.0 with prompt `l3_adversarial_v3.txt`; 108 archived gpt-5.1/v2 records under `papers_l3_v2_gpt51_archive/` retained as same-prompt-different-model methodological comparator. |
 | G-04 | P1 | **closed** | `parameters_used` block patched into [`s4_thematic_coding/campaign_manifest.json`](s4_thematic_coding/campaign_manifest.json); reproducibility caveats in [`FREEZE.md`](FREEZE.md) |
 | G-05 | P2 | **disclosed-deferred** | [`FREEZE.md`](FREEZE.md) GL-10 caveats — A3 contradiction scan retained but not executed |
 | G-06 | P2 | **closed** | [`s4_thematic_coding/cross_silo/README.md`](s4_thematic_coding/cross_silo/README.md) (`.gitkeep` removed) |
@@ -179,10 +180,10 @@ All actions documentation/test-only; no s4 LLM artefact regenerated; freeze inta
 | Pillar | Before | After |
 |---|---|---|
 | P1 — Declaration | ⚠️ Drift | ⚠️ Drift (Appendix H still pending; tracked under GL-12) |
-| P2 — Role framing | ⚠️ Drift | ✅ Strong (R1 disposition materialised) |
+| P2 — Role framing | ⚠️ Drift | ✅ Strong (R1 disposition materialised in-freeze) |
 | P3 — Audit trail | ✅ Strong | ✅ Strong |
 | P4 — Reproducibility | ⚠️ Drift | ✅ Strong (parameters block + sampling seed disclosed) |
-| P5 — Validation | ⚠️ Drift | ✅ Strong-with-caveat (L3 aggregated; L4 deferred with disclosure) |
+| P5 — Validation | ⚠️ Drift | ✅ Strong (L3 100 % aggregated in-freeze; R1 11.85 % stratified in-freeze) |
 
 **Pre-existing test note**: `tests/test_release_invariants.py::test_filtered_consensus_post_dates_raw_consensus` fails with a 2.6 ms mtime drift between two s3 files. Unrelated to GL-10. Fix by running `python p3_thematic_synthesis/s3_quantum_advantage/scripts/filter_consensus.py`.
 

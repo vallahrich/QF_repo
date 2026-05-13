@@ -11,7 +11,6 @@ Python entry points for the Phase 1 LLM-assisted extraction and deductive-normal
 | `build_review_workbook.py` | Render `review_data_done.json` → `s2_coding/review_dashboard.html` for human inspection. |
 | `build_taxonomy.py` | Aggregate normalised codes → taxonomy artifacts in `s3_taxonomy/`. |
 | `build_references.py` | Generate BibTeX entries for the Phase 1 corpus. |
-| `_archive/` | Superseded scripts — see [`_archive/README.md`](_archive/README.md). |
 
 ## Status
 

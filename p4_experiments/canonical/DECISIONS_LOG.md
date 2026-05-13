@@ -1,5 +1,12 @@
 # P4 Canonical Decisions Log
 
+## 2026-05-12 - Cosmetic figure regeneration
+
+- Decision: Re-rendered `canonical/outputs/figures/h_figures_sidecar.json` (and its 7 PNG outputs) and `canonical/outputs/figures/p4_hoefler_crossover.json` (and its 3 PNG/PDF outputs) for visual presentation tweaks.
+- Rationale: Cosmetic only — colour scheme / layout / labelling adjustments to match the manuscript figure conventions.
+- Scope: Source inputs (`stats_report.json`, `oracle_tax_table.json`, `cohort.json`, `evidence_report.json`) unchanged. No data, hypothesis, or numerical claim affected. The two regenerated sidecar JSONs carry `generated_utc` 2026-05-12T14:24Z and 2026-05-12T17:53Z respectively to attest the cosmetic re-render; their `source_inputs` paths and structural content are otherwise unchanged.
+- Result direction: unchanged. All Phase-9 / Phase-10 numbers identical to the 2026-04-26 evidence pack.
+
 ## 2026-04-28 - H2 active-P3-silo scope amendment
 
 - Decision: Path A accepted. H2 headline Kruskal-Wallis and the H2 MixedLM sensitivity now restrict silo-level inference to the active Phase 3 problem-domain silos declared in `shared/config/silo_inclusion.json` and recorded in `cohort.json::_p3_scope_disposition`.

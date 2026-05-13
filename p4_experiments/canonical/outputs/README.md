@@ -9,7 +9,7 @@ the source CSVs under `manuscript_artifacts/`.
 |-----------|---------|
 | `manuscript_artifacts/` | Tables, figure source CSVs, JSON summaries, briefs, captions, and other manuscript-bound artifacts. |
 | `phase08c_alternatives/` | Alternative phase-08c configurations explored before freezing. |
-| `phase08d_hhl_tail_exploratory/` | Exploratory phase-08d HHL-tail runs (with `archive_superseded_20260428/`). |
+| `phase08d_hhl_tail_exploratory/` | Exploratory phase-08d HHL-tail runs. |
 | `phase08d_qae_hhl_scout/` | QAE/HHL scout runs. |
 | `phase08e_per_silo/` | Per-silo phase-08e materialisations. |
 

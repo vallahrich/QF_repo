@@ -1,21 +1,45 @@
-"""Optional Phase 10 H1-H4 figure renderer.
+"""Phase 10 H1-H4 figure generator.
 
-Rendered figures are excluded from the P4 handoff because final figure files
-live in the thesis and appendix. The canonical package keeps figure source CSVs
-under ``canonical/outputs/manuscript_artifacts``.
+Creates the figure files that ``phase11_zenodo_bundle.py`` and
+``audit_phase11.py`` package from ``canonical/outputs/figures``.
+
+Visual policy: see ``docs/figures-tables-visual-policy.md``
+(rules V-08 / V-09 / V-10 / V-13). House styling is applied via
+``_figure_style.apply_house_style()``.
 """
 
 from __future__ import annotations
 
 import json
 import math
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+# Allow ``python -m ...`` invocations and notebooks to import the sibling
+# ``_figure_style`` module that ships next to this file.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+from _figure_style import (  # noqa: E402  -- after Agg backend
+    ACCENT_NEUTRAL,
+    ACCENT_PRIMARY,
+    ACCENT_SECONDARY,
+    ACCENT_WARN,
+    HEATMAP_CMAP_BINARY,
+    HEATMAP_CMAP_SEQUENTIAL,
+    apply_house_style,
+    display_criterion,
+    display_epsilon,
+    display_profile,
+    save_figure,
+)
+
+apply_house_style()
 
 ROOT = Path(__file__).resolve().parents[3]
 CANON = ROOT / "p4_experiments" / "canonical"
@@ -47,8 +71,8 @@ def _save(fig, name: str) -> dict:
     DOC_FIG_DIR.mkdir(parents=True, exist_ok=True)
     out_can = FIG_DIR / name
     out_doc = DOC_FIG_DIR / name
-    fig.savefig(out_can, dpi=160, bbox_inches="tight")
-    fig.savefig(out_doc, dpi=160, bbox_inches="tight")
+    # V-08: emit both PNG and PDF so the manuscript can prefer the vector form.
+    save_figure(fig, [out_can, out_doc])
     plt.close(fig)
     return {
         "canonical": str(out_can.relative_to(ROOT)).replace("\\", "/"),
@@ -65,15 +89,16 @@ def _fig_h1(stats: dict) -> dict:
             cell = ((h1.get(f"{profile}|{eps}") or {}).get("runtime_seconds") or {})
             median = cell.get("median_tau")
             if isinstance(median, (int, float)) and median > 0:
-                xs.append(f"{profile}\n{eps}")
+                xs.append(f"{display_profile(profile)}\n{display_epsilon(eps)}")
                 ys.append(math.log10(median))
     fig, ax = plt.subplots(figsize=(11, 4.8))
-    ax.bar(range(len(xs)), ys, color="#4069a8")
-    ax.axhline(1.0, color="#b23b3b", linestyle="--", linewidth=1.2, label="tau=10")
+    ax.bar(range(len(xs)), ys, color=ACCENT_PRIMARY)
+    ax.axhline(1.0, color=ACCENT_WARN, linestyle="--", linewidth=1.2,
+               label=r"$\tau = 10$")
     ax.set_xticks(range(len(xs)))
     ax.set_xticklabels(xs, rotation=75, ha="right", fontsize=7)
-    ax.set_ylabel("log10 median tau_runtime")
-    ax.set_title("H1 oracle-tax medians by hardware profile and epsilon")
+    ax.set_ylabel(r"$\log_{10}$ median $\tau_{\mathrm{runtime}}$")
+    # House style: empty title; LaTeX caption carries the description.
     ax.grid(axis="y", linestyle=":", alpha=0.4)
     ax.legend(loc="upper right")
     return _save(fig, "fig_h1_oracle_tax.png")
@@ -89,13 +114,14 @@ def _fig_h2(cohort: dict, oracle: dict) -> dict:
             silo = (cohort["labels"].get(label) or {}).get("silo", "unknown")
             grouped.setdefault(silo, []).append(math.log10(tau))
     labels = sorted(grouped)
+    display_labels = [s.replace("-", " ").replace("_", " ") for s in labels]
     fig, ax = plt.subplots(figsize=(10, 4.8))
     if labels:
-        ax.boxplot([grouped[label] for label in labels], labels=labels, vert=True)
-    ax.axhline(1.0, color="#b23b3b", linestyle="--", linewidth=1.2)
-    ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=8)
-    ax.set_ylabel("log10 tau_runtime")
-    ax.set_title("H2 silo separation at H4 anchor cell")
+        ax.boxplot([grouped[label] for label in labels], labels=display_labels, vert=True)
+    ax.axhline(1.0, color=ACCENT_WARN, linestyle="--", linewidth=1.2)
+    ax.set_xticklabels(display_labels, rotation=45, ha="right", fontsize=8)
+    ax.set_ylabel(r"$\log_{10} \tau_{\mathrm{runtime}}$")
+    # House style: empty title; LaTeX caption carries the description.
     ax.grid(axis="y", linestyle=":", alpha=0.4)
     return _save(fig, "fig_h2_silo_anchor.png")
 
@@ -103,7 +129,11 @@ def _fig_h2(cohort: dict, oracle: dict) -> dict:
 def _fig_h3(oracle: dict) -> dict:
     table = oracle.get("table_faithful") or {}
     fig, ax = plt.subplots(figsize=(8.5, 5.0))
-    for profile in PROFILES:
+    # V-09: cycle through Palette A in a fixed order so per-profile colours
+    # are stable across runs.
+    from _figure_style import PALETTE
+    palette_cycle = [PALETTE[i] for i in (0, 1, 3, 4, 6, 9)]
+    for profile, color in zip(PROFILES, palette_cycle):
         vals = []
         for by_cell in table.values():
             tau = (by_cell.get(f"{profile}|1e-04") or {}).get("runtime_seconds")
@@ -112,13 +142,13 @@ def _fig_h3(oracle: dict) -> dict:
         vals.sort()
         if vals:
             ys = [(index + 1) / len(vals) for index in range(len(vals))]
-            ax.step(vals, ys, where="post", label=profile)
-    ax.axvline(1.0, color="#b23b3b", linestyle="--", linewidth=1.2)
-    ax.set_xlabel("log10 tau_runtime")
+            ax.step(vals, ys, where="post", label=display_profile(profile), color=color, linewidth=1.6)
+    ax.axvline(1.0, color=ACCENT_WARN, linestyle="--", linewidth=1.2)
+    ax.set_xlabel(r"$\log_{10} \tau_{\mathrm{runtime}}$")
     ax.set_ylabel("ECDF")
-    ax.set_title("H3 runtime oracle-tax ECDF across hardware profiles")
+    # House style: empty title; LaTeX caption carries the description.
     ax.grid(True, linestyle=":", alpha=0.4)
-    ax.legend(fontsize=7)
+    ax.legend(fontsize=8, loc="lower right")
     return _save(fig, "fig_h3_runtime_ecdf.png")
 
 
@@ -131,15 +161,16 @@ def _fig_h4(stats: dict) -> dict:
         t_count = metrics.get("full_t_count")
         passes = bool(payload.get("passes_all"))
         if isinstance(tau, (int, float)) and tau > 0 and isinstance(t_count, (int, float)):
-            color = "#2b8a3e" if passes else "#6b7280"
+            color = ACCENT_SECONDARY if passes else ACCENT_NEUTRAL
             y_value = max(float(t_count), 0.0)
             ax.scatter(math.log10(tau), y_value, color=color, s=48)
             ax.annotate(label, (math.log10(tau), y_value), fontsize=7, xytext=(3, 3), textcoords="offset points")
-    ax.axvline(1.0, color="#b23b3b", linestyle="--", linewidth=1.2, label="tau=10")
+    ax.axvline(1.0, color=ACCENT_WARN, linestyle="--", linewidth=1.2,
+               label=r"$\tau = 10$")
     ax.axhline(0.0, color="black", linewidth=0.8)
-    ax.set_xlabel("log10 tau_runtime")
-    ax.set_ylabel("full T-count")
-    ax.set_title("H4 bifurcation: small tau vs non-trivial oracle")
+    ax.set_xlabel(r"$\log_{10} \tau_{\mathrm{runtime}}$")
+    ax.set_ylabel(r"full $T$-count")
+    # House style: empty title; LaTeX caption carries the description.
     ax.grid(True, linestyle=":", alpha=0.4)
     ax.legend(loc="upper right")
     return _save(fig, "fig_h4_bifurcation_scatter.png")
@@ -159,19 +190,29 @@ def _fig_h1_heatmap(evidence: dict) -> dict:
     ]
     numeric = [[float(v) if isinstance(v, (int, float)) else float("nan") for v in line] for line in matrix]
     fig, ax = plt.subplots(figsize=(7.2, 5.2))
-    image = ax.imshow(numeric, cmap="viridis", aspect="auto")
+    # R-4: pin colorbar to the [0, 1] log10-tau domain (up to the order-of-
+    # magnitude line at log10 tau = 1) so the visual range matches the H1
+    # verdict context. Without this, autoscale collapses the colorbar to a
+    # ~0.02-dex window that hides the structural pattern.
+    image = ax.imshow(numeric, cmap=HEATMAP_CMAP_SEQUENTIAL, aspect="auto",
+                      vmin=0.0, vmax=1.0)
     ax.set_xticks(range(len(EPSILONS)))
-    ax.set_xticklabels(EPSILONS)
+    ax.set_xticklabels([display_epsilon(e) for e in EPSILONS])
     ax.set_yticks(range(len(PROFILES)))
-    ax.set_yticklabels(PROFILES, fontsize=8)
-    ax.set_xlabel("epsilon")
-    ax.set_title("H1 runtime median log10 oracle tax")
+    ax.set_yticklabels([display_profile(p) for p in PROFILES], fontsize=9)
+    ax.set_xlabel(r"$\varepsilon$")
+    # House style: empty title; LaTeX caption carries the description.
+    # V-08: pick text colour from the colormap norm so labels are readable
+    # against any cell intensity (top ~40% of the colour range -> white).
+    norm = image.norm
     for y, profile in enumerate(PROFILES):
         for x, eps in enumerate(EPSILONS):
             value = value_by_cell.get(f"{profile}|{eps}")
             if isinstance(value, (int, float)):
-                ax.text(x, y, f"{value:.2f}", ha="center", va="center", color="white", fontsize=8)
-    fig.colorbar(image, ax=ax, label="median log10 tau_runtime")
+                txt_color = "white" if norm(value) >= 0.6 else "black"
+                ax.text(x, y, f"{value:.2f}", ha="center", va="center",
+                        color=txt_color, fontsize=9)
+    fig.colorbar(image, ax=ax, label=r"median $\log_{10} \tau_{\mathrm{runtime}}$")
     return _save(fig, "fig_h1_oracle_tax_heatmap.png")
 
 
@@ -186,13 +227,16 @@ def _fig_h4_criteria_heatmap(evidence: dict) -> dict:
     labels = [row.get("label") for row in rows]
     matrix = [[1 if (row.get("criteria") or {}).get(c) else 0 for c in criteria] for row in rows]
     fig, ax = plt.subplots(figsize=(8.0, 6.0))
-    image = ax.imshow(matrix, cmap="RdYlGn", vmin=0, vmax=1, aspect="auto")
+    image = ax.imshow(matrix, cmap=HEATMAP_CMAP_BINARY, vmin=0, vmax=1, aspect="auto")
     ax.set_xticks(range(len(criteria)))
-    ax.set_xticklabels(criteria, rotation=45, ha="right", fontsize=7)
+    ax.set_xticklabels([display_criterion(c) for c in criteria],
+                       rotation=45, ha="right", fontsize=8)
     ax.set_yticks(range(len(labels)))
-    ax.set_yticklabels(labels, fontsize=7)
-    ax.set_title("H4 strict-criterion pass/fail heatmap")
-    fig.colorbar(image, ax=ax, ticks=[0, 1], label="criterion passed")
+    ax.set_yticklabels(labels, fontsize=8)
+    # House style: empty title; LaTeX caption carries the description.
+    cbar = fig.colorbar(image, ax=ax, ticks=[0.25, 0.75])
+    cbar.ax.set_yticklabels(["fail", "pass"])
+    cbar.set_label("criterion outcome")
     return _save(fig, "fig_h4_criteria_heatmap.png")
 
 
@@ -201,14 +245,15 @@ def _fig_h4_funnel(evidence: dict) -> dict:
     criteria = [row.get("criterion") for row in funnel]
     counts = [row.get("n_remaining") or 0 for row in funnel]
     fig, ax = plt.subplots(figsize=(8.5, 4.8))
-    ax.bar(range(len(criteria)), counts, color="#4f7c65")
+    ax.bar(range(len(criteria)), counts, color=ACCENT_SECONDARY)
     ax.set_xticks(range(len(criteria)))
-    ax.set_xticklabels(criteria, rotation=45, ha="right", fontsize=8)
-    ax.set_ylabel("Faithful labels remaining")
-    ax.set_title("H4 strict-advantage criterion funnel")
+    ax.set_xticklabels([display_criterion(c) for c in criteria],
+                       rotation=30, ha="right", fontsize=9)
+    ax.set_ylabel("H4-eligible labels remaining")
+    # House style: empty title; LaTeX caption carries the description.
     ax.grid(axis="y", linestyle=":", alpha=0.4)
     for index, count in enumerate(counts):
-        ax.text(index, count + 0.15, str(count), ha="center", va="bottom", fontsize=9)
+        ax.text(index, count + 0.15, str(count), ha="center", va="bottom", fontsize=10)
     return _save(fig, "fig_h4_funnel.png")
 
 

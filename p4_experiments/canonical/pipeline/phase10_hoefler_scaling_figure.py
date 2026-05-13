@@ -26,8 +26,8 @@ Practical-deadline cap (1e6 s ≈ 2 weeks; Hoefler Fig. 1):
 
 Output
 ------
-This optional renderer can recreate thesis/appendix figure files on demand, but
-rendered figures are excluded from the P4 handoff package.
+- Figure: docs/figures/p4_hoefler_crossover.{png,pdf}
+- Data:   p4_experiments/canonical/outputs/figures/p4_hoefler_crossover.json
 """
 from __future__ import annotations
 
@@ -41,6 +41,21 @@ import matplotlib
 
 matplotlib.use("Agg")  # headless
 import matplotlib.pyplot as plt
+
+# Allow ``python -m ...`` invocations to import the sibling ``_figure_style``
+# module that ships next to this file.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from _figure_style import (  # noqa: E402  -- after Agg backend
+    ACCENT_NEUTRAL,
+    ACCENT_PRIMARY,
+    ACCENT_SECONDARY,
+    ACCENT_WARN,
+    PALETTE,
+    apply_house_style,
+)
+
+apply_house_style()
 
 ROOT = Path(__file__).resolve().parents[3]
 CANON = ROOT / "p4_experiments" / "canonical"
@@ -91,7 +106,7 @@ def _load_p4_overlay() -> list[dict]:
     """
     # Anchor cell matches Phase 9 H4 anchor:
     #   profile = maj_e6_floquet, epsilon = 1e-3, mode = full.
-    from p4_experiments.canonical.pipeline.phase09_stats import (
+    from p4_experiments.canonical.phase9_stats import (
         H4_ANCHOR_PROFILE, H4_ANCHOR_EPS,
     )
     cohort = json.loads((CANON / "cohort.json").read_text(encoding="utf-8"))
@@ -197,30 +212,33 @@ def make_figure() -> dict:
 
     # Panel A: time vs N (Hoefler Fig. 1 reproduction)
     ax = axes[0]
-    ax.loglog(N, classical_k1, color="#777777", lw=1.5, ls=":",
+    ax.loglog(N, classical_k1, color=ACCENT_NEUTRAL, lw=1.5, ls=":",
               label=r"Classical, no speedup $T_c \propto N$")
-    ax.loglog(N, classical_k2, color="#1f77b4", lw=2.0, ls="-",
+    ax.loglog(N, classical_k2, color=ACCENT_PRIMARY, lw=2.0, ls="-",
               label=r"Classical $T_c \propto N^2$ (Grover)")
-    ax.loglog(N, classical_k3, color="#1f77b4", lw=1.6, ls="--",
+    ax.loglog(N, classical_k3, color=ACCENT_PRIMARY, lw=1.6, ls="--",
               label=r"Classical $T_c \propto N^3$ (cubic)")
-    ax.loglog(N, classical_k4, color="#1f77b4", lw=1.2, ls="-.",
+    ax.loglog(N, classical_k4, color=ACCENT_PRIMARY, lw=1.2, ls="-.",
               label=r"Classical $T_c \propto N^4$ (quartic)")
-    ax.loglog(N, quantum,     color="#d62728", lw=2.4, ls="-",
+    ax.loglog(N, quantum,     color=ACCENT_WARN, lw=2.4, ls="-",
               label=r"Quantum $T_q \propto N$  (10.5 kop/s, fp16)")
 
     # 2-week deadline + crossover markers
     ax.axhline(DEADLINE_S, color="black", lw=1.0, ls=(0, (3, 3)))
     ax.text(N[-1], DEADLINE_S * 1.4, "2-week practical deadline ($10^{6}$ s)",
             ha="right", va="bottom", fontsize=8.5)
-    ax.axvline(Nq_max, color="#d62728", lw=0.8, ls=":", alpha=0.55)
-    ax.text(Nq_max, ax.get_ylim()[0] * 50,
-            f"  $N_q^{{\\max}}$ = {Nq_max:.1e}",
-            color="#d62728", fontsize=8, rotation=90, va="bottom", ha="left")
+    ax.axvline(Nq_max, color=ACCENT_WARN, lw=0.8, ls=":", alpha=0.55)
+    # Audit P1 fix: horizontal label tucked into the clear airspace at
+    # x just right of Nq_max so it does not overprint the classical/quantum
+    # trend lines.
+    ax.text(Nq_max * 1.4, 1e10,
+            f"$N_q^{{\\max}}$ = {Nq_max:.1e}",
+            color=ACCENT_WARN, fontsize=8, va="center", ha="left")
 
     for Nx, label, color in [
-        (Nx_k2, r"$N^*_{k=2}$", "#1f77b4"),
-        (Nx_k3, r"$N^*_{k=3}$", "#1f77b4"),
-        (Nx_k4, r"$N^*_{k=4}$", "#1f77b4"),
+        (Nx_k2, r"$N^*_{k=2}$", ACCENT_PRIMARY),
+        (Nx_k3, r"$N^*_{k=3}$", ACCENT_PRIMARY),
+        (Nx_k4, r"$N^*_{k=4}$", ACCENT_PRIMARY),
     ]:
         if not np.isfinite(Nx):
             continue
@@ -229,10 +247,19 @@ def make_figure() -> dict:
 
     ax.set_xlabel(r"Oracle queries / problem size $N$")
     ax.set_ylabel("Runtime (s)")
-    ax.set_title("A. Hoefler–Häner–Troyer (2023) crossover model, fp16\n"
-                 "GPU $t_c{=}5.1{\\times}10^{-15}$ s vs FT-quantum "
-                 "$t_q{=}9.5{\\times}10^{-5}$ s")
-    ax.legend(loc="upper left", fontsize=7.6, framealpha=0.92)
+    # E-1: single-line title; chip-latency math is now an in-axes
+    # annotation in the upper-left so the figure box is not eaten by a
+    # two-line title (full provenance lives in the manuscript caption).
+    ax.set_title("A. Hoefler classical-vs-quantum crossover (fp16)")
+    ax.text(0.02, 0.97,
+            r"$t_c{=}5.1{\times}10^{-15}$ s, $t_q{=}9.5{\times}10^{-5}$ s",
+            transform=ax.transAxes, ha="left", va="top", fontsize=8.0,
+            color=ACCENT_NEUTRAL,
+            bbox=dict(boxstyle="round,pad=0.25", fc="white",
+                      ec=ACCENT_NEUTRAL, lw=0.4, alpha=0.85))
+    ax.legend(loc="upper left", fontsize=7.6, framealpha=0.92,
+              borderpad=0.3, handletextpad=0.5,
+              bbox_to_anchor=(0.0, 0.92))
     ax.grid(True, which="both", ls=":", lw=0.4, alpha=0.5)
     ax.set_xlim(1, 1e18)
     ax.set_ylim(1e-15, 1e15)
@@ -244,16 +271,25 @@ def make_figure() -> dict:
     if points:
         xs = np.array([p["t_count"] for p in points])
         ys = np.array([p["runtime_s"] for p in points])
-        ax.loglog(xs, ys, "o", color="#2ca02c", ms=7, mec="black", mew=0.6,
+        # R-8: raise anchor marker size from 7 to 9 with a slightly heavier
+        # edge so the green P4 cohort reads cleanly against the Phase 8d
+        # scout markers and the classical/quantum reference lines.
+        ax.loglog(xs, ys, "o", color=ACCENT_SECONDARY, ms=9, mec="black", mew=0.8,
                   label=f"P4 Faithful anchor cell (n={len(points)})")
         # Annotate a few extremes
         i_lo = int(np.argmin(ys)); i_hi = int(np.argmax(ys))
         for i in {i_lo, i_hi}:
+            # Audit P1 fix: bumped offset and weight so SD3-style anchor
+            # labels are not hidden behind the larger ms=9 markers.
             ax.annotate(points[i]["label"], (xs[i], ys[i]),
-                        fontsize=7.5, xytext=(5, 5), textcoords="offset points")
+                        fontsize=7.5, fontweight="bold",
+                        xytext=(11, 7), textcoords="offset points")
 
     if phase8d_points:
-        family_colors = {"hhl": "#9467bd", "qae": "#ff7f0e"}
+        # V-09: Phase 8d scout family colours come from Palette A's purple
+        # and orange slots so they coexist with the Palette-A blue line and
+        # green anchor without introducing new hues.
+        family_colors = {"hhl": PALETTE[9], "qae": PALETTE[7]}
         profile_markers = {"maj_e6_floquet": "s", "maj_e6_surface": "^"}
         families = sorted({p.get("family") for p in phase8d_points}, key=lambda value: str(value))
         profiles = sorted({p.get("hardware_profile") for p in phase8d_points}, key=lambda value: str(value))
@@ -286,18 +322,22 @@ def make_figure() -> dict:
                     zorder=4,
                 )
         largest = max(phase8d_points, key=lambda p: p["n_value"])
+        # R-8: pull the "Phase 8d scout" label off the marker cluster with
+        # a thin leader line so it is not visually overlapping the points.
         ax.annotate(
             "Phase 8d scout",
             (largest["n_value"], largest["runtime_s"]),
             fontsize=7.5,
-            xytext=(6, -10),
+            xytext=(34, -28),
             textcoords="offset points",
+            arrowprops=dict(arrowstyle="-", color=ACCENT_NEUTRAL,
+                            lw=0.6, shrinkA=2, shrinkB=4),
         )
 
     # Reference lines (re-plotted for context, light)
-    ax.loglog(N, classical_k2, color="#1f77b4", lw=1.4, ls="-", alpha=0.55,
+    ax.loglog(N, classical_k2, color=ACCENT_PRIMARY, lw=1.4, ls="-", alpha=0.55,
               label=r"Classical (A100 GPU), $T_c \propto N^2$")
-    ax.loglog(N, quantum,     color="#d62728", lw=1.8, ls="-", alpha=0.85,
+    ax.loglog(N, quantum,     color=ACCENT_WARN, lw=1.8, ls="-", alpha=0.85,
               label=r"Quantum FT, $T_q \propto N$ (per oracle op)")
     ax.axhline(DEADLINE_S, color="black", lw=1.0, ls=(0, (3, 3)))
     ax.text(N[-1], DEADLINE_S * 1.4, "2-week deadline",
@@ -305,23 +345,28 @@ def make_figure() -> dict:
 
     ax.set_xlabel(r"$N$  (P4 anchor: T-count; Phase 8d: problem size; Hoefler: oracle queries)", fontsize=8.5)
     ax.set_ylabel("Runtime (s)")
-    ax.set_title("B. P4 anchor-cell and Phase 8d scout measurements vs Hoefler band\n"
-                 "(Phase 8d plotted as appendix-only high-N scout evidence)")
-    ax.legend(loc="upper left", fontsize=7.6, framealpha=0.92)
+    # E-2: single-line title; the "appendix-only high-N scout" qualifier
+    # is already covered by the manuscript caption (V-07).
+    ax.set_title("B. P4 anchor-cell + Phase 8d scout overlay")
+    ax.legend(loc="upper left", fontsize=7.6, framealpha=0.92,
+              borderpad=0.3, handletextpad=0.5)
     ax.grid(True, which="both", ls=":", lw=0.4, alpha=0.5)
     ax.set_xlim(1, 1e18)
     ax.set_ylim(1e-3, 1e15)
 
-    fig.suptitle("Hoefler-style scaling: time vs N  (Phase 10 figure)",
-                 fontsize=11.5, y=1.02)
+    # House style: figure-level suptitle dropped; the LaTeX caption carries
+    # the description (audit 2026-05-12, R-8). Panel A/B titles remain as
+    # navigation tags.
     fig.tight_layout()
 
     out_png_doc = DOC_FIG_DIR / "p4_hoefler_crossover.png"
     out_pdf_doc = DOC_FIG_DIR / "p4_hoefler_crossover.pdf"
     out_png_can = FIG_DIR    / "p4_hoefler_crossover.png"
-    fig.savefig(out_png_doc, dpi=160, bbox_inches="tight")
+    out_pdf_can = FIG_DIR    / "p4_hoefler_crossover.pdf"  # V-08: vector for manuscript
+    fig.savefig(out_png_doc, dpi=300, bbox_inches="tight")
     fig.savefig(out_pdf_doc, bbox_inches="tight")
-    fig.savefig(out_png_can, dpi=160, bbox_inches="tight")
+    fig.savefig(out_png_can, dpi=300, bbox_inches="tight")
+    fig.savefig(out_pdf_can, bbox_inches="tight")
     plt.close(fig)
 
     # JSON sidecar with the constants and crossover values

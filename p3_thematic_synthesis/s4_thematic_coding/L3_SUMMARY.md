@@ -142,9 +142,9 @@ Every AT (45 across 8 silos) and DT (234) was annotated in place with two new fi
 
 Per-theme manifests at `s4_thematic_coding/{silo}/themes/l3_propagation.json`; aggregate at [`output/l3_propagation_summary.md`](output/l3_propagation_summary.md). No retain/queue verdict is computed at this layer — the relevance-filtered base rate is still too saturated for a `> 0.5` threshold to discriminate. Verdicts are deferred to R1.
 
-**A3/R1 contract note:** the design-time within-paper contract is A1 -> L1 -> A2 -> L2 -> L3 -> A3 -> R1. In the frozen submission state A3 remained a retained/deferred contradiction-scan prompt with no executed outputs, while the R1 review below was executed as post-freeze GL-10 validation hardening.
+**A3/R1 contract note:** the design-time within-paper contract is A1 -> L1 -> A2 -> L2 -> L3 -> A3 -> R1. In the frozen submission state A3 remained a retained/deferred contradiction-scan prompt with no executed outputs; the R1 stratified review below was executed in-freeze (2026-04-23 → 2026-04-25, 3 working windows per day, +02:00) before B1/B2 theme generation on 2026-04-26.
 
-### R1 stratified researcher review (commit `273c7cd5`, finalised `2026-05-08`)
+### R1 stratified researcher review (commit `273c7cd5`, finalised `2026-04-25`)
 
 **Sampling:** propagation-prioritised stratified sample drawn only from papers feeding ≥1 B1/B2 theme, with three-tier stratification by L3 max severity (A=major / B=minor / C=none) and a corpus-wide top-up for major-flagged papers feeding ≥10 themes that the per-silo draws missed. Sample n=153 = 11.85 % of the 1291 silo–paper assignments; all 8 silos at or above the 10 % floor (range 10.0 – 18.6 %); 133 from per-silo Tier-A walk + 20 corpus-wide high-propagation top-ups.
 
@@ -157,7 +157,7 @@ Per-theme manifests at `s4_thematic_coding/{silo}/themes/l3_propagation.json`; a
 | requires_revision | 2 | 1.3 % | memo retained; per-AT attribution scope-down logged |
 | flag_for_pull | 1 | 0.7 % | memo moved to `{silo}/reviewed/_pulled/`; downstream cleanup applied |
 
-**Reconciliation (commit `f145a83f`, 2026-05-08):**
+**Reconciliation (commit `f145a83f`, 2026-04-25):**
 
 - *TE pull* — `4e492b86e6c7` / `Wu2025`: non-replicable methodology (no dataset, no annealer named, suspiciously round and identically repeated performance numbers across sections). Removed from `supporting_papers` + `support_code_ids` of 4 B1 DTs + 4 B2 DTs + 2 B2 ATs in trading_execution; `_r1_pulled_papers` audit field added; 3 surgical edits to `manuscript/03_Chapters/06_silos/trading_execution.tex` (AT-TE-002 footnote 7→6 papers, AT-TE-004 body neutralised, AT-TE-004 footnote 6→5 papers + verdict count updated). Pull disclosed inline with audit-trail path.
 - *QML revise* — `0030bd185e0d` / `Pasupuleti2025` and `1312e9d3c55e` / `Shapiro2025`: not evidentiary for AT-QML-001 (NISQ ceiling) or AT-QML-005 (expressivity-trainability). No theme deletion, no manuscript edits (citations live in multi-anchor `\cite{}` clusters where AT prose survives). Per-AT `_r1_attribution_caveats` metadata added to every QML theme that lists either paper as supporting; future re-projection passes honour the scope-down without losing the original provenance.

@@ -18,7 +18,7 @@
 | Screening inter-rater κ (calibration) | **0.692 → 0.849** | [calibration_log.md](s1_slr/03_screening/calibration_log.md) |
 | Tag emission (`topic_tags`) | 100 % slug-canonical | [tag_normalization_report.json](output/audit/tag_normalization_report.json) |
 | Tag emission (`methodology_tags`) | 99.4 % slug-canonical, 0.6 % PD/SA-code | [tag_normalization_report.json](output/audit/tag_normalization_report.json) |
-| Per-step `step{N}_date` audit | 761 sentinel + 9 distinct + 7 incomplete = 777 | [step_date_backfill_report.json](output/audit/step_date_backfill_report.json) |
+| Per-step `step{N}_date` audit | 770 identical + 7 incomplete = 777 | [step_date_backfill_report.json](output/audit/step_date_backfill_report.json) |
 
 ## What is publication-grade
 
@@ -27,7 +27,7 @@
 
 ## Production vs. legacy code paths
 
-- **Production**: [s2_classification/scripts/run_classification.py](s2_classification/scripts/run_classification.py) (Pipeline C; cached-prefix; parallel; produced all 777 outputs). Per-step `datetime.now()` per writer (fixed 2026-05-02; backfilled to sentinel).
+- **Production**: [s2_classification/scripts/run_classification.py](s2_classification/scripts/run_classification.py) (Pipeline C; cached-prefix; parallel; produced all 777 outputs). Per-step `datetime.now()` per writer.
 - **Deprecated single-paper diagnostics**: [extract_paper.py](s2_classification/scripts/extract_paper.py) and [run_extraction_step.py](s2_classification/scripts/run_extraction_step.py) carry top-of-file `.. deprecated:: 2026-05-02` banners. Retained because [fetch_from_zotero.py](s2_classification/scripts/fetch_from_zotero.py) shells out to `extract_paper.py`; do not use to (re)produce the corpus.
 - **Validation helpers** are now importable from [s2_classification/utils/validation.py](s2_classification/utils/validation.py) (re-exports the canonical implementations from `tests/test_schema_validation.py`).
 

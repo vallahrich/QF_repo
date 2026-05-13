@@ -1,7 +1,14 @@
-"""Generate SLR figures for 04_figures/ (Step 1: search & screening)."""
+"""Generate SLR figures for 04_figures/ (Step 1: search & screening).
+
+Visual style is sourced from the shared ``shared.style.figure_style``
+facade (see ``docs/figures-tables-visual-policy.md`` rule V-08, V-09).
+This avoids drift between the Phase 2 SLR figures and the Phase 4
+canonical pipeline.
+"""
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -11,27 +18,36 @@ import matplotlib.patches as mpatches
 import pandas as pd
 
 REPO = Path(__file__).resolve().parent
+ROOT = REPO.parents[1]
+
+# Make the repo root importable so we can pull in ``shared.style``.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from shared.style.figure_style import (  # noqa: E402
+    FLOW_ARROW_MSCALE,
+    FLOW_ARROW_STYLE,
+    FLOW_BOXSTYLE,
+    FLOW_LW_ARROW,
+    FLOW_LW_BOX,
+    FLOW_LW_OUTER,
+    LAYER_BLUE,
+    LAYER_CORAL,
+    LAYER_GRAY,
+    LINE_GRAY,
+    PALETTE,
+    TEXT_MUTED,
+    apply_house_style,
+)
+
 FIGURES = REPO / "04_figures"
 FIGURES.mkdir(exist_ok=True)
+MANUSCRIPT_FIGURES = ROOT / "manuscript" / "05_Figures"
+MANUSCRIPT_FIGURES.mkdir(exist_ok=True)
 SCREENING = REPO / "03_screening"
 
-# Styling
-plt.rcParams.update({
-    "font.family": "serif",
-    "font.size": 11,
-    "axes.titlesize": 13,
-    "axes.labelsize": 12,
-    "figure.dpi": 300,
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.15,
-})
-
-PALETTE = [
-    "#2171b5", "#6baed6", "#bdd7e7",  # blues
-    "#238b45", "#74c476", "#bae4b3",  # greens
-    "#d94801", "#fd8d3c", "#fdd0a2",  # oranges
-    "#756bb1", "#bcbddc", "#dadaeb",  # purples
-]
+# Apply the canonical Palette A + serif rcParams used by Phase 4 figures.
+apply_house_style()
 
 
 def _load_asreview() -> pd.DataFrame:
@@ -48,6 +64,12 @@ def _load_ta_decisions() -> pd.DataFrame:
 
 def _load_ft_decisions() -> pd.DataFrame:
     return pd.read_csv(SCREENING / "full_text_decisions.csv", dtype=str).fillna("")
+
+
+def _save_figure(fig: plt.Figure, stem: str, *, include_manuscript: bool = False) -> None:
+    for output_dir in ([FIGURES, MANUSCRIPT_FIGURES] if include_manuscript else [FIGURES]):
+        fig.savefig(output_dir / f"{stem}.png")
+        fig.savefig(output_dir / f"{stem}.pdf")
 
 
 # ── Figure 1: PRISMA flow diagram ─────────────────────────────────────────
@@ -74,60 +96,74 @@ def fig_prisma_flow():
     n_identified = 6232
     n_duplicates = 3222
 
-    # PDFs on disk
-    pdf_dir = REPO / "05_full_texts" / "pdfs"
-    n_pdfs = len([f for f in os.listdir(pdf_dir) if f.endswith(".pdf")]) if pdf_dir.exists() else 0
-
-    # ── Layout constants ──────────────────────────────────────────────────
-    fig_w, fig_h = 11, 11.5
+    # Layout constants - audit P0 v2: canvas tightened from 11x11.5 to
+    # 11x8.5 so phase bands hug their content with consistent ~0.4-unit
+    # vertical padding above and below each box.
+    fig_w, fig_h = 11, 8.5
     fig, ax = plt.subplots(figsize=(fig_w, fig_h))
     ax.set_xlim(0, fig_w)
-    ax.set_ylim(0, fig_h)
+    # Audit P0 v2: ylim tightened to the actual content range so the
+    # tight-bbox saved PDF/PNG does not carry a tall empty footer.
+    ax.set_ylim(0.0, 8.7)
     ax.axis("off")
 
     cx = 4.2            # centre of main flow boxes
     rx = 8.5            # centre of right-side exclusion boxes
     bw_main = 3.2       # main box width
     bw_excl = 3.0       # exclusion box width
-    bh = 0.85           # box height
+    bh = 0.85           # main-column box height
+    bh_excl = 0.95      # right-column exclusion box height (ft has 3 lines)
     sidebar_w = 1.3     # phase sidebar width
+    pad = 0.40          # vertical padding inside each phase band
 
-    # Phase y-bands
-    y_id_top, y_id_bot = 11.0, 8.3
-    y_sc_top, y_sc_bot = 8.3, 5.8
-    y_el_top, y_el_bot = 5.8, 3.4
-    y_in_top, y_in_bot = 3.4, 0.8
+    # Box y-centres (top to bottom). Identification has the main + the
+    # duplicates junction; Eligibility has the main + the ft-exclusions.
+    y_ident = 7.8
+    y_junct_band = 6.95   # duplicates junction y-band
+    y_screen = 5.65
+    y_excl_ta = 5.65
+    y_assess = 3.65
+    y_excl_ft = 3.65
+    y_incl = 1.55
 
-    # Box y-centres
-    y_ident = 10.2
-    y_dup = 9.35
-    y_screen = 7.2
-    y_excl_ta = 7.2
-    y_assess = 4.8
-    y_excl_ft = 4.8
-    y_incl = 2.2
+    # Phase y-bands (each = box top/bottom +/- pad).
+    y_id_top = y_ident + bh / 2 + pad
+    y_id_bot = y_junct_band - 0.65 / 2 - pad
+    y_sc_top = y_screen + bh / 2 + pad
+    y_sc_bot = y_screen - bh / 2 - pad
+    y_el_top = y_assess + bh / 2 + pad
+    y_el_bot = y_assess - bh_excl / 2 - pad
+    y_in_top = y_incl + bh / 2 + pad
+    y_in_bot = y_incl - bh / 2 - pad
 
-    # ── Colours (PRISMA 2020 standard: muted, professional) ───────────────
-    c_sidebar = "#e8e8e8"
-    c_sidebar_text = "#444444"
-    c_box_fill = "#ffffff"
-    c_box_edge = "#333333"
-    c_excl_fill = "#fafafa"
-    c_excl_edge = "#888888"
-    c_incl_fill = "#f0f7f0"
-    c_incl_edge = "#333333"
-    c_arrow = "#333333"
-    lw_box = 1.2
-    lw_arrow = 1.0
+    # Colours: Palette B (audit 2026-05-12 design-system unification) — same
+    # vocabulary as the Phase 2 corpus workflow and the Ch4 pipeline TikZ.
+    c_sidebar = LAYER_GRAY
+    c_sidebar_text = TEXT_MUTED
+    c_box_fill = LAYER_BLUE          # process / human step
+    c_box_edge = LINE_GRAY
+    c_excl_fill = LAYER_GRAY         # excluded
+    c_excl_edge = LINE_GRAY
+    c_incl_fill = LAYER_CORAL        # final / active outcome
+    c_incl_edge = LINE_GRAY
+    c_arrow = LINE_GRAY
+    lw_box = FLOW_LW_BOX
+    lw_arrow = FLOW_LW_ARROW
     fs_box = 9.5
     fs_phase = 11
 
-    # ── Helpers ───────────────────────────────────────────────────────────
+    # Helpers — note: PRISMA uses small data-unit boxes (height ≈ 0.85 in an
+    # 11.5-unit canvas), so we use a tighter ``rounding_size`` than the
+    # ``FLOW_BOXSTYLE`` token (which is calibrated for the 100-unit
+    # process-board canvas). Stroke/edge/arrow tokens still come from the
+    # shared facade, keeping visual unification with the workflow figure.
+    _prisma_boxstyle = "round,pad=0.08,rounding_size=0.30"
+
     def _box(x, y, w, h, text, fill, edge, lw=lw_box, fontsize=fs_box,
              fontweight="normal"):
         rect = mpatches.FancyBboxPatch(
             (x - w / 2, y - h / 2), w, h,
-            boxstyle="round,pad=0.08",
+            boxstyle=_prisma_boxstyle,
             facecolor=fill, edgecolor=edge, linewidth=lw,
         )
         ax.add_patch(rect)
@@ -136,15 +172,15 @@ def fig_prisma_flow():
 
     def _arrow_down(x, y_from, y_to):
         ax.annotate("", xy=(x, y_to), xytext=(x, y_from),
-                    arrowprops=dict(arrowstyle="-|>", color=c_arrow,
-                                    lw=lw_arrow, mutation_scale=12))
+                    arrowprops=dict(arrowstyle=FLOW_ARROW_STYLE, color=c_arrow,
+                                    lw=lw_arrow, mutation_scale=FLOW_ARROW_MSCALE))
 
     def _arrow_right(x_from, x_to, y):
         ax.annotate("", xy=(x_to, y), xytext=(x_from, y),
-                    arrowprops=dict(arrowstyle="-|>", color=c_arrow,
-                                    lw=lw_arrow, mutation_scale=12))
+                    arrowprops=dict(arrowstyle=FLOW_ARROW_STYLE, color=c_arrow,
+                                    lw=lw_arrow, mutation_scale=FLOW_ARROW_MSCALE))
 
-    # ── Phase sidebar bands ───────────────────────────────────────────────
+    # Phase sidebar bands
     for top, bot, label in [
         (y_id_top, y_id_bot, "Identification"),
         (y_sc_top, y_sc_bot, "Screening"),
@@ -153,37 +189,32 @@ def fig_prisma_flow():
     ]:
         rect = mpatches.FancyBboxPatch(
             (0.15, bot), sidebar_w, top - bot,
-            boxstyle="round,pad=0.06",
-            facecolor=c_sidebar, edgecolor="#cccccc", linewidth=0.8,
+            boxstyle=_prisma_boxstyle,
+            facecolor="none", edgecolor=LINE_GRAY, linewidth=FLOW_LW_BOX,
         )
         ax.add_patch(rect)
         ax.text(0.15 + sidebar_w / 2, (top + bot) / 2, label,
                 ha="center", va="center", fontsize=fs_phase,
                 fontweight="bold", color=c_sidebar_text, rotation=90)
 
-    # ── Identification ────────────────────────────────────────────────────
-    src_line = "Openalex: 2,843\nSemantic Scholar: 1,554\nScopus: 1,127\nArxiv: 708"
-    id_box_h = 1.8
-    _box(cx, y_ident, bw_main, id_box_h,
-         f"Records identified through\ndatabase searching\n(n = {n_identified:,})",
+    # Identification - Audit P0-2: uniform main-column box height.
+    _box(cx, y_ident, bw_main, bh,
+         f"Records identified through database searching\n(n = {n_identified:,})",
          c_box_fill, c_box_edge)
-    ax.text(cx, y_ident - 0.55, src_line,
-            ha="center", va="center", fontsize=5.5, color="#666666",
-            linespacing=1.3)
 
-    # Duplicates removed — junction between ident and screening
-    y_junct = y_ident - id_box_h / 2 - 0.45
+    # Duplicates removed at the junction between identification and screening.
+    y_junct = y_ident - bh / 2 - 0.45
     _box(rx, y_junct, bw_excl, 0.65,
          f"Duplicates removed\n(n = {n_duplicates:,})",
          c_excl_fill, c_excl_edge)
 
-    # Vertical line: ident bottom → junction → screening top
-    ax.plot([cx, cx], [y_ident - id_box_h / 2, y_junct], color=c_arrow,
+    # Vertical line from identification to screening.
+    ax.plot([cx, cx], [y_ident - bh / 2, y_junct], color=c_arrow,
             lw=lw_arrow, solid_capstyle="butt")
     _arrow_right(cx, rx - bw_excl / 2, y_junct)
     _arrow_down(cx, y_junct, y_screen + bh / 2)
 
-    # ── Screening ─────────────────────────────────────────────────────────
+    # Screening
     _box(cx, y_screen, bw_main, bh,
          f"Records screened\n(title/abstract)\n(n = {n_screened:,})",
          c_box_fill, c_box_edge)
@@ -195,9 +226,9 @@ def fig_prisma_flow():
     _arrow_down(cx, y_screen - bh / 2, y_assess + bh / 2)
     _arrow_right(cx + bw_main / 2, rx - bw_excl / 2, y_excl_ta)
 
-    # ── Eligibility ───────────────────────────────────────────────────────
+        # Eligibility
     _box(cx, y_assess, bw_main, bh,
-         f"Full-text articles assessed\nfor eligibility\n(n = {n_assessed_ft:,})",
+            f"Full-text records assessed\nfor eligibility\n(n = {n_assessed_ft:,})",
          c_box_fill, c_box_edge)
 
     if n_excluded_ft > 0:
@@ -205,7 +236,7 @@ def fig_prisma_flow():
             "EX-NOTEN": "Non-English",
             "EX-NOACCESS": "Full text not retrieved",
         }
-        reason_parts = [f"Full-text articles excluded\n(n = {n_excluded_ft})"]
+        reason_parts = [f"Full-text records excluded\n(n = {n_excluded_ft})"]
         for reason, count in sorted(ft_reasons.items(), key=lambda x: -x[1]):
             label = reason_labels.get(reason, reason)
             reason_parts.append(f"{label}: {count}")
@@ -218,13 +249,12 @@ def fig_prisma_flow():
 
     _arrow_down(cx, y_assess - bh / 2, y_incl + bh / 2)
 
-    # ── Included ──────────────────────────────────────────────────────────
+    # Included
     _box(cx, y_incl, bw_main, bh,
-         f"Studies included in\nsystematic review\n(n = {n_included_ft:,})",
-         c_incl_fill, c_incl_edge, fontweight="bold")
+         f"Processed Phase 2 corpus\n(n = {n_included_ft:,})",
+         c_incl_fill, c_incl_edge, lw=FLOW_LW_OUTER, fontweight="bold")
 
-    fig.savefig(FIGURES / "fig1_prisma_flow.png")
-    fig.savefig(FIGURES / "fig1_prisma_flow.pdf")
+    _save_figure(fig, "fig1_prisma_flow", include_manuscript=True)
     plt.close(fig)
     print("  fig1_prisma_flow")
 
@@ -249,15 +279,14 @@ def fig_year_distribution():
         ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 8,
                 str(count), ha="center", va="bottom", fontsize=9)
 
-    ax.set_xlabel("Publication Year")
-    ax.set_ylabel("Number of Records")
-    ax.set_title("Records Identified by Publication Year (2016–2026)")
+    ax.set_xlabel("Publication year")
+    ax.set_ylabel("Records")
     ax.set_xticks(year_counts.index)
+    ax.set_ylim(0, max(year_counts.values) * 1.12)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    fig.savefig(FIGURES / "fig2_year_distribution.png")
-    fig.savefig(FIGURES / "fig2_year_distribution.pdf")
+    _save_figure(fig, "fig2_year_distribution", include_manuscript=True)
     plt.close(fig)
     print("  fig2_year_distribution")
 
@@ -265,7 +294,7 @@ def fig_year_distribution():
 # ── Figure 3: Source database contribution ────────────────────────────────
 def fig_source_distribution():
     """Horizontal bar chart of records by source database."""
-    # Source counts from original search logs (hardcoded — master_records.csv
+    # Source counts from original search logs. master_records.csv
     # was in a previous branch structure; these values match the search logs)
     sources = {"Openalex": 2843, "Semantic Scholar": 1554, "Scopus": 1127, "Arxiv": 708}
 

@@ -1,0 +1,995 @@
+{
+  "silo": "credit_lending",
+  "generated_at": "2026-04-26T13:17:36.921290+00:00",
+  "prompt_template_version": "f2_v1",
+  "prompt_text": "# F2 — per-silo finance-framing aggregation\n\nYou are aggregating per-paper financial-framing extractions (the F1\noutput of the s6_silo_framing pipeline) into a per-silo synthesis.\nThe synthesis will be used as input to a researcher-authored finance\npreface for the silo chapter (Chapter 6 of the thesis).\n\n## Source\n\nYou will be given:\n- `silo` — the silo name (one of: portfolio_optimization,\n  derivative_pricing, risk_management, quantum_ml_finance,\n  fraud_detection, trading_execution, credit_lending,\n  simulation_monte_carlo)\n- `silo_paper_set` — the canonical list of paper_ids belonging to this\n  silo (used to validate your `*_supporting_paper_ids` outputs)\n- `coverage_stats` — pre-computed counts of how many papers in the silo\n  have each F1 field populated (you do NOT need to recount; trust these\n  numbers)\n- `f1_records` — a JSON array of F1 extractions, one per paper. Each\n  record contains:\n    paper_id, silos, problem_statement (or null),\n    classical_baseline (or null), classical_difficulty (or null),\n    business_stakes (or null), extraction_confidence, extraction_notes\n\nVerbatim quote evidence supporting each F1 statement was verified\nupstream against the original PDF text and is persisted alongside the\nrecords in `extractions/papers/{paper_id}.json`. You do not need to\nre-verify the prose — synthesise across what the F1 records say.\n\n## Task\n\nProduce ONE per-silo aggregation that synthesises across the F1 records\nand answers four questions for the silo as a whole:\n\n1. **What is the financial problem this silo addresses?** (Q1)\n2. **What classical baseline / state-of-the-art does the corpus treat\n   as the comparator?** (derived Q3)\n3. **Why is the problem hard classically?** (Q2)\n4. **What business stakes does the corpus mention?** (derived Q4 — may\n   be sparse; silence is a finding)\n\nFor each question, write 2–4 sentences in your own words that summarise\nthe dominant patterns and tensions across the silo. Then list the\n`paper_ids` that support each synthesised claim. Finally, produce a\nsingle `draft_finance_brief` of 200–400 words that the researcher can\nuse as a starting point for §(0) of the silo chapter.\n\n## Output schema\n\nReturn ONE JSON object with exactly these fields:\n\n```json\n{\n  \"silo\": \"<silo name>\",\n  \"synthesised_problem_statement\": \"<2-4 sentences>\",\n  \"problem_statement_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"synthesised_classical_baseline\": \"<2-4 sentences>\",\n  \"classical_baseline_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"synthesised_classical_difficulty\": \"<2-4 sentences>\",\n  \"classical_difficulty_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"synthesised_business_stakes\": null | \"<2-4 sentences>\",\n  \"business_stakes_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"silo_silence_flags\": [\"<short string>\", \"...\"],\n  \"draft_finance_brief\": \"<200-400 word paragraph>\"\n}\n```\n\n## Rules\n\n1. **Every supporting_paper_id must exist in `silo_paper_set`.** Any\n   paper_id you cite must be a paper_id that appears in the F1 records\n   you were given for this silo. The downstream sanitiser will drop\n   hallucinated IDs.\n\n2. **Cite only papers that actually support the claim you make.** Do\n   not pad supporting lists. 5–15 paper_ids per field is typical. If\n   only 3 papers support a specific claim, cite only those 3.\n\n3. **Synthesise dominant patterns; do not list every paper.** The\n   reader can see the F1 records; your job is to find the throughline.\n   Quote-level detail belongs in F1, not F2.\n\n4. **Acknowledge tensions when they exist.** If half the silo frames\n   the problem one way and half another, say so explicitly. Do not\n   force a single thesis where the corpus is divided.\n\n5. **Silence is a finding.** If `coverage_stats.n_papers_with_business_stakes`\n   is low (e.g. < 30%), that is itself a finding — record it in\n   `silo_silence_flags` and consider returning `null` for\n   `synthesised_business_stakes` if the populated records do not\n   converge on a coherent stake.\n\n6. **Do not import outside knowledge.** Synthesise only what the F1\n   records say. Do not import textbook context, do not introduce claims\n   that are not present in any F1 record.\n\n7. **`draft_finance_brief` must be self-contained prose.** It is not a\n   paraphrase of the four synthesised paragraphs. It is a researcher-\n   ready paragraph that names the financial problem, sketches the\n   classical baseline and difficulty, mentions stakes if substantively\n   present, and signals the tensions or silences. 200–400 words.\n   Academic register, no bullet points, no citation marks.\n\n8. **Output ONLY the JSON object.** No markdown wrapping, no prefatory\n   text, no commentary.\n\n## What to avoid\n\n- Generic summaries that could apply to any silo (\"quantum methods are\n  promising but face challenges\")\n- Listing every method tried by the silo (that is s4 thematic\n  synthesis territory, not s6 framing)\n- Inflating supporting_paper_id lists with weakly-related papers\n- Writing the draft_finance_brief as a thesis abstract — it should be\n  a finance preface, leading with the financial problem\n- Returning a single-sentence synthesis when the corpus contains 100+\n  papers worth of nuance\n",
+  "silo_paper_set": [
+    "0757b9aa9a3b",
+    "0a824fa99e38",
+    "0c49909a73ca",
+    "0cfd33edfd1a",
+    "1993ad0237f3",
+    "1a0d37057236",
+    "2849bbcb864e",
+    "288305d31b7d",
+    "2896abff2596",
+    "2a0770a1a995",
+    "2fe0d0f15604",
+    "30afc00e8912",
+    "30c35313cb34",
+    "32f6aa86e556",
+    "36cd7ccae10c",
+    "3f8ab7317ca4",
+    "3fe2b056b181",
+    "41d2d7bb257a",
+    "46db6505e091",
+    "470b798927ef",
+    "55496bcdeaa7",
+    "620d7dc5208d",
+    "64111b3b5d61",
+    "64beee021f17",
+    "6ce12ea7c2bf",
+    "6fe2aeb67e66",
+    "71966c8a9dc7",
+    "71dc25d5ac6a",
+    "71ed62112b8d",
+    "75c40280653d",
+    "7c795b799d02",
+    "7f5135581c08",
+    "80db1bf3c910",
+    "85fbbb9f2a42",
+    "8d08019fb608",
+    "95a7b64bceac",
+    "9700e75505fd",
+    "980d054544f5",
+    "b0f18b08964e",
+    "b524b2fc9631",
+    "b9aa74e4bc0d",
+    "bbd82caa4d1f",
+    "c408224c2f59",
+    "c434305b37fb",
+    "c56a3ba7d912",
+    "c60694a1e2ed",
+    "c7451962353b",
+    "ca17c4baa8d1",
+    "cde1c896dc3c",
+    "d388ccd2fff8",
+    "e0a04002122e",
+    "ebc4087b5ca1",
+    "ed111831958f",
+    "f3cb59fe38ac",
+    "f55fea197b67",
+    "f85bdc99d9eb",
+    "f8669d109a5f",
+    "f88bb4cc0c22",
+    "f96f14134a21",
+    "f9e5b6ee139d",
+    "ff36740b3b52"
+  ],
+  "n_papers_in_silo_projection": 63,
+  "coverage_stats": {
+    "n_papers_in_silo_with_f1": 61,
+    "n_papers_with_problem_statement": 57,
+    "n_papers_with_classical_baseline": 57,
+    "n_papers_with_classical_difficulty": 56,
+    "n_papers_with_business_stakes": 55,
+    "confidence_distribution": {
+      "high": 58,
+      "medium": 2,
+      "low": 1
+    }
+  },
+  "f1_records": [
+    {
+      "paper_id": "0757b9aa9a3b",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the financial problem as selecting a relevant subset of features for credit card fraud detection and credit default prediction so that machine learning models perform better and more efficiently. It treats feature selection as especially important in high-dimensional transaction and credit data where redundant or irrelevant variables can obscure the signal.",
+      "classical_baseline": "The paper compares its quantum feature-selection approach against classical feature-selection methods, especially Random Forest feature importance and mutual information plus Spearman correlation. It also discusses standard filter, wrapper, and embedded feature-selection methods as the broader classical baseline.",
+      "classical_difficulty": "The paper says classical feature selection becomes NP-hard and computationally infeasible as the number of features grows, because the solution space expands exponentially and exhaustive search is not practical. It also says some classical information-based formulations require expensive conditional mutual information calculations and can become costly in time and memory on large datasets.",
+      "business_stakes": "The paper says these feature-selection improvements matter for financial services because the metrics used are widely used in the industry, and even small performance gains can translate into significant revenue growth for financial institutions. It also frames the task as part of financial risk assessment applications.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly finance-applied but centered on feature selection rather than a market/portfolio problem."
+    },
+    {
+      "paper_id": "0a824fa99e38",
+      "silos": [
+        "credit_lending",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames credit risk analysis as a key problem for financial institutions, especially for estimating risk metrics such as Value at Risk and Conditional Value at Risk and the resulting Economic Capital. It treats the task as one where the cumulative distribution of losses must be estimated from a portfolio of counterparties under uncertainty.",
+      "classical_baseline": "The paper treats Monte Carlo simulation as the classical state of the art for credit risk analysis, used to estimate VaR and Expected Shortfall/CVaR. It also describes the original quantum credit-risk setup as relying on a state-preparation operator with uncertainty, sum, and comparator subroutines, but the classical baseline itself is Monte Carlo.",
+      "classical_difficulty": "The paper says the classical Monte Carlo approach is the state of the art, while quantum methods aim for a quadratic speed-up. It also says that the quantum operators needed for QAE can be prohibitively costly, and that prior quantum credit-risk circuits can grow exponentially in gate count with the number of counterparties, making them unfeasible on NISQ hardware.",
+      "business_stakes": "The paper explicitly links credit risk analysis to capital reserves and solvency requirements for large financial institutions. It says these metrics are used to estimate Economic Capital, which institutions are required to calculate to ensure sufficient capital reserves under adverse conditions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is focused on credit risk analysis and Monte Carlo baseline, with clear scaling/tractability concerns."
+    },
+    {
+      "paper_id": "0c49909a73ca",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the task as few-shot credit risk assessment for inclusive finance, where customer segments can be very small and default examples are rare. It says the goal is to build accurate risk-control models that can assess customer risk effectively from limited data.",
+      "classical_baseline": "The paper treats conventional credit-scoring and machine-learning models as the baseline, especially logistic regression, random forest, XGBoost, decision trees, and SVMs. It also describes the scorecard model and logistic regression as standard tools in credit assessment.",
+      "classical_difficulty": null,
+      "business_stakes": "The paper links the problem to inclusive finance and says better models can help financial institutions identify risks more accurately, optimize credit decisions, expand coverage and depth of inclusive finance, and ensure fund security. It also calls the application high-stakes.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly finance-framed and repeatedly contrasts data-scarce credit risk control with conventional models."
+    },
+    {
+      "paper_id": "0cfd33edfd1a",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the task as credit scoring and loan/default risk prediction for a FinTech lender, using customers’ aggregated banking information to assign a risk score and predict default. It also treats fraud/anomalous application detection and score assignment as part of the same financial workflow.",
+      "classical_baseline": "The paper compares against classical machine-learning models, especially XGBoost as the main baseline, and also mentions SVC/SVC-like classical classifiers in the evaluation. XGBoost is explicitly described as the baseline for potential improvement in the system.",
+      "classical_difficulty": "The paper says classical models are hard to surpass when large datasets are available, but they struggle when data is scarce and skewed. It also says data-hungry algorithms like XGBoost need more data to perform well, while simpler classical models can lose performance as noise grows.",
+      "business_stakes": "The paper says the financial sector is highly competitive, so even small improvements can affect revenue, resource use, and competitiveness. It also says better generalization from scarce data helps early-stage firms make decisions and improve business resiliency.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is finance-applied QML with clear classical baseline and scarcity/imbalance framing."
+    },
+    {
+      "paper_id": "1993ad0237f3",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as a set of computational problems involving uncertainty in future asset behavior, including portfolio optimization, credit scoring, fraud detection, derivative pricing, and risk analysis. It emphasizes that these tasks often require large-scale computation and can benefit from faster quantum methods.",
+      "classical_baseline": "The paper treats classical optimization, machine learning, and Monte Carlo sampling as the standard approaches in quantitative finance. It also explicitly names classical linear programming, simulated annealing, the Black-Scholes-Merton model, and Monte Carlo sampling as the classical baselines for specific problems.",
+      "classical_difficulty": "The paper says several finance problems are hard for classical computers because they are NP-hard, require many runs or large numbers of high-dimensional operations, and become more expensive as data grows. It also notes that Monte Carlo methods need many samples for accuracy and that some models are less accurate for short times.",
+      "business_stakes": "The paper says faster quantum methods could bring large savings for governments, financial institutions, and individuals, and that faster algorithms would be highly disruptive to the industry. It also mentions practical consequences for banks in lending and for financial institutions managing risk.",
+      "extraction_confidence": "high",
+      "extraction_notes": "review paper with broad finance framing; motivation is explicit in abstract and introduction"
+    },
+    {
+      "paper_id": "1a0d37057236",
+      "silos": [
+        "credit_lending"
+      ],
+      "problem_statement": "The paper frames credit scoring as a high-stakes financial decision task that determines access to credit, loan approvals, credit limits, and interest rates. It emphasizes that the task must support multiclass credit risk classification while meeting strong requirements for transparency and interpretability in regulated settings.",
+      "classical_baseline": "The paper treats classical machine learning explainability methods as the established reference point, noting that they are well-studied for classical models but do not directly extend to quantum models. It also contrasts its work with prior credit-scoring approaches that focused on binary classification or optimization rather than transparency and explainability.",
+      "classical_difficulty": "The paper says the main difficulty is that existing QNN-based models often prioritize performance over interpretability, and that classical explainability methods do not directly transfer to quantum models because of their probabilistic nature and circuit-based representations. It also notes that structured multiclass credit-scoring interpretability remains largely unexplored.",
+      "business_stakes": "The paper explicitly ties the problem to regulated financial deployment, where decisions affect access to credit and must comply with fairness, transparency, GDPR, and Basel III requirements. It also frames interpretability as necessary for trust, accountability, and deployment feasibility in financial services.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly framed around interpretability and regulated credit scoring."
+    },
+    {
+      "paper_id": "2849bbcb864e",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames credit-risk modeling as a finance task where predictive models should be both accurate and interpretable, because the decisions have material consequences and are used in regulated settings like credit scoring and fraud detection. It focuses on estimating whether a customer will default on a credit card payment from financial and demographic characteristics.",
+      "classical_baseline": "The paper treats Logistic Regression as the transparent classical benchmark, Random Forest as a nonlinear but still moderately interpretable classical baseline, and a standard neural network as a high-performance classical reference point. It also compares against these standard classical machine-learning methods on the credit-risk dataset.",
+      "classical_difficulty": "The paper says linear models are too simple to capture the complex, non-linear patterns in financial data, while more expressive models often become black boxes and are difficult to interpret. It also notes that there is no clear guideline for tailoring variational quantum circuits to exploit quantum advantages for specific datasets, and that reliable explanations from probabilistic quantum outputs are difficult.",
+      "business_stakes": "The paper explicitly says the setting is high-stakes finance and that model decisions have material consequences. It also points to regulatory and institutional requirements for transparent, auditable reasoning, and says accountability and interpretability are paramount for practical deployment.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is focused on credit-risk interpretability rather than broader finance."
+    },
+    {
+      "paper_id": "288305d31b7d",
+      "silos": [
+        "credit_lending",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the task as credit risk analysis for a portfolio, especially estimating value at risk and economic capital from default probabilities and losses. It says the goal is to make the quantum approach more realistic by handling multiple systemic risk factors and by allowing non-integer loss-given-default inputs.",
+      "classical_baseline": "The paper compares against classical Monte Carlo methods for estimating value at risk and economic capital in credit risk analysis. It also treats the Basel II single-factor ASFR/IRB-style model as the classical baseline uncertainty model for defaults.",
+      "classical_difficulty": "The paper says the classical Monte Carlo approach converges slowly, with rate O(√n), and is computationally expensive because credit risk evaluation is a rare-event simulation problem. It also says classical simulation is limited to pseudo-random variables and that large-scale simulation can produce duplicates that compromise quality. For the baseline credit model, it says the single-factor Basel II model is deliberately conservative and less suitable for complex portfolios.",
+      "business_stakes": "The paper says the problem matters for economic capital, which is the amount of capital a company needs to stay solvent, and for financial institutions’ capital reporting. It also says the improved flexibility is needed to use real financial-sector data and to establish fair benchmarking protocols.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; framing is credit-risk/Monte-Carlo centered with clear classical baseline and difficulty statements."
+    },
+    {
+      "paper_id": "2896abff2596",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as credit risk assessment, specifically binary loan default prediction on a real-world credit risk dataset. It emphasizes improving prediction quality, especially for the minority defaulter class, while staying feasible for current quantum hardware.",
+      "classical_baseline": "The paper compares its hybrid quantum-classical transfer learning model against a standalone Quantum Neural Network, and also reports results for a classical neural network. The classical model is treated as a strong baseline for overall performance, while the standalone QNN is the main quantum baseline.",
+      "classical_difficulty": "The paper says the standalone QNN has poor recall, convergence inefficiencies, and high training cost. It attributes this to high computational demands, limited capacity to capture complex feature hierarchies without prior pre-processing, sensitivity to initialization, and gradient noise from the parameter-shift rule on simulated quantum circuits.",
+      "business_stakes": "The paper says the motivation is tied to accurate and scalable credit risk assessment, and it notes that transfer learning can reduce training time and associated carbon emissions. It also frames the task as important for real-world credit risk assessment under imbalanced data conditions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is focused on credit risk classification with a brief but clear classical-difficulty statement."
+    },
+    {
+      "paper_id": "2a0770a1a995",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames two finance forecasting problems inside Itaú Unibanco: predicting customer churn so the bank can intervene before withdrawals happen, and predicting SME credit default / probability of default for credit granting decisions. It presents these as practical bank use cases where better forecasting would improve model performance and business decision-making.",
+      "classical_baseline": "For churn prediction, the benchmark is the production Random Forest classifier. For credit risk, the benchmark is a fully connected residual neural network / classical feed-forward layer, and the paper also compares against a classical fully connected neural network on public datasets.",
+      "classical_difficulty": "The paper says churn prediction is hard because the dataset is large and the bank can only flag a small number of customers with high confidence, so false positives must be reduced. For credit risk, it says SME credit granting is particularly challenging because the relationship often starts at application time, so very little data is available. It also notes that DPP sampling on large datasets can be time-consuming and that some compound layers are exponential to train classically.",
+      "business_stakes": "For churn, the paper says the bank wants to salvage assets under management through interventions, and that the true financial impact depends on intervention success and profit per dollar of AUM. For credit risk, it says the PD model is used internally for credit ratings and that the Gini score is a KPI the business team can interpret.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Paper gives explicit motivation in abstract/introduction and clear business framing for both use cases."
+    },
+    {
+      "paper_id": "2fe0d0f15604",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the task as classifying credit sales risk: deciding whether a customer’s order should be realized or blocked based on seven decision variables such as arrears, current dues, payment delay, and indicators of reliability. It treats this as a binary decision problem with classes for allowing goods to be issued versus blocking the sale.",
+      "classical_baseline": "The paper compares its quantum approach against standard classical machine-learning classifiers applied to the same credit-sales dataset. It explicitly discusses SVM, k-nearest neighbours, Gaussian process, decision tree, random forest, MLP, AdaBoost, Gaussian Naive Bayes, and quadratic discriminant analysis as the classical baselines.",
+      "classical_difficulty": "The paper says the classes are not well separated, correlations are weak, and there is no simple linear model that fits the data. It also notes that high-performing classical models require more complex polynomial-kernel or other complex classifiers.",
+      "business_stakes": "The paper describes an operational debt-collection setting in which a wholesaler must decide whether to continue supplying a customer who has overdue invoices. The stakes are whether orders are realized or suspended, and the discussion mentions debt recovery and sales bans.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and centered on credit-sales risk classification; classical difficulty is stated directly in the introduction/analysis sections."
+    },
+    {
+      "paper_id": "30afc00e8912",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as predicting financial default or credit card default risk from a time-series financial dataset. It presents this as a risk-management problem for financial ecosystems and as a predictive analytics problem on complex, high-dimensional financial data.",
+      "classical_baseline": "The paper treats entirely classical machine learning models as the baseline, and specifically compares its hybrid model against state-of-the-art classical gradient-boosting algorithms. It also contrasts the hybrid approach with classical computing more generally.",
+      "classical_difficulty": "The paper says classical systems struggle with complex, high-dimensional data and with problems that require exploring an exponential solution space within reasonable timeframes or with desired accuracy. It also says the training-time burden grows as datasets become larger and more complex.",
+      "business_stakes": "The paper explicitly links default forecasting to risk management and the resilience of financial ecosystems. It also suggests that faster training matters for time-sensitive applications and for handling growing data volumes in real-world financial analytics.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is a hybrid QML application with clear finance framing and a clear classical baseline."
+    },
+    {
+      "paper_id": "30c35313cb34",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as portfolio optimization and related financial decision-making under increasing market complexity, including risk assessment and asset allocation. It also treats derivative pricing, credit risk assessment, and scenario analysis as connected financial tasks that quantum computing may help address.",
+      "classical_baseline": "The paper treats classical portfolio theory and Monte Carlo simulation as the main baseline, especially Markowitz’s Modern Portfolio Theory and traditional computational models. It also references classical optimization methods for asset allocation and risk assessment as the approaches quantum computing is meant to complement or improve upon.",
+      "classical_difficulty": "The paper says the classical approaches struggle with scalability, computational complexity, and market uncertainty. In particular, they require large computational resources for high-dimensional problems and Monte Carlo methods can be very demanding for complex instruments.",
+      "business_stakes": "The paper suggests that the stakes include faster decision-making, improved risk management, and broader impacts on financial markets. It also mentions regulatory and ethical concerns as practical issues for adoption.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and centered on portfolio optimization; paper also broadens to risk, pricing, credit risk, and fraud detection in later sections."
+    },
+    {
+      "paper_id": "32f6aa86e556",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the core financial problem as the need to speed up backtesting and forward testing of quantitative finance models, especially when the data are large, noisy, and changing with market conditions. It also presents this as relevant to trading, portfolio optimization, and risk management.",
+      "classical_baseline": "The paper treats classical computing as the baseline for running financial model tests, using standard financial modeling tools on high-performance classical hardware. It compares QFOQs against traditional classical computing approaches in finance.",
+      "classical_difficulty": "The paper says the classical approach is hard because backtesting and forward testing are computationally intensive, and classical computing struggles with the complexity and speed needed for real-time financial applications. It also emphasizes that financial data are noisy and that variable market conditions make the task harder.",
+      "business_stakes": "The paper says faster and more accurate testing could improve real-time trading, reduce latency, support more frequent recalibration, and help firms manage risk and compliance in volatile markets. It also mentions competitive advantage and better decision-making for financial institutions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit but heavily promotional and repetitive; framing centers on backtesting/forward testing rather than a single canonical finance task."
+    },
+    {
+      "paper_id": "36cd7ccae10c",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the problem as a lack of scalable, efficient, and accurate financial risk modeling systems that can combine AI and quantum computing to predict and mitigate risk in real time. It specifically points to portfolio management, fraud detection, and credit risk assessment as the main application areas.",
+      "classical_baseline": "The paper treats classical computational models and traditional machine learning as the baseline, including Monte Carlo simulations, the Markowitz mean-variance framework, and standard models such as logistic regression, decision trees, random forests, and support vector machines. These are presented as the existing approaches that quantum-enhanced AI is meant to improve upon.",
+      "classical_difficulty": "The paper says classical methods struggle with scale, high dimensionality, non-linear dependencies, and real-time demands. It also says some financial problems become intractable for classical computing, and that classical optimization methods do not scale efficiently as complexity grows.",
+      "business_stakes": "The paper says the stakes include real-time decision-making in volatile markets, better risk mitigation, improved lending decisions, reduced exposure to defaults, and competitive advantage for financial institutions. It also mentions regulatory compliance and the high costs of quantum infrastructure.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and broad; paper is largely a review/position piece with repeated framing across abstract and introduction."
+    },
+    {
+      "paper_id": "3f8ab7317ca4",
+      "silos": [
+        "credit_lending",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames portfolio optimization as choosing a binary set of assets to maximize return and minimize risk under a fixed relation between the two, with a budget constraint on how many assets can be selected. It also treats feature selection, clustering, and weighted MaxCut as combinatorial optimization problems, but the finance-specific framing is the portfolio problem.",
+      "classical_baseline": "For the portfolio problem, the paper compares against classical optimization methods, especially CPLEX, GUROBI, MQLib/Burer2002, and Goemans-Williamson. For the runtime comparison with quantum methods, it says MQLib/Burer2002 is the most suitable classical benchmark because it has low absolute runtime and a well-defined scaling behavior.",
+      "classical_difficulty": "The paper says brute force is infeasible because the number of possible solutions grows as 2^N, and it also emphasizes that some classical solvers have hard-to-model runtime behavior with jumps and discontinuities. For CPLEX and GUROBI, the paper notes overhead from optimality bounds and that their search approach may change unexpectedly, making them difficult to model and compare.",
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Paper is primarily algorithmic, but it contains explicit finance framing for portfolio optimization and explicit classical benchmark discussion."
+    },
+    {
+      "paper_id": "3fe2b056b181",
+      "silos": [
+        "credit_lending"
+      ],
+      "problem_statement": "The paper frames the task as optimizing credit score cards by choosing thresholds and weights so that banks can better predict credit risk and maximize total revenue. It treats this as a combinatorial optimization problem over many credit score card and threshold combinations.",
+      "classical_baseline": "The paper compares its approach against classical algorithms for the same credit score card optimization task, and specifically mentions traditional weight calculation methods. It also uses enumeration and depth-first search as classical checks in the model testing section.",
+      "classical_difficulty": "The paper says the problem is a combinatorial optimization problem and explicitly labels the underlying minimization as NP-hard. It also says the QUBO matrix can become large and difficult to calculate and measure, and that more complex problems can reduce accuracy and make the global optimum harder to find.",
+      "business_stakes": "The paper says the bank’s objective is to maximize total revenue and that higher approval rates can increase interest income, but also raise bad debt and capital loss risk. It also frames the work as relevant to risk management and practical application.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit but somewhat repetitive; paper mixes quantum-method framing with credit-scorecard business framing."
+    },
+    {
+      "paper_id": "41d2d7bb257a",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames credit risk assessment as a financial classification problem, especially for predicting loan defaults in imbalanced datasets. It emphasizes that accurate credit risk assessment is needed to support financial health and regulatory compliance, and that current models still struggle with nonlinear, high-dimensional relationships and minority-class recall.",
+      "classical_baseline": "The paper compares against a standalone Quantum Neural Network trained directly on raw credit risk data and a conventional classical neural network. It also describes logistic regression as a benchmark in classical credit risk modeling, with ensemble methods and deep learning as more recent classical approaches.",
+      "classical_difficulty": "The paper says the standalone QNN has poor recall and unstable convergence, and attributes this to lack of feature preprocessing and high computational demands. More broadly, it says current credit risk models struggle with nonlinear relationships in high-dimensional data and with minority-class recall, and that quantum circuit simulation remains a computational bottleneck.",
+      "business_stakes": "The paper says accurate credit risk assessment is important for maintaining financial health, minimizing loan defaults, and complying with regulatory standards. It also notes that the model is relevant to financial decision-making pipelines.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is focused on credit risk classification with clear classical baselines and difficulty statements."
+    },
+    {
+      "paper_id": "46db6505e091",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": null,
+      "classical_baseline": null,
+      "classical_difficulty": null,
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly finance-framed but also heavily method-focused."
+    },
+    {
+      "paper_id": "470b798927ef",
+      "silos": [
+        "credit_lending",
+        "portfolio_optimization",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames portfolio optimization, feature selection, and clustering as combinatorial optimization problems that can be written as QUBO instances. For the finance-specific case, portfolio optimization is described as choosing assets to maximize return while minimizing risk under a budget constraint.",
+      "classical_baseline": "The paper compares against classical optimization methods, especially CPLEX, Gurobi, MQLib/Burer2002 Heuristic, and Goemans-Williamson’s algorithm. For the later quantum-runtime comparison, it says MQLib/Burer2002 is the most suitable classical baseline because it is fast and has a well-defined scaling behavior.",
+      "classical_difficulty": "The paper says brute force is infeasible because the number of possible solutions grows as 2^N. It also says the classical methods have different scaling behaviors, that some do not guarantee the global optimum, and that CPLEX and Gurobi can show jumps and discontinuities that make their behavior hard to model.",
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Paper is primarily about QAOA runtime scaling; finance framing is explicit only for portfolio optimization, while the other use cases are non-financial."
+    },
+    {
+      "paper_id": "55496bcdeaa7",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames feature selection as the financial/ML problem of choosing a subset of relevant input features to build a predictive model for credit risk. It treats this as a real-world optimization task where the goal is to find feature subsets that improve model performance while discarding irrelevant or redundant features.",
+      "classical_baseline": "The paper compares against traditional feature selection techniques, especially RFE and RFECV, and also discusses model-based, filter, and wrapper methods as the classical feature-selection landscape. In the experiments, logistic regression is used as the classifier for the benchmark feature-selection methods.",
+      "classical_difficulty": "The paper says the feature-selection problem has exponential growth in the number of features and is NP-hard. It also says classical heuristics have little structure to exploit, so they are mainly greedy, iterative, or sequential, and that QUBO-based formulations require significant overhead and only capture up to pair-wise correlations.",
+      "business_stakes": "The paper says feature selection can speed up training, reduce memory costs, avoid overfitting, and improve interpretability and generalizability. It also notes that training on large feature sets may become expensive or infeasible.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and centered on feature selection for credit risk; classical framing is clear and includes both generic feature-selection methods and the paper's benchmark methods."
+    },
+    {
+      "paper_id": "620d7dc5208d",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames quantum computing as a way to improve several financial services use cases at Intesa Sanpaolo, including credit scoring, fraud detection, option pricing, investment recommendation, and dynamic portfolio optimization. It also says the bank is exploring quantum use cases across its operations, especially where a quantum approach may eventually provide an advantage over classical algorithms.",
+      "classical_baseline": "The paper treats classical algorithms and classical solutions as the baseline for the financial use cases it discusses. It explicitly contrasts quantum approaches with classical counterparts in credit risk analysis, fraud detection, portfolio optimization, and related tasks.",
+      "classical_difficulty": "The paper says quantum computing may help with problems that are not classically tractable, and that classical solutions already have issues in some finance tasks. It specifically mentions unbalanced datasets for fraud detection and difficulty choosing meaningful input features for credit scoring, and more generally says some problems may be hard to solve efficiently with classical computers.",
+      "business_stakes": "The paper says the use cases have broad societal impact from a financial inclusion point of view, and that fraud detection protects people involved in transactions while credit scoring supports a more transparent credit admission process. It also frames the work as relevant to banking operations and financial services more broadly.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is broad and partly corporate/strategic rather than a single technical problem; finance framing is explicit in the introduction and later use-case discussion."
+    },
+    {
+      "paper_id": "64111b3b5d61",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": null,
+      "classical_baseline": null,
+      "classical_difficulty": null,
+      "business_stakes": null,
+      "extraction_confidence": "low",
+      "extraction_notes": "paper is a broad book chapter collection; no single finance problem framing is stated for this paper"
+    },
+    {
+      "paper_id": "64beee021f17",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the finance task as classifying a credit scoring dataset into default and non-default cases, including both balanced and unbalanced versions of the data. It also presents the broader problem as building quantum classifiers that can handle realistic finance datasets with many features, many observations, and sometimes unbalanced targets.",
+      "classical_baseline": "The paper compares its hybrid quantum network against a fully classical neural network with approximately the same number of parameters. It also treats standard classical machine learning evaluation and training as the baseline setting for the finance classification task.",
+      "classical_difficulty": "The paper says the classical difficulty is not the finance task itself but the challenge of making quantum classifiers work on realistic datasets: existing examples are small, while finance use cases can have up to 1,000 features, more than 1,000 training samples, and unbalanced classes. It also says the straightforward quantum encoding scales with the number of features, so many qubits would be needed, which is out of scope for NISQ devices.",
+      "business_stakes": "The paper says finance-sector use cases typically have the realistic conditions that motivate the work, and it emphasizes deployment-oriented software as a possible path to web or mobile applications. It does not discuss regulatory or capital-allocation stakes.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; framing is mainly about scalable classification of realistic finance datasets, with a classical neural-net baseline."
+    },
+    {
+      "paper_id": "6ce12ea7c2bf",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the finance problem as selecting a small but effective subset of features from the German Credit Dataset to build a credit scoring model for credit risk assessment. It says the goal is to maximize classification performance while minimizing the number of selected features, so the model stays lightweight, interpretable, and useful for financial institutions.",
+      "classical_baseline": "The paper treats common machine learning feature-selection methods and classical numerical methods for QUBO as the baseline, and it also compares the resulting credit scoring model against a standard logistic regression classifier. In the broader framing, it presents classical digital optimization and classical algorithms as the conventional approach to the feature-selection problem.",
+      "classical_difficulty": "The paper says classical algorithms face computational complexity challenges as the optimization scale grows, and that heuristic sub-QUBO extraction methods are not theoretically solid and may fail to find globally optimal solutions. It also notes that QNN training is slower because gradient calculation is computationally expensive, but that point is about the image task rather than the credit problem.",
+      "business_stakes": "The paper says the credit-scoring task matters for financial institutions’ risk management and credit decision-making, and that high recall for low-risk applicants is important to avoid rejecting creditworthy applicants. It also mentions resource-constrained deployment such as mobile banking apps.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in the introduction and discussion; paper also includes a second non-finance image-classification case study, but the finance framing is clear."
+    },
+    {
+      "paper_id": "6fe2aeb67e66",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as finding near-term uses for quantum computing in asset management, especially in portfolio optimization, pricing and risk simulation, targeted machine learning tasks, and trading/routing decisions. It also treats migration to post-quantum cryptography as an immediate security problem for financial firms.",
+      "classical_baseline": "The paper treats strong classical baselines as the standard for judging any quantum pilot. It explicitly compares quantum approaches against the best classical tools for portfolio optimization, pricing and risk, and ML tasks.",
+      "classical_difficulty": "The paper says the hard part is that fully reliable, large-scale quantum machines are not yet available, so current work must rely on small, noisy NISQ devices and hybrid methods. It also notes that data encoding, error mitigation, and end-to-end runtime overhead must be managed, and that some tasks need careful benchmarking because speedups are only meaningful if quality and constraints hold.",
+      "business_stakes": "The paper says firms should act now because attackers can steal encrypted data today and decrypt it later, creating immediate security risk. It also frames the work in terms of ROI, cost, and operational integration, including faster run times, better fills or slippage, and speedups for stress testing.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Practitioner brief with explicit motivation; framing is broad and operational rather than a single research problem."
+    },
+    {
+      "paper_id": "71966c8a9dc7",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the financial problem as managing risk in finance using big data, especially for predictive modelling and real-time assessment. It emphasizes identifying, assessing, and controlling risks such as market changes, liquidity problems, credit problems, fraud, and operational or compliance risks.",
+      "classical_baseline": "The paper contrasts big-data-driven risk assessment with traditional financial risk management, which relied on historical data, regular reports, and simple statistical models. It also treats Value at Risk, scenario analysis, and stress tests as standard tools used by financial managers.",
+      "classical_difficulty": "The paper says the traditional approach was slow, reactive, and limited, and that it could not handle the scale, speed, and diversity of modern financial data well. It also notes that older methods often assumed future risks would resemble the past, which is less suitable for today's complex and fast-moving markets.",
+      "business_stakes": "The paper says risk management protects institutions from losses, helps save capital, supports long-term profits, and improves compliance and trust. It also states that delays in risk systems can cause big financial losses, penalties, reputational damage, and legal trouble.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Paper is a broad review with explicit motivation in abstract/introduction and repeated restatements in later sections."
+    },
+    {
+      "paper_id": "71dc25d5ac6a",
+      "silos": [
+        "credit_lending",
+        "risk_management"
+      ],
+      "problem_statement": null,
+      "classical_baseline": null,
+      "classical_difficulty": null,
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly framed around SME credit-risk contagion and crash estimation."
+    },
+    {
+      "paper_id": "71ed62112b8d",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames finance as a set of problems where quantum computing may help with risk management, portfolio optimization, option pricing, fraud detection, credit risk analysis, market forecasting, and Monte Carlo simulation. It presents these as tasks involving large datasets, complex patterns, and intricate computations.",
+      "classical_baseline": "The paper contrasts quantum approaches with conventional or classical computing methods, including classical linear algorithms, classical machine learning algorithms, established optimization algorithms, established risk models, and classical Monte Carlo methods. It treats these as the current baseline in finance.",
+      "classical_difficulty": "The paper says classical methods are limited in scale, accuracy, and speed for finance tasks. It describes small-scale limits for optimization and derivative pricing, limited scalability for fraud detection, and computational complexity or slowness for Monte Carlo simulation and large-scale optimization.",
+      "business_stakes": "The paper says these finance applications matter because they support better decision-making, reduced risk, improved pricing and risk assessment, and real-time stress testing. It also notes that financial institutions face security, compliance, and control requirements that make deployment choices important.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is broad and survey-like; the paper discusses many finance use cases rather than one specific problem."
+    },
+    {
+      "paper_id": "75c40280653d",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the problem as automating financial analysis in banking so that banks can process large volumes of financial data more efficiently and make better decisions. It also treats this as relevant to evaluating financial fitness, creditworthiness, loan approvals, investment strategies, and risk management.",
+      "classical_baseline": "The paper compares against traditional or conventional financial analysis and monetary assessment methods, including manual data analysis and classical methods such as regression analysis or neural networks. These are presented as the existing state of practice in banking before QML.",
+      "classical_difficulty": "The paper says the classical approach is hard because it is time-consuming, error-prone, resource-intensive, and based on human judgment. It also says conventional systems struggle with large, complex datasets and can produce biased or wrong conclusions when trained on limited or inaccurate data.",
+      "business_stakes": "The paper says the stakes include reducing financial loss, improving customer trust, lowering operational charges, and adhering to regulatory compliance requirements. It also links faster decision-making to responding to changing market situations.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit but repetitive and somewhat garbled/OCR-corrupted; framing is banking-wide rather than silo-specific."
+    },
+    {
+      "paper_id": "7c795b799d02",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the task as predicting whether a customer will default on a credit card balance, treating accurate default prediction as a critical capability for financial institutions that issue and manage credit. It also presents the problem as one involving high-dimensional, temporally correlated credit data.",
+      "classical_baseline": "The paper compares its quantum-classical approach against classical machine-learning models, especially XGBoost / gradient boosting, and also reports a dummy classifier as a low-performing reference. It treats these classical models as the benchmark for credit default prediction.",
+      "classical_difficulty": "The paper says classical methods struggle with scalability and performance on the dataset because the data are high-dimensional, temporally correlated, and large. It also notes that the dataset has many missing values and strong class imbalance, which require advanced preprocessing and robust modeling.",
+      "business_stakes": "The paper explicitly links better default prediction to financial stability, regulatory adherence, and customer experience. It also frames the task as important for identifying customers with a high likelihood of default.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is primarily a credit-default classification study with some business framing."
+    },
+    {
+      "paper_id": "7f5135581c08",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the financial task as predicting credit rating downgrades, also called fallen-angels forecasting, by estimating whether a debtor will have a high or low risk of becoming a fallen angel in the foreseeable future. It also describes this as an important problem for banks and financial institutions that work with large amounts of historical credit and market data.",
+      "classical_baseline": "The paper treats Random Forest as the classical benchmark for fallen-angels detection, and notes that similar credit risk modeling tasks have also been investigated with XGBoost. It explicitly benchmarks the proposed quantum approach against a highly optimized Random Forest classifier.",
+      "classical_difficulty": "The paper says the classical approach becomes computationally demanding as the number of decision trees grows, and that dense forests become hard to interpret. It also says the problem is difficult because the dataset is highly unbalanced, feature processing is resource-consuming, and finding optimal predictor weights is exponentially complex as the number of predictors increases.",
+      "business_stakes": "The paper says the task is essential for banks and important for financial institutions, and that better interpretability and performance on complex, highly imbalanced datasets are pressing issues in finance. It also mentions that faster runtimes would be practically relevant and that future improvements could offer industry-relevant quantum value.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; classical baseline and difficulty are clearly stated."
+    },
+    {
+      "paper_id": "80db1bf3c910",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": null,
+      "classical_baseline": null,
+      "classical_difficulty": null,
+      "business_stakes": "The paper explicitly links better credit scoring to lower rejection of good SMEs and lower risk for lenders, and says that even small improvements can have significant economic benefits. It also notes that training time is a significant business driver.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in the introduction and abstract; paper is finance-framed but also strongly algorithmic."
+    },
+    {
+      "paper_id": "85fbbb9f2a42",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the financial task as binary classification on real-world-style tabular finance data, specifically credit card default prediction and bank fraud detection. It says the datasets are meant to represent imbalanced financial behavior and transactional information, and that the goal is to classify whether a client defaults or whether a user is a fraudster.",
+      "classical_baseline": "The paper treats standard classical machine-learning classifiers as the baseline, including logistic regression, decision tree, naïve Bayes, k-nearest neighbors, and SVM. It also says these classical models are applied without dimensionality reduction in the baseline comparison.",
+      "classical_difficulty": "The paper says the main classical difficulty is that the datasets are imbalanced and that the minority class provides little information, which makes classification harder. It also notes that some classical methods do not converge or predict only the majority class, and that logistic regression needs many samples to be stable.",
+      "business_stakes": "The paper says the work is motivated by business use and industry constraints, especially the need to handle big datasets on current NISQ devices and to be practical in a business context. It also mentions a bank using QML for risk assessment.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is finance-adjacent but framed as QML classification on credit/fraud datasets rather than a finance-domain method paper."
+    },
+    {
+      "paper_id": "8d08019fb608",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames quantitative finance as a set of use cases where quantum machine learning may help with portfolio optimization, market prediction and trading, pricing, and risk management. It also explicitly includes fraud detection and underwriting among the finance applications it surveys.",
+      "classical_baseline": "The paper treats classical finance and classical machine learning methods as the baseline, including Markowitz mean-variance portfolio optimization, Monte Carlo simulation for option pricing, Black-Scholes for European options, and classical ML methods such as neural networks, SVMs, and regression for prediction and classification tasks. It also compares quantum methods against conventional commercial solvers and classical hedging or risk models in several places.",
+      "classical_difficulty": "The paper says the classical difficulty comes from computational complexity, scaling, and data/market uncertainty. Examples include the need to estimate means and covariances for portfolio optimization, the computational cost of Monte Carlo for complex options, the curse of dimensionality in machine learning and PDE-based pricing, and the fact that market prediction is inherently uncertain. It also notes that some classical methods become computationally expensive on large datasets or in high-dimensional settings.",
+      "business_stakes": "The paper mentions practical stakes such as regulatory requirements in constrained portfolio optimization, capital requirements in risk management, and the need to safeguard financial markets, institutions, and investors from fraud. It also notes that incorrect ML decisions can have serious consequences in financial transactions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Survey paper with explicit motivation in abstract/introduction and many classical baselines discussed across use cases."
+    },
+    {
+      "paper_id": "95a7b64bceac",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the problem as forecasting and managing risk in volatile financial markets with huge, interdependent data streams. It also treats market prediction, portfolio allocation, derivative pricing, credit risk assessment, and fraud detection as related financial tasks to be improved.",
+      "classical_baseline": "The paper compares against conventional computational models, traditional machine learning and statistical models, and mainstream financial models such as Black-Scholes, Markowitz mean-variance, Black-Litterman, and classical Monte Carlo. It also mentions LSTM, ARIMA, Random Forest, and SVM as classical baselines in the results.",
+      "classical_difficulty": "The paper says classical approaches struggle with large, high-dimensional financial data, nonlinear dependencies, and the need for high-quality historical data. It also says VaR and Monte Carlo methods have computational complexity that blocks real-time risk assessment, and that large-scale simulation and optimization can be too computationally expensive for high-frequency trading.",
+      "business_stakes": "The paper says the goal is to support financial institutions and real-world deployment, with faster real-time decision-making, stress testing, and risk measurement. It also mentions high-frequency trading environments and regulatory aspects as practical concerns.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and conclusion; paper is broad and mixes several finance tasks in one framing."
+    },
+    {
+      "paper_id": "9700e75505fd",
+      "silos": [
+        "credit_lending",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames loan collection as an optimization problem: choose actions for each loanee to maximize the lender’s expected net profit while also accounting for the financial welfare of connected loanees and keeping loan loss provisions low. It emphasizes that collection actions can have network effects across loanees and that LLP is an important constraint in bank lending.",
+      "classical_baseline": "The paper treats rule-based loan collection and purely classical optimization as the baseline. In the numerical comparison, the classical alternative is a standalone greedy provision reduction procedure fed with random actions, contrasted with the hybrid quantum-classical method.",
+      "classical_difficulty": "The paper says the problem is hard because loan collection decisions interact through a financial network, so domino effects are usually ignored due to the complexity of the underlying financial system. It also says LLP depends on many bank-specific and regulatory factors, making the optimization large-scale and computationally intensive.",
+      "business_stakes": "The paper explicitly links the problem to bank financial health and liquidity. It says LLP is regulated to ensure the financial health of the bank, constitutes a significant portion of the financial statement, and that minimizing LLP promotes financial liquidity.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly finance-framed with clear classical baseline and difficulty statements."
+    },
+    {
+      "paper_id": "980d054544f5",
+      "silos": [
+        "credit_lending"
+      ],
+      "problem_statement": "The paper frames the problem as choosing credit scoring card thresholds, first for a single card and then for a combination of three cards, so that the bank's final income is maximized. It says this income depends on loan interest income and bad debt losses determined by the threshold combination.",
+      "classical_baseline": "The paper treats brute-force enumeration and typical optimization algorithms such as machine learning-based optimization evaluation as the classical approach, and contrasts them with QUBO-based optimization. It also mentions simulated annealing as a standard solver used for the small-scale optimization instance.",
+      "classical_difficulty": "The paper says brute-force enumeration is computationally complex and time-consuming, and that for large data the computing power, time, and space complexity are far beyond ordinary computers. It also notes that banks must balance pass rate and bad debt rate, since improving pass rates may increase bad debt rates.",
+      "business_stakes": "The paper says the threshold design affects bank risk management, revenue optimization, non-performing loan risk, and profitability. It also states that the goal is to better suit market needs and the bank's strategic goals.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in the introduction and abstract; framing is centered on bank revenue/risk from credit scoring card thresholds."
+    },
+    {
+      "paper_id": "b0f18b08964e",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the problem as financial risk management in complex, interconnected financial markets, where institutions need to identify, assess, and mitigate market, credit, liquidity, and operational risks. It also treats portfolio optimisation, derivative pricing, and credit risk modelling as related financial tasks within that broader risk-management setting.",
+      "classical_baseline": "The paper treats traditional financial risk management approaches as the classical baseline, especially statistical methods, Monte Carlo simulations, and risk models such as VaR, credit scoring, and event tree analysis. It also refers more generally to classical computing as the current approach used for these tasks.",
+      "classical_difficulty": "The paper says classical computing struggles with the scale and complexity of modern financial markets, especially the large data volumes and heavy calculations needed for accurate risk assessment. It also says classical methods can be too slow for real-time analysis and may rely on simplifying assumptions that miss nonlinearity, leading to inaccurate or biased risk estimates.",
+      "business_stakes": "The paper says poor risk management can have profound consequences, and it also links the problem to mispricing or misallocation of capital. It further notes that timely risk assessment is needed to mitigate adverse events in fast-moving markets.",
+      "extraction_confidence": "high",
+      "extraction_notes": "The paper is a theoretical review; motivation is explicit in the abstract and introduction, with broad finance framing rather than a single narrow task."
+    },
+    {
+      "paper_id": "b524b2fc9631",
+      "silos": [
+        "credit_lending",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the problem as estimating account-level loan risk distributions, especially the lifetime distribution of default and yield uncertainty, so that lenders can do true loan-level pricing and underwriting. It also treats the competing risks of default and pay-off as part of that account-level uncertainty.",
+      "classical_baseline": "The classical baseline is Monte Carlo simulation on classical computers, used to tabulate the lifetime loss or default distribution from the forecast distributions. The paper also contrasts this with current best-practice underwriting based on forward-looking lifetime loss, payment, and yield projections under macroeconomic scenarios.",
+      "classical_difficulty": "The paper says the classical approach is computationally intensive and historically too slow for operational lending use, especially because the forecast combines many time steps and the competing-risks structure prevents a closed-form or matrix-algebra solution. It also says real-time underwriting is sensitive to latency, so seconds matter.",
+      "business_stakes": "The paper says the stakes are loan-level pricing and real-time underwriting, with implications for capital allocation and model risk control. It also mentions fair lending compliance, auditor acceptance, and regulatory oversight as reasons the process is slow and carefully reviewed.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is partly algorithmic but clearly frames a lending-risk problem."
+    },
+    {
+      "paper_id": "b9aa74e4bc0d",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as credit score classification for assessing an individual's creditworthiness and supporting lending decisions in financial institutions. It treats the goal as predicting credit scores accurately and interpretably from borrower features.",
+      "classical_baseline": "The paper treats the classical Support Vector Classifier as the main baseline, and also discusses traditional credit risk modeling approaches such as logistic regression, LDA, decision trees, random forests, and other standard machine learning and deep learning methods. In the results, classical SVC is used as the reference point for comparison with the quantum model.",
+      "classical_difficulty": "The paper says classical models struggle as datasets become more complex and high-dimensional, with limitations in performance, scalability, expressiveness, and computational cost. It also says training can require substantial resources, time, and extensive hyperparameter tuning, cross-validation, and feature engineering.",
+      "business_stakes": "The paper says credit risk modeling affects loan approval, interest rates, collateral requirements, capital reserves, lending limits, portfolio management, and profitability. It also notes that real-world deployment can matter for high-frequency trading or real-time credit scoring because latency and performance are critical.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in the introduction and practical implications; paper is partly algorithmic but does state finance context clearly."
+    },
+    {
+      "paper_id": "bbd82caa4d1f",
+      "silos": [
+        "credit_lending",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the financial problem as using quantum computing to improve financial forecasting, risk management, portfolio optimization, and credit modeling. It presents these as finance tasks where better speed, accuracy, and scalability are needed for decision-making.",
+      "classical_baseline": "The paper treats classical finance algorithms and classical Monte Carlo simulation as the baseline, along with traditional methods for portfolio optimization, risk analysis, credit scoring, and derivative pricing. It also contrasts quantum methods with classical SVMs and DNNs in related business analytics tasks.",
+      "classical_difficulty": "The paper says the classical side is hard because financial markets and real-time data environments exceed classical processing abilities, and because classical finance algorithms have computational limitations. It also says classical Monte Carlo methods require more samples, and that portfolio optimization involves complex constraints and large-scale problems that are difficult to handle efficiently.",
+      "business_stakes": "The paper says the stakes include faster and more accurate market decisions, better regulatory compliance, and lower logistics or delivery costs in related optimization settings. It also notes that quantum models could support real-time forecasting and risk management in high-volatility or high-frequency trading environments.",
+      "extraction_confidence": "high",
+      "extraction_notes": "paper is a broad review; finance framing is explicit but mixed with marketing and cross-sector discussion"
+    },
+    {
+      "paper_id": "c408224c2f59",
+      "silos": [
+        "credit_lending",
+        "fraud_detection"
+      ],
+      "problem_statement": "The paper frames the target problems as automating credit card fraud detection and loan eligibility prediction in a rapidly growing digital financial environment. It presents these as complex financial tasks that need more accurate and reliable decision-making models.",
+      "classical_baseline": "The paper treats classical machine learning and deep neural network models as the main baseline for these tasks, and it compares QFDNN against standard classifiers such as logistic regression, KNN, SVM, ANN, random forest, and gradient boosting. It also discusses existing classical ML/DNN approaches for fraud detection and credit scoring as the prior state of the art.",
+      "classical_difficulty": "The paper says classical methods struggle because financial data are complex and high-dimensional, which leads to scalability problems, overfitting, and high computational cost. It also says financial data can be noisy, incomplete, biased, and of inconsistent quality, and that feature selection and integration into existing infrastructures add further difficulty.",
+      "business_stakes": "The paper says the applications matter for trust, sustainability, social responsibility, and security in social financial technology, and that the goal is to support real-world financial decision-making. It also mentions regulatory compliance as a concern for DNN-based financial models.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is application-focused and compares against standard classical ML baselines."
+    },
+    {
+      "paper_id": "c434305b37fb",
+      "silos": [
+        "credit_lending",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames credit risk analysis as the task of modeling borrower default probabilities and the resulting loss distribution, including quantities such as expected loss, VaR, and CVaR. It also emphasizes the need to generate correlated default scenarios and loss distributions for portfolio-level risk analysis.",
+      "classical_baseline": "The paper treats Monte Carlo simulation as the classical baseline for estimating credit-risk quantities, and it also presents the Gaussian conditional-independence model as a classical baseline for the default-probability structure. In the results, it compares the quantum output against a classical/noiseless simulated counterpart for the same model.",
+      "classical_difficulty": "The paper says the main classical bottleneck is generating high-fidelity samples from correlated default models and evaluating portfolio losses over many scenarios. It also notes that the quantum approach is motivated by the large number of scenarios needed for Monte Carlo-style estimation, while the NISQ setting adds hardware limitations that complicate implementation.",
+      "business_stakes": "The paper explicitly links the problem to economic capital, pricing, capital allocation, and Basel stress testing. It also states that the resulting loss distribution is used to determine VaR/CVaR and that the CDF/VaR output supports the same risk conclusion for the scenario studied.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Clear credit-risk framing with explicit Monte Carlo baseline and explicit discussion of VaR/CVaR, capital allocation, and Basel stress testing."
+    },
+    {
+      "paper_id": "c56a3ba7d912",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the task as predicting whether credit card customers will default on their balance in the following month. It emphasizes that this is a binary classification problem in finance and that the dataset is highly imbalanced because defaults are much rarer than non-defaults.",
+      "classical_baseline": "The paper compares its hybrid quantum-classical pipeline against a fully classical pipeline that uses the same preprocessing and classical classifiers, and it also benchmarks against a Deep Neural Network. It additionally considers a classical reservoir computing variant where the quantum reservoir is replaced by a classically equivalent counterpart.",
+      "classical_difficulty": "The paper says the task is hard because the data are imbalanced, which can bias learning and make accuracy misleading. It also states that encoding real data into quantum registers is hard, and that the quantum reservoir approach is intended to address limited data availability and reduce training burden compared with more complex models.",
+      "business_stakes": "The paper does not give a detailed business-stakes discussion beyond identifying the use case as a real-world financial application. It does say the task is a credit-card default prediction problem in the financial sector and notes that limited data availability is relevant for practical applications.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract/introduction; business stakes are only lightly stated."
+    },
+    {
+      "paper_id": "c60694a1e2ed",
+      "silos": [
+        "credit_lending",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames credit risk assessment as a core financial decision problem that affects loan approvals, portfolio management, and systemic stability. It also treats modern credit evaluation as needing to handle large, high-dimensional, and increasingly complex financial data, including non-traditional data sources.",
+      "classical_baseline": "The paper treats conventional credit scoring and classical machine learning models as the baseline, including decision trees, support vector machines, and neural networks. It also contrasts quantum methods with classical Monte Carlo methods for risk simulation and with classical approaches to portfolio optimization.",
+      "classical_difficulty": "The paper says classical models are increasingly challenged by scalability and computational complexity on modern financial datasets. It describes the burden as exponential computational loads, bottlenecks on model sophistication and deployment speed, and a classical Monte Carlo scaling of O(1/ε²) for high-precision risk calculations.",
+      "business_stakes": "The paper links the problem to loan approvals, regulatory compliance, portfolio management, systemic stability, and high-precision risk calculations needed by regulatory and in-house risk management procedures. It also says better methods could support more inclusive lending and earlier detection of systemic risk.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and repeated across abstract, introduction, and conclusion; paper also mixes credit risk, portfolio optimization, and Monte Carlo framing."
+    },
+    {
+      "paper_id": "c7451962353b",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the financial problem as helping institutions make better decisions under uncertainty by improving risk management and portfolio optimization. It also treats related finance tasks such as option pricing, fraud detection, credit scoring, and risk simulation as part of the same broader quantum-finance opportunity.",
+      "classical_baseline": "The paper treats conventional computers and classical statistical or optimization models as the baseline for finance. It specifically mentions mean-variance models, linear programming, regression models, and classical solvers as the traditional approaches being compared against.",
+      "classical_difficulty": "The paper says classical computing struggles when the number of possible portfolio combinations grows very large, making optimal solutions too slow to compute in reasonable time. It also says classical techniques are computationally expensive for higher asset dimensions and that traditional models are not often scalable for large portfolios or complex risk analyses.",
+      "business_stakes": "The paper says the stakes include better investment decisions, real-time portfolio rebalancing, risk mitigation, stress testing, and regulatory compliance. It also notes that faster risk analysis can help institutions avoid losses and support market stability.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and repeated across abstract, introduction, and conclusion; paper is broad and includes multiple finance applications beyond the main title focus."
+    },
+    {
+      "paper_id": "ca17c4baa8d1",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as a set of hard computational problems involving portfolio selection, market prediction, derivative pricing, and risk assessment. It emphasizes that these tasks arise under uncertainty and stochastic market behavior, and that quantum computing may help address them.",
+      "classical_baseline": "The paper treats classical optimization, classical machine learning, and Monte Carlo simulation as the baseline approaches in finance. It also explicitly names the Black–Scholes-Merton model and classical linear programming as classical methods for option pricing and straightforward portfolio problems.",
+      "classical_difficulty": "The paper says classical methods become expensive or impractical as the problems get larger or more complex. It describes portfolio optimization as NP-hard, notes that Monte Carlo methods require many runs, and says several finance tasks need significant processing power that worsens with more data.",
+      "business_stakes": "The paper says these methods matter because they can save money and support real financial decision-making. It also mentions regulatory compliance and the need for real-time, low-latency applications such as high-frequency trading and dynamic portfolio rebalancing.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Review paper with broad finance framing; motivation is explicit in abstract, introduction, and conclusion."
+    },
+    {
+      "paper_id": "cde1c896dc3c",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as a broad set of machine-learning use cases that may benefit from quantum computing, especially regression, classification, clustering, generative modeling, feature extraction, reinforcement learning, and NLP. It emphasizes that these tasks arise in applications such as asset pricing, portfolio optimization, credit scoring, fraud detection, algorithmic trading, market making, and financial forecasting.",
+      "classical_baseline": "The paper treats standard classical machine-learning and optimization methods as the baseline, including least-squares regression, Lasso, linear classification, nearest-centroid and k-NN classifiers, SVMs, k-means, classical Monte Carlo for simulation-related tasks, and classical reinforcement learning for trading and market making. It also explicitly compares against classical approaches such as the Fama-French five-factor model, buy-and-hold, and classical regression methods in some examples.",
+      "classical_difficulty": "The paper says the main classical difficulties are the complexity of the algorithms, the size of the data, and the cost of training or calibration. It also notes that data loading and output extraction for quantum methods are still hard, and that some quantum algorithms require conditions or customizations that make end-to-end speedup nontrivial.",
+      "business_stakes": "The paper says finance is expected to be an early beneficiary of quantum computing and that some applications matter for risk management, portfolio hedging, option pricing, liquidity, and credit decisions. It also mentions that financial forecasting helps businesses adapt to uncertainty and that market making increases exchange liquidity.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Review paper with broad finance framing; motivation is explicit in abstract/introduction and restated in conclusion."
+    },
+    {
+      "paper_id": "d388ccd2fff8",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames the financial problem as using quantum machine learning to improve financial risk analysis, portfolio optimization, fraud detection, and market forecasting. It also treats financial modelling as a hard optimization and simulation problem that classical methods struggle to handle at scale.",
+      "classical_baseline": "The paper compares against classical machine learning, classical optimization, and classical simulation methods such as brute-force search, classical SVMs, and traditional Monte Carlo simulations. In finance, it also contrasts quantum methods with conventional risk assessment, portfolio optimization, and market forecasting approaches.",
+      "classical_difficulty": "The paper says the classical financial problem is hard because it involves large, high-dimensional datasets, many possible combinations, and substantial processing time. It also says classical methods can be slow, resource-intensive, and struggle to scale to real-time or large-market problems.",
+      "business_stakes": "The paper explicitly links these finance applications to risk management, investment strategy, and financial security. It says better methods could improve decision-making, reduce risk, and support faster, more accurate financial modelling and fraud detection.",
+      "extraction_confidence": "high",
+      "extraction_notes": "paper is a broad survey/chapter; finance framing is spread across multiple sections rather than a single motivation paragraph"
+    },
+    {
+      "paper_id": "e0a04002122e",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames feature selection as a way to reduce high-dimensional classification data while preserving useful information and improving classifier efficiency and performance. It focuses on selecting a subset of features that has high relevance and low redundancy.",
+      "classical_baseline": "The paper treats classical feature selection methods, especially MRMR, as the baseline. It compares its QAOA-based MRMR approach against classical MRMR for selecting feature subsets in classification tasks.",
+      "classical_difficulty": "The paper says classical feature selection is limited by computational power and storage complexity, and that MRMR can get trapped in local optima. It also states that searching for the global optimum by traversal would likely require exponential time.",
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit but algorithmic; finance appears only as one benchmark domain, not as a finance-specific problem framing."
+    },
+    {
+      "paper_id": "ebc4087b5ca1",
+      "silos": [
+        "credit_lending"
+      ],
+      "problem_statement": "The paper frames mortgage and banking AI systems as increasingly dependent on sensitive data, long-lived records, and cryptographic protections, while quantum computing threatens the security foundations those systems rely on. It says the problem is to secure mortgage, banking, and credit-related AI workflows so they remain confidential, trustworthy, and compliant over long time horizons in the post-quantum era.",
+      "classical_baseline": "The paper treats classical public-key cryptography and conventional security models as the baseline for protecting banking, mortgage, and credit systems. It also contrasts against traditional threat models and classical machine learning/security setups that do not account for quantum-enabled adversaries.",
+      "classical_difficulty": "The paper says the classical approach is hard because quantum algorithms can break widely used public-key schemes, and because mortgage and banking data must remain protected for decades, creating harvest-now-decrypt-later risk. It also says classical approaches are limited by legacy systems, interoperability, and the need to preserve long-term confidentiality, integrity, and compliance.",
+      "business_stakes": "The paper says the stakes include regulatory compliance, customer trust, financial stability, and avoiding severe market or institutional damage. It also notes that failures could lead to fines, contract problems, and even financial meltdown in the broader marketplace.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Book/preface-style framing, but chapter 1 provides explicit motivation and classical-difficulty statements relevant to credit_lending."
+    },
+    {
+      "paper_id": "ed111831958f",
+      "silos": [
+        "credit_lending",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper studies credit risk management in a credit portfolio, specifically the calculation of risk contributions that quantify how much each subgroup of obligors contributes to the portfolio’s overall risk. It frames this as a way to analyze where risk is concentrated and to help banks disperse that risk.",
+      "classical_baseline": "The paper compares against classical Monte Carlo estimation of credit risk contributions, and also mentions existing classical approaches for VaR contributions such as Monte Carlo with importance sampling and semi-analytical saddle-point methods. For the main complexity comparison, the baseline is the classical Monte Carlo method for CVaR contributions.",
+      "classical_difficulty": "The paper says classical Monte Carlo is costly because estimating risk contributions requires conditional expected values, so only a small fraction of samples satisfy the conditioning event. It also states that the classical sample complexity scales as O(ǫ−2), and for many groups the dependence is eO(log(Ngr)/ǫ2), with an extra 1/p factor when conditioning on L ≥ v.",
+      "business_stakes": "The paper says the measures help banks analyze and disperse risk, including identifying concentration in specific sectors, regions, or business divisions. It also notes that major banks may have portfolios with millions of obligors, making the computation operationally expensive.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and centered on credit risk contributions; classical baseline and difficulty are clearly stated in the introduction and comparison section."
+    },
+    {
+      "paper_id": "f3cb59fe38ac",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "quantum_ml_finance",
+        "risk_management"
+      ],
+      "problem_statement": "The paper frames the financial problem as modeling financial networks and transaction relationships with graph neural networks for tasks such as fraud detection, credit scoring, risk assessment, and market prediction. It also presents quantum-natural language processing as a way to analyze risk-related financial data in banking more effectively.",
+      "classical_baseline": "The paper compares against traditional methods, including rule-based or simple feature-analysis systems in intrusion/fraud settings and conventional models for credit scoring, risk assessment, and recommendation. In the quantum-NLP section, it also contrasts its approach with traditional NLP models and their distributional methods.",
+      "classical_difficulty": "The paper says the hard part classically is that financial and risk data are complex, interconnected, and large-scale, so traditional methods miss subtle patterns or cannot handle the volume and complexity. It also notes that graph problems can be computationally expensive and that large graphs create scalability and memory challenges.",
+      "business_stakes": "The paper explicitly ties the financial framing to reducing financial losses, improving security, and supporting banking risk management. It also mentions real-time decision needs in fraud detection and the importance of timely efficiency for resource allocation and response.",
+      "extraction_confidence": "medium",
+      "extraction_notes": "paper is a broad GNN survey/chapter with finance framing spread across multiple sections; motivation is present but not concentrated in one finance-specific problem statement"
+    },
+    {
+      "paper_id": "f55fea197b67",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the problem as forecasting loan risk or default probability for borrowers, because non-performing loans and loan default create major challenges for financial institutions. It presents this as a credit-risk assessment task where the goal is to identify likely defaulters and non-defaulters more reliably.",
+      "classical_baseline": "The classical baseline is standard machine-learning credit-risk modeling, especially Support Vector Machine (SVM), which the paper compares directly against Quantum Support Vector Machine (QSVM). The introduction also situates this within traditional loan-risk models such as logistic regression and linear discriminant analysis, but the main head-to-head baseline in the study is SVM.",
+      "classical_difficulty": "The paper says the task is hard because borrower data are complex, default probability and default correlation matter, and traditional models may not capture modern financial-market and borrower-behavior complexity well. It also emphasizes imbalanced datasets, non-linear relationships, and the need for more adaptive and scalable approaches.",
+      "business_stakes": "The paper says better loan-risk prediction matters for bank profitability, financial stability, capital adequacy, and reducing losses from bad lending decisions. It also claims improved models can help institutions make more informed loan-approval decisions and reduce financial losses.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is a direct SVM vs QSVM comparison on loan default prediction."
+    },
+    {
+      "paper_id": "f85bdc99d9eb",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames finance as a collection of computationally challenging tasks, especially stochastic modeling, optimization, and machine learning. It highlights examples such as pricing and risk estimation, identifying anomalous transactions and customer preferences, portfolio selection, trading strategies, hedging, and other financial applications.",
+      "classical_baseline": "The paper treats the classical state of the art as the existing financial-industry toolkit: stochastic modeling, optimization algorithms, machine learning models, Monte Carlo integration, dynamic programming, regression-based methods, branch-and-bound, interior-point methods, and other standard classical techniques. It also explicitly contrasts quantum approaches with the classical counterpart in several places.",
+      "classical_difficulty": "The paper says many financial problems are computationally challenging, and that classical methods can suffer from unfavorable scaling in dimension, error, or tree size. It specifically notes that some methods require exponentially many samples or have exponential dependence on dimension, while others are already efficient classically, leaving little room for improvement.",
+      "business_stakes": "The paper says that in finance, computational time and accuracy can directly affect profit and loss, and that fast, accurate risk evaluation is crucial for hedging under volatile market conditions. It also says early and accurate fraud detection can avoid significant monetary loss and reputational damage.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Review paper with broad finance framing; motivation is explicit in abstract, introduction, and outlook."
+    },
+    {
+      "paper_id": "f8669d109a5f",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo"
+      ],
+      "problem_statement": "The paper frames finance as one of several domains that may benefit from quantum computing, especially for fraud detection, risk analysis, portfolio optimization, and market simulation. It presents these as complex financial tasks that quantum computing could help address more effectively than classical systems.",
+      "classical_baseline": "The paper contrasts quantum approaches with traditional finance methods that rely on rules-based systems, statistical analysis, and classical models and simulations. For risk estimation, it specifically names classic Monte Carlo simulation as the conventional baseline.",
+      "classical_difficulty": "The paper says classical methods are limited in detecting sophisticated fraud schemes, and that some financial tasks such as Value at Risk estimation are computationally demanding. It also says existing methods can fail to capture extreme tail losses adequately, and that practical quantum alternatives are still constrained by hardware and algorithmic development challenges.",
+      "business_stakes": "The paper says fraud detection is critical for banks to maintain trust and protect assets, and that better risk estimation affects profits and financial losses. It also notes that stronger encryption is needed to avoid financial loss from cyberattacks.",
+      "extraction_confidence": "medium",
+      "extraction_notes": "paper is a broad quantum-computing overview; finance framing is brief and mixed with many non-finance applications"
+    },
+    {
+      "paper_id": "f88bb4cc0c22",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as a set of data-intensive decision problems where machine learning is used for fraud detection, anti-money laundering, algorithmic trading, credit scoring, financial forecasting, portfolio optimization, risk assessment, and option pricing. It then positions quantum machine learning as a way to address these financial tasks by handling high-dimensional data and complex optimization or simulation problems more efficiently.",
+      "classical_baseline": "The paper treats classical machine learning as the main baseline, alongside traditional rule-based, statistical, and heuristic methods in specific finance tasks. It contrasts QML against classical ML methods such as SVMs, neural networks, gradient descent, evolutionary algorithms, Monte Carlo methods, and classical clustering or trading approaches.",
+      "classical_difficulty": "The paper says classical approaches struggle with scalability, adaptability, interpretability, and real-time performance in finance. It also notes that some financial problems become computationally prohibitive at large scale, that high-frequency trading has extreme latency requirements, and that classical simulation methods can be too slow for complex pricing and risk tasks.",
+      "business_stakes": "The paper explicitly links these methods to financial losses, market efficiency, and regulatory compliance. It says fraud detection lowers financial losses, algorithmic trading affects market liquidity and trading results, and low-latency trading can avoid significant losses; it also notes that better risk simulation can support regulatory compliance.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Review paper with broad finance framing; motivation is explicit but spread across abstract, introduction, and section headings."
+    },
+    {
+      "paper_id": "f96f14134a21",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames recovery rate prediction as a core credit-risk task for bond investment, portfolio allocation, pricing, and credit risk management. It says the task is especially difficult because recovery rates depend on complex nonlinear relationships in high-dimensional data and because sample sizes are limited.",
+      "classical_baseline": "The paper compares against traditional statistical models, a classical feedforward neural network, XGBoost, and an orthogonality-constrained neural network. It presents the classical neural network as the direct baseline for the proposed hybrid model, and XGBoost as a strong tabular-data benchmark.",
+      "classical_difficulty": "The paper says classical approaches struggle because they cannot capture highly nonlinear and interactive effects, are sensitive to outliers and skewed/heavy-tailed data, rely on fixed functional forms and strong distributional assumptions, and scale poorly when predictors are numerous relative to the sample size. It also notes that enforcing orthogonality in classical training can be computationally demanding, with re-orthogonalization steps costing O(N3).",
+      "business_stakes": "The paper says recovery rates matter for pricing, risk assessment, portfolio optimization, expected loss, and financial regulations. It also notes that better forecasts can affect investment decisions and, in future work, could inform trading strategies and economic-capital calculations.",
+      "extraction_confidence": "high",
+      "extraction_notes": "motivation is explicit in abstract and introduction; paper also discusses business stakes in limitations/future work"
+    },
+    {
+      "paper_id": "f9e5b6ee139d",
+      "silos": [
+        "credit_lending",
+        "fraud_detection",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames the financial problem as binary classification in financial services, with use cases including fraud detection, default prediction, credit scoring, and loan approval. It focuses on improving the quality and robustness of predictive models for these tasks.",
+      "classical_baseline": "The paper treats classical kernel methods and classical multiple kernel learning as the main baseline, especially SVMs built with RBF kernels and classical MKL. It also compares against single-kernel quantum models as a simpler state-of-the-art reference.",
+      "classical_difficulty": "The paper says that choosing a suitable kernel for a classical dataset is difficult, and that using a single arbitrary kernel may not fit a given dataset well. It also says kernel-based methods require finding the right kernel, and that quantum kernel methods can suffer from expensive iterative optimization, barren plateaus, overfitting, and exponential concentration as the number of qubits grows.",
+      "business_stakes": "The paper explicitly says that better discrimination quality matters for both business and customers because it increases true positives and reduces false positives. It also frames the work as potentially useful for industrial fraud-detection workflows and profitable near-term quantum utility in financial services.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly finance-framed but still method-heavy."
+    },
+    {
+      "paper_id": "ff36740b3b52",
+      "silos": [
+        "credit_lending",
+        "quantum_ml_finance"
+      ],
+      "problem_statement": "The paper frames credit risk assessment in lending as a core banking decision problem, and says traditional methods struggle to keep up with the complexity and rapid change of modern financial markets. It also argues that different loan categories have distinct characteristics and risk profiles, so the model should support row-type-dependent, more granular prediction.",
+      "classical_baseline": "The paper treats conventional credit risk assessment methods, including logistic regression and decision trees, as the classical baseline. It also contrasts its approach with traditional methods that rely on historical data and predefined risk categories.",
+      "classical_difficulty": "The paper says classical credit risk methods are limited by their dependence on historical data and static categories, which makes them inadequate for volatile markets and less precise in prediction. It also says machine-learning alternatives still face challenges from large labeled-data requirements, generalization to novel scenarios, and issues of interpretability, computational cost, and scalability.",
+      "business_stakes": "The paper says better credit risk analysis can improve lending decisions, reduce default rates, and support fair lending compliance. It also links the model to broader banking uses such as fraud detection and portfolio management.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is partly algorithmic but does state classical limitations and banking stakes clearly."
+    }
+  ]
+}

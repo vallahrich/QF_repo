@@ -1,0 +1,688 @@
+{
+  "silo": "trading_execution",
+  "generated_at": "2026-04-26T13:17:37.367497+00:00",
+  "prompt_template_version": "f2_v1",
+  "prompt_text": "# F2 — per-silo finance-framing aggregation\n\nYou are aggregating per-paper financial-framing extractions (the F1\noutput of the s6_silo_framing pipeline) into a per-silo synthesis.\nThe synthesis will be used as input to a researcher-authored finance\npreface for the silo chapter (Chapter 6 of the thesis).\n\n## Source\n\nYou will be given:\n- `silo` — the silo name (one of: portfolio_optimization,\n  derivative_pricing, risk_management, quantum_ml_finance,\n  fraud_detection, trading_execution, credit_lending,\n  simulation_monte_carlo)\n- `silo_paper_set` — the canonical list of paper_ids belonging to this\n  silo (used to validate your `*_supporting_paper_ids` outputs)\n- `coverage_stats` — pre-computed counts of how many papers in the silo\n  have each F1 field populated (you do NOT need to recount; trust these\n  numbers)\n- `f1_records` — a JSON array of F1 extractions, one per paper. Each\n  record contains:\n    paper_id, silos, problem_statement (or null),\n    classical_baseline (or null), classical_difficulty (or null),\n    business_stakes (or null), extraction_confidence, extraction_notes\n\nVerbatim quote evidence supporting each F1 statement was verified\nupstream against the original PDF text and is persisted alongside the\nrecords in `extractions/papers/{paper_id}.json`. You do not need to\nre-verify the prose — synthesise across what the F1 records say.\n\n## Task\n\nProduce ONE per-silo aggregation that synthesises across the F1 records\nand answers four questions for the silo as a whole:\n\n1. **What is the financial problem this silo addresses?** (Q1)\n2. **What classical baseline / state-of-the-art does the corpus treat\n   as the comparator?** (derived Q3)\n3. **Why is the problem hard classically?** (Q2)\n4. **What business stakes does the corpus mention?** (derived Q4 — may\n   be sparse; silence is a finding)\n\nFor each question, write 2–4 sentences in your own words that summarise\nthe dominant patterns and tensions across the silo. Then list the\n`paper_ids` that support each synthesised claim. Finally, produce a\nsingle `draft_finance_brief` of 200–400 words that the researcher can\nuse as a starting point for §(0) of the silo chapter.\n\n## Output schema\n\nReturn ONE JSON object with exactly these fields:\n\n```json\n{\n  \"silo\": \"<silo name>\",\n  \"synthesised_problem_statement\": \"<2-4 sentences>\",\n  \"problem_statement_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"synthesised_classical_baseline\": \"<2-4 sentences>\",\n  \"classical_baseline_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"synthesised_classical_difficulty\": \"<2-4 sentences>\",\n  \"classical_difficulty_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"synthesised_business_stakes\": null | \"<2-4 sentences>\",\n  \"business_stakes_supporting_paper_ids\": [\"<paper_id>\", \"...\"],\n  \"silo_silence_flags\": [\"<short string>\", \"...\"],\n  \"draft_finance_brief\": \"<200-400 word paragraph>\"\n}\n```\n\n## Rules\n\n1. **Every supporting_paper_id must exist in `silo_paper_set`.** Any\n   paper_id you cite must be a paper_id that appears in the F1 records\n   you were given for this silo. The downstream sanitiser will drop\n   hallucinated IDs.\n\n2. **Cite only papers that actually support the claim you make.** Do\n   not pad supporting lists. 5–15 paper_ids per field is typical. If\n   only 3 papers support a specific claim, cite only those 3.\n\n3. **Synthesise dominant patterns; do not list every paper.** The\n   reader can see the F1 records; your job is to find the throughline.\n   Quote-level detail belongs in F1, not F2.\n\n4. **Acknowledge tensions when they exist.** If half the silo frames\n   the problem one way and half another, say so explicitly. Do not\n   force a single thesis where the corpus is divided.\n\n5. **Silence is a finding.** If `coverage_stats.n_papers_with_business_stakes`\n   is low (e.g. < 30%), that is itself a finding — record it in\n   `silo_silence_flags` and consider returning `null` for\n   `synthesised_business_stakes` if the populated records do not\n   converge on a coherent stake.\n\n6. **Do not import outside knowledge.** Synthesise only what the F1\n   records say. Do not import textbook context, do not introduce claims\n   that are not present in any F1 record.\n\n7. **`draft_finance_brief` must be self-contained prose.** It is not a\n   paraphrase of the four synthesised paragraphs. It is a researcher-\n   ready paragraph that names the financial problem, sketches the\n   classical baseline and difficulty, mentions stakes if substantively\n   present, and signals the tensions or silences. 200–400 words.\n   Academic register, no bullet points, no citation marks.\n\n8. **Output ONLY the JSON object.** No markdown wrapping, no prefatory\n   text, no commentary.\n\n## What to avoid\n\n- Generic summaries that could apply to any silo (\"quantum methods are\n  promising but face challenges\")\n- Listing every method tried by the silo (that is s4 thematic\n  synthesis territory, not s6 framing)\n- Inflating supporting_paper_id lists with weakly-related papers\n- Writing the draft_finance_brief as a thesis abstract — it should be\n  a finance preface, leading with the financial problem\n- Returning a single-sentence synthesis when the corpus contains 100+\n  papers worth of nuance\n",
+  "silo_paper_set": [
+    "00c17032f4af",
+    "0d70169cb87f",
+    "0e18f027f93b",
+    "1993ad0237f3",
+    "19cfac96e8fe",
+    "1f628b8e78f9",
+    "2322e385b8e7",
+    "25a848404367",
+    "25da778231cf",
+    "2ae3455aa47b",
+    "2b34eb642f89",
+    "30c35313cb34",
+    "32f6aa86e556",
+    "381642996201",
+    "3adb18321a79",
+    "48fad011ea47",
+    "4e492b86e6c7",
+    "4ee4d5f63858",
+    "5081ec6b6068",
+    "5bb38201b7ae",
+    "6377e377053e",
+    "64111b3b5d61",
+    "6fe2aeb67e66",
+    "7a159ec77866",
+    "7ea4faff382d",
+    "88e7d870aeb0",
+    "8a2ce0575ff1",
+    "8d08019fb608",
+    "8fccc6cb2db6",
+    "9be7c1fe15c2",
+    "a7b3e49448d1",
+    "ac9a031452bb",
+    "bc172c83a778",
+    "c7b77a40d1ea",
+    "ca17c4baa8d1",
+    "cde1c896dc3c",
+    "dca63675e36a",
+    "e36d3ea67d07",
+    "e71143fc75ea",
+    "f3998e794c14",
+    "f88bb4cc0c22",
+    "ff62c3dd3f66"
+  ],
+  "n_papers_in_silo_projection": 43,
+  "coverage_stats": {
+    "n_papers_in_silo_with_f1": 42,
+    "n_papers_with_problem_statement": 41,
+    "n_papers_with_classical_baseline": 41,
+    "n_papers_with_classical_difficulty": 41,
+    "n_papers_with_business_stakes": 37,
+    "confidence_distribution": {
+      "high": 37,
+      "medium": 4,
+      "low": 1
+    }
+  },
+  "f1_records": [
+    {
+      "paper_id": "00c17032f4af",
+      "silos": [
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames currency arbitrage as finding profitable cycles in exchange-rate data, where short-lived discrepancies can be exploited for risk-free profit. It emphasizes that the practical task is to identify valid trading cycles in real time.",
+      "classical_baseline": "The paper treats traditional graph-based algorithms and linear/mixed-integer programming as the classical approaches for currency arbitrage, and it benchmarks against Gurobi and Tabu Search as strong classical solvers. It also references classical negative-cycle detection as the standard modeling idea.",
+      "classical_difficulty": "The paper says the main classical difficulty is that opportunities are fleeting, so profitable arbitrage requires fast, scalable, and accurate optimization. It also states that classical methods struggle with execution time as the problem scales to realistic market scenarios, and that Gurobi grows exponentially with problem size in their comparison.",
+      "business_stakes": "The paper says execution time is critical for currency arbitrage and that real-time arbitrage must run within microseconds to milliseconds. It frames low-latency execution as important for practical, industry-level use.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper also states latency stakes in conclusion."
+    },
+    {
+      "paper_id": "0d70169cb87f",
+      "silos": [
+        "quantum_ml_finance",
+        "risk_management",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames large-scale financial forecasting as the core problem: predicting asset returns, volatility, liquidity metrics, and order-flow behavior across many instruments for uses such as pricing, risk management, algorithmic trading, and portfolio construction. It also treats multi-horizon liquidity and order-flow forecasting as a task that supports execution algorithms, alongside volatility and VaR forecasting for risk management.",
+      "classical_baseline": "The paper treats classical machine learning and deep learning as the baseline state of the art, including ensemble trees, recurrent networks, attention models, and standard statistical time-series methods. It explicitly lists ARIMA/GARCH, state-space/Kalman filters, XGBoost/LightGBM, random forests, LSTM/GRU, Transformers/TFT, and hybrid CNN-LSTM as the classical comparators.",
+      "classical_difficulty": "The paper says classical methods face limits in sample efficiency, feature expressivity for extremely high-dimensional inputs, and certain kernel-like inference problems at scale. It also notes that classical models often require extensive labeled data, careful feature engineering, and robust regularization to avoid overfitting in non-stationary markets, and that some statistical methods struggle to incorporate large heterogeneous features across many assets.",
+      "business_stakes": "The paper says the forecasting problem matters because it underpins pricing, risk management, algorithmic trading, and portfolio construction. It also states that financial models influence capital and customer outcomes, and that realistic evaluation must account for transaction costs, slippage, and regulatory transparency requirements.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and broad; paper is a comparative framework/review with clear classical baselines and practical finance stakes."
+    },
+    {
+      "paper_id": "0e18f027f93b",
+      "silos": [
+        "portfolio_optimization",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames portfolio management as two linked decisions: selecting which assets to hold and deciding when to rebalance toward target weights. It says these decisions should be handled jointly to maximise risk-adjusted return net of transaction costs.",
+      "classical_baseline": "The paper treats the classical baseline as the standard Markowitz-style separation of portfolio weighting from a fixed rebalancing rule, such as calendar-based or threshold-based schedules. It also compares against classical weight constructions including minimum-variance and equal-weight portfolios, plus a genetic-algorithm weight method with periodic or threshold rebalancing.",
+      "classical_difficulty": "The paper says the classical difficulty is that separating weighting from scheduling ignores the interaction between weight drift and rebalancing cost, and that fixed schedules waste transaction budget on unnecessary trades while missing beneficial opportunities. It also states that the rebalancing schedule problem becomes combinatorially large, with brute force requiring evaluation of all binary strings and the search space growing exponentially as the number of candidate dates increases.",
+      "business_stakes": "The paper explicitly ties the problem to transaction costs and risk-adjusted performance. It also says the goal is to reduce unnecessary trading and that the proposed approach yields lower transaction costs while improving Sharpe ratio.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and quantum-advantage discussion; framing is mainly about portfolio rebalancing and transaction-cost-aware trading."
+    },
+    {
+      "paper_id": "1993ad0237f3",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as a set of computational problems involving uncertainty in future asset behavior, including portfolio optimization, credit scoring, fraud detection, derivative pricing, and risk analysis. It emphasizes that these tasks often require large-scale computation and can benefit from faster quantum methods.",
+      "classical_baseline": "The paper treats classical optimization, machine learning, and Monte Carlo sampling as the standard approaches in quantitative finance. It also explicitly names classical linear programming, simulated annealing, the Black-Scholes-Merton model, and Monte Carlo sampling as the classical baselines for specific problems.",
+      "classical_difficulty": "The paper says several finance problems are hard for classical computers because they are NP-hard, require many runs or large numbers of high-dimensional operations, and become more expensive as data grows. It also notes that Monte Carlo methods need many samples for accuracy and that some models are less accurate for short times.",
+      "business_stakes": "The paper says faster quantum methods could bring large savings for governments, financial institutions, and individuals, and that faster algorithms would be highly disruptive to the industry. It also mentions practical consequences for banks in lending and for financial institutions managing risk.",
+      "extraction_confidence": "high",
+      "extraction_notes": "review paper with broad finance framing; motivation is explicit in abstract and introduction"
+    },
+    {
+      "paper_id": "19cfac96e8fe",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames financial trading as a sequential decision-making problem in volatile, non-stationary markets with many macroeconomic signals and regime shifts. It focuses on weekly S&P 500 trading and asks whether a reinforcement-learning agent can learn better trading decisions when augmented with quantum circuits and one-week-ahead forecasting signals.",
+      "classical_baseline": "The paper compares its quantum approach against classical A3C, and also against a random policy baseline. It treats classical A3C as the main non-quantum state of the art for the trading task.",
+      "classical_difficulty": "The paper says classical trading methods struggle in non-stationary markets, and specifically that classical A3C may not have enough representational capacity for complex financial time-series dependencies. It also notes that classical A3C without predictive signals converges more slowly and has higher variance.",
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly framed around trading performance and learning stability, with limited broader business-stakes discussion."
+    },
+    {
+      "paper_id": "1f628b8e78f9",
+      "silos": [
+        "quantum_ml_finance",
+        "risk_management",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the problem as forecasting and decision-making in financial markets, specifically comparing quantum and classical machine learning on directional return prediction, live-trading simulation, and realized volatility forecasting. It asks whether, given identical inputs, quantum ML models can deliver more accurate forecasts or better trading outcomes than classical counterparts.",
+      "classical_baseline": "The classical baselines are architecture-matched machine learning and econometric methods: ANNs for directional classification, LSTMs for live trading, SVR for volatility forecasting, and GARCH as an additional standard baseline for volatility. The paper treats these as the established methods to compare against the quantum models.",
+      "classical_difficulty": "The paper says classical methods can be limited by linearity, nonlinear market structure, overfitting in low-data regimes, poor generalization under market shifts, and feature-engineering demands. For volatility, it says standard linear time-series models fail to capture changing variance over time, and that kernel methods are used because linear SVR is limited in capturing nonlinear dependencies.",
+      "business_stakes": "The paper explicitly ties the tasks to trading signals, portfolio exposure, transaction costs, and risk-adjusted profitability. It says directional models are used for basic trading and risk signals, volatility forecasting informs position sizing and risk management, and live trading is evaluated net of trading costs and against buy-and-hold.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is a benchmark study with clear classical baselines and trading/risk framing."
+    },
+    {
+      "paper_id": "2322e385b8e7",
+      "silos": [
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames crypto-currency intra-exchange arbitrage as an optimization problem: find a closed trading loop across multiple currencies that maximizes profit. It focuses on scaling the problem from three assets to five assets and on finding the global best path rather than a merely feasible local one.",
+      "classical_baseline": "The paper treats classical optimization as the baseline, especially the classical method that solves the arbitrage problem by brute force. It also compares against COBYLA as a commonly used classical optimizer within the VQE setup.",
+      "classical_difficulty": "The paper says the classical approach scales poorly because it tries all possible combinations, so the search space grows exponentially as more crypto-assets are added. It also notes that the problem can have many local minima, making it hard to find the global optimum.",
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and finance-specific; classical difficulty is stated directly in the introduction and optimization sections."
+    },
+    {
+      "paper_id": "25a848404367",
+      "silos": [
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames currency arbitrage as finding profitable trading routes by exploiting price discrepancies in exchange rates across markets. It treats the task as an optimal path search in a directed graph of currencies and exchange rates, with the goal of identifying a closed cycle that maximizes profit while keeping risk low.",
+      "classical_baseline": "The paper identifies the classical baseline as the Bellman-Ford algorithm for detecting arbitrage opportunities by finding negative cycles in a graph of exchange rates. It also contrasts its approach with classical optimization and solver-based methods used to search for the best cycle.",
+      "classical_difficulty": "The paper says the problem is a combinatorial optimization challenge that requires efficient algorithms for prompt decision-making. It also states that the QUBO formulation is mathematically sophisticated and that the gate-based implementation becomes difficult because deeper and wider circuits are more vulnerable to noise, decoherence, and gate errors.",
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is algorithmic but does state trading/profit framing and implementation difficulty."
+    },
+    {
+      "paper_id": "25da778231cf",
+      "silos": [
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as one of several major application areas where quantum computing has been applied. In the finance section, it highlights secure digital payments with quantum tokens and algorithmic bond trading as the financial problems being addressed.",
+      "classical_baseline": "For digital payments, the paper contrasts quantum tokens with traditional payment systems that rely on double-entry bookkeeping and network confirmations. For bond trading, it compares the quantum-enabled approach against traditional techniques and classical methods used on production-scale trading data.",
+      "classical_difficulty": "The paper says the classical side is limited by the need to prevent double-spending through bookkeeping and confirmations, and that classical techniques can miss hidden pricing signals in noisy market data. It also presents the bond-trading task as a practical issue in complex real-time market conditions and risk assessments.",
+      "business_stakes": "The paper says quantum tokens are intended to prevent forgery and enable almost instant settlement, and that the bond-trading application provides a competitive advantage in financial services. It also emphasizes faster secure transaction verification and improved trade-fill prediction in real market conditions.",
+      "extraction_confidence": "medium",
+      "extraction_notes": "Paper is a broad review; finance framing is brief and mostly example-based rather than a dedicated finance motivation section."
+    },
+    {
+      "paper_id": "2ae3455aa47b",
+      "silos": [
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as one of several application areas where variational quantum algorithms may help solve complex problems that are difficult for classical computers. In the finance-specific section, it highlights portfolio optimization, risk analysis, algorithmic trading, and derivative pricing as representative financial tasks.",
+      "classical_baseline": "The paper compares VQA-based finance methods against classical benchmarks such as classical Monte Carlo methods, classical counterparts in trading backtests, standard Black-Scholes models, and classical benchmarks for portfolio optimization. It also explicitly references classical Markowitz mean-variance optimization as the baseline for portfolio optimization.",
+      "classical_difficulty": "The paper says these financial problems are complex and challenging for classical computers, and that scaling to practical problem sizes remains difficult. It also points to high-dimensional market data, non-normal and highly correlated financial data, and the need for more robust error mitigation as practical obstacles, while noting that current gate error rates limit circuit depth.",
+      "business_stakes": "The paper suggests the stakes are reliable financial decision-making and practical deployment in high-frequency trading and institutional finance. It also implies that better tail-risk modeling and faster risk calculations matter for real-world financial use.",
+      "extraction_confidence": "medium",
+      "extraction_notes": "Review paper with brief finance framing; finance appears mainly in one dedicated subsection and a few summary mentions, with limited classical-difficulty detail."
+    },
+    {
+      "paper_id": "2b34eb642f89",
+      "silos": [
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as an Asset Exchange Problem in which multiple individuals or institutions seek mutually beneficial exchanges of assets across a network. It emphasizes cooperative, multi-party exchange settings such as portfolio and cryptocurrency trading, where participants want to identify exchanges that benefit all parties.",
+      "classical_baseline": "The paper treats traditional exchange and portfolio methods as the baseline, including pairwise swap transactions, double-sided exchanges, and traditional portfolio optimization with reserve currency or intermediaries. It also contrasts its approach with standard network flow algorithms for the basic formulation and with classical mathematical formulations that are not flexible enough for more complex variants.",
+      "classical_difficulty": "The paper says the complex combinatorial exchange trading problem is NP-complete, and that adding constraints increases the complexity further. It also says standard network flow algorithms do not adapt well to more complex AEP variants, and that present-day quantum computers are limited by small qubit counts, so only small AEP problems can be handled.",
+      "business_stakes": "The paper says the exchanges can reduce transaction fees, improve liquidity, and support trustless or disintermediated trading. It also suggests relevance for real-world liquidity needs and for financial institutions executing large basket trades.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is spread across abstract, introduction, and examples; paper is tutorial-like and mixes finance with broader exchange applications."
+    },
+    {
+      "paper_id": "30c35313cb34",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as portfolio optimization and related financial decision-making under increasing market complexity, including risk assessment and asset allocation. It also treats derivative pricing, credit risk assessment, and scenario analysis as connected financial tasks that quantum computing may help address.",
+      "classical_baseline": "The paper treats classical portfolio theory and Monte Carlo simulation as the main baseline, especially Markowitz’s Modern Portfolio Theory and traditional computational models. It also references classical optimization methods for asset allocation and risk assessment as the approaches quantum computing is meant to complement or improve upon.",
+      "classical_difficulty": "The paper says the classical approaches struggle with scalability, computational complexity, and market uncertainty. In particular, they require large computational resources for high-dimensional problems and Monte Carlo methods can be very demanding for complex instruments.",
+      "business_stakes": "The paper suggests that the stakes include faster decision-making, improved risk management, and broader impacts on financial markets. It also mentions regulatory and ethical concerns as practical issues for adoption.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and centered on portfolio optimization; paper also broadens to risk, pricing, credit risk, and fraud detection in later sections."
+    },
+    {
+      "paper_id": "32f6aa86e556",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the core financial problem as the need to speed up backtesting and forward testing of quantitative finance models, especially when the data are large, noisy, and changing with market conditions. It also presents this as relevant to trading, portfolio optimization, and risk management.",
+      "classical_baseline": "The paper treats classical computing as the baseline for running financial model tests, using standard financial modeling tools on high-performance classical hardware. It compares QFOQs against traditional classical computing approaches in finance.",
+      "classical_difficulty": "The paper says the classical approach is hard because backtesting and forward testing are computationally intensive, and classical computing struggles with the complexity and speed needed for real-time financial applications. It also emphasizes that financial data are noisy and that variable market conditions make the task harder.",
+      "business_stakes": "The paper says faster and more accurate testing could improve real-time trading, reduce latency, support more frequent recalibration, and help firms manage risk and compliance in volatile markets. It also mentions competitive advantage and better decision-making for financial institutions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit but heavily promotional and repetitive; framing centers on backtesting/forward testing rather than a single canonical finance task."
+    },
+    {
+      "paper_id": "381642996201",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames high-frequency trading anomaly detection as a financial analytics problem: HFT data are large, fast, and high-dimensional, and the goal is to detect abnormal market behavior early so the trading system remains effective. It also treats predictive analytics for HFT as part of the same problem space.",
+      "classical_baseline": "The paper compares quantum VAEs against classical VAEs as the baseline method for anomaly detection in HFT. It also references earlier conventional statistical, heuristic, and machine-learning approaches as prior methods, but the direct benchmark in the study is the standard classical VAE.",
+      "classical_difficulty": "The paper says classical anomaly detection methods have not kept up with the increasing complexity and size of HFT data. It emphasizes high dimensionality, rapidly changing markets, large trading volumes, and the need for real-time processing as the main difficulties, and says conventional deep learning and machine-learning models struggle to capture the data dynamics.",
+      "business_stakes": "The paper says missed anomalies can expose markets to potentially catastrophic financial loss, and that anomaly detection matters for fraud, manipulation, system failures, risk management, and better trades. It also says timely and accurate detection is important for market integrity and decision-making.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly framed around HFT anomaly detection and compares quantum vs classical VAE."
+    },
+    {
+      "paper_id": "3adb18321a79",
+      "silos": [
+        "portfolio_optimization",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the target problem as quantitative trading for high-frequency statistical arbitrage: given long historical price data for many stocks, it aims to select stocks or portfolios that are cointegrated. It describes the workflow as first preselecting multicollinear portfolios and then verifying cointegration.",
+      "classical_baseline": "The paper treats classical statistical-arbitrage processing as repeated matrix factorization, linear regression, and cointegration testing. It also cites a classical benchmark of O(N 2d) for the overall task and O(N 3) for the preselection procedure.",
+      "classical_difficulty": "The paper says the classical approach is hard because the data size can be huge, the method requires many linear regressions and cointegration tests, and the resulting complexity grows very quickly. It specifically notes that high-frequency trading needs very fast computation and that the problem size in U.S. stock markets can exceed N = 10^7, making the classical benchmark very large.",
+      "business_stakes": "The paper emphasizes latency and speed requirements in high-frequency trading, and says the strategy is used by hedge funds. It also frames the method as relevant to real market-scale data in U.S. stock markets.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract/introduction and includes both portfolio-selection and trading-execution latency framing; paper is algorithmic but does state classical difficulty clearly."
+    },
+    {
+      "paper_id": "48fad011ea47",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the task as predicting financial markets and developing an optimal trading strategy in the presence of market complexity and volatility. It also treats the trading problem as making decisions under uncertainty and partial observability in financial markets.",
+      "classical_baseline": "The paper contrasts its approach with traditional computational finance methods, classical volatility models such as GARCH, deep learning models like RNNs, LSTMs, and Transformers, and the buy-and-hold trading benchmark. It also compares against DDPG in the experiments.",
+      "classical_difficulty": "The paper says classical approaches struggle because financial markets are complex, volatile, noisy, and non-stationary, which makes prediction and risk management difficult. It also states that traditional methods face computational-power and algorithm-complexity limits, and that some models require extensive resources or fail to capture nonlinear and extreme market behavior.",
+      "business_stakes": "The paper mentions trading costs and risk-adjusted performance as practical concerns, and frames the work as relevant to investors and real-world financial decision-making. It also emphasizes downside risk management and market-condition realism in backtesting.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper mixes prediction and trading framing, with clear classical baselines and practical trading-cost mention."
+    },
+    {
+      "paper_id": "4e492b86e6c7",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames real-time energy market trading as a dynamic optimization problem: traders must make rapid decisions that balance supply and demand, maximize profitability, and manage risk under market constraints. It says the goal is to build trading strategies that adapt to changing market conditions while remaining feasible and compliant.",
+      "classical_baseline": "The paper treats traditional trading methods and traditional optimization techniques as the baseline, and it also compares against PPO alone as the non-quantum reference point. In the discussion, it contrasts the proposed approach with state-of-the-art methods and conventional trading algorithms.",
+      "classical_difficulty": "The paper says the problem is hard because energy markets are volatile and complex, so strategies must adapt quickly while optimizing multiple objectives. It also says classical optimization can miss the global optimum, and that real-time trading has computational demands that make sophisticated algorithms difficult to deploy.",
+      "business_stakes": "The paper explicitly links the problem to profitability, financial losses, transaction costs, and system stability. It also notes that the strategy must comply with market regulations and operational limitations.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly framed around real-time energy trading with some broader finance claims."
+    },
+    {
+      "paper_id": "4ee4d5f63858",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the task as predicting stock price movement, specifically whether a stock will go up or down, using financial market data and indicators. It treats this as a stock price prediction and binary classification problem for several companies.",
+      "classical_baseline": "The paper compares quantum methods against classical stock prediction approaches, including statistical models, machine learning algorithms, time-series analysis, and specific classical classifiers such as SVM, decision tree, random forest, KNN, logistic regression, naive Bayes, gradient boosting, and XGBoost.",
+      "classical_difficulty": "The paper says classical methods struggle with vast historical financial data, intricate market dynamics, and rapidly changing conditions. It also notes that current quantum hardware is noisy and limited, and that simulating quantum circuits can require more computational power than available for larger feature sets.",
+      "business_stakes": "The paper links the problem to investment decisions, trading strategies, risk assessment, and financial decision-making. It suggests that better prediction and feature selection could help investors and financial analysts make more informed decisions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is partly algorithmic but does state classical limitations and financial stakes."
+    },
+    {
+      "paper_id": "5081ec6b6068",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the problem as optimizing financial trading strategies in Automated Market Makers and Decentralized Finance, and it studies whether quantum machine learning can outperform classical machine learning in that setting. It also treats feature engineering and model selection as central parts of the trading-strategy optimization problem.",
+      "classical_baseline": "The paper compares quantum approaches against classical machine learning methods, especially Random Forest, Gradient Boosting, Logistic Regression, and in some places Support Vector Machines as the established finance baseline. It also treats classical ensemble methods as the practical benchmark for stable, high-performing trading models.",
+      "classical_difficulty": "The paper says the classical side of the problem is hard because trading strategy optimization in DeFi involves complex nonlinear relationships and market microstructure patterns, and because classical methods depend on rich feature engineering and extensive historical data. It also notes that classical methods face limitations in handling these relationships in DeFi environments.",
+      "business_stakes": null,
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract/introduction; paper is comparative and finance-framed, but business stakes are not discussed beyond trading performance."
+    },
+    {
+      "paper_id": "5bb38201b7ae",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the problem as detecting market patterns in high-frequency trading for banking so that traders and banks can make informed buy/sell decisions in fast-changing markets. It presents this as a way to handle volatile, real-time financial data and improve trading outcomes.",
+      "classical_baseline": "The paper contrasts its approach with conventional methods and classical machine-learning approaches for processing market data and finding patterns. It treats these classical approaches as the baseline for market pattern detection in HFT.",
+      "classical_difficulty": "The paper says the task is hard because it involves huge amounts of statistics, intricate market trends, and considerable facts that are time-consuming and work-intensive to analyze. It also says classical methods struggle with non-linear data, and that the market is dynamic, making accurate prediction and real-time adaptation difficult.",
+      "business_stakes": "The paper says the stakes include missed business opportunities, missed capacities, and the need for banks to make profitable trading decisions. It also mentions that faster and more accurate detection can help banks streamline HFT strategies and gain more income.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; framing is somewhat repetitive and language is awkward, but the financial problem and classical limitations are stated clearly."
+    },
+    {
+      "paper_id": "6377e377053e",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the problem as estimating fill probabilities for RFQ responses in institutional algorithmic bond trading, especially in the European corporate bond market. It treats this as a core ingredient of trading strategy optimization under complex market dynamics and uncertain, sparse, time-dependent information.",
+      "classical_baseline": "The paper compares against common machine learning models used for fill-probability estimation, specifically logistic regression, gradient boosting, random forest, and a feed-forward neural network. It also uses the original classical trading data as the non-quantum baseline input.",
+      "classical_difficulty": "The paper says the task is hard because financial markets have complex dynamics, inherent uncertainty, stochastic multivariate time series, hidden temporal patterns, sparse pricing data, high dimensionality, and limited information. It also says prediction is bounded by time irreversibility and partial observability, and that no universal theory or generalizable theoretical guarantees are available for out-of-sample prediction in this setting.",
+      "business_stakes": "The paper explicitly says better fill-probability estimation can improve execution fidelity, margins, risk management, and future deal flow, and can help avoid undesired transactions. It also mentions low-latency institutional trade optimization settings and regulatory/model-risk-management considerations.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and finance-specific; classical baseline and difficulty are clearly stated in abstract/introduction/conclusion."
+    },
+    {
+      "paper_id": "64111b3b5d61",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": null,
+      "classical_baseline": null,
+      "classical_difficulty": null,
+      "business_stakes": null,
+      "extraction_confidence": "low",
+      "extraction_notes": "paper is a broad book chapter collection; no single finance problem framing is stated for this paper"
+    },
+    {
+      "paper_id": "6fe2aeb67e66",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as finding near-term uses for quantum computing in asset management, especially in portfolio optimization, pricing and risk simulation, targeted machine learning tasks, and trading/routing decisions. It also treats migration to post-quantum cryptography as an immediate security problem for financial firms.",
+      "classical_baseline": "The paper treats strong classical baselines as the standard for judging any quantum pilot. It explicitly compares quantum approaches against the best classical tools for portfolio optimization, pricing and risk, and ML tasks.",
+      "classical_difficulty": "The paper says the hard part is that fully reliable, large-scale quantum machines are not yet available, so current work must rely on small, noisy NISQ devices and hybrid methods. It also notes that data encoding, error mitigation, and end-to-end runtime overhead must be managed, and that some tasks need careful benchmarking because speedups are only meaningful if quality and constraints hold.",
+      "business_stakes": "The paper says firms should act now because attackers can steal encrypted data today and decrypt it later, creating immediate security risk. It also frames the work in terms of ROI, cost, and operational integration, including faster run times, better fills or slippage, and speedups for stress testing.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Practitioner brief with explicit motivation; framing is broad and operational rather than a single research problem."
+    },
+    {
+      "paper_id": "7a159ec77866",
+      "silos": [
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as using quantum computing in finance, especially high-frequency trading and fraud detection, to help optimize services, improve targeting and prediction, reduce risk, and provide security against fraud. It also presents quantum computing as relevant to trade optimization, portfolio rebalancing, and risk profiling in financial services.",
+      "classical_baseline": "The paper treats traditional computers and traditional algorithms as the baseline, and it also refers to existing financial methods such as black-Scholes-Merton for pricing and Monte Carlo simulations for risk analysis. It contrasts quantum computing with these conventional approaches in finance and trading.",
+      "classical_difficulty": "The paper says traditional computing is limited by its bit-based processing and by the need to test many possible connections or solutions sequentially. As the number of variables grows, memory and time demands increase immensely, leading to unrealistic runtimes or inaccurate and costly estimations; it also says Monte Carlo simulations are constrained by scaling of predicted error.",
+      "business_stakes": "The paper says the stakes include better customer service, reduced fraud losses, improved compliance, faster response to market volatility, lower capital needs, and reduced costs from trading and compliance. It also notes that poor fraud detection and data management can cause large revenue losses for financial institutions.",
+      "extraction_confidence": "medium",
+      "extraction_notes": "motivation is broad and somewhat repetitive; paper is largely a general overview with finance examples rather than a focused technical finance study"
+    },
+    {
+      "paper_id": "7ea4faff382d",
+      "silos": [
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the problem as ultra-low-latency decision-making for high-frequency trading in global markets, together with portfolio optimization and short-term market prediction. It says the goal is to support real-time trading strategies that can respond to market changes quickly and handle volatility.",
+      "classical_baseline": "The paper treats classical algorithms, traditional statistical models, and traditional machine learning procedures as the baseline. It also compares against ARIMA, SVM, DNN, and a quantum-inspired optimization approach in its results section.",
+      "classical_difficulty": "The paper says classical methods struggle with scaling, speed, and non-linear market applications, and that classical computers struggle to perform optimization, forecasting, and execution at the extremely low latency required for HFT. It also says classical techniques face challenges in scaling to large portfolios and handling noisy signals.",
+      "business_stakes": "The paper says even slight speed improvements can increase profits in HFT, and that the system is meant to remain competitive in global markets. It also mentions risk-adjusted returns and regulatory compliance as practical concerns.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly framed around HFT latency, prediction, and portfolio optimization."
+    },
+    {
+      "paper_id": "88e7d870aeb0",
+      "silos": [
+        "quantum_ml_finance",
+        "risk_management",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the task as predicting financial markets and optimizing trading strategies for banking and investment management, with an emphasis on portfolio management, trading automation, and risk mitigation. It also presents the setting as one of dynamic, uncertain financial ecosystems where market behavior is hard to model precisely.",
+      "classical_baseline": "The paper compares against traditional statistical tools, classical models, basic machine learning approaches, deep learning methods such as LSTM and Transformer-based models, and the stochastic baseline of Geometric Brownian Motion. In experiments, it also benchmarks against Buy & Hold and DDPG.",
+      "classical_difficulty": "The paper says classical approaches struggle because financial markets are highly variable, nonlinear, and subject to abrupt regime shifts, while conventional predictive mechanisms do not scale well. It also states that deep learning methods require substantial computational effort and are sensitive to data irregularities, and that GBM misses fat-tailed event risks and structural breaks.",
+      "business_stakes": "The paper links the problem to banking and investment management, portfolio management, trading automation, and risk mitigation, and says better drawdown control matters for capital preservation and risk-sensitive deployment. It also notes that future live deployment would need to address latency and brokerage integration.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract, introduction, and conclusion; classical difficulty and business stakes are directly stated."
+    },
+    {
+      "paper_id": "8a2ce0575ff1",
+      "silos": [
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames sector rotation in the Taiwan stock market as a sequential investment decision problem: an agent reallocates capital across industry sectors to maximize long-term investment return. It also frames the task as learning to anticipate which sectors will lead in the near future using sector-level market data.",
+      "classical_baseline": "The paper treats classical reinforcement-learning backbones as the baseline state of the art, specifically LSTM and Transformer models within the same PPO framework. It also contrasts RL against the Markowitz mean-variance optimization framework as a traditional non-RL approach.",
+      "classical_difficulty": "The paper says the task is hard because financial markets are dynamic, noisy, volatile, and non-stationary, and because reward design is difficult: proxy rewards can correlate poorly with true investment objectives. It also notes that classical methods can be static or rule-based and may fail to adapt to changing market conditions.",
+      "business_stakes": "The paper says the task matters because sector rotation is used for generating alpha and managing risk, and because the evaluation focuses on real investment outcomes such as cumulative return, Sharpe ratio, and drawdown. It also explicitly mentions institutional investors in discussing the practical appeal of low drawdown and stable volatility.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly framed around reward-performance misalignment in sector rotation RL."
+    },
+    {
+      "paper_id": "8d08019fb608",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames quantitative finance as a set of use cases where quantum machine learning may help with portfolio optimization, market prediction and trading, pricing, and risk management. It also explicitly includes fraud detection and underwriting among the finance applications it surveys.",
+      "classical_baseline": "The paper treats classical finance and classical machine learning methods as the baseline, including Markowitz mean-variance portfolio optimization, Monte Carlo simulation for option pricing, Black-Scholes for European options, and classical ML methods such as neural networks, SVMs, and regression for prediction and classification tasks. It also compares quantum methods against conventional commercial solvers and classical hedging or risk models in several places.",
+      "classical_difficulty": "The paper says the classical difficulty comes from computational complexity, scaling, and data/market uncertainty. Examples include the need to estimate means and covariances for portfolio optimization, the computational cost of Monte Carlo for complex options, the curse of dimensionality in machine learning and PDE-based pricing, and the fact that market prediction is inherently uncertain. It also notes that some classical methods become computationally expensive on large datasets or in high-dimensional settings.",
+      "business_stakes": "The paper mentions practical stakes such as regulatory requirements in constrained portfolio optimization, capital requirements in risk management, and the need to safeguard financial markets, institutions, and investors from fraud. It also notes that incorrect ML decisions can have serious consequences in financial transactions.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Survey paper with explicit motivation in abstract/introduction and many classical baselines discussed across use cases."
+    },
+    {
+      "paper_id": "8fccc6cb2db6",
+      "silos": [
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames quantum computing as a way to improve several financial-services tasks, especially portfolio construction and risk analysis, and also mentions fraud detection, trading strategies, and derivative pricing. It presents these as operational problems where faster and more accurate computation could help financial institutions.",
+      "classical_baseline": "The paper treats conventional compute resources and manual calculation as the baseline. It contrasts quantum approaches with conventional cloud-based compute resources, and with the current process of choosing among many investment combinations and running Monte Carlo methods classically.",
+      "classical_difficulty": "The paper says the classical difficulty is that these financial tasks are expensive, time-consuming, and complex, with many possible combinations or scenarios to evaluate. It also says the relevant Monte Carlo approach is heuristic rather than exact, and that conventional compute resources are slower than the quantum or quantum-inspired alternatives discussed.",
+      "business_stakes": "The paper says the stakes include better operational efficiency, reduced risk, and faster decision-making for financial institutions. It also suggests that improved quantum capability could materially affect security and trust in financial systems, though this is framed more as cyber-risk than as direct business performance.",
+      "extraction_confidence": "medium",
+      "extraction_notes": "Magazine feature rather than a research paper; framing is broad and mixed across several finance use cases, with some sections focused on cyber-security rather than a single technical problem."
+    },
+    {
+      "paper_id": "9be7c1fe15c2",
+      "silos": [
+        "quantum_ml_finance",
+        "risk_management",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as predicting stock prices and making algorithmic trading decisions in high-frequency trading settings. It says the goal is to improve forecasting, execution speed, and real-time trading decisions under rapidly changing market conditions.",
+      "classical_baseline": "The paper treats statistical analysis, machine learning, and conventional HFT systems as the classical baseline, and it also compares against SVM, LSTM, QSVM, QA, and PCA-based approaches in its related-work and results discussion. It explicitly contrasts the proposed framework with traditional models and conventional techniques.",
+      "classical_difficulty": "The paper says classical methods struggle with large volumes of financial data, real-time demands, computational inefficiency, data-flow bottlenecks, and non-linear market dynamics. It also says these limits create decision delays, ineffective trading, and higher computational costs, especially in high-frequency settings.",
+      "business_stakes": "The paper says the stakes include reducing latency, avoiding slippage and losses, improving capital distribution, and increasing profitability and competitiveness in volatile markets. It also suggests better execution speed matters because traders can capitalize on temporary opportunities.",
+      "extraction_confidence": "high",
+      "extraction_notes": "motivation is explicit in abstract and introduction; paper mixes framing with method claims, but the financial problem and classical limits are clearly stated"
+    },
+    {
+      "paper_id": "a7b3e49448d1",
+      "silos": [
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as a domain with difficult computational tasks in risk management, portfolio allocation, cryptography, financial modeling, and trading-related simulation. It presents quantum computing as a way to address these finance problems and reviews the current state of that convergence.",
+      "classical_baseline": "The paper treats classical computing methods as the baseline, especially high-performance computing, Markowitz mean-variance portfolio optimization, classical Monte Carlo simulation, and conventional cryptosystems such as RSA and ECC. It also contrasts quantum methods with classical heuristics and classical machine learning approaches.",
+      "classical_difficulty": "The paper says classical methods struggle with large-scale combinatorial problems, stochastic simulations, high-dimensional datasets, and computational complexity. It also says Monte Carlo methods are computationally expensive, and that some quantum advantages are still debated or unavailable for many problems.",
+      "business_stakes": "The paper says the stakes include financial security, fraud prevention, and protecting financial data and decentralized financial systems from quantum attacks. It also links the technology to risk evaluation, market forecasting, and high-frequency trading.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Review paper with explicit motivation across abstract, introduction, and conclusion; framing is broad and multi-application rather than one specific finance task."
+    },
+    {
+      "paper_id": "ac9a031452bb",
+      "silos": [
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as using hybrid quantum-classical methods for predictive business intelligence and decision optimization in finance, especially for tasks like financial forecasting, market risk modeling, fraud screening, and portfolio construction. It also treats portfolio construction and related financial decisions as combinatorial optimization problems that must be handled under real-world constraints.",
+      "classical_baseline": "The paper treats classical machine learning, deep learning, and classical optimization as the baseline systems, and in finance it specifically contrasts quantum methods with classical risk assessment models, classical local search, and classical classifiers. It also describes classical post-processing, feasibility repair, and classical solvers as the standard components that remain in place around the quantum subroutines.",
+      "classical_difficulty": "The paper says the classical difficulty comes from exponential growth in combinations, nonlinear and non-separable relationships, non-stationary markets, and latency or scalability limits. For finance specifically, it says classical models can be unstable and opaque on non-stationary markets, and that portfolio construction involves many competing factors and rugged optimization landscapes.",
+      "business_stakes": "The paper explicitly links the financial use cases to real stakes such as reducing false positives and catastrophic false negatives, making earlier informed capital-allocation decisions, and improving robustness under market stress. It also mentions regulatory exposure and transaction costs as part of the portfolio problem.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Paper is broad and architecture-heavy, but it contains explicit finance framing in multiple sections; portfolio/risk/fraud/trading stakes are mentioned alongside general enterprise claims."
+    },
+    {
+      "paper_id": "bc172c83a778",
+      "silos": [
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the financial problem as optimizing portfolios, assessing risk, and improving trading strategies in increasingly complex markets. It also treats financial forecasting and high-frequency trading as optimization problems where faster and more accurate solutions are valuable.",
+      "classical_baseline": "The paper compares against traditional or classical optimization methods, including brute-force searches, heuristics, and classical portfolio optimization methods such as Markowitz’s mean-variance optimization. It also contrasts quantum methods with classical Monte Carlo methods and classical pricing approaches for derivatives.",
+      "classical_difficulty": "The paper says the financial optimization problems grow rapidly in complexity as the number of assets, market variables, and time periods increases, making them computationally intensive and even computationally prohibitive for classical algorithms. It also says classical methods struggle with scaling, combinatorial explosion, and the need for fast, accurate results in real-time settings.",
+      "business_stakes": "The paper says these problems matter because they affect faster decision-making, risk exposure, and profitability in fast-moving markets. It also mentions regulatory requirements for portfolio management and the need to minimize transaction costs and market slippage in trading execution.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Chapter-style review with explicit finance framing in abstract, introduction, and finance section; includes some derivative-pricing and HFT mentions but no deep problem-specific treatment."
+    },
+    {
+      "paper_id": "c7b77a40d1ea",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the task as modeling directional mid-price movements in a limit order book, using observed order-book data to learn the stochastic sequence of up/down mid-price changes. It treats this as a high-frequency financial time-series problem relevant to understanding LOB dynamics.",
+      "classical_baseline": "The paper compares against classical limit-order-book modeling approaches, especially stochastic models and deep learning methods, and also references classical hidden Markov models as the finite-state baseline for stochastic process languages. It presents quantum HMMs as a more parsimonious alternative to classical HMMs.",
+      "classical_difficulty": "The paper says the rank of the Hankel matrix can be hard to infer from data, calling it undecidable, and notes that large state spaces may be computationally intractable. It also says longer sequences are rare, so their probabilities cannot be estimated well, and that the rank of the Hankel matrices grows exponentially with sequence length in the studied data.",
+      "business_stakes": "The paper explicitly links LOB models to trading and market-making success, and says the models contribute to theories of price formation and supply-demand dynamics. It also emphasizes the millisecond scale of order submission and execution, which makes the setting latency-sensitive.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in the introduction and conclusion; paper is primarily methodological but does state the financial framing clearly."
+    },
+    {
+      "paper_id": "ca17c4baa8d1",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as a set of hard computational problems involving portfolio selection, market prediction, derivative pricing, and risk assessment. It emphasizes that these tasks arise under uncertainty and stochastic market behavior, and that quantum computing may help address them.",
+      "classical_baseline": "The paper treats classical optimization, classical machine learning, and Monte Carlo simulation as the baseline approaches in finance. It also explicitly names the Black–Scholes-Merton model and classical linear programming as classical methods for option pricing and straightforward portfolio problems.",
+      "classical_difficulty": "The paper says classical methods become expensive or impractical as the problems get larger or more complex. It describes portfolio optimization as NP-hard, notes that Monte Carlo methods require many runs, and says several finance tasks need significant processing power that worsens with more data.",
+      "business_stakes": "The paper says these methods matter because they can save money and support real financial decision-making. It also mentions regulatory compliance and the need for real-time, low-latency applications such as high-frequency trading and dynamic portfolio rebalancing.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Review paper with broad finance framing; motivation is explicit in abstract, introduction, and conclusion."
+    },
+    {
+      "paper_id": "cde1c896dc3c",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as a broad set of machine-learning use cases that may benefit from quantum computing, especially regression, classification, clustering, generative modeling, feature extraction, reinforcement learning, and NLP. It emphasizes that these tasks arise in applications such as asset pricing, portfolio optimization, credit scoring, fraud detection, algorithmic trading, market making, and financial forecasting.",
+      "classical_baseline": "The paper treats standard classical machine-learning and optimization methods as the baseline, including least-squares regression, Lasso, linear classification, nearest-centroid and k-NN classifiers, SVMs, k-means, classical Monte Carlo for simulation-related tasks, and classical reinforcement learning for trading and market making. It also explicitly compares against classical approaches such as the Fama-French five-factor model, buy-and-hold, and classical regression methods in some examples.",
+      "classical_difficulty": "The paper says the main classical difficulties are the complexity of the algorithms, the size of the data, and the cost of training or calibration. It also notes that data loading and output extraction for quantum methods are still hard, and that some quantum algorithms require conditions or customizations that make end-to-end speedup nontrivial.",
+      "business_stakes": "The paper says finance is expected to be an early beneficiary of quantum computing and that some applications matter for risk management, portfolio hedging, option pricing, liquidity, and credit decisions. It also mentions that financial forecasting helps businesses adapt to uncertainty and that market making increases exchange liquidity.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Review paper with broad finance framing; motivation is explicit in abstract/introduction and restated in conclusion."
+    },
+    {
+      "paper_id": "dca63675e36a",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the task as predicting financial market trends from large, complex financial data. It says this involves analyzing historical and real-time information with non-linear, multivariable interactions, and it extends the framing to stock prices, technical indicators, macroeconomic factors, and trading/risk applications.",
+      "classical_baseline": "The paper compares against conventional machine learning and deep learning methods, especially CNNs, LSTMs, and transformer models. It also treats classical deep learning as the baseline for financial forecasting and algorithmic trading evaluation.",
+      "classical_difficulty": "The paper says classical methods struggle with overfitting, high computational cost, and long-range dependencies in time-series data. It also says existing models misbehave on time series and do not handle non-stationary financial values well.",
+      "business_stakes": "The paper says the approach is relevant to algorithmic trading, risk evaluation, portfolio management, and risk management, including identifying stock volatility and the likelihood of a market crash. It also frames the goal as improving trading execution and reducing costs and power use.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit in abstract and introduction; paper is strongly application-framed and repeatedly compares against classical deep learning baselines."
+    },
+    {
+      "paper_id": "e36d3ea67d07",
+      "silos": [
+        "fraud_detection",
+        "risk_management",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames the problem as making real-time decisions under uncertainty with probabilistic databases, especially when the data are high-dimensional and have complicated correlations. It also says this matters for finance-related tasks such as risk assessment, fraud detection, and algorithmic trading.",
+      "classical_baseline": "The classical baseline is probabilistic databases and classical Bayesian inference, including Bayesian inference, Markov models, and Monte Carlo simulation. The paper also compares against classical heuristic and metaheuristic algorithms for optimization.",
+      "classical_difficulty": "The paper says the classical approach is computationally inefficient, especially as uncertainty and data complexity grow. It specifically states that probabilistic query processing is NP-hard, that high-dimensional correlations are difficult to model, and that real-time updates add overhead that makes classical systems infeasible for dynamic decision support.",
+      "business_stakes": "The paper says the stakes are real-time risk assessment, fraud detection, and algorithmic trading in finance, where decisions must be made quickly under changing probabilities. It also mentions risk mitigation and real-time decision support as practical goals.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Motivation is explicit and repeated across abstract, introduction, and related work; paper is broad DSS framing with finance as one application area."
+    },
+    {
+      "paper_id": "e71143fc75ea",
+      "silos": [
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames currency arbitrage in the foreign exchange market as a graph-based optimization problem: find profitable exchange cycles in a currency network. It specifically models bid and ask rates to capture more realistic trading conditions and arbitrage profitability.",
+      "classical_baseline": "The paper treats Bellman–Ford and linear programming as the classical approaches for arbitrage detection, and also presents binary integer programming as a classical optimization formulation. These are the methods it compares against conceptually before moving to QAOA-based optimization.",
+      "classical_difficulty": "The paper says the classical difficulty comes from NP-completeness, rapid growth of the search space, and poor scaling on large currency graphs. It also notes practical limitations from market frictions, transaction costs, and rapidly changing rates.",
+      "business_stakes": "The paper says the financial relevance is that the method aims to recover arbitrage profit in FX trading, and that leaving profit unexploited is negligible only when the gap is under one basis point. It also ties the problem to transaction costs, bid–ask spreads, and practical feasibility on real-time or larger FX networks.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Clear motivation in abstract and introduction; classical difficulty and business stakes are explicitly stated."
+    },
+    {
+      "paper_id": "f3998e794c14",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames high-frequency trading forecasting as the task of predicting HFT time series from rapidly arriving market data so traders can make timely buy/sell decisions. It emphasizes that the goal is to anticipate future price movements and market direction in a setting where accuracy and speed are critical.",
+      "classical_baseline": "The paper treats conventional time series forecasting methods as the classical baseline, especially statistical models such as ARIMA, GARCH, regression, moving averages, exponential smoothing, VAR and Kalman filter models. It also contrasts these with machine learning and hybrid approaches, but the classical reference point is traditional forecasting methods used in trading.",
+      "classical_difficulty": "The paper says classical methods struggle with the size, volatility, nonlinearity and changing nature of HFT data, and that they may be slow and resource-intensive. It also states that conventional methods assume stationarity, linearity and independence, which often do not hold for real-world financial time series.",
+      "business_stakes": "The paper links HFT forecasting to profit-making, competitive advantage and avoiding financial losses. It says speed and accurate predictions matter for trading outcomes, and that delays or inaccuracies can cause significant losses.",
+      "extraction_confidence": "high",
+      "extraction_notes": "paper is a review with explicit motivation in abstract/introduction/conclusion; framing is clear and finance-specific"
+    },
+    {
+      "paper_id": "f88bb4cc0c22",
+      "silos": [
+        "credit_lending",
+        "derivative_pricing",
+        "fraud_detection",
+        "portfolio_optimization",
+        "quantum_ml_finance",
+        "risk_management",
+        "simulation_monte_carlo",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames finance as a set of data-intensive decision problems where machine learning is used for fraud detection, anti-money laundering, algorithmic trading, credit scoring, financial forecasting, portfolio optimization, risk assessment, and option pricing. It then positions quantum machine learning as a way to address these financial tasks by handling high-dimensional data and complex optimization or simulation problems more efficiently.",
+      "classical_baseline": "The paper treats classical machine learning as the main baseline, alongside traditional rule-based, statistical, and heuristic methods in specific finance tasks. It contrasts QML against classical ML methods such as SVMs, neural networks, gradient descent, evolutionary algorithms, Monte Carlo methods, and classical clustering or trading approaches.",
+      "classical_difficulty": "The paper says classical approaches struggle with scalability, adaptability, interpretability, and real-time performance in finance. It also notes that some financial problems become computationally prohibitive at large scale, that high-frequency trading has extreme latency requirements, and that classical simulation methods can be too slow for complex pricing and risk tasks.",
+      "business_stakes": "The paper explicitly links these methods to financial losses, market efficiency, and regulatory compliance. It says fraud detection lowers financial losses, algorithmic trading affects market liquidity and trading results, and low-latency trading can avoid significant losses; it also notes that better risk simulation can support regulatory compliance.",
+      "extraction_confidence": "high",
+      "extraction_notes": "Review paper with broad finance framing; motivation is explicit but spread across abstract, introduction, and section headings."
+    },
+    {
+      "paper_id": "ff62c3dd3f66",
+      "silos": [
+        "quantum_ml_finance",
+        "trading_execution"
+      ],
+      "problem_statement": "The paper frames financial market prediction as a binary directional forecasting task: given historical observations, predict whether the S&P 500 will close higher or lower the next day. It presents this as a difficult and economically important machine-learning problem because small gains in directional accuracy can matter in trading and risk management.",
+      "classical_baseline": "The paper treats single-model approaches, naive ensembles, and pure quantum approaches as the main classical baselines or prior state of the art. It also explicitly compares against the best individual model and against simple majority/weighted voting ensembles.",
+      "classical_difficulty": "The paper says the problem is hard classically because financial time series are noisy, non-stationary, and affected by adversarial dynamics and regime changes. It also says most models only reach about 55-57% accuracy, and that evaluation is difficult because standard metrics ignore trading costs and published results can suffer from data snooping and bias.",
+      "business_stakes": "The paper explicitly says that even modest improvements in directional accuracy can have substantial economic value, and that forecasting supports risk management, portfolio optimization, and algorithmic trading. It also notes that trading performance must account for transaction costs, slippage, and market impact.",
+      "extraction_confidence": "high",
+      "extraction_notes": "motivation is explicit in abstract and introduction; paper also discusses trading implications and limitations"
+    }
+  ]
+}

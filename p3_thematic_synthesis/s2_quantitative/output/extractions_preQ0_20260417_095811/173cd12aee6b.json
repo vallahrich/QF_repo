@@ -1,0 +1,497 @@
+{
+  "paper_id": "173cd12aee6b",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "173cd12aee6b_a_quantum_algorithm_for_pricing_asian_options_on_valuation_trees.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.95,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 3,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.quantum_resources.cnot_count: {'reported_as_cx': True} is not of type 'integer', 'null'",
+      "Schema error at experiments.0.quantum_resources.gate_count_total: {'single_subcircuit_cx': {'n=2': 67, 'n=3': 141, 'n=4': 243, 'n=5': 473, 'n=6': 847}, 'single_subcircuit_cx_D2_nf5_or_nf8': {'n=2': 89, 'n=3': 187, 'n=4': 337, 'n=5': 663, 'n=6': 1229}} is not of type 'integer', 'null'",
+      "Schema error at experiments.0.quantum_resources.num_shots: {'pathwise_figures': 10000000, 'full_pricing_histograms_per_point': 1000000, 'histogram_points': 100} is not of type 'integer', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.95,
+      "completeness": 0.95,
+      "num_experiments": 1,
+      "experiment_scores": [
+        0.95
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "A Quantum Algorithm for Pricing Asian Options on Valuation Trees",
+    "authors": [
+      "Mark-Oliver Wolf",
+      "Roman Horsky",
+      "Jonas Koppe"
+    ],
+    "year": 2022,
+    "doi": "10.3390/risks10120221"
+  },
+  "finance_domain": {
+    "primary_silo": "derivative-pricing",
+    "secondary_silos": [
+      "simulation-monte-carlo"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Simulation study of a quantum circuit for pricing a discrete floating-strike Asian option on a binomial valuation tree, evaluated path-by-path and then in superposition for n=5 time steps, with varying gearbox approximation levels and Fourier-series truncation.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "Amplitude-based valuation-tree Asian option pricing with gearbox-based positive-part approximation; compatible with quantum amplitude estimation",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "option_type": "discrete floating-strike Asian option",
+          "maturity_T": 1,
+          "zero_interest_rate_r": 0,
+          "volatility_sigma": 0.2,
+          "time_steps_n": 5,
+          "gearbox_approximation_levels_D": [
+            1,
+            2
+          ],
+          "fourier_terms_n_f": [
+            4,
+            5,
+            8
+          ],
+          "shots_per_data_point": 1000000,
+          "histogram_data_points": 100,
+          "pathwise_evaluation_shots": 10000000
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "Paths through the valuation tree are encoded in an N-qubit state register; for the binomial model used in the experiment, one qubit per time step is used, so the state register has n qubits. The underlying values are normalized by M=max_{t_i,k} S_k(t_i) and loaded into amplitudes. The positive part is approximated by a gearbox circuit using RY rotations and a Fourier expansion.",
+        "objective_function": "Estimate C(0) = E[(S(T) - (1/n) sum_{i=1}^n S(t_i))^+]",
+        "constraints_handling": "Positive part implemented approximately via gearbox circuit; no explicit constraints beyond amplitude rescaling and post-processing.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": "ceil(log2(n)) for the mean-payoff subcircuit G, plus additional ancilla qubits for the gearbox circuit Gb_D and readout qubits; exact total depends on D and subcircuit decomposition.",
+        "objective_function_details": {
+          "payoff": "g(x_k)=S(T)-(1/n) sum_i S(t_i)",
+          "indicator": "q(x_k)=1{g(x_k)>0}",
+          "pricing_estimator": "sum_k f(x_k) g(x_k) q(x_k)"
+        }
+      },
+      "problem_instance": {
+        "description": "Rendleman-Bartter binomial model for an Asian option on a valuation tree; all time steps are included in the averaging.",
+        "num_assets": 1,
+        "time_steps": 5,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "model": "Rendleman and Bartter (1979) binomial model",
+          "initial_underlying_S0": 1,
+          "up_down_probabilities": "1/2 each",
+          "up_factor": "u = exp((r - sigma^2/2) Delta t + sigma sqrt(Delta t))",
+          "down_factor": "d = exp((r - sigma^2/2) Delta t - sigma sqrt(Delta t))",
+          "time_grid": "Delta t = T/n",
+          "included_time_points": "t_i = i Delta t, i=1,...,n"
+        },
+        "data_preprocessing_details": "Classically compute the valuation-tree node values S_k(t_i), normalize by M, and map each path to a qubit basis state; for the uniform-superposition experiment, Hadamard gates are used to encode equal path probabilities.",
+        "evaluation_methodology": "Single-path circuit evaluations for all computational basis states, then full pricing with 100 histogram data points; each histogram point is estimated from 10^6 circuit shots. The paper also reports 10^7-shot results for the pathwise approximation figures."
+      },
+      "quantum_resources": {
+        "num_qubits": 13,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": {
+          "single_subcircuit_cx": {
+            "n=2": 67,
+            "n=3": 141,
+            "n=4": 243,
+            "n=5": 473,
+            "n=6": 847
+          },
+          "single_subcircuit_cx_D2_nf5_or_nf8": {
+            "n=2": 89,
+            "n=3": 187,
+            "n=4": 337,
+            "n=5": 663,
+            "n=6": 1229
+          }
+        },
+        "cnot_count": {
+          "reported_as_cx": true
+        },
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": {
+          "pathwise_figures": 10000000,
+          "full_pricing_histograms_per_point": 1000000,
+          "histogram_points": 100
+        },
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": "IBM",
+        "device_name": null,
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "Compute valuation-tree node values classically; normalize underlying values by M; for the binomial model, set the state register to a uniform superposition with Hadamard gates to encode equal probabilities.",
+        "classical_postprocessing": "Rescale measured probability using 2^(2D-1) * 4M * (P_hat - 1/2) to estimate the option price; compare against the exact classically evaluated binomial tree.",
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "price_error",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": null,
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "success_probability",
+          "value": 0.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "success_probability",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "convergence_rate",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "O(1/Ns) in number of circuit executions",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "convergence_rate",
+          "value": 0.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "O(1/sqrt(Ns)) in number of circuit executions",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": 107,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "shots",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": 106,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "shots per histogram data point",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": 100000000,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "total circuit executions for each histogram (100 points × 10^6 shots)",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "asset",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": 13,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "logical qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": 17,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "logical qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": 23,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "logical qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 473,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cX gates per single subcircuit (n=5, D=1 case)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 663,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cX gates per single subcircuit (n=5, D=2 case)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 67,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cX gates per single subcircuit (n=2, D=1 case)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 141,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cX gates per single subcircuit (n=3, D=1 case)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 243,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cX gates per single subcircuit (n=4, D=1 case)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 847,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cX gates per single subcircuit (n=6, D=1 case)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 89,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cX gates per single subcircuit (n=2, D=2 case)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 187,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cX gates per single subcircuit (n=3, D=2 case)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 337,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cX gates per single subcircuit (n=4, D=2 case)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 1229,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cX gates per single subcircuit (n=6, D=2 case)",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical monte carlo",
+          "metric_name": "convergence_rate",
+          "value": 0.5,
+          "unit": "O(1/sqrt(Ns)) in number of samples"
+        },
+        {
+          "method_name": "classical binomial tree valuation",
+          "metric_name": "price",
+          "value": null,
+          "unit": null
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo",
+          "conditions": "if the circuit is used with quantum amplitude estimation and sufficiently large, fault-tolerant hardware",
+          "is_demonstrated": false,
+          "caveats": "The paper states the algorithm is compatible with amplitude estimation and could achieve quadratic speed-up; the reported experiments are simulator-based and do not use amplitude estimation."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 2,
+          "num_qubits": 13,
+          "metric_name": "gate_count_total",
+          "metric_value": 67
+        },
+        {
+          "problem_size": 3,
+          "num_qubits": 15,
+          "metric_name": "gate_count_total",
+          "metric_value": 141
+        },
+        {
+          "problem_size": 4,
+          "num_qubits": 16,
+          "metric_name": "gate_count_total",
+          "metric_value": 243
+        },
+        {
+          "problem_size": 5,
+          "num_qubits": 18,
+          "metric_name": "gate_count_total",
+          "metric_value": 473
+        },
+        {
+          "problem_size": 6,
+          "num_qubits": 19,
+          "metric_name": "gate_count_total",
+          "metric_value": 847
+        },
+        {
+          "problem_size": 2,
+          "num_qubits": 17,
+          "metric_name": "gate_count_total",
+          "metric_value": 89
+        },
+        {
+          "problem_size": 3,
+          "num_qubits": 19,
+          "metric_name": "gate_count_total",
+          "metric_value": 187
+        },
+        {
+          "problem_size": 4,
+          "num_qubits": 20,
+          "metric_name": "gate_count_total",
+          "metric_value": 337
+        },
+        {
+          "problem_size": 5,
+          "num_qubits": 22,
+          "metric_name": "gate_count_total",
+          "metric_value": 663
+        },
+        {
+          "problem_size": 6,
+          "num_qubits": 23,
+          "metric_name": "gate_count_total",
+          "metric_value": 1229
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": "O(1/Ns) convergence for amplitude estimation; circuit state preparation for arbitrary distributions may require exponential gates",
+        "classical_complexity": "O(1/sqrt(Ns)) for Monte Carlo estimation",
+        "speedup_order": "quadratic",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    }
+  ]
+}

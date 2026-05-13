@@ -1,0 +1,2205 @@
+{
+  "paper_id": "7a47e22ecc89",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "7a47e22ecc89_benchmarking_of_quantum_and_classical_computing_in_large_scale_dynamic_portfolio.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.47,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 0,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.quantum_resources.error_correction: None is not of type 'object'",
+      "Schema error at experiments.1.quantum_resources.error_correction: None is not of type 'object'",
+      "Schema error at experiments.2.quantum_resources.error_correction: None is not of type 'object'",
+      "Schema error at experiments.3.quantum_resources.error_correction: None is not of type 'object'",
+      "Schema error at experiments.4.quantum_resources.error_correction: None is not of type 'object'"
+    ],
+    "quality_details": {
+      "score": 0.47,
+      "completeness": 0.47,
+      "num_experiments": 5,
+      "experiment_scores": [
+        0.8,
+        0.8,
+        0.283,
+        0.183,
+        0.283
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 1.0,
+          "results": 0.0,
+          "baselines": 0.0,
+          "problem_instance": 0.3333333333333333
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 0.0,
+          "results": 0.0,
+          "baselines": 0.0,
+          "problem_instance": 0.3333333333333333
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 1.0,
+          "results": 0.0,
+          "baselines": 0.0,
+          "problem_instance": 0.3333333333333333
+        }
+      ]
+    },
+    "validation_passed": true
+  },
+  "paper_metadata": {
+    "title": "Benchmarking of Quantum and Classical Computing in Large-Scale Dynamic Portfolio Optimization Under Market Frictions",
+    "authors": [
+      "Ying Chen",
+      "Thorsten Koch",
+      "Hanqiu Peng",
+      "Hongrui Zhang"
+    ],
+    "year": 2025,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Quantum-ready QUBO benchmark on a medium-sized dynamic portfolio optimization instance with 200 stocks over 10 trading days, evaluated across multiple risk-aversion settings q using ABS2/qoqo and compared against Gurobi BQP baselines.",
+      "algorithm": {
+        "family": "qubo",
+        "variant": "ABS2 on qoqo solver for QUBO portfolio optimization",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": "time limit 3600 s or stopping criterion of ABS2 (e.g., convergence/max iterations/time limit)",
+        "hyperparameters": {
+          "q_values": [
+            0,
+            1e-06,
+            1e-05,
+            5e-05,
+            0.0001,
+            0.0005,
+            0.001,
+            0.01
+          ],
+          "transaction_cost_rate": 0.001,
+          "daily_risk_free_rate": 0.0001,
+          "daily_short_loan_rate": 2.5e-05,
+          "available_capital_C": 10,
+          "maximum_assets_B": 60,
+          "maximum_blocks_per_asset_k": 3,
+          "time_horizon_T": 10,
+          "asset_count_n": 200
+        },
+        "parameter_initialization": "random feasible solution pools",
+        "optimizer_settings": {
+          "time_limit_seconds": 3600,
+          "solution_pools": null,
+          "gpu_parallelization": true
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "Binary variables x_{i,t} for asset positions over time, plus slack binaries y_{c,t} and s_{b,t}; total QUBO size reported as 12,100 variables for n=200, T=10, k=3, B=60, C=10.",
+        "objective_function": "Minimize sum_t [ q * sum_{i,j} p_{i,t} x_{i,t} sigma_{ij,t} x_{j,t} p_{j,t} - sum_i (p_{i,t+1}-p_{i,t}) x_{i,t} - delta * sum_i p_{i,t}(x_{i,t-1}+x_{i,t}-2x_{i,t-1}x_{i,t}) - rho_c u * sum_c 2^c y_{c,t} + rho_s * sum_{i in S} p_{i,t} x_{i,t} + delta * sum_i p_{i,T} x_{i,T} ] + P * sum_t [ (C - sum_i tau_i x_{i,t} - sum_c 2^c y_{c,t})^2 + (B - sum_i x_{i,t} - sum_b 2^b s_{b,t})^2 ]",
+        "constraints_handling": "Quadratic penalty terms for capital and asset-count constraints; short selling handled via tau_i in the cash constraint; transaction costs and liquidation costs included directly in the objective.",
+        "num_binary_variables": 12100,
+        "problem_hamiltonian": "QUBO mapped to Ising Hamiltonian via x_i = (s_i + 1)/2"
+      },
+      "problem_instance": {
+        "description": "Top 200 S&P 500 market-cap stocks over 10 trading days (two weeks), with short selling, transaction costs, and path-dependent cash constraints.",
+        "num_assets": 200,
+        "time_steps": 10,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": "S&P 500 top market-cap stocks",
+        "dataset_specification": {
+          "ticker_symbols": null,
+          "date_range": "2023-10-02 to 2023-10-13",
+          "benchmark_name": "S&P 500 Market Index",
+          "preprocessing": null,
+          "train_test_split": null
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 12100,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "not_specified",
+        "provider": null,
+        "device_name": null,
+        "framework": "qoqo/ABS2"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "Gurobi 11.0",
+        "classical_preprocessing": null,
+        "classical_postprocessing": null,
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": "objective value convergence reported over time",
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 200,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "time_horizon",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "trading_days",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_binary_variables",
+          "value": 12100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "variables",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "q_value",
+          "value": 0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "dimensionless",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -1855197,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -1855197,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 0.22,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -1855197,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 102,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -1839242,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -1839242,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 34,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -1839012,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 0.01,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 210,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -1706529,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -1697030,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 0.56,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 125,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -1701223,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 0.312,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 105,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -1289791,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -1265722,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 1.891,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 3212,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -1269382,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 1.608,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 1191,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -988003,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -950586,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 3.936,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 9591,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -953432,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 3.626,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 1778,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -356010,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -296540,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 20.055,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 10000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -272033,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 30.87,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 3562,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -231724,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -168674,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 37.38,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 10000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -104856,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 120.992,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 3552,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -108821,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -1000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 10782,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 33,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -1000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 10782,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 53,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -1855197,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -1855197,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 0.22,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -1839242,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -1839242,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 34,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -1706529,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -1697030,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 0.56,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 125,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -1289791,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -1265722,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 1.891,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 3212,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -988003,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -950586,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 3.936,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 9591,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -356010,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -296540,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 20.055,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 10000,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -231724,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -168674,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 37.38,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 10000,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -108821,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -1000,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 10782,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 33,
+          "unit": "seconds"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "empirical",
+          "factor": "ABS2 converges faster to good solutions for harder q settings (e.g., ~71 s for q=0.0005 and ~35 s for q=0.001 in text discussion)",
+          "baseline_method": "Gurobi 11.0",
+          "conditions": "medium-sized instance n=200, T=10; challenging risk-aversion settings q=0.0005 and q=0.001",
+          "is_demonstrated": true,
+          "caveats": "Gurobi can achieve slightly better final objective values given longer time limits; ABS2 is faster to a good solution, not necessarily to the best proven bound."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 200,
+          "num_qubits": 12100,
+          "metric_name": "qubo_objective",
+          "metric_value": -1855197
+        },
+        {
+          "problem_size": 200,
+          "num_qubits": 12100,
+          "metric_name": "qubo_objective",
+          "metric_value": -1839012
+        },
+        {
+          "problem_size": 200,
+          "num_qubits": 12100,
+          "metric_name": "qubo_objective",
+          "metric_value": -1701223
+        },
+        {
+          "problem_size": 200,
+          "num_qubits": 12100,
+          "metric_name": "qubo_objective",
+          "metric_value": -1269382
+        },
+        {
+          "problem_size": 200,
+          "num_qubits": 12100,
+          "metric_name": "qubo_objective",
+          "metric_value": -953432
+        },
+        {
+          "problem_size": 200,
+          "num_qubits": 12100,
+          "metric_name": "qubo_objective",
+          "metric_value": -272033
+        },
+        {
+          "problem_size": 200,
+          "num_qubits": 12100,
+          "metric_name": "qubo_objective",
+          "metric_value": -104856
+        },
+        {
+          "problem_size": 200,
+          "num_qubits": 12100,
+          "metric_name": "qubo_objective",
+          "metric_value": -1000
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Quantum-ready QUBO benchmark on a larger dynamic portfolio optimization instance with 499 stocks over 15 trading days, evaluated across multiple risk-aversion settings q using ABS2/qoqo and compared against Gurobi BQP baselines.",
+      "algorithm": {
+        "family": "qubo",
+        "variant": "ABS2 on qoqo solver for QUBO portfolio optimization",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": "time limit 3600 s or stopping criterion of ABS2 (e.g., convergence/max iterations/time limit)",
+        "hyperparameters": {
+          "q_values": [
+            0,
+            1e-06,
+            1e-05,
+            5e-05,
+            0.0001,
+            0.0005,
+            0.001,
+            0.01
+          ],
+          "transaction_cost_rate": 0.001,
+          "daily_risk_free_rate": 0.0001,
+          "daily_short_loan_rate": 2.5e-05,
+          "available_capital_C": 10,
+          "maximum_assets_B": 60,
+          "maximum_blocks_per_asset_k": 3,
+          "time_horizon_T": 15,
+          "asset_count_n": 499
+        },
+        "parameter_initialization": "random feasible solution pools",
+        "optimizer_settings": {
+          "time_limit_seconds": 3600,
+          "solution_pools": null,
+          "gpu_parallelization": true
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "Binary variables x_{i,t} for asset positions over time, plus slack binaries y_{c,t} and s_{b,t}; total QUBO size reported as 45,060 variables for n=499, T=15, k=3, B=60, C=10.",
+        "objective_function": "Minimize sum_t [ q * sum_{i,j} p_{i,t} x_{i,t} sigma_{ij,t} x_{j,t} p_{j,t} - sum_i (p_{i,t+1}-p_{i,t}) x_{i,t} - delta * sum_i p_{i,t}(x_{i,t-1}+x_{i,t}-2x_{i,t-1}x_{i,t}) - rho_c u * sum_c 2^c y_{c,t} + rho_s * sum_{i in S} p_{i,t} x_{i,t} + delta * sum_i p_{i,T} x_{i,T} ] + P * sum_t [ (C - sum_i tau_i x_{i,t} - sum_c 2^c y_{c,t})^2 + (B - sum_i x_{i,t} - sum_b 2^b s_{b,t})^2 ]",
+        "constraints_handling": "Quadratic penalty terms for capital and asset-count constraints; short selling handled via tau_i in the cash constraint; transaction costs and liquidation costs included directly in the objective.",
+        "num_binary_variables": 45060,
+        "problem_hamiltonian": "QUBO mapped to Ising Hamiltonian via x_i = (s_i + 1)/2"
+      },
+      "problem_instance": {
+        "description": "All 499 S&P 500 stocks over 15 trading days (three weeks), with short selling, transaction costs, and path-dependent cash constraints.",
+        "num_assets": 499,
+        "time_steps": 15,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": "S&P 500 stocks",
+        "dataset_specification": {
+          "ticker_symbols": null,
+          "date_range": "2024-04-29 to 2024-05-17",
+          "benchmark_name": "S&P 500 Market Index",
+          "preprocessing": null,
+          "train_test_split": null
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 45060,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "not_specified",
+        "provider": null,
+        "device_name": null,
+        "framework": "qoqo/ABS2"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "Gurobi 11.0",
+        "classical_preprocessing": null,
+        "classical_postprocessing": null,
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": "objective value convergence reported over time",
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 499,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "time_horizon",
+          "value": 15,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "trading_days",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_binary_variables",
+          "value": 45060,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "variables",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "q_value",
+          "value": 0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "dimensionless",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -4841118,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -4841118,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 0.93,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -4831302,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 0.203,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 3615,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -4795977,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -4785071,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 0.228,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 588,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -4787080,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 0.186,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 3568,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -4343457,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -4324080,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 0.448,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 834,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -4322507,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 0.484,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 3621,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -2927666,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -2867493,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 2.099,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 3060,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -2871591,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 1.953,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 3606,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -1996723,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -1903969,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 4.872,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 2663,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -1887560,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 5.783,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 3545,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -708516,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -563441,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 25.748,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 4843,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -451312,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 56.99,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 3579,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -507219,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -332172,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 52.698,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 5243,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -132613,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 282.481,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 3595,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_lower_bound",
+          "value": -316320,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_upper_bound",
+          "value": -1500,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "bqp_gap",
+          "value": 20988,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gurobi_tts",
+          "value": 337,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_objective",
+          "value": -1500,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective_value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qubo_gap",
+          "value": 20988,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "abs2_tts",
+          "value": 1026,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "table"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -4841118,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -4841118,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 0.93,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -4795977,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -4785071,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 0.228,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 588,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -4343457,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -4324080,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 0.448,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 834,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -2927666,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -2867493,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 2.099,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 3060,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -1996723,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -1903969,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 4.872,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 2663,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -708516,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -563441,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 25.748,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 4843,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -507219,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -332172,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 52.698,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 5243,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_lower_bound",
+          "value": -316320,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_upper_bound",
+          "value": -1500,
+          "unit": "objective_value"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "bqp_gap",
+          "value": 20988,
+          "unit": "%"
+        },
+        {
+          "method_name": "Gurobi 11.0",
+          "metric_name": "gurobi_tts",
+          "value": 337,
+          "unit": "seconds"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "empirical",
+          "factor": "ABS2 reaches good solutions faster in early stages; at 120 s it often matches or beats BQP objective values, and at q=0.0005/q=0.001 it stabilizes much earlier than Gurobi",
+          "baseline_method": "Gurobi 11.0",
+          "conditions": "large instance n=499, T=15; especially q=0.0005 and q=0.001; time limits 120-3600 s",
+          "is_demonstrated": true,
+          "caveats": "Gurobi can still achieve better final objective values with longer runtime; ABS2 is not shown to dominate at all time limits."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 499,
+          "num_qubits": 45060,
+          "metric_name": "qubo_objective",
+          "metric_value": -4831302
+        },
+        {
+          "problem_size": 499,
+          "num_qubits": 45060,
+          "metric_name": "qubo_objective",
+          "metric_value": -4787080
+        },
+        {
+          "problem_size": 499,
+          "num_qubits": 45060,
+          "metric_name": "qubo_objective",
+          "metric_value": -4322507
+        },
+        {
+          "problem_size": 499,
+          "num_qubits": 45060,
+          "metric_name": "qubo_objective",
+          "metric_value": -2871591
+        },
+        {
+          "problem_size": 499,
+          "num_qubits": 45060,
+          "metric_name": "qubo_objective",
+          "metric_value": -1887560
+        },
+        {
+          "problem_size": 499,
+          "num_qubits": 45060,
+          "metric_name": "qubo_objective",
+          "metric_value": -451312
+        },
+        {
+          "problem_size": 499,
+          "num_qubits": 45060,
+          "metric_name": "qubo_objective",
+          "metric_value": -132613
+        },
+        {
+          "problem_size": 499,
+          "num_qubits": 45060,
+          "metric_name": "qubo_objective",
+          "metric_value": -1500
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_3",
+      "description": "Variational quantum eigensolver (VQE) framework described for QUBO-to-Hamiltonian portfolio optimization, implemented in IBM Qiskit as a quantum-ready method; the paper provides the algorithmic setup but no separate numerical VQE benchmark results.",
+      "algorithm": {
+        "family": "vqe",
+        "variant": "VQE for QUBO problems",
+        "ansatz": "Variational Circuit",
+        "optimizer": "Classical optimizer not specified",
+        "num_layers": null,
+        "convergence_criteria": "optimizer minimizes expectation value until energy converges to a minimum",
+        "hyperparameters": {},
+        "parameter_initialization": "Initialize Parameters()",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "QUBO converted to Ising Hamiltonian; number of qubits equals number of binary variables in the QUBO instance.",
+        "objective_function": "Minimize expectation value E(θ)=⟨ψ(θ)|H|ψ(θ)⟩ where H is the Hamiltonian derived from the QUBO.",
+        "constraints_handling": "Not specified beyond QUBO formulation and penalty-based constraints in the underlying portfolio model.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": "H ← QUBO to Hamiltonian(Q)"
+      },
+      "problem_instance": {
+        "description": "Generic QUBO portfolio optimization instance; no separate VQE numerical experiment instance is reported.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": null,
+        "dataset_name": null,
+        "dataset_specification": null
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "real_qpu_superconducting",
+        "provider": "IBM",
+        "device_name": null,
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "mitigation_details": null,
+        "is_noisy": true
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": null,
+        "classical_postprocessing": "Convert optimized parameters θopt back to QUBO solution xQUBO"
+      },
+      "results": [],
+      "classical_baselines": [],
+      "speedup_claims": [],
+      "scalability_data": [],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_4",
+      "description": "Quantum approximate optimization algorithm (QAOA) is discussed as a quantum-ready method for the same QUBO portfolio optimization problem, but the paper does not report a separate executed QAOA benchmark.",
+      "algorithm": {
+        "family": "qaoa",
+        "variant": "QAOA for QUBO problems",
+        "ansatz": null,
+        "optimizer": "Classical optimizer not specified",
+        "num_layers": null,
+        "convergence_criteria": "theoretically sufficient steps should yield a good or optimal solution; no empirical stopping rule reported",
+        "hyperparameters": {
+          "problem_unitary": "U(Q, q)=e^{-iqQ}",
+          "mixer_unitary": "U(H, β)=e^{-iβH}"
+        },
+        "parameter_initialization": "Not specified",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "QUBO mapped to Ising model with x_i=(s_i+1)/2; QAOA acts on the Ising Hamiltonian.",
+        "objective_function": "QUBO objective mapped to Ising energy F(s)=sum_i h_i s_i + sum_{i<j} J_{ij} s_i s_j.",
+        "constraints_handling": "Not specified beyond the QUBO penalty formulation.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": "Ising Hamiltonian with linear coefficients h_i and couplings J_ij"
+      },
+      "problem_instance": {
+        "description": "Generic QUBO portfolio optimization instance; no separate QAOA numerical benchmark is reported.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": null,
+        "dataset_name": null,
+        "dataset_specification": null
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "not_specified",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": null,
+        "classical_postprocessing": null
+      },
+      "results": [],
+      "classical_baselines": [],
+      "speedup_claims": [],
+      "scalability_data": [],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_5",
+      "description": "Quantum annealing / hybrid quantum optimization is discussed for the QUBO portfolio benchmark, with D-Wave Advantage and D-Wave Hybrid mentioned as applicable platforms; the paper does not report a separate standalone D-Wave numerical experiment in the provided text.",
+      "algorithm": {
+        "family": "quantum-annealing",
+        "variant": "D-Wave Advantage / D-Wave Hybrid for QUBO",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": "adiabatic evolution to final time T; no empirical stopping rule reported",
+        "hyperparameters": {
+          "driver_hamiltonian": "H_d",
+          "problem_hamiltonian": "H_p",
+          "schedule": "H(s)=(1-s)H_d+sH_p",
+          "time_parameter": "t/T"
+        },
+        "parameter_initialization": "Prepare ground state of driver Hamiltonian",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "Binary QUBO variables mapped to Ising spins for annealing; logical qubits correspond to binary variables.",
+        "objective_function": "QUBO portfolio objective with risk, profit, transaction costs, short-selling costs, liquidation costs, and quadratic penalties for capital and asset-count constraints.",
+        "constraints_handling": "Penalty terms in QUBO; annealing solves the resulting Ising Hamiltonian.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": "H(t)=A(t)H_start+B(t)H_problem"
+      },
+      "problem_instance": {
+        "description": "Generic QUBO portfolio optimization benchmark intended for D-Wave annealing/hybrid execution; no separate D-Wave run details are reported in the text.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": null,
+        "dataset_name": null,
+        "dataset_specification": null
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "quantum_annealer",
+        "provider": "D-Wave",
+        "device_name": "D-Wave Advantage",
+        "framework": "D-Wave / Ocean"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": null,
+        "classical_postprocessing": null
+      },
+      "results": [],
+      "classical_baselines": [],
+      "speedup_claims": [],
+      "scalability_data": [],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    }
+  ]
+}

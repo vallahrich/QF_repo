@@ -1,0 +1,485 @@
+{
+  "paper_id": "9636cfb13bd3",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "9636cfb13bd3_a_quantum_model_for_constrained_markowitz_modern_portfolio_using_slack_variables.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 1.0,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 0,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.problem_instance.dataset_specification: 'μ sampled uniformly in [0.01, 0.10]; Σ = L L^T with L lower-triangular and entries i.i.d. N(0, 0.05); α ∈ {0,1}^3 is a one-hot mask with exactly K = 1 active asset selected uniformly at random; repeated across three independent random seeds' is not of type 'object', 'null'",
+      "Schema error at experiments.0.quantum_resources.error_correction: None is not of type 'object'",
+      "Schema error at experiments.1.problem_instance.dataset_specification: 'Same μ, Σ, α generation procedure as the proposed method; one-hot mask with K = 1' is not of type 'object', 'null'",
+      "Schema error at experiments.1.quantum_resources.error_correction: None is not of type 'object'"
+    ],
+    "quality_details": {
+      "score": 1.0,
+      "completeness": 1.0,
+      "num_experiments": 2,
+      "experiment_scores": [
+        1.0,
+        1.0
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": true
+  },
+  "paper_metadata": {
+    "title": "A Quantum Model for Constrained Markowitz Modern Portfolio Using Slack Variables to Process Mixed-Binary Optimization under QAOA",
+    "authors": [
+      "Pablo Thomassin",
+      "Guillaume Guerard",
+      "Sonia Djebali",
+      "Vincent Marc Lambert"
+    ],
+    "year": 2025,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Simulation-based evaluation of a slack-ancilla QAOA formulation for constrained Markowitz portfolio optimization on a 3-asset synthetic instance, compared against a standard penalty-based QAOA baseline and classical ground truth.",
+      "algorithm": {
+        "family": "qaoa",
+        "variant": "Slack-ancilla QAOA for constrained Markowitz portfolio optimization",
+        "ansatz": "QAOA phase-separation and mixer circuit with problem Hamiltonian exponentiation; Rx mixer and Rz/problem-unitary structure",
+        "optimizer": "COBYLA",
+        "num_layers": 2,
+        "convergence_criteria": "Cap of 200 classical optimization steps per instance; penalty weight doubled every 20 Powell-optimizer iterations until 100% feasibility is observed in a batch of 10^3 samples",
+        "hyperparameters": {
+          "n": 3,
+          "K": 1,
+          "p": 2,
+          "beta_initial": 100,
+          "beta_update_rule": "doubled every 20 Powell-optimizer iterations",
+          "feasibility_target": "100% feasibility",
+          "batch_size": 1000,
+          "max_classical_optimization_steps": 200,
+          "risk_aversion_factor_q": 0.5
+        },
+        "parameter_initialization": "Not specified for QAOA angles; penalty weight beta initialized at 10^2",
+        "optimizer_settings": {
+          "max_iterations": 200,
+          "step_rule": "Powell optimizer with beta doubling every 20 iterations",
+          "tolerance": null,
+          "parameter_bounds": null,
+          "learning_rate": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "3 binary asset variables with slack variables mapped to dedicated ancilla qubits; inequality constraints converted to equalities via slack variables",
+        "objective_function": "Minimize ω^T Σ ω − λ μ^T ω subject to 1^T ω = 1 and ω_i ≤ α_i, reformulated with penalty β∑_i(ω_i − α_i + s_i)^2",
+        "constraints_handling": "Slack-variable penalty internalized in the Hamiltonian; each slack variable represented by an ancilla qubit; compared against standard penalty-only QAOA",
+        "num_binary_variables": 3,
+        "problem_hamiltonian": "H = ∑_{i,j} Σ_{ij} Z_i Z_j / 4 − ∑_i [ (∑_j Σ_{ij})/2 − λ μ_i / 2 + β(1/2 + s_i − α_i) ] Z_i + ∑_i β_i Z_i^2 / 2 − ∑_i [ (∑_j Σ_{ij})/4 − λ μ_i / 2 − β((s_i − α_i)^2 + (s_i − α_i) + 1/4) ]",
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Three-asset constrained portfolio instance with one-hot cardinality mask and synthetic covariance/return data",
+        "num_assets": 3,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 1,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "μ sampled uniformly in [0.01, 0.10]; Σ = L L^T with L lower-triangular and entries i.i.d. N(0, 0.05); α ∈ {0,1}^3 is a one-hot mask with exactly K = 1 active asset selected uniformly at random; repeated across three independent random seeds"
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 3,
+        "qubit_type": "logical",
+        "circuit_depth": 2,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": 4,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_statevector",
+        "provider": "IBM",
+        "device_name": "Qiskit statevector backend",
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null,
+        "is_noisy": false,
+        "noise_description": "noiseless"
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": "https://github.com/SmartGridandCity/Quantum Markowitz",
+        "framework_version": null,
+        "classical_solver": "COBYLA; classical exhaustive search used as ground truth; standard QAOA penalty baseline also evaluated",
+        "classical_preprocessing": "Synthetic generation of μ, Σ, and α; construction of slack-variable penalty term; initialization of beta at 10^2",
+        "classical_postprocessing": "Portfolio feasibility checking; comparison to ground-truth optimal portfolio; repeated over three random seeds"
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 3,
+          "uncertainty": null,
+          "num_runs": 3,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "feasibility_percentage",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": 1000,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "expected_return",
+          "value": 0.0468,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective value",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "expected_return",
+          "value": 0.0376,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective value",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "num_variational_params",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "circuit_depth",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "beta_initial",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "penalty weight",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "beta_final",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "penalty weight",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical exhaustive search",
+          "metric_name": "expected_return",
+          "value": 0.0468,
+          "unit": "objective value"
+        },
+        {
+          "method_name": "classical exhaustive search",
+          "metric_name": "feasibility_percentage",
+          "value": 100,
+          "unit": "%"
+        },
+        {
+          "method_name": "COBYLA",
+          "metric_name": "feasibility_percentage",
+          "value": 100,
+          "unit": "%"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "projected",
+          "factor": "minutes vs hours",
+          "baseline_method": "classical portfolio optimization / classical solvers",
+          "conditions": "preliminary analyses; not demonstrated as a measured runtime benchmark in the reported experiment",
+          "is_demonstrated": false,
+          "caveats": "The paper claims the quantum framework may shorten optimization from several hours to mere minutes, but no measured runtime numbers are provided for the experiment."
+        },
+        {
+          "type": "empirical",
+          "factor": "under one second",
+          "baseline_method": "statevector simulation runtime",
+          "conditions": "3-asset noiseless statevector simulation at p = 2",
+          "is_demonstrated": true,
+          "caveats": "Reported in the methodology summary as a simulation claim; no direct timing table is provided."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 3,
+          "num_qubits": 3,
+          "metric_name": "expected_return",
+          "metric_value": 0.0468
+        },
+        {
+          "problem_size": 3,
+          "num_qubits": 3,
+          "metric_name": "expected_return",
+          "metric_value": 0.0376
+        },
+        {
+          "problem_size": 3,
+          "num_qubits": 3,
+          "metric_name": "feasibility_percentage",
+          "metric_value": 100
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Baseline standard penalty-based QAOA evaluation on the same 3-asset synthetic constrained portfolio instance, using a uniform penalty without slack-ancilla embedding.",
+      "algorithm": {
+        "family": "qaoa",
+        "variant": "Standard penalty-based QAOA for constrained Markowitz portfolio optimization",
+        "ansatz": "QAOA phase-separation and mixer circuit with standard penalty Hamiltonian",
+        "optimizer": "COBYLA",
+        "num_layers": 2,
+        "convergence_criteria": "Not specified; evaluated under the same simulation setup as the proposed method",
+        "hyperparameters": {
+          "n": 3,
+          "K": 1,
+          "p": 2,
+          "lambda": 1000,
+          "beta": 1000,
+          "risk_aversion_factor_q": 0.5
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": {
+          "max_iterations": null,
+          "step_size": null,
+          "tolerance": null,
+          "parameter_bounds": null,
+          "learning_rate": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "3 binary asset variables; constraints enforced only through a large quadratic penalty term",
+        "objective_function": "Constrained Markowitz objective with penalty-based enforcement of cardinality/feasibility constraints",
+        "constraints_handling": "Direct quadratic penalty A(∑ x_i − K)^2 / penalty-based constraint enforcement; no slack-ancilla embedding",
+        "num_binary_variables": 3,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 0
+      },
+      "problem_instance": {
+        "description": "Same 3-asset synthetic portfolio instance used for the proposed method",
+        "num_assets": 3,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 1,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "Same μ, Σ, α generation procedure as the proposed method; one-hot mask with K = 1"
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 3,
+        "qubit_type": "logical",
+        "circuit_depth": 2,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": 4,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_statevector",
+        "provider": "IBM",
+        "device_name": "Qiskit statevector backend",
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null,
+        "is_noisy": false,
+        "noise_description": "noiseless"
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": "https://github.com/SmartGridandCity/Quantum Markowitz",
+        "framework_version": null,
+        "classical_solver": "COBYLA; classical exhaustive search used as ground truth",
+        "classical_preprocessing": "Synthetic generation of μ, Σ, and α; setting large penalty factors λ = β = 10^3",
+        "classical_postprocessing": "Feasibility and portfolio value comparison against ground truth"
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 3,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "expected_return",
+          "value": 0.0376,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective value",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "feasibility_percentage",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "lambda",
+          "value": 1000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "penalty weight",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "beta",
+          "value": 1000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "penalty weight",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "circuit_depth",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_variational_params",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical exhaustive search",
+          "metric_name": "expected_return",
+          "value": 0.0468,
+          "unit": "objective value"
+        },
+        {
+          "method_name": "classical exhaustive search",
+          "metric_name": "feasibility_percentage",
+          "value": 100,
+          "unit": "%"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "No explicit runtime or asymptotic speedup claim is reported for the standard penalty-based QAOA baseline."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 3,
+          "num_qubits": 3,
+          "metric_name": "expected_return",
+          "metric_value": 0.0376
+        },
+        {
+          "problem_size": 3,
+          "num_qubits": 3,
+          "metric_name": "feasibility_percentage",
+          "metric_value": 100
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    }
+  ]
+}

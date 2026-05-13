@@ -1,0 +1,484 @@
+{
+  "paper_id": "f02939adf369",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-17",
+    "run_timestamp": "2026-04-17T08:30:57+00:00",
+    "schema_version": "benchmark_extraction_v1.0",
+    "prompt_version_hash": "2d440153b274177d",
+    "scope": "gate_based",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.4-mini"
+    },
+    "source_file": "f02939adf369_power_law_amplitude_estimation_for_option_pricing_with_nisq_devices.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.65,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 0,
+    "validation_warnings": 10,
+    "validation_passed": true,
+    "validation_error_details": [],
+    "validation_warning_details": [
+      "experiments[0].results[1].unit='underlying asset' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[2].unit='discretized asset prices' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[3].unit='price units' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[4].unit='price units' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[7].unit='years' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[9].unit='schedule parameter' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[10].unit='schedule parameter' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[11].unit='schedule parameter' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[12].unit='schedule parameter' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[15].unit='oracle calls' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)"
+    ],
+    "quality_details": {
+      "score": 0.65,
+      "completeness": 0.65,
+      "num_experiments": 1,
+      "experiment_scores": [
+        0.65
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "revalidated_at": "2026-04-17T08:36:09+00:00"
+  },
+  "paper_metadata": {
+    "title": "Power Law Amplitude Estimation for Option Pricing with NISQ Devices",
+    "authors": [
+      "Ge Lin",
+      "Zhengming Guo",
+      "Tingting Song"
+    ],
+    "year": 2024,
+    "doi": "10.1002/qute.202400411",
+    "scope": "gate_based"
+  },
+  "finance_domain": {
+    "primary_silo": "derivative-pricing",
+    "secondary_silos": [
+      "simulation-monte-carlo"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "The paper proposes a power-law amplitude estimation algorithm for European call option pricing and simulates it on Qiskit using 3 qubits: 2 qubits load a discretized log-normal asset-price distribution and 1 ancilla encodes payoff. The main quantitative claims are a theoretical oracle complexity of O(epsilon^-1) versus classical Monte Carlo O(epsilon^-2), and an empirical 13.12% accuracy improvement over QFT-free AE at k = 9.",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Power-law amplitude estimation for pricing a European call option using a 3-qubit Qiskit simulation with a 2-qubit log-normal asset-price loader and 1 payoff ancilla, compared against QFT-free AE across several scheduling parameters k.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "power law amplitude estimation (power-law AE) for option pricing",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "k_values": [
+            3,
+            5,
+            7,
+            9
+          ],
+          "beta_values": [
+            0.417,
+            0.625
+          ],
+          "approximate_scaling": 0.25,
+          "Nshot": "constant per k",
+          "M": "max(1/epsilon^(2beta), log(1/epsilon))",
+          "qk": "floor(k^((1-beta)/(2beta)))",
+          "strike_price_K": 6.0,
+          "spot_price": 7.0,
+          "risk_free_rate": 0.02,
+          "volatility": 0.5,
+          "maturity_T": "30/365"
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "Two qubits encode four discretized future asset prices; amplitudes represent the log-normal probability distribution. A third qubit encodes the option payoff via controlled Ry rotations.",
+        "objective_function": "Estimate the expected payoff E[max(0, V-K)] for a European call option and recover option value from the measured ancilla probability P_pl.",
+        "constraints_handling": null,
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 1
+      },
+      "problem_instance": {
+        "description": "European call option pricing under a Black-Scholes-Merton log-normal asset-price model.",
+        "num_assets": 1,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 4,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "Possible expiration prices discretized to [3.981, 6.001, 8.022, 10.042] with probabilities [0.1%, 55.9%, 42.0%, 2.0%]."
+        },
+        "data_preprocessing_details": "Asset-price distribution truncated to an interval by three standard deviations; log-normal distribution parameters set from BSM model with T=30/365, volatility 50%, risk-free rate 2%, spot price 7.",
+        "evaluation_methodology": "Simulated in Qiskit; compared estimated option values for k in {3,5,7,9} against the analytical Black-Scholes-Merton value; reported overall accuracy improvement of about 13.12% over QFT-free AE."
+      },
+      "quantum_resources": {
+        "num_qubits": 3,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": {
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        }
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": null,
+        "device_name": null,
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "noise_model": {
+          "is_noisy": false,
+          "noise_type": null,
+          "error_mitigation_method": null
+        },
+        "noise_parameters": null,
+        "mitigation_details": null,
+        "is_noisy": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "maximum likelihood estimation for Bayesian update/post-processing",
+        "transpilation_settings": null,
+        "classical_preprocessing": "Load discretized log-normal asset distribution; construct payoff via controlled Ry rotations and comparison circuit.",
+        "classical_postprocessing": "Maximum likelihood estimation over measurement outcomes to estimate theta_pl and recover option value from P_pl.",
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        },
+        "classical_mc_samples": null,
+        "num_layers": null,
+        "ansatz_depth": null,
+        "p_rounds": null
+      },
+      "results": [
+        {
+          "metric_name": "num_qubits",
+          "value": 3,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "underlying asset",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "dataset_size",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "discretized asset prices",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "strike_price",
+          "value": 6.0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "price units",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "spot_price",
+          "value": 7.0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "price units",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "risk_free_rate",
+          "value": 0.02,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "volatility",
+          "value": 0.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "maturity",
+          "value": 0.0821917808219178,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "years",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "approximate_scaling",
+          "value": 0.25,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "k_values",
+          "value": 3,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "schedule parameter",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "k_values",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "schedule parameter",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "k_values",
+          "value": 7,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "schedule parameter",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "k_values",
+          "value": 9,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "schedule parameter",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "beta_values",
+          "value": 0.417,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "beta_values",
+          "value": 0.625,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "oracle_queries",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "oracle calls",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "price_error",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": null,
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "convergence_rate",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": null,
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "success_probability",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": null,
+          "higher_is_better": true,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "black_scholes_merton_model",
+          "metric_name": "price_error",
+          "value": null,
+          "unit": "option price"
+        },
+        {
+          "method_name": "qft_free_ae",
+          "metric_name": "price_error",
+          "value": null,
+          "unit": "option price"
+        },
+        {
+          "method_name": "monte_carlo",
+          "metric_name": "oracle_queries",
+          "value": null,
+          "unit": "samples"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical monte carlo",
+          "conditions": "amplitude estimation / amplitude amplification setting; option pricing via expected payoff estimation",
+          "is_demonstrated": false,
+          "caveats": "The paper states the quadratic speedup in general AE context; the numerical experiment is a Qiskit simulation, not a hardware demonstration."
+        },
+        {
+          "type": "theoretical",
+          "factor": "O(epsilon^-1) oracle calls",
+          "baseline_method": "classical monte carlo O(epsilon^-2)",
+          "conditions": "from Fisher-information analysis for power-law AE; target error epsilon",
+          "is_demonstrated": false,
+          "caveats": "This is an asymptotic complexity claim derived analytically, not an empirical runtime measurement."
+        },
+        {
+          "type": "empirical",
+          "factor": "13.12% overall accuracy improvement",
+          "baseline_method": "qft_free_ae",
+          "conditions": "European call option simulation at k = 9",
+          "is_demonstrated": true,
+          "caveats": "The paper reports the improvement qualitatively/numerically but does not provide the underlying absolute error values in text."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": null,
+          "num_qubits": 3,
+          "metric_name": "price_error",
+          "metric_value": null
+        },
+        {
+          "problem_size": null,
+          "num_qubits": 3,
+          "metric_name": "price_error",
+          "metric_value": null
+        },
+        {
+          "problem_size": null,
+          "num_qubits": 3,
+          "metric_name": "price_error",
+          "metric_value": null
+        },
+        {
+          "problem_size": null,
+          "num_qubits": 3,
+          "metric_name": "price_error",
+          "metric_value": null
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": "O(epsilon^-1) oracle calls (from Fisher-information analysis for power-law AE; lower-bound error scales as O(N_q^-1))",
+        "classical_complexity": "Monte Carlo methods require O(epsilon^-2) samples for comparable accuracy (stated as classical baseline context)",
+        "speedup_order": "quadratic",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": "N_q = Nshot * sum_k (2q_k + 1)",
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {
+        "advantage_status": "theoretical_only",
+        "hoefler_viable": false,
+        "maturity_level": "L1_noiseless_sim",
+        "crossover_size": "not_assessed",
+        "resources_for_advantage": "No hardware demonstration; only a 3-qubit Qiskit simulation with constant-shot Bayesian post-processing",
+        "data_loading_bottleneck": true,
+        "feasibility_horizon": "far_future_10_plus_years",
+        "limiting_factors": [
+          "Only simulated results are reported, not a QPU run",
+          "Speedup is quadratic (O(epsilon^-1) vs classical Monte Carlo O(epsilon^-2)), which Hoefler-style constant-factor analysis generally deems insufficient for practical advantage",
+          "The circuit still requires state preparation/loading of a log-normal distribution and controlled rotations for payoff encoding",
+          "No end-to-end runtime or wall-clock comparison against classical methods is provided",
+          "The reported 13.12% improvement is only relative to QFT-free AE, not to a classical baseline"
+        ]
+      },
+      "provenance": {
+        "hardware_type": "paper_reported",
+        "num_qubits": "paper_reported",
+        "circuit_depth": "derived",
+        "speedup_order": "paper_reported",
+        "quantum_complexity": "paper_reported",
+        "classical_complexity": "paper_reported",
+        "notes": [
+          "Hardware inferred as simulator_other because the paper states the circuits were simulated on Qiskit and does not name a real QPU.",
+          "Circuit depth is not explicitly quantified; only qualitative statements about shallower circuits and reduced control gates are given.",
+          "The paper compares against QFT-free AE and classical Monte Carlo conceptually, but the reported numerical experiment is the Qiskit simulation of the power-law AE circuit for European call options.",
+          "The paper claims theoretical quadratic acceleration and reports a 13.12% accuracy improvement over QFT-free AE, but does not demonstrate practical quantum advantage over classical methods."
+        ],
+        "advantage_status": "paper_inferred"
+      }
+    }
+  ]
+}

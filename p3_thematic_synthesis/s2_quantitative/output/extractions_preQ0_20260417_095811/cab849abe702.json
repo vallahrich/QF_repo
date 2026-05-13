@@ -1,0 +1,844 @@
+{
+  "paper_id": "cab849abe702",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "cab849abe702_diagram_to_circuit_qnlp_for_financial_sentiment_analysis.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.95,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 0,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.problem_instance.dataset_specification: '100%-agreement subset of 2,264 sentences; after preprocessing and circuit generation, 2,263 sentences remained. Split 64%/16%/20% into train/dev/test with label counts: train 1448 (194/889/365), dev 361 (48/222/91), test 454 (61/279/114).' is not of type 'object', 'null'",
+      "Schema error at experiments.0.quantum_resources.error_correction: None is not of type 'object'",
+      "Schema error at experiments.1.problem_instance.dataset_specification: 'Same split and preprocessing as exp_1: 2,263 remaining sentences after preprocessing; train/dev/test = 1448/361/454.' is not of type 'object', 'null'",
+      "Schema error at experiments.1.quantum_resources.error_correction: None is not of type 'object'"
+    ],
+    "quality_details": {
+      "score": 0.95,
+      "completeness": 0.95,
+      "num_experiments": 2,
+      "experiment_scores": [
+        0.95,
+        0.95
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": true
+  },
+  "paper_metadata": {
+    "title": "Diagram-to-Circuit QNLP for Financial Sentiment Analysis",
+    "authors": [
+      "Takayuki Sakuma"
+    ],
+    "year": 2025,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "quantum-ml-finance",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Chunked QDisCoCirc-inspired quantum natural language processing model for 3-class financial sentiment classification using shallow IQP-ansatz circuits per chunk and mean-pooled Bloch vectors as the sentence representation.",
+      "algorithm": {
+        "family": "quantum-ml",
+        "variant": "QDisCoCirc-inspired chunked diagram-to-circuit QNLP with mean pooling",
+        "ansatz": "IQP ansatz",
+        "optimizer": "Adam",
+        "num_layers": 4,
+        "convergence_criteria": "early stopping with burn-in of 2 epochs and maximum of 20 epochs",
+        "hyperparameters": {
+          "classes": 3,
+          "chunk_max_length_words": 5,
+          "temperature_tau": 0.1,
+          "Kc": 3,
+          "learning_rate": 0.0005,
+          "batch_size": 9,
+          "reduce_lr_factor": 0.5,
+          "reduce_lr_patience": 2,
+          "reduce_lr_threshold": 0.002,
+          "reduce_lr_cooldown": 1,
+          "min_learning_rate": 1e-05,
+          "class_weighting": "inverse class frequencies",
+          "thresholds": {
+            "tau0": 0.32,
+            "tau1": 0.372,
+            "tau2": 0.3
+          }
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": {
+          "learning_rate": 0.0005,
+          "batch_size": 9,
+          "scheduler": "ReduceLROnPlateau",
+          "scheduler_factor": 0.5,
+          "scheduler_patience": 2,
+          "scheduler_threshold": 0.002,
+          "scheduler_cooldown": 1,
+          "scheduler_min_lr": 1e-05,
+          "early_stopping_burn_in_epochs": 2,
+          "max_epochs": 20
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "angle_encoding",
+        "encoding_details": "Each chunk is mapped to a shallow quantum circuit; each valid chunk yields a 2x2 density matrix via its Bloch vector. Sentence representation is the uniform convex combination of chunk density matrices.",
+        "objective_function": "3-class sentiment classification optimized with class-weighted cross-entropy over softmax probabilities derived from normalized Hilbert-Schmidt similarities between sentence density matrices and class prototype density matrices.",
+        "constraints_handling": "No explicit quantum constraints; invalid/empty chunks whose CCG types reduce to identity are excluded and contribute zero.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Financial PhraseBank 100%-agreement subset for positive/neutral/negative sentiment classification.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 2263,
+        "data_type": "public_benchmark",
+        "dataset_name": "Financial PhraseBank",
+        "dataset_specification": {
+          "description": "100%-agreement subset of 2,264 sentences; after preprocessing and circuit generation, 2,263 sentences remained. Split 64%/16%/20% into train/dev/test with label counts: train 1448 (194/889/365), dev 361 (48/222/91), test 454 (61/279/114)."
+        },
+        "data_preprocessing_details": "CCG parsing with BobcatParser; sentence chunking into contiguous chunks of max 5 words; rule-based rewrite/normalization of financial vocabulary; preprocessing rules for passive constructions, compound prepositions, proper nouns, URLs/symbol sequences, as + past participle, to + verb, and sentence-initial discourse markers; parameter sharing across rewritten word labels.",
+        "evaluation_methodology": "Single train/dev/test split; dev-set threshold tuning by grid search to maximize macro-F1; early stopping; test evaluation reported with accuracy and macro-F1."
+      },
+      "quantum_resources": {
+        "num_qubits": 1,
+        "qubit_type": "logical",
+        "circuit_depth": 4,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": 22000,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_statevector",
+        "provider": null,
+        "device_name": null,
+        "framework": "lambeq"
+      },
+      "noise_model": {
+        "mitigation_details": null,
+        "is_noisy": false
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "CCG parsing, chunking, vocabulary rewriting, parameter sharing, farthest-first selection of class prototypes, threshold tuning on dev set.",
+        "classical_postprocessing": "Normalized Bloch-vector similarity, temperature-scaled log-sum-exp over class prototypes, softmax probabilities, class-specific thresholding for final prediction."
+      },
+      "results": [
+        {
+          "metric_name": "dataset_size",
+          "value": 2263,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "sentences",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "accuracy",
+          "value": 0.696,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "f1_score",
+          "value": 0.551,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "macro_f1",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "num_variational_params",
+          "value": 22000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "learning_rate",
+          "value": 0.0005,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "batch_size",
+          "value": 9,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "samples",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "circuit_depth",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "threshold_tau0",
+          "value": 0.32,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "threshold_tau1",
+          "value": 0.372,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "threshold_tau2",
+          "value": 0.3,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "dev_macro_f1",
+          "value": 0.5266,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "macro_f1",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "test_accuracy",
+          "value": 0.696,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "test_macro_f1",
+          "value": 0.5514,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "macro_f1",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "top20share",
+          "value": 0.583,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "top20share_train",
+          "value": 0.58,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "top20share_dev",
+          "value": 0.585,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "top20share_test",
+          "value": 0.583,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "bloch_share_test",
+          "value": 0.405,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "ccg_structure_share_test",
+          "value": 0.272,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "type_gate_share_test",
+          "value": 0.322,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "mean_correct_p_max",
+          "value": 0.445,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_incorrect_p_max",
+          "value": 0.382,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_correct_prob_margin",
+          "value": 0.162,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_incorrect_prob_margin",
+          "value": 0.066,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_correct_entropy_norm",
+          "value": 0.968,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_incorrect_entropy_norm",
+          "value": 0.989,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_correct_suff_gap_x",
+          "value": 0.109,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_incorrect_suff_gap_x",
+          "value": 0.049,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_correct_suff_gap_y",
+          "value": 0.111,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_incorrect_suff_gap_y",
+          "value": 0.05,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_correct_suff_gap_z",
+          "value": 0.001,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_incorrect_suff_gap_z",
+          "value": 0.002,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_correct_comp_x",
+          "value": 0.002,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_incorrect_comp_x",
+          "value": 0.001,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_correct_comp_y",
+          "value": 0.0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_incorrect_comp_y",
+          "value": 0.001,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_correct_comp_z",
+          "value": 0.108,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "mean_incorrect_comp_z",
+          "value": 0.048,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "cohens_d_accuracy_related",
+          "value": 1.123,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "effect_size",
+          "higher_is_better": true,
+          "data_source": "table"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "FinBERT",
+          "metric_name": "accuracy",
+          "value": 0.97,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "FinBERT",
+          "metric_name": "f1_score",
+          "value": 0.95,
+          "unit": "macro_f1"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": "FinBERT",
+          "conditions": "The paper only states that the proposed model has approximately 2.2×10^4 parameters versus FinBERT's 110M parameters, and that accuracy is lower; no computational speedup is claimed.",
+          "is_demonstrated": false,
+          "caveats": "No runtime, wall-clock, or asymptotic speedup comparison is reported."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 2263,
+          "num_qubits": 1,
+          "metric_name": "dataset_size",
+          "metric_value": 2263
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Hybrid sequence model that feeds the chunk-level Bloch-vector sequence and CCG type embeddings into a shallow Transformer encoder for financial sentiment classification.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "Transformer over Bloch-vector sequence with CCG type embeddings",
+        "ansatz": null,
+        "optimizer": "AdamW",
+        "num_layers": 1,
+        "convergence_criteria": "early stopping with dev macro-F1 monitoring; maximum epochs not separately stated for this model",
+        "hyperparameters": {
+          "dmodel": 128,
+          "num_heads": 4,
+          "ffn_hidden_dim": 256,
+          "dropout": 0.2,
+          "learning_rate": 0.001,
+          "weight_decay": 0.0001,
+          "reduce_lr_factor": 0.6,
+          "reduce_lr_patience": 2,
+          "class_weighting": "class-weighted cross-entropy",
+          "thresholds": "class-wise thresholds tuned on development set"
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": {
+          "learning_rate": 0.001,
+          "weight_decay": 0.0001,
+          "scheduler": "ReduceLROnPlateau",
+          "scheduler_factor": 0.6,
+          "scheduler_patience": 2
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "angle_encoding",
+        "encoding_details": "Each chunk Bloch vector rt in R3 is linearly mapped to Rd, concatenated with a learned CCG type embedding, projected to model dimension, added to positional embeddings, and processed by a Transformer encoder.",
+        "objective_function": "3-class sentiment classification with class-weighted cross-entropy on top of a pooled Transformer representation.",
+        "constraints_handling": "Padding-mask-aware mean pooling; no explicit quantum constraints.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Same Financial PhraseBank 100%-agreement sentiment classification task as the baseline experiment.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 2263,
+        "data_type": "public_benchmark",
+        "dataset_name": "Financial PhraseBank",
+        "dataset_specification": {
+          "description": "Same split and preprocessing as exp_1: 2,263 remaining sentences after preprocessing; train/dev/test = 1448/361/454."
+        },
+        "data_preprocessing_details": "Uses the chunked Bloch-vector sequence produced by the QDisCoCirc-inspired preprocessing pipeline and CCG type IDs.",
+        "evaluation_methodology": "Dev macro-F1 used for scheduler and threshold tuning; test accuracy and macro-F1 reported."
+      },
+      "quantum_resources": {
+        "num_qubits": 1,
+        "qubit_type": "logical",
+        "circuit_depth": 4,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": 22000,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_statevector",
+        "provider": null,
+        "device_name": null,
+        "framework": "PyTorch"
+      },
+      "noise_model": {
+        "mitigation_details": null,
+        "is_noisy": false
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "Same chunk generation and Bloch-vector extraction as exp_1, plus learned type embeddings and positional embeddings.",
+        "classical_postprocessing": "Masked mean pooling over Transformer outputs, linear 3-way classifier, softmax, and class-wise threshold tuning on the development set."
+      },
+      "results": [
+        {
+          "metric_name": "dataset_size",
+          "value": 2263,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "sentences",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "dev_macro_f1",
+          "value": 0.6131,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "macro_f1",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "test_accuracy",
+          "value": 0.6916,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "test_macro_f1",
+          "value": 0.5857,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "macro_f1",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "test_class_f1_class_0",
+          "value": 0.42,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "f1",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "test_class_f1_class_1",
+          "value": 0.83,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "f1",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "test_class_f1_class_2",
+          "value": 0.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "f1",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "dev_macro_f1_improvement_over_baseline",
+          "value": 0.0865,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute_macro_f1",
+          "higher_is_better": true,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "test_macro_f1_improvement_over_baseline",
+          "value": 0.0343,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute_macro_f1",
+          "higher_is_better": true,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "dmodel",
+          "value": 128,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "dimension",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_heads",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "heads",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "ffn_hidden_dim",
+          "value": 256,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "dimension",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "dropout",
+          "value": 0.2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "learning_rate",
+          "value": 0.001,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "weight_decay",
+          "value": 0.0001,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "Baseline (Mean-Pooled Bloch Vectors)",
+          "metric_name": "dev_macro_f1",
+          "value": 0.5266,
+          "unit": "macro_f1"
+        },
+        {
+          "method_name": "Baseline (Mean-Pooled Bloch Vectors)",
+          "metric_name": "test_accuracy",
+          "value": 0.696,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "Baseline (Mean-Pooled Bloch Vectors)",
+          "metric_name": "test_macro_f1",
+          "value": 0.5514,
+          "unit": "macro_f1"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": "Baseline (Mean-Pooled Bloch Vectors)",
+          "conditions": "The paper reports performance improvement in macro-F1, not computational speedup.",
+          "is_demonstrated": false,
+          "caveats": "No runtime, training-time, or asymptotic complexity comparison is reported for the Transformer model."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 2263,
+          "num_qubits": 1,
+          "metric_name": "dataset_size",
+          "metric_value": 2263
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    }
+  ]
+}

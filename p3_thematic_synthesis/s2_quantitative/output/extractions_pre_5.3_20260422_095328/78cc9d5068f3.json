@@ -1,0 +1,214 @@
+{
+  "paper_id": "78cc9d5068f3",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-17",
+    "run_timestamp": "2026-04-17T12:00:00+00:00",
+    "schema_version": "benchmark_extraction_v1.0",
+    "prompt_version_hash": "manual-human-v1",
+    "pipeline": "manual-human",
+    "source_file": "78cc9d5068f3_quantum_algorithms_for_portfolio_optimization.md",
+    "notes": "Gate-based quantum algorithm: quantum short-step interior-point method (QIPM) for second-order cone programs (SOCP) reducing constrained portfolio optimization. Provable complexity O~(n * sqrt(r) * zeta * kappa / delta^2 * log(1/eps)). Experiments are classical simulations of the quantum-noise model (Gaussian noise calibrated to tomography precision) on S&P 500 sub-samples from cvxportfolio; they estimate empirical scaling of problem-dependent parameters (kappa, delta, zeta) and overall complexity.",
+    "scope": "gate_based",
+    "revalidated_at": "2026-04-17T09:46:23+00:00",
+    "validation_errors": 0,
+    "validation_warnings": 5,
+    "validation_passed": true,
+    "validation_error_details": [],
+    "validation_warning_details": [
+      "experiments[0].results[0].unit='exponent_of_n' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[1].unit='exponent_of_n' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[2].unit='dimensionless' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[3].unit='qualitative' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[4].unit='dimensionless' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)"
+    ],
+    "quality_score": 0.75,
+    "quality_details": {
+      "score": 0.75,
+      "completeness": 0.75,
+      "num_experiments": 1,
+      "experiment_scores": [
+        0.75
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    }
+  },
+  "paper_metadata": {
+    "title": "Quantum Algorithms for Portfolio Optimization",
+    "authors": [
+      "Iordanis Kerenidis",
+      "Anupam Prakash",
+      "Daniel Szilagyi"
+    ],
+    "year": 2019,
+    "venue": "arXiv:1908.08040 (Proc. ACM AFT 2019 / QCE context)",
+    "doi": null,
+    "arxiv_id": "1908.08040",
+    "scope": "gate_based"
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "First quantum algorithm for CONSTRAINED portfolio optimization (positivity + budget constraints). Reduces the problem to an SOCP and applies a quantum short-step interior-point method using block encodings, quantum linear-system solvers and quantum tomography. Theoretical runtime O~(n * sqrt(r) * kappa * zeta / delta^2 * log(1/eps)) versus classical O~(sqrt(r) * n^omega * log(1/eps)) with practical omega~3. Experiments on S&P-500 sub-samples from cvxportfolio (50 companies, 100 days, 9-year dataset 2007-2016) simulate the quantum noise with Gaussian tomography-precision noise. Empirical findings: kappa shows no growth with problem size, zeta < 5 for all instances, 1/delta^2 grows roughly linearly with n (power-law exponent 1.050, 95% CI [0.965, 1.136]), overall observed complexity scales as O(n^2.387) with 95% CI [2.184, 2.589] -- giving an almost O(n) speedup over the practical classical O(n^3.5).",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Simulation of the quantum short-step SOCP IPM on S&P-500 sub-samples from cvxportfolio: 50 companies x 100 days baseline, plus random subsets of 100 companies over random windows t in [10, 500] days, precision eps=0.1. Quantum noise modelled as Gaussian with magnitude equal to tomography precision. Measured: duality gap decay, Newton-matrix condition number kappa, zeta, 1/delta^2, and overall observed runtime scaling.",
+      "algorithm": {
+        "family": "other-gate-based",
+        "variant": "Quantum short-step interior-point method for Second-Order Cone Programs (QIPM-SOCP) [Kerenidis-Prakash-Szilagyi 2019, building on Kerenidis-Prakash SDP IPM]",
+        "ansatz": "SOCP reduction: min (1;0_{n+m})^T (t;x) s.t. Mx = tilde_t, mu^T x = R, Ax = b, x>=0, t in Lorentz cone L^m. Block-encoded Newton system solved via QRAM-based linear algebra (Chakraborty-Gilyen-Jeffery; Gilyen-Su-Low-Wiebe) with tomography (Kerenidis-Prakash).",
+        "optimizer": "Classical outer IPM loop; inner step = quantum linear-system solve + quantum state tomography + norm estimation",
+        "hyperparameters": {
+          "iterations_T": "O(sqrt(r) log(n/eps))",
+          "precision_eps": 0.1,
+          "tomography_error_delta": "adaptive",
+          "duality_reduction_factor_sigma": "1 - alpha/sqrt(r), alpha < 0.1"
+        },
+        "num_layers": null
+      },
+      "problem_formulation": {
+        "encoding_method": "qram_amplitude",
+        "encoding_details": "Portfolio covariance Sigma=M M^T with columns (1/sqrt(T-1))(R(t)-mu) stored in QRAM. Constraint matrix for SOCP (Eq. 5) also stored in QRAM. Block encoding cost (zeta, 2 log n); update O(log^2 n) per entry.",
+        "num_binary_variables": null,
+        "constraints": "Equality: mu^T x=R and Ax=b; inequality: x>=0 plus SOCP conic constraint t0 >= ||M x||."
+      },
+      "problem_instance": {
+        "dataset_name": "S&P-500 historical returns (cvxportfolio dataset)",
+        "dataset_specification": {
+          "benchmark_name": "S&P 500 (cvxportfolio)",
+          "date_range": "2007-2016 (9 years daily)",
+          "description": "Main experiment: 50 companies, 100 days. Scaling study: 100 random companies, random t in [10, 500] days per instance, precision eps=0.1."
+        },
+        "data_type": "real_market",
+        "num_assets": 50,
+        "num_features": null,
+        "time_steps": 100,
+        "dataset_size": null
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "num_shots": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "num_variational_params": null,
+        "error_correction": {
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        },
+        "t_count": null,
+        "t_depth": null
+      },
+      "hardware": {
+        "type": "simulator_noisy",
+        "device_name": "classical simulation of noisy quantum IPM (Gaussian tomography-precision noise)",
+        "provider": null,
+        "framework": null
+      },
+      "noise_model": {
+        "is_noisy": true,
+        "noise_type": "Gaussian noise with magnitude equal to tomography precision (simulating quantum-state tomography error in the inner linear-system solve)",
+        "error_mitigation_method": "Norm estimation + tomography (Kerenidis-Prakash, Theorem 6.4); no separate QEC or mitigation layer"
+      },
+      "results": [
+        {
+          "metric_name": "observed_runtime_scaling_exponent_b",
+          "value": 2.387,
+          "unit": "exponent_of_n",
+          "data_source": "figure",
+          "notes": "Fig 5: least-squares power-law fit of observed complexity vs n (eps=0.1). 95% CI [2.184, 2.589]. Implies quantum algorithm scales as O(n^2.387) vs classical O(n^3.5) in practice -> nearly O(n) speedup."
+        },
+        {
+          "metric_name": "observed_scaling_1_over_delta_squared_exponent",
+          "value": 1.05,
+          "unit": "exponent_of_n",
+          "data_source": "figure",
+          "notes": "Fig 4: 1/delta^2 grows roughly linearly with n; 95% CI [0.965, 1.136]."
+        },
+        {
+          "metric_name": "zeta_upper_bound_observed",
+          "value": 5.0,
+          "unit": "dimensionless",
+          "data_source": "text",
+          "notes": "Section 7: zeta < 5 across all instances; zeta >= 1 always, deemed not a bottleneck."
+        },
+        {
+          "metric_name": "kappa_growth_with_n",
+          "value": "no observable growth with n",
+          "unit": "qualitative",
+          "data_source": "figure",
+          "notes": "Fig 3a/3b: condition number kappa of the Newton matrix does not grow with problem size; large only in small number of instances."
+        },
+        {
+          "metric_name": "duality_gap_decay_rate_alpha",
+          "value": "close to classical chi=0.1",
+          "unit": "dimensionless",
+          "data_source": "figure",
+          "notes": "Fig 1: quantum sigma = 1 - alpha/sqrt(r) with alpha close to the classical constant 0.1; asymptotically matching iteration count O(sqrt(r) log(n/eps))."
+        }
+      ],
+      "classical_baselines": [
+        {
+          "metric_name": "theoretical_complexity_exponent",
+          "value": 3.5,
+          "unit": "exponent_of_n",
+          "method_name": "Classical short-step IPM for SOCP / QP (practical omega approx 3)",
+          "notes": "Complexity O(sqrt(r) n^omega log(1/eps)) with omega theoretical ~2.373 but practical ~3, giving ~n^3.5 in practice."
+        },
+        {
+          "metric_name": "theoretical_complexity_exponent_lloyd_rebentrost",
+          "value": "unconstrained only",
+          "unit": "qualitative",
+          "method_name": "Lloyd-Rebentrost 2018 quantum algorithm (unconstrained portfolio optimization via HHL)",
+          "notes": "Prior quantum approach limited to unconstrained mean-variance; does not handle positivity/budget constraints addressed here."
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "magnitude": "nearly O(n) speedup in practice",
+          "notes": "Observed O(n^2.387) vs classical practical O(n^3.5). Theoretical: O~(n * sqrt(r) * kappa * zeta / delta^2 * log(1/eps)) vs O~(sqrt(r) * n^omega * log(1/eps))."
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": "O~(n * sqrt(r) * kappa * zeta / delta^2 * log(1/eps)); observed empirical O(n^2.387).",
+        "classical_complexity": "O~(sqrt(r) * n^omega * log(1/eps)) ~ O(n^3.5) with practical matrix-inversion cost.",
+        "speedup_order": "polynomial_other"
+      },
+      "advantage_assessment": {
+        "advantage_status": "not_assessed",
+        "feasibility_horizon": "requires_fault_tolerance",
+        "maturity_level": "L1_noiseless_sim",
+        "data_loading_bottleneck": true,
+        "crossover_size": null,
+        "resources_for_advantage": "QRAM and fault-tolerant quantum linear-algebra primitives (block-encoded linear system solvers, tomography); conditional on kappa, zeta, 1/delta^2 being well-behaved as empirically observed."
+      },
+      "provenance": {
+        "hardware_type": "paper_reported",
+        "advantage_status": "paper_inferred",
+        "num_qubits": "paper_reported",
+        "quantum_complexity": "paper_reported",
+        "classical_complexity": "paper_reported",
+        "speedup_order": "paper_reported",
+        "notes": [
+          "Scaling exponents and CIs from Section 7 (experimental results). Theoretical complexity from Theorem 5.1/5.2. Dataset: cvxportfolio S&P-500 (Boyd et al.). Quantum algorithm is a simulated noisy IPM; no physical QPU used."
+        ]
+      }
+    }
+  ]
+}

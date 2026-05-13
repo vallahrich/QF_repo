@@ -1,0 +1,762 @@
+{
+  "paper_id": "0e18f027f93b",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "0e18f027f93b_quantum_assisted_optimal_rebalancing_with_uncorrelated_asset_selection_for_algor.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 1.0,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 3,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.implementation_details.classical_postprocessing: ['select most-probable bitstring from final measurement distribution', 'choose restart with lowest expected QUBO energy', 'map local schedule to global test-window indices', 'apply schedule in walk-forward backtest'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.implementation_details.classical_preprocessing: ['construct QUBO from local-window Sharpe gains and transaction-cost penalties', 'normalize QUBO matrix by max |Q_kl|', 'map QUBO to Ising Hamiltonian', 'sample random initial angles for each restart'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.problem_instance.dataset_specification.preprocessing: ['survivorship-bias-free universe reconstruction by reversing index addition/deletion events after 2024-12-31', 'remove tickers with missing data throughout the full period', 'compute daily adjusted close prices', 'use daily log returns', 'annualize Sharpe with sqrt(252)'] is not of type 'string', 'null'"
+    ],
+    "quality_details": {
+      "score": 1.0,
+      "completeness": 1.0,
+      "num_experiments": 1,
+      "experiment_scores": [
+        1.0
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Quantum-Assisted Optimal Rebalancing with Uncorrelated Asset Selection for Algorithmic Trading: Walk-Forward QUBO Scheduling via QAOA",
+    "authors": [
+      "Abraham Itzhak Weinberg"
+    ],
+    "year": 2026,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": [
+      "trading-execution"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Walk-forward QAOA solution of the portfolio rebalancing schedule QUBO for the GA-optimized portfolio weights on S&P 500 test data, evaluated over three walk-forward windows with multi-restart optimization.",
+      "algorithm": {
+        "family": "qaoa",
+        "variant": "Walk-forward QAOA for rebalancing schedule optimization",
+        "ansatz": "standard QAOA with transverse-field mixer",
+        "optimizer": "COBYLA",
+        "num_layers": 2,
+        "convergence_criteria": "max 150 iterations; retain the restart with lowest expected QUBO energy",
+        "hyperparameters": {
+          "circuit_depth_p": 2,
+          "candidate_dates_per_window_W": 8,
+          "walk_forward_windows_K": 3,
+          "restarts_R": 5,
+          "optimisation_shots": 2048,
+          "evaluation_shots": 4096,
+          "qubo_penalty_lambda1": 1.0,
+          "qubo_penalty_lambda2": 0.5,
+          "qubo_penalty_lambda3": 0.3,
+          "transaction_cost_c": 0.001,
+          "parameter_bounds_gamma": "[0, 2π]",
+          "parameter_bounds_beta": "[0, π]",
+          "initial_angles": "uniformly random",
+          "mixer_hamiltonian": "HB = sum_i X_i"
+        },
+        "parameter_initialization": "uniformly random initial angles for each restart",
+        "optimizer_settings": {
+          "max_iterations": 150,
+          "parameter_bounds": {
+            "gamma": "[0, 2π]",
+            "beta": "[0, π]"
+          }
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "One binary variable per candidate rebalancing date; x in {0,1}^8 indicates whether to rebalance on each of 8 candidate dates in a window.",
+        "objective_function": "minimize x^T Q x, where Q_kk = -lambda1 * g_k + lambda2 * c * n and Q_kl = lambda3 * exp(-|t_k - t_l| / Delta t) for k != l; g_k is the marginal Sharpe gain net of transaction cost.",
+        "constraints_handling": "Encoded via QUBO penalty terms; no explicit hard constraints beyond binary schedule variables.",
+        "num_binary_variables": 8,
+        "problem_hamiltonian": "H_C = sum_i h_i Z_i + sum_{i<j} J_ij Z_i Z_j, obtained from x_i = (1 - Z_i)/2"
+      },
+      "problem_instance": {
+        "description": "Rebalancing schedule selection for a 10-asset portfolio over the 2025 out-of-sample test period using walk-forward windows.",
+        "num_assets": 10,
+        "time_steps": 249,
+        "num_features": null,
+        "dataset_size": 249,
+        "data_type": "real_market",
+        "dataset_name": "S&P 500 adjusted close prices",
+        "dataset_specification": {
+          "ticker_symbols": [
+            "EXR",
+            "NI",
+            "CHD",
+            "LLY",
+            "COST",
+            "AVGO",
+            "TPL",
+            "CTAS",
+            "AMP",
+            "AJG"
+          ],
+          "date_range": "2010-01-01 to 2025-12-31",
+          "train_test_split": "train: 2010-01-01 to 2024-12-31; test: 2025-01-01 to 2025-12-31",
+          "benchmark_name": "S&P 500",
+          "preprocessing": [
+            "survivorship-bias-free universe reconstruction by reversing index addition/deletion events after 2024-12-31",
+            "remove tickers with missing data throughout the full period",
+            "compute daily adjusted close prices",
+            "use daily log returns",
+            "annualize Sharpe with sqrt(252)"
+          ]
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 8,
+        "qubit_type": "logical",
+        "circuit_depth": 2,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 4096,
+        "num_variational_params": 4,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_statevector",
+        "provider": "IBM",
+        "device_name": "Qiskit Aer statevector simulator",
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": "Qiskit 1.2.4; Qiskit-Aer 0.15.1; Qiskit-Algorithms 0.3.1",
+        "transpilation_target": null,
+        "classical_solver": "COBYLA",
+        "classical_preprocessing": [
+          "construct QUBO from local-window Sharpe gains and transaction-cost penalties",
+          "normalize QUBO matrix by max |Q_kl|",
+          "map QUBO to Ising Hamiltonian",
+          "sample random initial angles for each restart"
+        ],
+        "classical_postprocessing": [
+          "select most-probable bitstring from final measurement distribution",
+          "choose restart with lowest expected QUBO energy",
+          "map local schedule to global test-window indices",
+          "apply schedule in walk-forward backtest"
+        ]
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": 8,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "circuit_depth",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_variational_params",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "candidate_dates_per_window",
+          "value": 8,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "dates",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "walk_forward_windows",
+          "value": 3,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "windows",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "restarts",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "restarts",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "optimisation_shots",
+          "value": 2048,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "shots",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "evaluation_shots",
+          "value": 4096,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "shots",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "transaction_cost",
+          "value": 0.001,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "train_sharpe_ratio",
+          "value": 1.445,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "test_return",
+          "value": 10.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": 0.588,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sortino_ratio",
+          "value": 0.764,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "maximum_drawdown",
+          "value": -15.84,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "calmar_ratio",
+          "value": 0.638,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "rebalance_count",
+          "value": 8,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "rebalances",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "transaction_cost",
+          "value": 6.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "bp",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "top_bitstring_probability",
+          "value": 7.0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "top_5_bitstring_probability_mass",
+          "value": 25.0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "uniform_baseline_probability",
+          "value": 0.390625,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "optimal_solution_enrichment",
+          "value": 18.0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "x",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "qaoa_layers",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "GA Buy&Hold",
+          "metric_name": "return",
+          "value": 7.68,
+          "unit": "%"
+        },
+        {
+          "method_name": "GA Buy&Hold",
+          "metric_name": "sharpe_ratio",
+          "value": 0.471,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "GA Buy&Hold",
+          "metric_name": "rebalance_count",
+          "value": 0,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "GA Buy&Hold",
+          "metric_name": "transaction_cost",
+          "value": 0.0,
+          "unit": "bp"
+        },
+        {
+          "method_name": "MinVar Buy&Hold",
+          "metric_name": "return",
+          "value": -0.86,
+          "unit": "%"
+        },
+        {
+          "method_name": "MinVar Buy&Hold",
+          "metric_name": "sharpe_ratio",
+          "value": 0.06,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "MinVar Buy&Hold",
+          "metric_name": "rebalance_count",
+          "value": 0,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "MinVar Buy&Hold",
+          "metric_name": "transaction_cost",
+          "value": 0.0,
+          "unit": "bp"
+        },
+        {
+          "method_name": "Equal Buy&Hold",
+          "metric_name": "return",
+          "value": 5.15,
+          "unit": "%"
+        },
+        {
+          "method_name": "Equal Buy&Hold",
+          "metric_name": "sharpe_ratio",
+          "value": 0.382,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "Equal Buy&Hold",
+          "metric_name": "rebalance_count",
+          "value": 0,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "Equal Buy&Hold",
+          "metric_name": "transaction_cost",
+          "value": 0.0,
+          "unit": "bp"
+        },
+        {
+          "method_name": "Ensemble Buy&Hold",
+          "metric_name": "return",
+          "value": 3.99,
+          "unit": "%"
+        },
+        {
+          "method_name": "Ensemble Buy&Hold",
+          "metric_name": "sharpe_ratio",
+          "value": 0.325,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "Ensemble Buy&Hold",
+          "metric_name": "rebalance_count",
+          "value": 0,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "Ensemble Buy&Hold",
+          "metric_name": "transaction_cost",
+          "value": 0.0,
+          "unit": "bp"
+        },
+        {
+          "method_name": "GA Rebal/1d",
+          "metric_name": "return",
+          "value": 9.12,
+          "unit": "%"
+        },
+        {
+          "method_name": "GA Rebal/1d",
+          "metric_name": "sharpe_ratio",
+          "value": 0.541,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "GA Rebal/1d",
+          "metric_name": "rebalance_count",
+          "value": 248,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "GA Rebal/1d",
+          "metric_name": "transaction_cost",
+          "value": 31.6,
+          "unit": "bp"
+        },
+        {
+          "method_name": "GA Rebal/5d",
+          "metric_name": "return",
+          "value": 9.63,
+          "unit": "%"
+        },
+        {
+          "method_name": "GA Rebal/5d",
+          "metric_name": "sharpe_ratio",
+          "value": 0.567,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "GA Rebal/5d",
+          "metric_name": "rebalance_count",
+          "value": 49,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "GA Rebal/5d",
+          "metric_name": "transaction_cost",
+          "value": 15.8,
+          "unit": "bp"
+        },
+        {
+          "method_name": "GA Rebal/10d",
+          "metric_name": "return",
+          "value": 9.77,
+          "unit": "%"
+        },
+        {
+          "method_name": "GA Rebal/10d",
+          "metric_name": "sharpe_ratio",
+          "value": 0.575,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "GA Rebal/10d",
+          "metric_name": "rebalance_count",
+          "value": 24,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "GA Rebal/10d",
+          "metric_name": "transaction_cost",
+          "value": 11.0,
+          "unit": "bp"
+        },
+        {
+          "method_name": "GA Rebal/21d",
+          "metric_name": "return",
+          "value": 8.43,
+          "unit": "%"
+        },
+        {
+          "method_name": "GA Rebal/21d",
+          "metric_name": "sharpe_ratio",
+          "value": 0.505,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "GA Rebal/21d",
+          "metric_name": "rebalance_count",
+          "value": 11,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "GA Rebal/21d",
+          "metric_name": "transaction_cost",
+          "value": 6.5,
+          "unit": "bp"
+        },
+        {
+          "method_name": "GA Threshold (5%)",
+          "metric_name": "return",
+          "value": 7.63,
+          "unit": "%"
+        },
+        {
+          "method_name": "GA Threshold (5%)",
+          "metric_name": "sharpe_ratio",
+          "value": 0.469,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "GA Threshold (5%)",
+          "metric_name": "rebalance_count",
+          "value": 2,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "GA Threshold (5%)",
+          "metric_name": "transaction_cost",
+          "value": 2.4,
+          "unit": "bp"
+        },
+        {
+          "method_name": "MinVar + QAOA",
+          "metric_name": "return",
+          "value": 0.34,
+          "unit": "%"
+        },
+        {
+          "method_name": "MinVar + QAOA",
+          "metric_name": "sharpe_ratio",
+          "value": 0.137,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "MinVar + QAOA",
+          "metric_name": "rebalance_count",
+          "value": 8,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "MinVar + QAOA",
+          "metric_name": "transaction_cost",
+          "value": 4.6,
+          "unit": "bp"
+        },
+        {
+          "method_name": "Equal + QAOA",
+          "metric_name": "return",
+          "value": 7.26,
+          "unit": "%"
+        },
+        {
+          "method_name": "Equal + QAOA",
+          "metric_name": "sharpe_ratio",
+          "value": 0.498,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "Equal + QAOA",
+          "metric_name": "rebalance_count",
+          "value": 8,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "Equal + QAOA",
+          "metric_name": "transaction_cost",
+          "value": 5.6,
+          "unit": "bp"
+        },
+        {
+          "method_name": "Ensemble + QAOA",
+          "metric_name": "return",
+          "value": 5.63,
+          "unit": "%"
+        },
+        {
+          "method_name": "Ensemble + QAOA",
+          "metric_name": "sharpe_ratio",
+          "value": 0.422,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "Ensemble + QAOA",
+          "metric_name": "rebalance_count",
+          "value": 8,
+          "unit": "rebalances"
+        },
+        {
+          "method_name": "Ensemble + QAOA",
+          "metric_name": "transaction_cost",
+          "value": 5.6,
+          "unit": "bp"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "empirical",
+          "factor": "2.3% Sharpe improvement",
+          "baseline_method": "GA Rebal/10d",
+          "conditions": "2025 out-of-sample test period; GA weights; walk-forward QAOA schedule with 8 candidate dates per window, 3 windows, 5 restarts, p=2",
+          "is_demonstrated": true,
+          "caveats": "Improvement is small in absolute terms (0.588 vs 0.575) and based on a single test year."
+        },
+        {
+          "type": "empirical",
+          "factor": "44.5% transaction-cost reduction",
+          "baseline_method": "GA Rebal/10d",
+          "conditions": "6.1 bp vs 11.0 bp transaction cost in 2025",
+          "is_demonstrated": true,
+          "caveats": "Lower cost comes with fewer rebalances (8 vs 24); performance gain is modest."
+        },
+        {
+          "type": "theoretical",
+          "factor": "18x enrichment of the top bitstring over uniform baseline",
+          "baseline_method": "uniform random sampling over 2^8 bitstrings",
+          "conditions": "4,096 measurement shots; top bitstring probability >7% vs uniform 1/256 ≈ 0.39%",
+          "is_demonstrated": true,
+          "caveats": "This is a sampling concentration metric, not a proven computational speedup."
+        },
+        {
+          "type": "asymptotic",
+          "factor": "brute force over 2^W schedules",
+          "baseline_method": "classical exhaustive search",
+          "conditions": "rebalancing schedule problem with W binary variables",
+          "is_demonstrated": false,
+          "caveats": "The paper states the combinatorial growth but does not demonstrate asymptotic quantum speedup."
+        },
+        {
+          "type": "projected",
+          "factor": "polynomial query complexity for approximate solutions",
+          "baseline_method": "classical exhaustive search",
+          "conditions": "for larger production settings with daily decisions over a year (W≈252) or multi-asset, multi-window formulations",
+          "is_demonstrated": false,
+          "caveats": "Claim is qualitative and not benchmarked against a classical solver at that scale."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 10,
+          "num_qubits": 8,
+          "metric_name": "portfolio_assets",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 8,
+          "num_qubits": 8,
+          "metric_name": "binary_variables",
+          "metric_value": 8
+        },
+        {
+          "problem_size": 3,
+          "num_qubits": 8,
+          "metric_name": "walk_forward_windows",
+          "metric_value": 3
+        },
+        {
+          "problem_size": 252,
+          "num_qubits": null,
+          "metric_name": "candidate_schedule_length_projected",
+          "metric_value": 252
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": "QAOA on W binary variables; circuit depth O(p * W^2) as stated for the cost unitary",
+        "classical_complexity": "brute force over 2^W schedules",
+        "speedup_order": "none",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    }
+  ]
+}

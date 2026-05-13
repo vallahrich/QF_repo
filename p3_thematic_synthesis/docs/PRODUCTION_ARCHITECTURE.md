@@ -1,6 +1,6 @@
 # Thematic Pipeline — Production Architecture
 
-> **Status note (2026-05-10): historical design-time architecture document (2026-04-19).** Retained as provenance for the Step 3.5 design rationale; not the current authority. Current truth: [../FREEZE.md](../FREEZE.md), [../P3_AUDIT_STATUS.md](../P3_AUDIT_STATUS.md), and [../../docs/PROJECT_STATE.yaml](../../docs/PROJECT_STATE.yaml). This document describes the high-volume A1/A2/L3 production architecture; it does not override the canonical within-paper contract **A1 -> L1 -> A2 -> L2 -> L3 -> A3 -> R1** or the freeze disclosure that A3 was deferred and R1 was post-freeze validation.
+> **Status note (2026-05-10): historical design-time architecture document (2026-04-19).** Retained as provenance for the Step 3.5 design rationale; not the current authority. Current truth: [../FREEZE.md](../FREEZE.md), [../P3_AUDIT_STATUS.md](../P3_AUDIT_STATUS.md), and [../../docs/PROJECT_STATE.yaml](../../docs/PROJECT_STATE.yaml). This document describes the high-volume A1/A2/L3 production architecture; it does not override the canonical within-paper contract **A1 -> L1 -> A2 -> L2 -> L3 -> A3 -> R1** or the freeze disclosure that A3 was retained as a deferred contradiction-scan prompt.
 
 > Design decisions for the Phase 3 Step 3.5 production pipeline.
 > Records the rationale behind each choice for methodology defence.

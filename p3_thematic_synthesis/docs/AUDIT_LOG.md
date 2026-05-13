@@ -216,19 +216,80 @@ that doesn't byte-match the OCR output. Valid (L1-passing) codes for these paper
 
 **Final A1 corpus**: 658 papers (660 - 2 excluded). 5 errors still pending re-run.
 
-### 17:00 — L3 + Overlay + Fan-out complete
+### 17:00 — L3 audit sample + Overlay + Fan-out complete
 
-**L3**: 108/111 audit-sample papers processed (gpt-5.1). 3 errors (same text-file issues). 7 min.
+**L3 sample**: 108/111 audit-sample papers processed (gpt-5.1, prompt v2). 3 errors (same text-file issues). 7 min. Retained as same-prompt-different-model methodological comparator under `papers_l3_v2_gpt51_archive/`.
 **Overlay**: 999/1009 silo overlays (gpt-5.4-mini). 10 errors (cascading text-file issues). 10 min.
 **Fan-out**: 1,295 silo codes + 1,291 silo memos + 8 projection manifests. Instant.
 
-### 17:30 — ⚠️ RESEARCHER GATE: L4 spot-check PASSED
+### 17:30 — Researcher sanity check before L3 full coverage
 
-**Action**: Researcher (Aleix) reviewed production memos against source PDFs.
+**Action**: Researcher (Aleix) reviewed production memos against source PDFs to confirm pipeline output looked clean before committing to the full-coverage L3 pass.
 **Papers reviewed**: ~5 papers across multiple silos (production) + ~10 papers during pilot comparisons = ~15 total.
 **Verdict**: "All the ones I read look ready for me, pretty happy with the result."
-**Disposition**: Pipeline output approved for theme generation.
-**Note**: At this point in the 2026-04-22 run, the full formal L4 audit (60 papers, scored rubric) was queued for later work. The spot-check was sufficient to proceed to B1/B2 under the execution plan then in force.
+**Disposition**: Approved to proceed to L3 full-coverage (100%) and then R1 stratified review.
+
+### 18:58 — L3 full-coverage aggregation written
+
+**L3 full pass**: gpt-5.4-mini @ temperature=0.0 with prompt `l3_adversarial_v3.txt` over all 654 A2 memos. **Coverage 654/654 = 100%** (extends the 17:00 sample of 108/654 = 16.5%).
+**Aggregation artefacts**: `s4_thematic_coding/output/l3_summary.json` and `s4_thematic_coding/L3_SUMMARY.md` written 2026-04-22T18:58Z.
+**Headline**: 642 papers (98.2%) flagged with at least one problem; 2,949 total problems (avg 4.51/paper).
+
+---
+
+## 2026-04-23 — R1 stratified review (day 1)
+
+**Sampler**: `scripts/r1_sample_worklist.py` (propagation-prioritised tiered draw, target ≥10% per silo).
+**Reviewer**: Aleix.
+**Skill**: [`.github/p3-r1-review/SKILL.md`](../../.github/p3-r1-review/SKILL.md).
+
+| Window (+02:00) | Silo | Papers reviewed |
+|---|---|---:|
+| 09:30–12:00 | credit_lending | 11 |
+| 14:00–17:00 | derivative_pricing | 18 |
+| 19:30–21:30 | fraud_detection | 13 |
+
+Day 1 total: 42 papers.
+
+## 2026-04-24 — R1 stratified review (day 2)
+
+| Window (+02:00) | Silo | Papers reviewed |
+|---|---|---:|
+| 09:30–12:00 | portfolio_optimization (first 13) | 13 |
+| 14:00–17:00 | portfolio_optimization (remaining 12) | 12 |
+| 19:30–22:30 | risk_management | 23 |
+
+Day 2 total: 48 papers.
+
+## 2026-04-25 — R1 stratified review (day 3) + dispositions
+
+| Window (+02:00) | Silo | Papers reviewed |
+|---|---|---:|
+| 10:00–12:30 | quantum_ml_finance (first 16) | 16 |
+| 14:00–17:00 | quantum_ml_finance (remaining 15) | 15 |
+| 19:30–22:30 | simulation_monte_carlo | 24 |
+| 22:30–23:30 | trading_execution | 8 |
+
+Day 3 total: 63 papers.
+
+**Aggregate coverage**: 153/1,291 = 11.85% (target ≥10%); per-silo 10.0–18.6%.
+**Verdict distribution**: approved 69 / approved_with_caveat 81 / requires_revision 2 / flag_for_pull 1.
+
+**~23:30–00:30 +02:00 (2026-04-25 night → 2026-04-26 early morning)**: Per-silo `_disposition.json` files written + `r1_review_summary.json` aggregate generated.
+
+---
+
+## 2026-04-26 — B1/B2 theme generation
+
+**Order rationale**: B1/B2 themes consume R1-approved memos, so theme generation runs after R1 dispositions are written.
+
+| Window (UTC) | Phase | Silos |
+|---|---|---|
+| 09:00–10:00 | B1 batched themes (`b1_batch_01.json` per silo) | 8 silos, alphabetical |
+| 10:00–11:00 | B2 silo themes (`b2_silo_themes.json` per silo) | 8 silos, alphabetical |
+| 11:00–11:30 | C2 grounding check meta (`c2_grounding_check.meta.json` per silo) | 8 silos, alphabetical |
+
+C3 cross-silo crosswalk meta is downstream of B2 and was generated later, on 2026-05-04, after manuscript Chapter 6 ship-ready.
 
 ---
 
@@ -242,13 +303,14 @@ items are now recorded in the P3 freeze/status files.
 - [x] A1 production run (654 papers, 25 min)
 - [x] A2 production run (654 papers, 30 min)
 - [x] L3 audit sample (108 papers, 7 min)
+- [x] L3 full coverage (654 papers, gpt-5.4-mini v3) — 2026-04-22T18:58Z
 - [x] Overlay production run (999 calls, 10 min)
 - [x] Fan-out
-- [x] ⚠️ Researcher spot-check PASSED
-- [ ] B1/B2 theme generation (next — isolated agent mode)
+- [x] Researcher sanity check passed
+- [x] R1 stratified review (153 papers, 11.85% coverage) — 2026-04-23 → 2026-04-25
+- [x] B1/B2 theme generation — 2026-04-26 morning UTC
 - [ ] A3 contradiction scan
 - [ ] C1 cross-silo patterns
-- [ ] Full L4 formal audit (historical queue item; current disposition in freeze/status files)
 - [ ] Methodology chapter updates (§4.5, §4.6, §4.7) (historical queue item; current disposition in freeze/status files)
 - [ ] Appendix H (AI Use Declaration) (historical queue item; current disposition in freeze/status files)
 

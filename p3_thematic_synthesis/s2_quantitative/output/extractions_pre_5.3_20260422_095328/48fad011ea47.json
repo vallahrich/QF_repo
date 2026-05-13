@@ -1,0 +1,553 @@
+{
+  "paper_id": "48fad011ea47",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-17",
+    "run_timestamp": "2026-04-17T08:08:25+00:00",
+    "schema_version": "benchmark_extraction_v1.0",
+    "prompt_version_hash": "2d440153b274177d",
+    "scope": "gate_based",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.4-mini"
+    },
+    "source_file": "48fad011ea47_qadqn_quantum_attention_deep_q_network_for_financial_market_prediction.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.8,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 0,
+    "validation_warnings": 2,
+    "validation_passed": true,
+    "validation_error_details": [],
+    "validation_warning_details": [
+      "experiments[0].results[22].unit='days' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[24].unit='episodes' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)"
+    ],
+    "quality_details": {
+      "score": 0.8,
+      "completeness": 0.8,
+      "num_experiments": 1,
+      "experiment_scores": [
+        0.8
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "revalidated_at": "2026-04-17T08:36:05+00:00"
+  },
+  "paper_metadata": {
+    "title": "QADQN: Quantum Attention Deep Q-Network for Financial Market Prediction",
+    "authors": [
+      "Siddhant Dutta",
+      "Nouhaila Innan",
+      "Alberto Marchisio",
+      "Sadok Ben Yahia",
+      "Muhammad Shafique"
+    ],
+    "year": 2024,
+    "doi": "",
+    "scope": "gate_based"
+  },
+  "finance_domain": {
+    "primary_silo": "trading-execution",
+    "secondary_silos": [
+      "quantum-ml-finance"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "The paper presents a 4-qubit hybrid Quantum Attention Deep Q-Network (QADQN) for S&P 500 trading, evaluated on overlapping and non-overlapping test periods from 2019-01-16 to 2024-01-16 and 2020-01-16 to 2024-01-16. Reported QADQN results include 78.91% return, 0.82 Sharpe, 1.19 Sortino, and 19.24% max drawdown on the overlapping period, and 71.26% return, 0.77 Sharpe, 1.28 Sortino, and 19.24% max drawdown on the non-overlapping period; it outperforms Buy & Hold and DDPG on the reported metrics but does not demonstrate quantum advantage.",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Quantum Attention Deep Q-Network (QADQN) for S&P 500 trading prediction/backtesting using a variational quantum circuit inside a deep Q-learning framework, evaluated on overlapping and non-overlapping test periods.",
+      "algorithm": {
+        "family": "qaoa",
+        "variant": "Quantum Attention Deep Q-Network with multi-head quantum self-attention and quantum post-net layer",
+        "ansatz": "AngleEmbedding + parameterized RX/CNOT entangling layers",
+        "optimizer": "Lion",
+        "num_layers": null,
+        "convergence_criteria": "200 training episodes",
+        "hyperparameters": {
+          "num_qubits": 4,
+          "window_size_days": 24,
+          "discount_factor_gamma": 0.95,
+          "training_episodes": 200,
+          "action_space": [
+            "sit",
+            "buy",
+            "sell"
+          ],
+          "dual_thrust_k1": 0.8,
+          "dual_thrust_k2": 0.4,
+          "transaction_cost_rate": 0.002,
+          "replay_memory": "standard experience replay + prioritized experience replay",
+          "target_update_frequency": "periodic (exact frequency not reported)",
+          "loss_function": "Huber loss",
+          "policy": "UCB"
+        },
+        "parameter_initialization": "random weights for Q network; no explicit quantum parameter initialization reported",
+        "optimizer_settings": {
+          "learning_rate": null,
+          "max_iterations": 200,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "angle_encoding",
+        "encoding_details": "OHLC-derived financial features are log-transformed and fed through an LSTM pre-net; 4-dimensional outputs are encoded into 4 qubits via angle embedding",
+        "objective_function": "maximize trading reward / Q-value-based return under transaction costs in a POMDP trading environment",
+        "constraints_handling": "experience replay, prioritized replay, UCB action selection, and Dual Thrust pre-populated actions; transaction costs included in backtesting",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Financial market prediction and trading on S&P 500 index OHLC data",
+        "num_assets": 1,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "public_benchmark",
+        "dataset_name": "S&P 500 (Yahoo Finance OHLC)",
+        "dataset_specification": {
+          "ticker_symbols": [
+            "^GSPC"
+          ],
+          "date_range": "train: 2016-01-15 to 2020-01-15; test_overlapping: 2019-01-16 to 2024-01-16; test_non_overlapping: 2020-01-16 to 2024-01-16",
+          "benchmark_name": "S&P 500",
+          "preprocessing": "logarithmic transformation of price/feature ratios; 24-day window",
+          "train_test_split": "train on 2016-01-15 to 2020-01-15; evaluate on overlapping and non-overlapping test periods"
+        },
+        "data_preprocessing_details": "Input state St is an n-day log-return style representation of OHLC features; LSTM pre-processing followed by dimensionality reduction 64->32->8->4 before quantum layers",
+        "evaluation_methodology": "Backtesting with Backtest library and 0.2% commission; compared against Buy & Hold and DDPG; evaluated on overlapping and non-overlapping test periods using return, Sharpe ratio, Sortino ratio, and max drawdown"
+      },
+      "quantum_resources": {
+        "num_qubits": 4,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": {
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        }
+      },
+      "hardware": {
+        "type": "not_specified",
+        "provider": null,
+        "device_name": null,
+        "framework": "PennyLane"
+      },
+      "noise_model": {
+        "is_noisy": null,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "transpilation_settings": null,
+        "classical_preprocessing": "LSTM pre-net with ELU layers reducing 64 -> 32 -> 8 -> 4; log-transformed OHLC features; prioritized replay memory initialized with Dual Thrust actions",
+        "classical_postprocessing": "Backtesting and computation of total return, Sharpe ratio, Sortino ratio, and maximum drawdown",
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        },
+        "classical_mc_samples": null,
+        "num_layers": null,
+        "ansatz_depth": null,
+        "p_rounds": null
+      },
+      "results": [
+        {
+          "metric_name": "return",
+          "value": 78.91,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": 0.82,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sortino_ratio",
+          "value": 1.19,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "max_drawdown",
+          "value": 19.24,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "return",
+          "value": 71.26,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": 0.77,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sortino_ratio",
+          "value": 1.28,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "max_drawdown",
+          "value": 19.24,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "return",
+          "value": 74.42,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": 0.67,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sortino_ratio",
+          "value": 1.07,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "return",
+          "value": 44.22,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": 0.52,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sortino_ratio",
+          "value": 0.85,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "return",
+          "value": 31.23,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": 0.42,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sortino_ratio",
+          "value": 0.81,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "return",
+          "value": 15.94,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": 0.36,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sortino_ratio",
+          "value": 0.79,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "commission_rate",
+          "value": 0.2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "window_size",
+          "value": 24,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "days",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "discount_factor_gamma",
+          "value": 0.95,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "training_episodes",
+          "value": 200,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "episodes",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "buy_and_hold",
+          "metric_name": "return",
+          "value": 74.42,
+          "unit": "%"
+        },
+        {
+          "method_name": "buy_and_hold",
+          "metric_name": "sharpe_ratio",
+          "value": 0.67,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "buy_and_hold",
+          "metric_name": "sortino_ratio",
+          "value": 1.07,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "buy_and_hold",
+          "metric_name": "return",
+          "value": 44.22,
+          "unit": "%"
+        },
+        {
+          "method_name": "buy_and_hold",
+          "metric_name": "sharpe_ratio",
+          "value": 0.52,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "buy_and_hold",
+          "metric_name": "sortino_ratio",
+          "value": 0.85,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "ddpg",
+          "metric_name": "return",
+          "value": 31.23,
+          "unit": "%"
+        },
+        {
+          "method_name": "ddpg",
+          "metric_name": "sharpe_ratio",
+          "value": 0.42,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "ddpg",
+          "metric_name": "sortino_ratio",
+          "value": 0.81,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "ddpg",
+          "metric_name": "return",
+          "value": 15.94,
+          "unit": "%"
+        },
+        {
+          "method_name": "ddpg",
+          "metric_name": "sharpe_ratio",
+          "value": 0.36,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "ddpg",
+          "metric_name": "sortino_ratio",
+          "value": 0.79,
+          "unit": "ratio"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "The paper reports performance improvements in returns and risk-adjusted metrics, but no computational speedup or asymptotic advantage is claimed or demonstrated."
+        }
+      ],
+      "scalability_data": [],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": "none_proven",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {
+        "advantage_status": "advantage_claimed_not_demonstrated",
+        "hoefler_viable": false,
+        "maturity_level": "L1_noiseless_sim",
+        "crossover_size": "not_assessed",
+        "resources_for_advantage": "4-qubit variational quantum circuit embedded in a classical deep Q-learning pipeline; no hardware execution, no scaling study, and no complexity analysis beyond qualitative discussion.",
+        "data_loading_bottleneck": true,
+        "feasibility_horizon": "far_future_10_plus_years",
+        "limiting_factors": [
+          "No demonstrated asymptotic speedup",
+          "No specific quantum hardware or noisy-device results",
+          "Classical preprocessing and optimization dominate the pipeline",
+          "Backtesting comparison is against Buy & Hold and DDPG only, not against a strong classical trading model family",
+          "The paper reports performance gains in returns, but these are application-level results rather than evidence of quantum computational advantage"
+        ]
+      },
+      "provenance": {
+        "hardware_type": "paper_reported",
+        "num_qubits": "paper_reported",
+        "circuit_depth": "paper_reported",
+        "speedup_order": "derived",
+        "quantum_complexity": "paper_reported",
+        "classical_complexity": "paper_reported",
+        "notes": [
+          "No specific QPU or simulator is named; hardware.type remains not_specified. The paper explicitly states use of PennyLane and 4 qubits per quantum layer.",
+          "Circuit depth, gate counts, shots, and variational parameter count are not explicitly reported in the paper.",
+          "No asymptotic quantum speedup analysis is provided; speedup_order set to none_proven.",
+          "The paper claims improved trading performance for QADQN, but does not establish quantum computational advantage in the Hoefler sense.",
+          "The experiment is a small-scale 4-qubit hybrid model with no reported hardware advantage or complexity crossover."
+        ],
+        "advantage_status": "paper_inferred"
+      }
+    }
+  ]
+}

@@ -7,7 +7,6 @@
 | `PRISMA_S_checklist.md` | PRISMA-S search reporting extension. |
 | `amendments_log.csv` | Append-only log of dated amendments to the protocol. |
 | `amendments/` | Full text of each amendment. See [`amendments/README.md`](amendments/README.md). |
-| `archive/` | Superseded amendments and legacy notes. See [`archive/README.md`](archive/README.md). |
 
 ## Status
 

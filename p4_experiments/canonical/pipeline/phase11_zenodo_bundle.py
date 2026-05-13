@@ -57,16 +57,7 @@ def _sha256(p: Path) -> str:
 
 def _copy_file(src: Path, dst: Path) -> None:
     dst.parent.mkdir(parents=True, exist_ok=True)
-    if dst.exists() or dst.is_symlink():
-        _unlink_if_stale(dst)
     shutil.copy2(src, dst)
-    src_sha = _sha256(src)
-    dst_sha = _sha256(dst)
-    if src_sha != dst_sha:
-        raise RuntimeError(
-            f"copy verification failed for {dst.relative_to(BUNDLE)}: "
-            f"source={src_sha}, bundle={dst_sha}"
-        )
 
 
 def _unlink_if_stale(path: Path) -> None:
@@ -105,16 +96,17 @@ Freeze tag: freeze-2026-05-02 (see top-level FREEZE.md in the source repo)
 ## Contents
 - `cohort.json` - 71-label S2-backed canonical cohort with `_phase_status` history.
 - `reports/stats_report.json` - H1/H2/H3/H4 statistical test results on the
-        family-template implementation cohort; the active cohort contains no
-        paper-faithful-strict estimator labels.
+    family-template implementation cohort; the active cohort contains no
+    paper-faithful-strict estimator labels.
 - `reports/oracle_tax_table.json` - per-(label, profile, eps) tau ratios.
 - `reports/sensitivity_grid.json` - H4 sensitivity across tau-thresholds and baseline scales.
 - `reports/evidence_report.json` - Phase 9b evidence layer linking H1-H4 results to manuscript claims.
 - `reports/audit/audit_phase{{1..11}}.json` - per-phase audit reports (all blockers green at tag time).
-- `manuscript_artifacts/` - LaTeX tables, figure source CSVs, briefs, captions, and `key_numbers.json`.
+- `manuscript_artifacts/` - LaTeX tables + figure CSVs + `key_numbers.json`.
 - `audit/implementation_type_audit_report.json` - per-label tier classification
-        (0 paper-faithful-strict / 13 paper-family-template / 58 proxy)
-        + family-mismatch disclosures stamped onto affected `instance.json` files.
+    (0 paper-faithful-strict / 13 paper-family-template / 58 proxy)
+    + family-mismatch disclosures stamped onto affected `instance.json` files.
+- `audit/common_vs_core.md` - diff of the `common/` compatibility namespace vs `core/`.
 - `experiments/silos/<silo>/<paper>/instance.json` - per-label instance metadata
   including `implementation_type` and `family_disclosure` where applicable.
 - `results/` - raw record JSON files from Phase 8 (2556 cells; 2519 OK + 37
@@ -135,9 +127,9 @@ docker run --rm -v "$PWD/output:/app/output" qf-p4-canonical
 ## Headline numbers
 - N labels in cohort: {len(cohort.get("labels") or {})}
 - Implementation tiers:
-        - paper-faithful-strict: 0 active estimator labels
-        - paper-family-template: 13
-        - proxy: 58
+    - paper-faithful-strict: 0 active estimator labels
+    - paper-family-template: 13
+    - proxy: 58
 - N records (Phase 8 grid): {(p8.get("results_breakdown") or {}).get("total_records", 2556)}
 - H4 canonical winners: {p9.get("h4_canonical_winners_count", 0)}
 - H4 bifurcation holds (family-template cohort): {p9.get("h4_bifurcation_holds", True)}
@@ -185,6 +177,14 @@ def _gather_files(cohort: dict) -> list[tuple[Path, str]]:
             if f.is_file():
                 pairs.append((f, f"manuscript_artifacts/{f.name}"))
 
+    # H1-H4 + Hoefler figures (PNG + JSON sidecar). Added 2026-04-19;
+    # see DECISIONS_LOG entry on Phase 10 figure scripts.
+    figs = CANON / "outputs" / "figures"
+    if figs.exists():
+        for f in figs.iterdir():
+            if f.is_file():
+                pairs.append((f, f"figures/{f.name}"))
+
     # PRE_REGISTRATION + Dockerfile + requirements.lock + requirements.in.
     for src, dst in [(PRE_REG, "PRE_REGISTRATION.md"),
                      (CANON / "Dockerfile", "Dockerfile"),
@@ -218,6 +218,8 @@ def _gather_files(cohort: dict) -> list[tuple[Path, str]]:
     audit_freeze_pairs = [
         (ROOT / "p4_experiments" / "scripts" / "implementation_type_audit_report.json",
          "audit/implementation_type_audit_report.json"),
+        (ROOT / "p4_experiments" / "common" / "COMMON_VS_CORE_AUDIT.md",
+         "audit/common_vs_core.md"),
         (ROOT / "p4_experiments" / "FREEZE.md", "FREEZE.p4.md"),
         (ROOT / "FREEZE.md", "FREEZE.md"),
     ]

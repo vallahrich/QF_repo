@@ -1,0 +1,677 @@
+{
+  "paper_id": "fddc282dba6f",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "fddc282dba6f_portfolio_construction_using_a_sampling_based_variational_quantum_scheme.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.975,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 8,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.1.algorithm.ansatz: ['TwoLocal bilinear', 'TwoLocal color', 'BFCD'] is not of type 'string', 'null'",
+      "Schema error at experiments.1.hardware.device_name: ['MPS simulator', 'ibm_marrakesh', 'ibm_fez'] is not of type 'string', 'null'",
+      "Schema error at experiments.1.hardware.type: ['simulator_other', 'real_qpu_superconducting'] is not of type 'string', 'null'",
+      "Schema error at experiments.1.hardware.type: ['simulator_other', 'real_qpu_superconducting'] is not one of ['simulator_statevector', 'simulator_noisy', 'simulator_other', 'real_qpu_superconducting', 'real_qpu_trapped_ion', 'real_qpu_photonic', 'real_qpu_neutral_atom', 'quantum_annealer', 'not_specified', None]",
+      "Schema error at experiments.1.quantum_resources.circuit_depth_transpiled: [17, 19, 57] is not of type 'integer', 'null'",
+      "Schema error at experiments.1.quantum_resources.cnot_count: [216, 246, 648] is not of type 'integer', 'null'",
+      "Schema error at experiments.1.quantum_resources.gate_count_total: [1525, 1555, 4220] is not of type 'integer', 'null'",
+      "Schema error at experiments.1.quantum_resources.num_variational_params: [327, 327, 434] is not of type 'integer', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.975,
+      "completeness": 0.975,
+      "num_experiments": 2,
+      "experiment_scores": [
+        0.95,
+        1.0
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Portfolio construction using a sampling-based variational quantum scheme",
+    "authors": [
+      "Gabriele Agliardi",
+      "Dimitris Alevras",
+      "Vaibhaw Kumar",
+      "Roberto Lo Nardo",
+      "Gabriele Compostella",
+      "Sumit Kumar",
+      "Manuel Proissl",
+      "Bimal Mehta"
+    ],
+    "year": 2025,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "31-qubit MPS simulation study used to tune CVaR alpha and ansatz repetitions for the TwoLocal bilinear and BFCD bilinear circuits on a simplified bond-ETF portfolio instance.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "sampling-based CVaR-VQA with local-search post-processing",
+        "ansatz": "TwoLocal and BFCD",
+        "optimizer": "NFT (Nakanishi-Fujii-Todo)",
+        "num_layers": 2,
+        "convergence_criteria": "Not explicitly stated; experiments run over 90 configurations and compared by final relative gap",
+        "hyperparameters": {
+          "cvar_alpha": [
+            0.1,
+            0.15,
+            0.2
+          ],
+          "repetitions_r": [
+            1,
+            2,
+            3
+          ],
+          "local_search": true,
+          "local_search_window_last_iterations": 20,
+          "initial_parameter_value": "pi/3",
+          "shots_per_iteration": 8192
+        },
+        "parameter_initialization": "All circuit parameters initialized to pi/3",
+        "optimizer_settings": {
+          "optimizer_name": "NFT",
+          "parameter_update_rule": "one parameter at a time in randomized order",
+          "derivative_estimation": "3-point numerical approximation",
+          "circuit_evaluations_per_parameter": 3
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "One qubit per bond; binary variables x_i indicate whether bond i is included; integer holdings simplified to y_i = c_i x_i",
+        "objective_function": "Minimize x^T Q x + 1^T max{0, s ⊙ (A x - b)}; original portfolio objective minimizes average squared distance of portfolio metrics from targets",
+        "constraints_handling": "Inequality constraints handled by nonnegative penalty term max{0, s ⊙ (A x - b)} without slack variables; local search used as post-processing",
+        "num_binary_variables": 31,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 0
+      },
+      "problem_instance": {
+        "description": "Simplified bond ETF portfolio construction instance reduced from a larger realistic formulation",
+        "num_assets": 31,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "proprietary",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "Subset of bonds selected from a larger ETF construction problem; subset of classes D' chosen from one dimension D; constraints involving bonds outside the restricted set removed; budget M manually adjusted"
+        },
+        "data_preprocessing_details": "Reduced to binary variables only by setting y_i = c_i x_i; restricted to a subset of classes and bonds; removed constraints involving excluded bonds; adjusted cash budget M",
+        "evaluation_methodology": "10 independent repetitions for each configuration; 90 experiments total over alpha and repetitions; relative gap measured against CPLEX optimum"
+      },
+      "quantum_resources": {
+        "num_qubits": 31,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 8192,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": "IBM",
+        "device_name": "MPS simulator",
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "noise_type": "noiseless simulation",
+        "is_noisy": false,
+        "error_mitigation_method": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "CPLEX",
+        "classical_preprocessing": "Classical solution used as benchmark; problem reduced before quantum run",
+        "classical_postprocessing": "Local search over sampled bitstrings; flip one variable at a time in randomized order until no improvement"
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 31,
+          "uncertainty": null,
+          "num_runs": 90,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "cvar",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": 90,
+          "unit": "alpha",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "repetitions_r",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": 90,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "repetitions_r",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": 90,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "repetitions_r",
+          "value": 3,
+          "uncertainty": null,
+          "num_runs": 90,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "shots_per_iteration",
+          "value": 8192,
+          "uncertainty": null,
+          "num_runs": 90,
+          "unit": "shots",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "relative_gap",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": 90,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "best_relative_gap",
+          "value": 0.0039,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "CPLEX",
+          "metric_name": "optimal_solution",
+          "value": null,
+          "unit": "objective value"
+        },
+        {
+          "method_name": "CPLEX",
+          "metric_name": "relative_gap",
+          "value": 0.0,
+          "unit": "fraction"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": "CPLEX",
+          "conditions": "31-qubit MPS simulation tuning study",
+          "is_demonstrated": false,
+          "caveats": "This experiment is for hyperparameter tuning and relative-gap comparison only; no runtime speedup claim is made."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 31,
+          "num_qubits": 31,
+          "metric_name": "relative_gap",
+          "metric_value": null
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "109-qubit simulator and hardware comparison of CVaR-VQA on the simplified bond-ETF instance using TwoLocal bilinear, TwoLocal color, and BFCD ansatzes, with and without local search.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "sampling-based CVaR-VQA with local-search post-processing",
+        "ansatz": [
+          "TwoLocal bilinear",
+          "TwoLocal color",
+          "BFCD"
+        ],
+        "optimizer": "NFT (Nakanishi-Fujii-Todo)",
+        "num_layers": 2,
+        "convergence_criteria": "Iterative optimization until convergence of sampled CVaR / best sampled objective; exact stopping criterion not specified",
+        "hyperparameters": {
+          "cvar_alpha": 0.1,
+          "repetitions_r": 2,
+          "local_search": true,
+          "local_search_window_last_iterations": 20,
+          "parameter_cutoff": 0.06,
+          "initial_parameter_value": "pi/3",
+          "shots_per_iteration": 8192,
+          "dynamical_decoupling_sequence": "default XX",
+          "transpiler_optimization_level": 3
+        },
+        "parameter_initialization": "All circuit parameters initialized to pi/3",
+        "optimizer_settings": {
+          "optimizer_name": "NFT",
+          "parameter_update_rule": "one parameter at a time in randomized order",
+          "derivative_estimation": "3-point numerical approximation",
+          "circuit_evaluations_per_parameter": 3,
+          "parameter_cutoff": 0.06
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "One qubit per bond; binary variables x_i indicate inclusion of each bond; y_i simplified to c_i x_i",
+        "objective_function": "Minimize x^T Q x + 1^T max{0, s ⊙ (A x - b)}",
+        "constraints_handling": "Inequality constraints encoded via penalty term max{0, s ⊙ (A x - b)}; local search applied after sampling",
+        "num_binary_variables": 109,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 0
+      },
+      "problem_instance": {
+        "description": "109-bond simplified bond ETF portfolio construction instance",
+        "num_assets": 109,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "proprietary",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "Reduced portfolio-construction instance derived from a larger bond ETF design problem; 109 bonds retained; constraints involving excluded bonds removed; budget adjusted to smaller portfolio size"
+        },
+        "data_preprocessing_details": "Binary-only reformulation y_i = c_i x_i; subset of classes selected; constraints outside restricted set removed; budget M manually adjusted",
+        "evaluation_methodology": "Hardware and simulator runs compared; raw samples and local-search post-processed samples analyzed; best objective and CVaR tracked over iterations; final optimization gap reported"
+      },
+      "quantum_resources": {
+        "num_qubits": 109,
+        "qubit_type": "physical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": [
+          17,
+          19,
+          57
+        ],
+        "gate_count_total": [
+          1525,
+          1555,
+          4220
+        ],
+        "cnot_count": [
+          216,
+          246,
+          648
+        ],
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 8192,
+        "num_variational_params": [
+          327,
+          327,
+          434
+        ],
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": [
+          "simulator_other",
+          "real_qpu_superconducting"
+        ],
+        "provider": "IBM",
+        "device_name": [
+          "MPS simulator",
+          "ibm_marrakesh",
+          "ibm_fez"
+        ],
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "noise_type": "hardware noise on IBM Heron processors; noiseless MPS simulation for comparison",
+        "is_noisy": true,
+        "error_mitigation_method": "dynamical decoupling using default XX sequence"
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": "IBM Heron heavy-hex topology",
+        "classical_solver": "CPLEX",
+        "classical_preprocessing": "Transpilation with Qiskit Primitive V2 transpiler at optimization level 3; dynamical decoupling applied; parameter cutoff used on hardware",
+        "classical_postprocessing": "Local search over sampled bitstrings; flip one variable at a time in randomized order until improvement or exhaustion"
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 109,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "cvar",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "alpha",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "repetitions_r",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "shots_per_iteration",
+          "value": 8192,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "shots",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "transpiled_depth",
+          "value": 17,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "gates",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "transpiled_depth",
+          "value": 19,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "gates",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "transpiled_depth",
+          "value": 57,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "gates",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 1525,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "gates",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 1555,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "gates",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gate_count_total",
+          "value": 4220,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "gates",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "cnot_count",
+          "value": 216,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cnot gates",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "cnot_count",
+          "value": 246,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cnot gates",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "cnot_count",
+          "value": 648,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cnot gates",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "num_variational_params",
+          "value": 327,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "num_variational_params",
+          "value": 327,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "num_variational_params",
+          "value": 434,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "optimization_gap",
+          "value": 0.0049,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "optimization_gap",
+          "value": 0.0055,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "optimization_gap",
+          "value": 0.0091,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "optimization_gap",
+          "value": 0.0039,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "initial_objective_peak",
+          "value": 1500000000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective value",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "CPLEX",
+          "metric_name": "optimal_solution",
+          "value": null,
+          "unit": "objective value"
+        },
+        {
+          "method_name": "CPLEX",
+          "metric_name": "optimization_gap",
+          "value": 0.0,
+          "unit": "fraction"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "empirical",
+          "factor": "fewer iterations on simulator than hardware",
+          "baseline_method": "IBM Heron hardware runs",
+          "conditions": "Noiseless MPS simulator versus noisy hardware; same problem and ansatz family",
+          "is_demonstrated": true,
+          "caveats": "The paper states the simulator requires fewer iterations to find good solutions, but does not quantify a speedup factor."
+        },
+        {
+          "type": "projected",
+          "factor": "potential overall speedup if hardware is 10x faster but needs 2x more iterations",
+          "baseline_method": "classical simulation schemes",
+          "conditions": "Illustrative example given in text: if hardware requires 2x the iterations but is 10x faster per circuit execution, overall runtime could be 5x faster",
+          "is_demonstrated": false,
+          "caveats": "This is a hypothetical example, not an experimentally demonstrated speedup."
+        },
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": "purely classical local search-based scheme",
+          "conditions": "Comparison of quantum-classical workflow versus local search alone",
+          "is_demonstrated": true,
+          "caveats": "The paper claims better accuracy and reduced computational resources, but does not provide a formal speedup factor."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 109,
+          "num_qubits": 109,
+          "metric_name": "optimization_gap",
+          "metric_value": 0.0049
+        },
+        {
+          "problem_size": 109,
+          "num_qubits": 109,
+          "metric_name": "optimization_gap",
+          "metric_value": 0.0055
+        },
+        {
+          "problem_size": 109,
+          "num_qubits": 109,
+          "metric_name": "optimization_gap",
+          "metric_value": 0.0091
+        },
+        {
+          "problem_size": 109,
+          "num_qubits": 109,
+          "metric_name": "optimization_gap",
+          "metric_value": 0.0039
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    }
+  ]
+}

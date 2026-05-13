@@ -1,0 +1,641 @@
+{
+  "paper_id": "090ce79070cb",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-17",
+    "run_timestamp": "2026-04-17T08:00:46+00:00",
+    "schema_version": "benchmark_extraction_v1.0",
+    "prompt_version_hash": "2d440153b274177d",
+    "scope": "gate_based",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.4-mini"
+    },
+    "source_file": "090ce79070cb_higher_order_portfolio_optimization_with_quantum_approximate_optimization_algori.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.783,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 0,
+    "validation_warnings": 11,
+    "validation_passed": true,
+    "validation_error_details": [],
+    "validation_warning_details": [
+      "experiments[0].results[0].unit='assets per instance (minimum sampled)' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[1].unit='assets per instance (maximum sampled)' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[2].unit='x enhancement over uniform random probability' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[2].ground_state_probability=14.43 with unit='x enhancement over uniform random probability' looks like percent but unit is not labelled — verify fraction vs percent",
+      "experiments[0].results[3].unit='x enhancement over uniform random probability (worst observed)' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[3].ground_state_probability=3.79 with unit='x enhancement over uniform random probability (worst observed)' looks like percent but unit is not labelled — verify fraction vs percent",
+      "experiments[0].results[4].unit='x enhancement over uniform random probability (best observed)' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[4].ground_state_probability=108.94 exceeds 100 for a bounded metric",
+      "experiments[0].results[17].unit='x' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[18].unit='x' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[19].unit='x' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)"
+    ],
+    "quality_details": {
+      "score": 0.783,
+      "completeness": 0.783,
+      "num_experiments": 1,
+      "experiment_scores": [
+        0.783
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 0.3333333333333333
+        }
+      ]
+    },
+    "revalidated_at": "2026-04-17T08:36:03+00:00"
+  },
+  "paper_metadata": {
+    "title": "Higher-Order Portfolio Optimization with Quantum Approximate Optimization Algorithm",
+    "authors": [
+      "Valter Uotila",
+      "Julia Ripatti",
+      "Bo Zhao"
+    ],
+    "year": 2025,
+    "doi": "",
+    "scope": "gate_based"
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "The paper introduces a higher-order portfolio optimization formulation with skewness and kurtosis, benchmarked on 100 DJIA-based instances spanning 6 to 15 qubits. It reports an average QAOA enhancement factor of 14.43x over uniform random sampling, but classical baselines remain strong: the constrained classical baseline achieves 74% feasibility versus 19% for QAOA, while the exact solver reaches 100% feasibility and 53% on the high-objective metric in the table shown.",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "QAOA benchmark for higher-order portfolio optimization (HUBO) with integer asset quantities, capital-based budget constraint, and higher moments (skewness/kurtosis) on 100 randomly generated DJIA-based instances.",
+      "algorithm": {
+        "family": "qaoa",
+        "variant": "standard QAOA for higher-order unconstrained binary optimization (HUBO)",
+        "ansatz": "standard QAOA with x-mixer and cost Hamiltonian evolution",
+        "optimizer": "CMA-ES (primary reported optimizer for QAOA subroutine); also benchmarked Powell, SLSQP, COBYLA, Nelder-Mead, and L-BFGS-B",
+        "num_layers": null,
+        "convergence_criteria": "limited number of iterations / optimizer termination; exact stopping rule not specified",
+        "hyperparameters": {
+          "risk_aversion": 3,
+          "q0": "risk_aversion/2",
+          "q1": "risk_aversion/6",
+          "q2": "risk_aversion/24",
+          "lambda_values": [
+            0.001,
+            0.01,
+            0.1,
+            0.9,
+            1.0,
+            10,
+            100,
+            1000
+          ],
+          "cma_es_sigma": 0.1
+        },
+        "parameter_initialization": "initial parameter values not specified; QAOA parameters optimized classically",
+        "optimizer_settings": {
+          "max_iterations": "limited number of iterations (exact value not reported)",
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "integer asset quantities z_i encoded into binary variables with logarithmic overhead; each integer variable z in range 0..N mapped to binary bits using standard binary/logarithmic encoding",
+        "objective_function": "min_z q2 K(z) - q1 S(z) + q0 z^T c z - mu^T z + lambda (z^T p^tau - C)^2",
+        "constraints_handling": "budget constraint encoded as quadratic penalty term; paper also discusses an alternative binary budget encoding but uses the symmetric penalty formulation in experiments",
+        "num_binary_variables": null,
+        "problem_hamiltonian": "H = sum_{S subset I} alpha_S prod_{i in S} Z_i, with terms up to 4-body interactions from cokurtosis; budget penalty added to cost Hamiltonian",
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Portfolio optimization over randomly sampled DJIA stocks with higher moments, integer quantities, and capital budget",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "public_benchmark",
+        "dataset_name": "Dow Jones Industrial Average (DJIA) / yfinance stock data",
+        "dataset_specification": {
+          "ticker_symbols": [
+            "30 DJIA companies sampled from pytickersymbols"
+          ],
+          "date_range": "2015-01-01 to 2025-01-01",
+          "benchmark_name": null,
+          "preprocessing": "geometric mean annualized with frequency 252 for expected returns; covariance annualized with frequency 252; coskewness and cokurtosis computed from returns; random sampling of 2-10 companies; random budget up to 6000; instances with >15 qubits excluded",
+          "train_test_split": null
+        },
+        "data_preprocessing_details": "returns computed from closing prices; geometric mean used for mean returns; arithmetic mean with f=1 used in covariance formula; higher moments computed from normalized central moments; instances filtered to fit 15-qubit simulator",
+        "evaluation_methodology": "100 random instances; compared QAOA against exact eigensolver and classical continuous-variable baselines; results reported across qubit counts 6-15; multiple optimizer comparisons for QAOA subroutine"
+      },
+      "quantum_resources": {
+        "num_qubits": 6,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": {
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        }
+      },
+      "hardware": {
+        "type": "simulator_statevector",
+        "provider": null,
+        "device_name": null,
+        "framework": "Qiskit and PennyLane (both mentioned as frameworks that can construct the QAOA circuit; implementation available on GitHub)"
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": "https://github.com/valterUo/quantum-portfolio",
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "SciPy SLSQP for continuous baseline; CVXPY for integer-programming discretization; exact eigensolver / sparse eigensolver for small instances; CMA-ES and other classical optimizers for QAOA subroutine",
+        "transpilation_settings": {
+          "optimization_level": null,
+          "basis_gates": [
+            "Hadamard",
+            "CNOT",
+            "Rz",
+            "Rx"
+          ],
+          "routing_method": null
+        },
+        "classical_preprocessing": "continuous-variable portfolio optimization solved first, then discretized via integer programming baseline; QAOA instances generated from same data",
+        "classical_postprocessing": "min-max normalization of objective values across methods; budget utilization computed; discrete allocations compared",
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": "not reported in numeric form; figure shows optimizer comparison and average objective values",
+          "variance_across_runs": null,
+          "num_independent_runs": 100
+        },
+        "classical_mc_samples": null,
+        "num_layers": null,
+        "ansatz_depth": null,
+        "p_rounds": null
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "assets per instance (minimum sampled)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_assets",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "assets per instance (maximum sampled)",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "ground_state_probability",
+          "value": 14.43,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "x enhancement over uniform random probability",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "ground_state_probability",
+          "value": 3.79,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "x enhancement over uniform random probability (worst observed)",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "ground_state_probability",
+          "value": 108.94,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "x enhancement over uniform random probability (best observed)",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "feasibility_percentage",
+          "value": 74,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "feasibility_percentage",
+          "value": 70,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "feasibility_percentage",
+          "value": 19,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "feasibility_percentage",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "min_max_objective_ge_0_95",
+          "value": 70,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "min_max_objective_ge_0_95",
+          "value": 68,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "min_max_objective_ge_0_95",
+          "value": 23,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "min_max_objective_ge_0_95",
+          "value": 53,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "intersection_of_feasible_and_high_objective",
+          "value": 50,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "intersection_of_feasible_and_high_objective",
+          "value": 46,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "intersection_of_feasible_and_high_objective",
+          "value": 3,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "intersection_of_feasible_and_high_objective",
+          "value": 53,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "qaoa_enhancement_factor",
+          "value": 14.43,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "x",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "qaoa_enhancement_factor",
+          "value": 3.79,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "x",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "qaoa_enhancement_factor",
+          "value": 108.94,
+          "uncertainty": null,
+          "num_runs": 100,
+          "unit": "x",
+          "higher_is_better": true,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "constrained classical continuous-variable baseline",
+          "metric_name": "feasibility_percentage",
+          "value": 74,
+          "unit": "%"
+        },
+        {
+          "method_name": "unconstrained classical continuous-variable baseline",
+          "metric_name": "feasibility_percentage",
+          "value": 70,
+          "unit": "%"
+        },
+        {
+          "method_name": "qaoa",
+          "metric_name": "feasibility_percentage",
+          "value": 19,
+          "unit": "%"
+        },
+        {
+          "method_name": "exact eigensolver",
+          "metric_name": "feasibility_percentage",
+          "value": 100,
+          "unit": "%"
+        },
+        {
+          "method_name": "constrained classical continuous-variable baseline",
+          "metric_name": "min_max_objective_ge_0_95",
+          "value": 70,
+          "unit": "%"
+        },
+        {
+          "method_name": "unconstrained classical continuous-variable baseline",
+          "metric_name": "min_max_objective_ge_0_95",
+          "value": 68,
+          "unit": "%"
+        },
+        {
+          "method_name": "qaoa",
+          "metric_name": "min_max_objective_ge_0_95",
+          "value": 23,
+          "unit": "%"
+        },
+        {
+          "method_name": "exact eigensolver",
+          "metric_name": "min_max_objective_ge_0_95",
+          "value": 53,
+          "unit": "%"
+        },
+        {
+          "method_name": "constrained classical continuous-variable baseline",
+          "metric_name": "intersection_of_feasible_and_high_objective",
+          "value": 50,
+          "unit": "%"
+        },
+        {
+          "method_name": "unconstrained classical continuous-variable baseline",
+          "metric_name": "intersection_of_feasible_and_high_objective",
+          "value": 46,
+          "unit": "%"
+        },
+        {
+          "method_name": "qaoa",
+          "metric_name": "intersection_of_feasible_and_high_objective",
+          "value": 3,
+          "unit": "%"
+        },
+        {
+          "method_name": "exact eigensolver",
+          "metric_name": "intersection_of_feasible_and_high_objective",
+          "value": 53,
+          "unit": "%"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "The paper reports empirical performance comparisons and QAOA enhancement factors, but no asymptotic or wall-clock speedup claim is demonstrated."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 6,
+          "num_qubits": 6,
+          "metric_name": "instance_count",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 7,
+          "num_qubits": 7,
+          "metric_name": "instance_count",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 8,
+          "num_qubits": 8,
+          "metric_name": "instance_count",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 9,
+          "num_qubits": 9,
+          "metric_name": "instance_count",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 10,
+          "num_qubits": 10,
+          "metric_name": "instance_count",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 11,
+          "num_qubits": 11,
+          "metric_name": "instance_count",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 12,
+          "num_qubits": 12,
+          "metric_name": "instance_count",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 13,
+          "num_qubits": 13,
+          "metric_name": "instance_count",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 14,
+          "num_qubits": 14,
+          "metric_name": "instance_count",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 15,
+          "num_qubits": 15,
+          "metric_name": "instance_count",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 6,
+          "num_qubits": 6,
+          "metric_name": "exact_spectrum_available",
+          "metric_value": 1
+        },
+        {
+          "problem_size": 7,
+          "num_qubits": 7,
+          "metric_name": "exact_spectrum_available",
+          "metric_value": 1
+        },
+        {
+          "problem_size": 8,
+          "num_qubits": 8,
+          "metric_name": "exact_spectrum_available",
+          "metric_value": 1
+        },
+        {
+          "problem_size": 9,
+          "num_qubits": 9,
+          "metric_name": "exact_spectrum_available",
+          "metric_value": 1
+        },
+        {
+          "problem_size": 10,
+          "num_qubits": 10,
+          "metric_name": "exact_spectrum_available",
+          "metric_value": 1
+        },
+        {
+          "problem_size": 11,
+          "num_qubits": 11,
+          "metric_name": "exact_spectrum_available",
+          "metric_value": 1
+        },
+        {
+          "problem_size": 12,
+          "num_qubits": 12,
+          "metric_name": "exact_spectrum_available",
+          "metric_value": 1
+        },
+        {
+          "problem_size": 13,
+          "num_qubits": 13,
+          "metric_name": "exact_spectrum_available",
+          "metric_value": 1
+        },
+        {
+          "problem_size": 14,
+          "num_qubits": 14,
+          "metric_name": "sparse_eigensolver_used",
+          "metric_value": 1
+        },
+        {
+          "problem_size": 15,
+          "num_qubits": 15,
+          "metric_name": "sparse_eigensolver_used",
+          "metric_value": 1
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": "none_proven",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {
+        "advantage_status": "advantage_claimed_not_demonstrated",
+        "hoefler_viable": null,
+        "maturity_level": "L1_noiseless_sim",
+        "crossover_size": "Not established; experiments are simulator-based on 6-15 qubits and no asymptotic crossover analysis is provided",
+        "resources_for_advantage": "Would require a scalable fault-tolerant implementation of QAOA for higher-order portfolio optimization plus efficient encoding of integer variables and budget constraints; the paper does not provide resource estimates for a practical advantage regime",
+        "data_loading_bottleneck": null,
+        "feasibility_horizon": "near_term_2_5_years",
+        "limiting_factors": [
+          "No real QPU execution reported",
+          "Only simulator-sized instances up to 15 qubits",
+          "Classical baseline is competitive and often better on the reported metrics",
+          "Optimization landscape is rugged with many local minima",
+          "No proven speedup or crossover analysis"
+        ]
+      },
+      "provenance": {
+        "hardware_type": "paper_reported",
+        "num_qubits": "paper_reported",
+        "circuit_depth": "derived",
+        "speedup_order": "derived",
+        "quantum_complexity": "paper_reported",
+        "classical_complexity": "paper_reported",
+        "notes": [
+          "Hardware inferred as simulator_statevector because the paper states the problems were sized to fit a 15-qubit simulator and does not name a real QPU.",
+          "Circuit depth not explicitly reported; only gate-count/depth comparison figure is mentioned without numeric values in the text provided.",
+          "Speedup order is none_proven because the paper discusses performance empirically but does not claim an asymptotic quantum speedup.",
+          "The paper reports QAOA on 100 simulator-sized portfolio instances and compares against classical baselines, but does not demonstrate practical quantum advantage.",
+          "The authors state the HUBO formulation can encode better portfolios than classical solutions in some cases, yet also note QAOA only matched a small subset of exact/classical results and that current hardware is likely too demanding."
+        ],
+        "advantage_status": "paper_inferred"
+      }
+    }
+  ]
+}

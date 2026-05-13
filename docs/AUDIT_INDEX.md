@@ -43,7 +43,7 @@ For the project-wide chronology, start with [PROJECT_TIMELINE.md](PROJECT_TIMELI
 | [p2_systematic_review/s1_slr/03_screening/calibration_decisions.csv](../p2_systematic_review/s1_slr/03_screening/calibration_decisions.csv) | Calibration round (50 records, two-reviewer κ ≥ 0.70 target) | CSV | "How did calibration go and what was the inter-rater agreement?" |
 | [p2_systematic_review/s1_slr/03_screening/title_abstract_decisions.csv](../p2_systematic_review/s1_slr/03_screening/title_abstract_decisions.csv) | Human title/abstract include/exclude decisions | CSV | "Why was each record included or excluded at title/abstract stage?" |
 | [p2_systematic_review/s1_slr/03_screening/ai_screening_decisions.csv](../p2_systematic_review/s1_slr/03_screening/ai_screening_decisions.csv) | AI screening decisions (gpt-5-mini production run) | CSV | "What did the AI predict for each record?" |
-| p2_systematic_review/s1_slr/03_screening/llm_screening_prompt_log.jsonl (moved to source archive) | Raw LLM screening prompts and decisions | JSONL | "What prompt and reasoning supported each screening decision?" |
+| [p2_systematic_review/s1_slr/03_screening/llm_screening_prompt_log.jsonl](../p2_systematic_review/s1_slr/03_screening/llm_screening_prompt_log.jsonl) | Raw LLM screening prompts and decisions | JSONL | "What prompt and reasoning supported each screening decision?" |
 | [p2_systematic_review/s1_slr/03_screening/ai_discrepancy_review.csv](../p2_systematic_review/s1_slr/03_screening/ai_discrepancy_review.csv) | AI vs human disagreement resolution | CSV | "Where did AI and human disagree, and how was it resolved?" |
 | [p2_systematic_review/s1_slr/03_screening/fn_audit_sample.csv](../p2_systematic_review/s1_slr/03_screening/fn_audit_sample.csv) | False-negative audit sample (10% of AI excludes) | CSV | "Did the AI miss any genuinely relevant records?" |
 | [p2_systematic_review/s1_slr/03_screening/non_english_audit.csv](../p2_systematic_review/s1_slr/03_screening/non_english_audit.csv) | Non-English exclusions per protocol §9 | CSV | "Which records were excluded for language only?" |
@@ -116,10 +116,9 @@ For the project-wide chronology, start with [PROJECT_TIMELINE.md](PROJECT_TIMELI
 ### Reports and audits
 | Artifact | What it records | Schema | Answers |
 |---|---|---|---|
-| p4_experiments/canonical/reports/ (moved to source archive) | Generated Phase 3/8/9 reports, evidence report, sensitivity grid | JSON + Markdown | "What does each phase report say?" |
-| p4_experiments/canonical/reports/audit/ (moved to source archive) | Per-phase audit JSONs (audit_phase4 … audit_phase11) | JSON | "Did each phase pass its audit, and what failed if not?" |
-| p4_experiments/canonical/outputs/manuscript_artifacts/ (moved to source archive) | Phase 10 manuscript tables, figure CSVs, key numbers, briefs, captions | CSV + JSON + Markdown | "Which manuscript tables/figures come from which canonical run?" |
-| [p4_experiments/canonical/release/](../p4_experiments/canonical/release/) | Hash-stamped Phase 11 Zenodo bundle, tarball, and `.sha256` sidecar | tar.gz + sidecar | "What is the canonical release bundle and how is its integrity verified?" |
+| [p4_experiments/canonical/reports/](../p4_experiments/canonical/reports/) | Generated Phase 3/8/9 reports, evidence report, sensitivity grid | JSON + Markdown | "What does each phase report say?" |
+| [p4_experiments/canonical/reports/audit/](../p4_experiments/canonical/reports/audit/) | Per-phase audit JSONs (audit_phase4 … audit_phase11) | JSON | "Did each phase pass its audit, and what failed if not?" |
+| [p4_experiments/canonical/outputs/manuscript_artifacts/](../p4_experiments/canonical/outputs/manuscript_artifacts/) | Phase 10 manuscript tables, figure CSVs, key numbers, briefs, captions | CSV + JSON + Markdown | "Which manuscript tables/figures come from which canonical run?" |
 
 ## Cross-cutting verification
 
@@ -129,44 +128,10 @@ For the project-wide chronology, start with [PROJECT_TIMELINE.md](PROJECT_TIMELI
 | [shared/bridge/paper_id_bridge.csv](../shared/bridge/paper_id_bridge.csv) | Canonical ID mapping: SLR paper_id ↔ DOI ↔ Zotero item key | CSV | "What is the canonical identifier for this paper across all phases?" |
 | [shared/config/unified_taxonomy.json](../shared/config/unified_taxonomy.json) | Single tag registry (PD-01..10, SA-01..11) used across all phases | JSON | "What is the authoritative taxonomy code list?" |
 
-## Cleanup/submission Phases 1–6
-
-| Artifact | What it records | Schema | Answers |
-|---|---|---|---|
-| PHASE1_CLEANUP_REPORT.md (moved to source archive) | Cleanup boundary check, files created/edited, secret scan, validation results | Markdown | "What did Phase 1 cleanup do, and what passed validation?" |
-| PHASE2_PACKAGING_REPORT.md (moved to source archive) | Package profile design, PDF handling rules, P4 manifest-drift and release-bundle decisions | Markdown | "What package profiles were designed and what blockers were documented?" |
-| PHASE3_FINAL_SUBMISSION_REPORT.md (moved to source archive) | Restoration of 42 cohort S2 files (line-ending-only drift); Phase 11 re-extraction; final validation | Markdown | "How was the strict P4 dry-run unblocked and the Phase 11 audit cleared?" |
-| PHASE4_DERIVED_PACKAGE_REPORT.md (moved to source archive) | Two derivative packages produced; copy/exclusion policy; package validation | Markdown | "What is in each derivative package and what was excluded?" |
-| PHASE5_FINAL_HANDOFF_REPORT.md (moved to source archive) | Manifest hashing, hygiene checks, reviewer first steps | Markdown | "Were the packages handoff-ready?" |
-| PHASE6_PACKAGE_IP_COMPLIANCE_REPORT.md (moved to source archive) | IP exclusion (verbatim full-text Markdown) and subsequent handoff curation (raw LLM I/O, non-final snapshots, internal prompts, monitor logs); final manifest counts | Markdown | "What did Phase 6 IP and curation do to the derivative packages?" |
-
-Per-package metadata (in each derivative package under `C:\QF_submission_packages\{profile}\`):
-
-| Artifact | What it records |
-|---|---|
-| `PACKAGE_README.md` | Package purpose, validation quick start, claim boundaries, IP and handoff curation policies |
-| `PACKAGE_MANIFEST.json` | Included files with byte sizes and SHA-256 hashes |
-| `EXCLUDED_FILES_MANIFEST.csv` | Excluded paths with rule and reason |
-| `PDF_EXCLUSION_MANIFEST.csv` | PDF-specific exclusions |
-| `VALIDATION_REPORT.md` | Commands run and final validation results, including IP and handoff-curation notes |
-
----
-
-## Iteration evidence retained on disk (internal copy only)
-
-These dated snapshot/archive folders preserve the pre-rerun state of pipelines that were later re-executed. They live in the source/internal copy as audit evidence and are excluded from the two derivative submission packages per the curation policy recorded in PHASE6_PACKAGE_IP_COMPLIANCE_REPORT.md (moved to source archive; see the archive manifest named in [../README.md](../README.md)):
-
-- p3_thematic_synthesis/s2_quantitative/output/extractions_preQ0_20260417_095811/ (moved to source archive)
-- p3_thematic_synthesis/s2_quantitative/output/extractions_pre_5.3_20260422_095328/ (moved to source archive)
-- p3_thematic_synthesis/s4_thematic_coding/papers_l3_v2_gpt51_archive/ (moved to source archive)
-- p3_thematic_synthesis/s3_quantum_advantage/combined/output/_pre_remediation_snapshot_2026-05-02/ (moved to source archive)
-- p4_experiments/canonical/outputs/phase08d_hhl_tail_exploratory/archive_superseded_20260428/ (moved to source archive)
-- p4_experiments/infra/azure/phase8_4vm_legacy_bootstrap/ (moved to source archive)
-
 ---
 
 ## Document policy
 
 - This index is a navigation aid. The underlying logs themselves are the source of truth.
-- Paths and counts are taken from the current state of the repository as of 2026-05-10.
+- Paths and counts are taken from the current state of the repository as of 2026-05-12.
 - This document is generated by hand and should be regenerated, not edited in place, if the underlying log layout changes.

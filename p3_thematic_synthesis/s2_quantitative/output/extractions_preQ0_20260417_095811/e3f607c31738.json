@@ -1,0 +1,646 @@
+{
+  "paper_id": "e3f607c31738",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "e3f607c31738_quantum_portfolio_optimization_with_investment_bands_and_target_volatility.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.8,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 2,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.scalability_data.0.metric_value: 'S&P100 full asset universe' is not of type 'number', 'null'",
+      "Schema error at experiments.1.scalability_data.0.metric_value: 'S&P500 full asset universe' is not of type 'number', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.8,
+      "completeness": 0.8,
+      "num_experiments": 2,
+      "experiment_scores": [
+        0.8,
+        0.8
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Quantum Portfolio Optimization with Investment Bands and Target Volatility",
+    "authors": [
+      "Samuel Palmer",
+      "Serkan Sahin",
+      "Rodrigo Hernández",
+      "Samuel Mugel",
+      "Román Orús"
+    ],
+    "year": 2021,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Hybrid D-Wave portfolio optimization on S&P100 with investment bands and a target volatility constraint, evaluated on one-day and yearly-return settings using real market data.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "D-Wave Hybrid quantum annealing with QUBO formulation for constrained portfolio optimization",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "risk_aversion_gamma": null,
+          "lagrange_multiplier_rho": null,
+          "lagrange_multiplier_mu": null,
+          "target_volatility": [
+            0.005,
+            0.0075,
+            0.01,
+            0.1
+          ],
+          "maximum_single_asset_holding": 0.1,
+          "minimum_investment_technology": 0.15,
+          "minimum_investment_industrials": 0.15,
+          "linear_weights_k_initial_guess": "k_n = 1/N",
+          "bit_depth_per_asset": 10,
+          "total_budget_K": 100
+        },
+        "parameter_initialization": "Linear weights initialized as k_n = 1/N; other hyperparameters tuned as needed.",
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "Discrete portfolio weights encoded with binary variables x_{n,q}; each asset weight is shifted by its minimum band and then discretized with N_{n,q} bits. The paper reports K=100 and N_{n,q}=10 for all assets in the volatility-constraint example.",
+        "objective_function": "Minimize H = -mu^T omega + (gamma/2) omega^T Sigma omega, with budget constraint enforced by rho (sum_n omega_n - 1)^2 and additional target-volatility penalty mu (k^T Sigma omega - sigma_target^2)^2.",
+        "constraints_handling": "Lower/upper investment bands handled by shifting omega_n = omega_n^min + \\tilde{omega}_n and binary discretization; budget constraint via quadratic penalty; target volatility via linearized quadratic penalty using k^T Sigma omega instead of omega^T Sigma omega.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null
+      },
+      "problem_instance": {
+        "description": "Portfolio optimization over all assets in the S&P100, including sector-based investment bands and target volatility constraints.",
+        "num_assets": 100,
+        "time_steps": 1,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": "S&P100",
+        "dataset_specification": {
+          "description": "Daily closing prices over the year prior to 23-04-2021; covariance matrix taken over the 3-month period prior to each day; sector bands shown in the figures."
+        },
+        "data_preprocessing_details": "Logarithmic returns and covariance matrix computed from stock prices; yearly and daily volatilities reported; no short selling allowed; sector investment bands imposed by distributing min/max across assets in a sector.",
+        "evaluation_methodology": "Optimization results shown for different target daily volatilities (0.5%, 0.75%, 1.00%) and a yearly target volatility example around 10%; compared against random typical portfolios and an equally weighted index."
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "quantum_annealer",
+        "provider": "D-Wave",
+        "device_name": "Advantage",
+        "framework": "D-Wave Hybrid / Ocean"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "Compute logarithmic returns and covariance matrix from historical prices; set sector bands and discretization depth; initialize linear weights k.",
+        "classical_postprocessing": "Extract portfolio compositions, volatility, and return; compare against random portfolios and equally weighted benchmark.",
+        "total_execution_time": "A few minutes per job in the worst case",
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "target_volatility",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of annual volatility",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "target_volatility",
+          "value": 0.005,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of daily volatility",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "target_volatility",
+          "value": 0.0075,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of daily volatility",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "target_volatility",
+          "value": 0.01,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of daily volatility",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "maximum_single_asset_holding",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of total portfolio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "bit_depth_per_asset",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "bits",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "total_budget",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "currency units",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "yearly_volatility_constraint_minimum",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "figure"
+        },
+        {
+          "metric_name": "yearly_volatility_constraint_actual_minimum",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "daily_volatility_target_example",
+          "value": 0.005,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "daily_volatility_target_example",
+          "value": 0.0075,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "daily_volatility_target_example",
+          "value": 0.01,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "annual_return_s_and_p500_ewi",
+          "value": 0.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "execution_time",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "a few minutes per job in the worst case",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "random typical portfolios",
+          "metric_name": "annual_return",
+          "value": null,
+          "unit": null
+        },
+        {
+          "method_name": "equally weighted index (S&P500 EWI)",
+          "metric_name": "annual_return",
+          "value": 0.5,
+          "unit": "fraction"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": null
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 100,
+          "num_qubits": null,
+          "metric_name": "portfolio_optimization_instance_size",
+          "metric_value": "S&P100 full asset universe"
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Hybrid D-Wave portfolio optimization on S&P500 with investment bands and target volatility, evaluated on one-day and yearly-return settings using real market data.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "D-Wave Hybrid quantum annealing with QUBO formulation for constrained portfolio optimization",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "risk_aversion_gamma": null,
+          "lagrange_multiplier_rho": null,
+          "lagrange_multiplier_mu": null,
+          "target_volatility": [
+            0.005,
+            0.0075,
+            0.01,
+            0.1
+          ],
+          "maximum_single_asset_holding": 0.1,
+          "minimum_investment_technology": 0.15,
+          "minimum_investment_industrials": 0.15,
+          "linear_weights_k_initial_guess": "k_n = 1/N",
+          "bit_depth_per_asset": 10,
+          "total_budget_K": 100
+        },
+        "parameter_initialization": "Linear weights initialized as k_n = 1/N; other hyperparameters tuned as needed.",
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "Discrete portfolio weights encoded with binary variables x_{n,q}; each asset weight is shifted by its minimum band and then discretized with N_{n,q} bits. The paper reports K=100 and N_{n,q}=10 for all assets in the volatility-constraint example.",
+        "objective_function": "Minimize H = -mu^T omega + (gamma/2) omega^T Sigma omega, with budget constraint enforced by rho (sum_n omega_n - 1)^2 and additional target-volatility penalty mu (k^T Sigma omega - sigma_target^2)^2.",
+        "constraints_handling": "Lower/upper investment bands handled by shifting omega_n = omega_n^min + \\tilde{omega}_n and binary discretization; budget constraint via quadratic penalty; target volatility via linearized quadratic penalty using k^T Sigma omega instead of omega^T Sigma omega.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null
+      },
+      "problem_instance": {
+        "description": "Portfolio optimization over all assets in the S&P500, including sector-based investment bands and target volatility constraints.",
+        "num_assets": 500,
+        "time_steps": 1,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": "S&P500",
+        "dataset_specification": {
+          "description": "Daily closing prices over the year prior to 23-04-2021; covariance matrix taken over the 3-month period prior to each day; sector bands shown in the figures."
+        },
+        "data_preprocessing_details": "Logarithmic returns and covariance matrix computed from stock prices; yearly and daily volatilities reported; no short selling allowed; sector investment bands imposed by distributing min/max across assets in a sector.",
+        "evaluation_methodology": "Optimization results shown for different target daily volatilities (0.5%, 0.75%, 1.00%) and a yearly target volatility example around 10%; compared against random typical portfolios and an equally weighted index."
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "quantum_annealer",
+        "provider": "D-Wave",
+        "device_name": "Advantage",
+        "framework": "D-Wave Hybrid / Ocean"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "Compute logarithmic returns and covariance matrix from historical prices; set sector bands and discretization depth; initialize linear weights k.",
+        "classical_postprocessing": "Extract portfolio compositions, volatility, and return; compare against random portfolios and equally weighted benchmark.",
+        "total_execution_time": "A few minutes per job in the worst case",
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 500,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "target_volatility",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of annual volatility",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "target_volatility",
+          "value": 0.005,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of daily volatility",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "target_volatility",
+          "value": 0.0075,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of daily volatility",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "target_volatility",
+          "value": 0.01,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of daily volatility",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "maximum_single_asset_holding",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of total portfolio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "minimum_investment_technology",
+          "value": 0.15,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of total portfolio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "minimum_investment_industrials",
+          "value": 0.15,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction of total portfolio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "bit_depth_per_asset",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "bits",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "total_budget",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "currency units",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "yearly_volatility_constraint_minimum",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "figure"
+        },
+        {
+          "metric_name": "yearly_volatility_constraint_actual_minimum",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "daily_volatility_target_example",
+          "value": 0.005,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "daily_volatility_target_example",
+          "value": 0.0075,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "daily_volatility_target_example",
+          "value": 0.01,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "annual_return_s_and_p500_ewi",
+          "value": 0.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "fraction",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "execution_time",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "a few minutes per job in the worst case",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "random typical portfolios",
+          "metric_name": "annual_return",
+          "value": null,
+          "unit": null
+        },
+        {
+          "method_name": "equally weighted index (S&P500 EWI)",
+          "metric_name": "annual_return",
+          "value": 0.5,
+          "unit": "fraction"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": null
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 500,
+          "num_qubits": null,
+          "metric_name": "portfolio_optimization_instance_size",
+          "metric_value": "S&P500 full asset universe"
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": null,
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    }
+  ]
+}

@@ -1,0 +1,590 @@
+{
+  "paper_id": "12a26364b038",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "12a26364b038_evaluating_quantum_amplitude_estimation_for_pricing_multi_asset_basket_options.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.6,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 3,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.implementation_details.classical_postprocessing: ['map estimated amplitude back to basket-price range', 'subtract strike price K if needed to obtain payoff', 'compare quantum estimates against Monte Carlo and Black-Scholes baselines'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.implementation_details.classical_preprocessing: ['historical data acquisition via yfinance', 'log-return estimation', 'lognormal parameter estimation', 'classical discretization of asset distributions', 'classical binned summation benchmark', 'Monte Carlo benchmark with 10,000 samples', 'Black-Scholes benchmark for simpler/lower-dimensional cases'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.problem_instance.dataset_specification.preprocessing: ['download daily adjusted close prices with yfinance', 'remove missing data points / non-trading days', 'compute logarithmic returns', 'estimate mean return and standard deviation from historical returns', 'scale mean by maturity T and volatility by sqrt(T)', 'add +5% shift to mean return', 'construct initial basket price as weighted sum of first-day adjusted close prices', 'truncate each asset distribution to [S_min, S_max] = S0 * exp(mu_T ± 3 sigma_T)', 'discretize each asset into 2^n points'] is not of type 'string', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.6,
+      "completeness": 0.6,
+      "num_experiments": 1,
+      "experiment_scores": [
+        0.6
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Evaluating Quantum Amplitude Estimation for Pricing Multi-Asset Basket Options",
+    "authors": [
+      "Muhammad Kashif",
+      "Shaf Khalid",
+      "Nouhaila Innan",
+      "Alberto Marchisio",
+      "Muhammad Shafique"
+    ],
+    "year": 2025,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "derivative-pricing",
+    "secondary_silos": [
+      "simulation-monte-carlo"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Hybrid quantum-classical basket option pricing using quantum amplitude estimation on real historical market data, with scalability analysis over varying uncertainty-qubit counts for fixed basket sizes and varying basket sizes for fixed qubit counts.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "Quantum Amplitude Estimation (QAE) with state preparation via LogNormalDistribution, WeightedAdder2, and LinearAmplitudeFunction; hybrid quantum-classical workflow",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": "Target precision ϵ_target and confidence α for amplitude estimation; no iterative optimizer stopping criterion reported",
+        "hyperparameters": {
+          "uncertainty_qubits_per_asset": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            8
+          ],
+          "basket_sizes_assets": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "time_range": "2024-01-01 to 2024-06-30",
+          "mean_return_shift": "+5%",
+          "price_range_bounds": "Si,0 * exp(mu_i,T ± 3*sigma_i,T)",
+          "mc_samples": 10000,
+          "target_precision": null,
+          "confidence": null,
+          "approximation_scaling_factor": null
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "Each asset price distribution is truncated and discretized into 2^n grid points using n uncertainty qubits per asset; basket prices are formed by weighted summation and binned into a 1D basket-price register; an objective qubit encodes the payoff condition via controlled rotations.",
+        "objective_function": "Estimate E[max(0, A_d(T) - K)] where A_d(T) = sum_i w_i S_i(T) is the basket price at maturity and K is the strike price; results are also reported as final basket price estimates.",
+        "constraints_handling": "No explicit constraints beyond truncation/discretization; payoff threshold handled through LinearAmplitudeFunction and objective-qubit rotation; assets assumed independent in the implementation.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": "At least one objective qubit plus ancilla/register qubits for weighted addition and phase estimation; exact total not reported separately"
+      },
+      "problem_instance": {
+        "description": "Pricing multi-asset basket options for baskets of 3 to 9 U.S. equities using historical adjusted-close data and lognormal modeling.",
+        "num_assets": 9,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": "Yahoo Finance historical adjusted close prices",
+        "dataset_specification": {
+          "ticker_symbols": [
+            "AAPL",
+            "GOOG",
+            "MSFT",
+            "NVDA",
+            "AMZN",
+            "TSLA",
+            "V",
+            "JNJ",
+            "XOM"
+          ],
+          "date_range": "2024-01-01 to 2024-06-30",
+          "preprocessing": [
+            "download daily adjusted close prices with yfinance",
+            "remove missing data points / non-trading days",
+            "compute logarithmic returns",
+            "estimate mean return and standard deviation from historical returns",
+            "scale mean by maturity T and volatility by sqrt(T)",
+            "add +5% shift to mean return",
+            "construct initial basket price as weighted sum of first-day adjusted close prices",
+            "truncate each asset distribution to [S_min, S_max] = S0 * exp(mu_T ± 3 sigma_T)",
+            "discretize each asset into 2^n points"
+          ],
+          "train_test_split": null
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": "IBM",
+        "device_name": null,
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": false,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": [
+          "historical data acquisition via yfinance",
+          "log-return estimation",
+          "lognormal parameter estimation",
+          "classical discretization of asset distributions",
+          "classical binned summation benchmark",
+          "Monte Carlo benchmark with 10,000 samples",
+          "Black-Scholes benchmark for simpler/lower-dimensional cases"
+        ],
+        "classical_postprocessing": [
+          "map estimated amplitude back to basket-price range",
+          "subtract strike price K if needed to obtain payoff",
+          "compare quantum estimates against Monte Carlo and Black-Scholes baselines"
+        ]
+      },
+      "results": [
+        {
+          "metric_name": "price_error",
+          "value": 22.7,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 45.19,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.67,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 28.17,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 35.76,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.75,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 31.7,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 7.08,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 2.38,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 16.9,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 30.4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 13.46,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 19.08,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 27.33,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 15.97,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 27.03,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 22.54,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 28.99,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 22.49,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 3,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 6,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 7,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 8,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_underlyings",
+          "value": 9,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical monte carlo",
+          "metric_name": "price_error",
+          "value": null,
+          "unit": null
+        },
+        {
+          "method_name": "black-scholes",
+          "metric_name": "price_error",
+          "value": null,
+          "unit": null
+        },
+        {
+          "method_name": "classical binned summation",
+          "metric_name": "price_error",
+          "value": null,
+          "unit": null
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical monte carlo",
+          "conditions": "for estimating expectation values / option payoffs with quantum amplitude estimation",
+          "is_demonstrated": false,
+          "caveats": "The paper states the standard QAE quadratic speedup claim, but the reported experiments focus on accuracy and scalability rather than runtime or oracle-query counts."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 3,
+          "num_qubits": 1,
+          "metric_name": "price_error",
+          "metric_value": 22.7
+        },
+        {
+          "problem_size": 3,
+          "num_qubits": 2,
+          "metric_name": "price_error",
+          "metric_value": 45.19
+        },
+        {
+          "problem_size": 3,
+          "num_qubits": 3,
+          "metric_name": "price_error",
+          "metric_value": 0.67
+        },
+        {
+          "problem_size": 4,
+          "num_qubits": 1,
+          "metric_name": "price_error",
+          "metric_value": 28.17
+        },
+        {
+          "problem_size": 4,
+          "num_qubits": 2,
+          "metric_name": "price_error",
+          "metric_value": 35.76
+        },
+        {
+          "problem_size": 4,
+          "num_qubits": 3,
+          "metric_name": "price_error",
+          "metric_value": 0.75
+        },
+        {
+          "problem_size": 5,
+          "num_qubits": 1,
+          "metric_name": "price_error",
+          "metric_value": 31.7
+        },
+        {
+          "problem_size": 5,
+          "num_qubits": 2,
+          "metric_name": "price_error",
+          "metric_value": 7.08
+        },
+        {
+          "problem_size": 5,
+          "num_qubits": 3,
+          "metric_name": "price_error",
+          "metric_value": 2.38
+        },
+        {
+          "problem_size": 6,
+          "num_qubits": 1,
+          "metric_name": "price_error",
+          "metric_value": 16.9
+        },
+        {
+          "problem_size": 6,
+          "num_qubits": 2,
+          "metric_name": "price_error",
+          "metric_value": 30.4
+        },
+        {
+          "problem_size": 6,
+          "num_qubits": 3,
+          "metric_name": "price_error",
+          "metric_value": 13.46
+        },
+        {
+          "problem_size": 7,
+          "num_qubits": 1,
+          "metric_name": "price_error",
+          "metric_value": 19.08
+        },
+        {
+          "problem_size": 7,
+          "num_qubits": 2,
+          "metric_name": "price_error",
+          "metric_value": 27.33
+        },
+        {
+          "problem_size": 7,
+          "num_qubits": 3,
+          "metric_name": "price_error",
+          "metric_value": 15.97
+        },
+        {
+          "problem_size": 8,
+          "num_qubits": 1,
+          "metric_name": "price_error",
+          "metric_value": 27.03
+        },
+        {
+          "problem_size": 8,
+          "num_qubits": 2,
+          "metric_name": "price_error",
+          "metric_value": 22.54
+        },
+        {
+          "problem_size": 8,
+          "num_qubits": 3,
+          "metric_name": "price_error",
+          "metric_value": 15.82
+        },
+        {
+          "problem_size": 9,
+          "num_qubits": 1,
+          "metric_name": "price_error",
+          "metric_value": 28.99
+        },
+        {
+          "problem_size": 9,
+          "num_qubits": 2,
+          "metric_name": "price_error",
+          "metric_value": 22.49
+        },
+        {
+          "problem_size": 9,
+          "num_qubits": 3,
+          "metric_name": "price_error",
+          "metric_value": 14.19
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    }
+  ]
+}

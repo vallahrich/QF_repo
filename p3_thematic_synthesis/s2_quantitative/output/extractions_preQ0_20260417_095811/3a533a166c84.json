@@ -1,0 +1,716 @@
+{
+  "paper_id": "3a533a166c84",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "3a533a166c84_quantum_portfolio_optimization_an_extensive_benchmark.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.8,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 7,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.implementation_details.convergence_data.variance_across_runs: 'Empirical standard deviation shown over 10 instances per size' is not of type 'number', 'null'",
+      "Schema error at experiments.0.problem_instance.dataset_specification.ticker_symbols: 'Randomly drawn from 1,978 NASDAQ assets' is not of type 'array', 'null'",
+      "Schema error at experiments.0.quantum_resources.num_qubits: '4n logical binary variables for n assets; largest embedded instance reported: 100 QUBO variables for 25 assets' is not of type 'integer', 'null'",
+      "Schema error at experiments.1.implementation_details.convergence_data.variance_across_runs: 'Empirical standard deviation over 10 instances per size' is not of type 'number', 'null'",
+      "Schema error at experiments.1.problem_instance.dataset_specification.ticker_symbols: 'Randomly drawn from 1,978 NASDAQ assets' is not of type 'array', 'null'",
+      "Schema error at experiments.1.quantum_resources.num_qubits: '4n logical qubits for n assets; classical simulation limited to roughly 30 variables; example transpiled depth for 20 assets increases from 161 to approximately 11,000' is not of type 'integer', 'null'",
+      "Schema error at experiments.1.quantum_resources.num_variational_params: '2p parameters (β and γ); for p = 1, 2 parameters' is not of type 'integer', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.8,
+      "completeness": 0.8,
+      "num_experiments": 2,
+      "experiment_scores": [
+        0.75,
+        0.85
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Quantum Portfolio Optimization: An Extensive Benchmark",
+    "authors": [
+      "Eric Stopfer",
+      "Friedrich Wagner"
+    ],
+    "year": 2025,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Quantum annealing benchmark on the MinVola QUBO portfolio optimization formulation across multiple asset sizes, using D-Wave Advantage 2 with default and tuned chain strengths and several annealing times.",
+      "algorithm": {
+        "family": "quantum-annealing",
+        "variant": "Quantum annealing on QUBO MinVola with DWaveCliqueSampler; default and tuned chain strength; annealing times 1, 5, 20, 50 µs",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "annealing_times_us": [
+            1,
+            5,
+            20,
+            50
+          ],
+          "chain_strength_default": true,
+          "chain_strength_tuned_values": {
+            "5_assets": 3,
+            "7_assets": 3,
+            "10_assets": 3,
+            "15_assets": 3,
+            "20_assets": 4,
+            "25_assets": 5
+          },
+          "annealing_schedule": "default",
+          "embedding_method": "DWaveCliqueSampler"
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "MinVola portfolio optimization discretized with d = 3, giving d + 1 = 4 binary variables per asset; all-to-all dense QUBO; upper bounds implicitly encoded via weight discretization",
+        "objective_function": "minimize σ^2(ω) + ϕ(µ(ω) − ϵ)^2 + ψ(∑_i ω_i − 1)^2",
+        "constraints_handling": "Penalty terms with ϕ = ψ = 1000; continuous weights discretized as ω_i = u_i(2^{-d} ω_{i,d+1} + Σ_{j=1}^d 2^{-j} ω_{i,j})",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Real-world NASDAQ portfolio instances for MinVola, evaluated over sizes from 3 to 1000 assets; 10 instances per size.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 1978,
+        "data_type": "real_market",
+        "dataset_name": "NASDAQ stock data via Yahoo Finance",
+        "dataset_specification": {
+          "ticker_symbols": "Randomly drawn from 1,978 NASDAQ assets",
+          "date_range": "2020-2023",
+          "benchmark_name": null,
+          "preprocessing": "Daily closing prices converted to daily returns; annualized returns and covariances computed with 252 trading days/year; asset upper bounds ui = max(1/10, 3/n)",
+          "train_test_split": null
+        },
+        "data_preprocessing_details": "Annualized returns ri = (Π_t (1 + r^d_{i,t}))^(252/|T|); annualized covariances σ_ij = 252/|T| Σ_t (r^d_{i,t} − r^av_i)(r^d_{j,t} − r^av_j)",
+        "evaluation_methodology": "10 instances per problem size; 60 s runtime limit; metrics: approximation ratio, feasibility percentage, number of samples"
+      },
+      "quantum_resources": {
+        "num_qubits": "4n logical binary variables for n assets; largest embedded instance reported: 100 QUBO variables for 25 assets",
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "quantum_annealer",
+        "provider": "D-Wave",
+        "device_name": "Advantage 2",
+        "framework": "Ocean / dwave-system"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": "https://github.com/stopfereric/portfolio_opt_benchmark",
+        "framework_version": "dwave-system 0.9.12",
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "QUBO construction from MinVola; penalty selection ϕ = ψ = 1000; discretization d = 3; embedding via DWaveCliqueSampler",
+        "classical_postprocessing": "Select best feasible sample within 60 s; compute approximation ratio and feasibility statistics",
+        "total_execution_time": "60 s",
+        "quantum_execution_time": "annealing time 1, 5, 20, or 50 µs per sample",
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "num_independent_runs": 10,
+          "variance_across_runs": "Empirical standard deviation shown over 10 instances per size",
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 25,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_binary_variables",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "binary variables",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "annealing_time",
+          "value": 50,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "µs",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "annealing_time",
+          "value": 20,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "µs",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "annealing_time",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "µs",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "annealing_time",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "µs",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "runtime_limit",
+          "value": 60,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "s",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "discretization_precision_d",
+          "value": 3,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "dimensionless",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "penalty_factor_phi",
+          "value": 1000,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "dimensionless",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "penalty_factor_psi",
+          "value": 1000,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "dimensionless",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "largest_embeddable_problem_size",
+          "value": 25,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "assets",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "largest_embeddable_qubo_variables",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "qubo variables",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "feasibility_percentage",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "figure"
+        },
+        {
+          "metric_name": "approximation_ratio",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "figure"
+        },
+        {
+          "metric_name": "number_of_samples",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "samples",
+          "higher_is_better": true,
+          "data_source": "figure"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "random sampling",
+          "metric_name": "approximation_ratio",
+          "value": null,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "random sampling",
+          "metric_name": "feasibility_percentage",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "method_name": "problem-specific heuristic",
+          "metric_name": "approximation_ratio",
+          "value": null,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "problem-specific heuristic",
+          "metric_name": "feasibility_percentage",
+          "value": null,
+          "unit": "%"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "empirical",
+          "factor": "no clear quantum advantage",
+          "baseline_method": "classical heuristics and random sampling",
+          "conditions": "60 s runtime limit on MinVola portfolio instances",
+          "is_demonstrated": true,
+          "caveats": "Quantum annealing with tuned chain strength was roughly on par with random sampling and worse than the problem-specific heuristic in approximation ratio and feasibility; no explicit speedup factor was reported."
+        },
+        {
+          "type": "empirical",
+          "factor": "independent of problem size in sample count",
+          "baseline_method": "not a classical speedup claim; runtime behavior across sizes",
+          "conditions": "annealing time fixed; up to 25 assets embedded on hardware",
+          "is_demonstrated": true,
+          "caveats": "The paper states the number of samples generated in 60 s was independent of problem size, suggesting potential future advantage for larger instances, but no quantitative speedup factor is given."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 25,
+          "num_qubits": 100,
+          "metric_name": "largest_embeddable_problem_size",
+          "metric_value": 25
+        },
+        {
+          "problem_size": 25,
+          "num_qubits": 100,
+          "metric_name": "largest_embeddable_qubo_variables",
+          "metric_value": 100
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": null,
+        "speedup_order": "none",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "QAOA benchmark on the MinVola QUBO portfolio optimization formulation, evaluated on a noiseless simulator and on IBM Quantum hardware, with p = 1 grid search, linear-ramp parameters, and COBYLA-optimized parameters.",
+      "algorithm": {
+        "family": "qaoa",
+        "variant": "QAOA for QUBO MinVola; p = 1 grid search, linear-ramp QAOA, and COBYLA-optimized parameters",
+        "ansatz": "QAOA",
+        "optimizer": "COBYLA",
+        "num_layers": 1,
+        "convergence_criteria": "Training limited to 30 s for grid search and up to 52 s for COBYLA optimization; final result after 60 s total runtime",
+        "hyperparameters": {
+          "linear_ramp_delta_beta": 0.3,
+          "linear_ramp_delta_gamma": 0.6,
+          "training_time_grid_search_s": 30,
+          "sampling_time_grid_search_s": 30,
+          "max_training_time_optimized_s": 52,
+          "total_time_limit_s": 60,
+          "p_values_tested": [
+            1,
+            2,
+            4
+          ],
+          "best_reported_configuration": "1-layer linear-ramp"
+        },
+        "parameter_initialization": "For COBYLA, initialize parameters with the linear-ramp QAOA formula",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "Same MinVola discretization as quantum annealing: d = 3, 4 binary variables per asset, dense all-to-all QUBO",
+        "objective_function": "minimize σ^2(ω) + ϕ(µ(ω) − ϵ)^2 + ψ(∑_i ω_i − 1)^2",
+        "constraints_handling": "Penalty-based QUBO with ϕ = ψ = 1000; feasibility enforced only through penalties",
+        "num_binary_variables": null,
+        "problem_hamiltonian": "HC |x⟩ = C(x) |x⟩, HM = Σ_i X_i",
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Real-world NASDAQ MinVola instances across sizes 3 to 1000 assets; QAOA hardware execution limited by transpilation and connectivity.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 1978,
+        "data_type": "real_market",
+        "dataset_name": "NASDAQ stock data via Yahoo Finance",
+        "dataset_specification": {
+          "ticker_symbols": "Randomly drawn from 1,978 NASDAQ assets",
+          "date_range": "2020-2023",
+          "benchmark_name": null,
+          "preprocessing": "Daily returns, annualized returns and covariances, asset upper bounds ui = max(1/10, 3/n)",
+          "train_test_split": null
+        },
+        "data_preprocessing_details": "Same annualization and covariance estimation as in Appendix A; QAOA uses the QUBO derived from MinVola",
+        "evaluation_methodology": "10 instances per size; 60 s total runtime; metrics: approximation ratio, feasibility percentage, number of samples"
+      },
+      "quantum_resources": {
+        "num_qubits": "4n logical qubits for n assets; classical simulation limited to roughly 30 variables; example transpiled depth for 20 assets increases from 161 to approximately 11,000",
+        "qubit_type": "logical",
+        "circuit_depth": 161,
+        "circuit_depth_transpiled": 11000,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": "2p parameters (β and γ); for p = 1, 2 parameters",
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "real_qpu_superconducting",
+        "provider": "IBM",
+        "device_name": "ibm_strasbourg",
+        "framework": "Qiskit / IBM Quantum"
+      },
+      "noise_model": {
+        "noise_parameters": null,
+        "mitigation_details": null,
+        "is_noisy": true,
+        "noise_description": "real hardware noise on IBM superconducting QPU; no explicit mitigation reported"
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": "https://github.com/stopferic/portfolio_opt_benchmark",
+        "framework_version": "Qiskit Aer 0.16.1",
+        "transpilation_target": "IBM Quantum hardware with limited connectivity",
+        "classical_solver": null,
+        "classical_preprocessing": "QUBO construction; parameter selection via grid search, linear-ramp protocol, or COBYLA on noiseless simulator",
+        "classical_postprocessing": "Sample best solution found within 60 s; include samples obtained during training",
+        "total_execution_time": "60 s",
+        "quantum_execution_time": "Sampling time after training: 30 s for grid search; remaining time after up to 52 s training for COBYLA",
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "num_independent_runs": 10,
+          "variance_across_runs": "Empirical standard deviation over 10 instances per size",
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 1000,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_assets",
+          "value": 20,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "circuit_depth",
+          "value": 161,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "gates",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "circuit_depth_transpiled",
+          "value": 11000,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "gates",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_variational_params",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "runtime_limit",
+          "value": 60,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "s",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "training_time_grid_search",
+          "value": 30,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "s",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "sampling_time_grid_search",
+          "value": 30,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "s",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "max_training_time_optimized",
+          "value": 52,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "s",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "linear_ramp_delta_beta",
+          "value": 0.3,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "dimensionless",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "linear_ramp_delta_gamma",
+          "value": 0.6,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "dimensionless",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "p_values_tested",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "p_values_tested",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "p_values_tested",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "best_reported_configuration",
+          "value": "1-layer linear-ramp",
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "configuration",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "feasibility_percentage",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "figure"
+        },
+        {
+          "metric_name": "approximation_ratio",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "figure"
+        },
+        {
+          "metric_name": "number_of_samples",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "samples",
+          "higher_is_better": true,
+          "data_source": "figure"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "random sampling",
+          "metric_name": "approximation_ratio",
+          "value": null,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "random sampling",
+          "metric_name": "feasibility_percentage",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "method_name": "problem-specific heuristic",
+          "metric_name": "approximation_ratio",
+          "value": null,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "problem-specific heuristic",
+          "metric_name": "feasibility_percentage",
+          "value": null,
+          "unit": "%"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "empirical",
+          "factor": "no clear quantum advantage",
+          "baseline_method": "classical heuristics and random sampling",
+          "conditions": "60 s runtime limit on MinVola portfolio instances; hardware execution on ibm_strasbourg",
+          "is_demonstrated": true,
+          "caveats": "QAOA performed roughly as well as random sampling and worse than the problem-specific heuristic; no explicit speedup factor was reported."
+        },
+        {
+          "type": "empirical",
+          "factor": "transpiled depth increased from 161 to approximately 11,000",
+          "baseline_method": "original circuit depth before transpilation",
+          "conditions": "for 20 assets on IBM hardware with limited connectivity",
+          "is_demonstrated": true,
+          "caveats": "This is a scalability/overhead result rather than a speedup claim."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 20,
+          "num_qubits": null,
+          "metric_name": "circuit_depth",
+          "metric_value": 161
+        },
+        {
+          "problem_size": 20,
+          "num_qubits": null,
+          "metric_name": "circuit_depth_transpiled",
+          "metric_value": 11000
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    }
+  ]
+}

@@ -1,0 +1,366 @@
+{
+  "paper_id": "78cc9d5068f3",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "78cc9d5068f3_quantum_algorithms_for_portfolio_optimization.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.55,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 3,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.scalability_data.2.problem_size: 't in [10, 500]' is not of type 'number', 'null'",
+      "Schema error at experiments.0.scalability_data.3.problem_size: 'varying n' is not of type 'number', 'null'",
+      "Schema error at experiments.0.scalability_data.4.problem_size: 'varying n' is not of type 'number', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.55,
+      "completeness": 0.55,
+      "num_experiments": 1,
+      "experiment_scores": [
+        0.55
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Qantum Algorithms for Portfolio Optimization",
+    "authors": [
+      "Iordanis Kerenidis",
+      "Anupam Prakash",
+      "Dániel Szilágyi"
+    ],
+    "year": 2019,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Simulation study of the proposed quantum interior-point method for constrained portfolio optimization on real market data, using the cvxportfolio S&P-500 dataset and varying problem sizes to estimate condition number, tomography precision, and empirical runtime scaling.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "Quantum short-step interior-point method for SOCP-based constrained portfolio optimization",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": "Run for T = O(sqrt(r) log(n/epsilon)) iterations until target precision epsilon is reached; experiments use fixed epsilon = 0.1 in the scalability study",
+        "hyperparameters": {
+          "epsilon": 0.1,
+          "chi": 0.1,
+          "eta": 0.01,
+          "xi": 0.001,
+          "sigma": "1 - alpha/sqrt(r)",
+          "alpha": "<= chi",
+          "tomography_precision": "delta",
+          "Newton_system_accuracy": "delta^2 / n^3",
+          "problem_sizes": "random subsets with 100 companies and random time windows t uniform in [10, 500]"
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "qRAM",
+        "encoding_details": "Historical returns are used to compute mu and M; M is stored in QRAM and used to build the SOCP constraint matrix and Newton matrices. Portfolio variables are represented in the SOCP with Lorentz-cone variables and positivity constraints.",
+        "objective_function": "minimize x^T Sigma x subject to mu^T x = R and x >= 0, with Sigma = M^T M",
+        "constraints_handling": "Constraints are enforced through SOCP reformulation; positivity constraints via Lorentz cones L_0, equality constraints via linear constraints in the SOCP",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Portfolio optimization instances derived from the cvxportfolio repository; S&P-500 stock data over 2007-2016, subsampled for experiments.",
+        "num_assets": 50,
+        "time_steps": 100,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": "cvxportfolio / S&P-500 historical stock data",
+        "dataset_specification": {
+          "description": "Historical data for S&P-500 companies over 9 years (2007-2016); experiments use a subsample of 50 companies and the first 100 days for the main simulation study; scalability study uses random subsets of 100 companies and random subintervals of length t with t uniform in [10, 500]."
+        },
+        "data_preprocessing_details": "Compute mean returns mu and matrix M from historical returns; covariance is represented as Sigma = M^T M; no additional preprocessing reported.",
+        "evaluation_methodology": "Simulate the quantum algorithm by adding Gaussian noise corresponding to tomography precision; compare against noiseless classical simulation; record duality gap, tomography precision, condition number, and estimated complexity across iterations and across random problem sizes."
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "noise_type": "Gaussian noise added to emulate tomography precision",
+        "error_mitigation_method": null,
+        "noise_parameters": {
+          "noise_magnitude": "corresponding to tomography precision in Theorem 6.5"
+        },
+        "mitigation_details": null,
+        "is_noisy": true,
+        "noise_description": "is_noisy"
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "Classical short-step interior-point method / SOCP solver baseline",
+        "transpilation_settings": null,
+        "classical_preprocessing": "Compute mu and M from historical returns; build SOCP formulation and constraint matrices.",
+        "classical_postprocessing": "Recover portfolio x from the SOCP solution; for the simulation study, compare duality gap and condition number trajectories and fit power laws to observed scaling.",
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": "duality gap decreases multiplicatively; tomography precision also decreases after a point",
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 50,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "time_steps",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "days",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "epsilon",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "precision",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "chi",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "constant",
+          "higher_is_better": null,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "eta",
+          "value": 0.01,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "constant",
+          "higher_is_better": null,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "xi",
+          "value": 0.001,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "constant",
+          "higher_is_better": null,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "problem_size_range",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "to 500 days (random subinterval length t uniform in [10, 500])",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "condition_number_kappa",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "not numerically specified; described as not showing observable growth with problem size and very large only in a small number of instances",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "tomography_precision_delta",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "described as decreasing multiplicatively with duality gap; no explicit numeric values reported",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "duality_gap",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "described as decreasing multiplicatively by factor sigma each iteration; no explicit numeric values reported",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "empirical_runtime_scaling_exponent",
+          "value": 2.387,
+          "uncertainty": "95% CI [2.184, 2.589]",
+          "num_runs": null,
+          "unit": "power-law exponent",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "inverse_square_tomography_precision_scaling_exponent",
+          "value": 1.05,
+          "uncertainty": "95% CI [0.965, 1.136]",
+          "num_runs": null,
+          "unit": "power-law exponent",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "theoretical_quantum_runtime",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "O~(n^1.5 * zeta * kappa / delta^2 * log(1/epsilon))",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "classical_runtime",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "O~(n^(omega+0.5) log(1/epsilon)) or approximately O(n^3.5) in practice",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical short-step interior-point method / SOCP solver baseline",
+          "metric_name": "classical_runtime",
+          "value": null,
+          "unit": "O(n^3.5) in practice; more generally O~(n^(omega+0.5) log(1/epsilon))"
+        },
+        {
+          "method_name": "classical noiseless simulation",
+          "metric_name": "duality_gap",
+          "value": null,
+          "unit": "not numerically specified"
+        },
+        {
+          "method_name": "classical noiseless simulation",
+          "metric_name": "condition_number_kappa",
+          "value": null,
+          "unit": "not numerically specified"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "polynomial speedup; potentially O(n) speedup in practice",
+          "baseline_method": "classical short-step interior-point method / SOCP solver",
+          "conditions": "assuming bounded problem-dependent parameters kappa and zeta, and moderate tomography precision delta; for large n and small r",
+          "is_demonstrated": true,
+          "caveats": "Quantum runtime depends on kappa, zeta, and 1/delta^2; speedup is not worst-case guaranteed. The paper also notes the practical classical complexity is about O(n^3.5), while the quantum estimate from experiments is about O(n^2.387), implying an almost O(n) speedup for most instances."
+        },
+        {
+          "type": "empirical",
+          "factor": "almost O(n) speedup",
+          "baseline_method": "practical classical O(n^3.5) algorithm",
+          "conditions": "based on fitted average-case complexity over sampled instances with epsilon = 0.1",
+          "is_demonstrated": true,
+          "caveats": "Derived from power-law fit to estimated complexity, not from wall-clock quantum hardware execution."
+        },
+        {
+          "type": "theoretical",
+          "factor": "O~(n^1.5 zeta kappa / delta^2 log(1/epsilon)) vs O~(n^(omega+0.5) log(1/epsilon))",
+          "baseline_method": "classical matrix-inversion-based interior-point method",
+          "conditions": "well-conditioned Newton systems and efficient QRAM/block-encoding access",
+          "is_demonstrated": false,
+          "caveats": "This is a complexity claim, not an experimental benchmark."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 50,
+          "num_qubits": null,
+          "metric_name": "num_assets",
+          "metric_value": 50
+        },
+        {
+          "problem_size": 100,
+          "num_qubits": null,
+          "metric_name": "num_assets",
+          "metric_value": 100
+        },
+        {
+          "problem_size": "t in [10, 500]",
+          "num_qubits": null,
+          "metric_name": "time_steps",
+          "metric_value": null
+        },
+        {
+          "problem_size": "varying n",
+          "num_qubits": null,
+          "metric_name": "empirical_runtime_scaling_exponent",
+          "metric_value": 2.387
+        },
+        {
+          "problem_size": "varying n",
+          "num_qubits": null,
+          "metric_name": "inverse_square_tomography_precision_scaling_exponent",
+          "metric_value": 1.05
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    }
+  ]
+}

@@ -96,8 +96,6 @@ QF_repo/
 			reports/
 			release/
 				README.md
-				zenodo_bundle.tar.gz
-				zenodo_bundle.tar.gz.sha256
 		common/
 		core/
 		docs/
@@ -109,13 +107,13 @@ QF_repo/
 		README.md
 		FREEZE.md
 		bridge/
-		chapter_supporting_literature/
 		config/
 			schemas/
 			silo_inclusion.json
 			unified_taxonomy.json
 		extracted_text/
 		phase3/
+		style/
 		tests/
 		tools/
 		validate_taxonomy.py
@@ -162,7 +160,7 @@ P4 experiments
 
 The hand-in repository keeps current/canonical outputs, freeze records, audit indexes, verifier scripts, and the retained evidence needed for traceability. It excludes source-paper PDFs, full-text dumps, raw model payloads, raw request/response logs, local environments, caches, and noisy historical drafts.
 
-Archived files are not deleted. They are recorded in `SOURCE_ARCHIVE_MANIFEST.csv` under the external archive root named in [README.md](../README.md).
+Archived files are not deleted on the source side. The submission archive is self-contained and does not reference an external archive.
 
 Ignored or regenerated local folders may exist in a working copy, but they are not part of the hand-in architecture. Examples include `.venv/`, `__pycache__/`, `.pytest_cache/`, transient log files, and the local RAG vector store.
 

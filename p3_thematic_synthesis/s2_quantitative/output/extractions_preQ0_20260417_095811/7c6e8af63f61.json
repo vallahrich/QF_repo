@@ -1,0 +1,800 @@
+{
+  "paper_id": "7c6e8af63f61",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "7c6e8af63f61_constrained_portfolio_optimization_via_quantum_approximate_optimization_algorith.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.975,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 8,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.implementation_details.classical_postprocessing: ['compute turnover', 'apply 5 bps transaction cost times turnover', 'compound portfolio value monthly'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.implementation_details.classical_preprocessing: ['estimate mu and Sigma from rolling 180-trading-day window', 'apply Ledoit-Wolf shrinkage', 'construct Ising cost Hamiltonian', 'prepare Dicke state', 'apply XY mixer', 'initialize parameters with trotterized ramp', 'optimize with Adam', 'filter measurement outcomes by Hamming weight K and probability threshold', 'rescore candidates with classical objective', 'solve continuous Sharpe-max allocation with SLSQP'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.implementation_details.convergence_data.final_loss_value: {'p=1': -0.1488, 'p=2': -0.2979, 'p=3': -0.3869, 'p=4': -0.3319, 'p=5': -0.3568, 'p=6': -0.5355} is not of type 'number', 'null'",
+      "Schema error at experiments.0.implementation_details.convergence_data.iterations_to_converge: {'p=1': 100, 'p=2': 72, 'p=3': 66, 'p=4': 81, 'p=5': 90, 'p=6': 100} is not of type 'integer', 'null'",
+      "Schema error at experiments.0.problem_instance.dataset_specification.preprocessing: ['forward-fill missing values', 'drop non-trading rows', 'compute daily returns', 'annualize mean returns by 252', 'annualize covariance by 252', 'Ledoit-Wolf shrinkage covariance estimation'] is not of type 'string', 'null'",
+      "Schema error at experiments.1.implementation_details.classical_postprocessing: ['compute turnover', 'apply 5 bps transaction cost times turnover', 'compound portfolio value monthly'] is not of type 'string', 'null'",
+      "Schema error at experiments.1.implementation_details.classical_preprocessing: ['estimate mu and Sigma from rolling 180-trading-day window', 'apply Ledoit-Wolf shrinkage', 'construct QUBO coefficients Qii and Qij', 'apply continuity bonus to diagonal terms', 'sample with simulated annealing', 'retain best feasible exact-K sample', 'solve continuous Sharpe-max allocation with SLSQP'] is not of type 'string', 'null'",
+      "Schema error at experiments.1.problem_instance.dataset_specification.preprocessing: ['forward-fill missing values', 'drop non-trading rows', 'compute daily returns', 'annualize mean returns by 252', 'annualize covariance by 252', 'Ledoit-Wolf shrinkage covariance estimation'] is not of type 'string', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.975,
+      "completeness": 0.975,
+      "num_experiments": 2,
+      "experiment_scores": [
+        1.0,
+        0.95
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Constrained Portfolio Optimization via Quantum Approximate Optimization Algorithm (QAOA) with XY-Mixers and Trotterized Initialization: A Hybrid Approach for Direct Indexing",
+    "authors": [
+      "Javier Mancilla",
+      "Theodoros D. Bouloumis",
+      "Frederic Goguikian"
+    ],
+    "year": 2026,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Constraint-preserving QAOA-XY portfolio selection experiment on a 10-asset U.S. large-cap universe, evaluated in a monthly 2025 walk-forward backtest with circuit depths p=1..6 and a trotterized parameter warm-start.",
+      "algorithm": {
+        "family": "qaoa",
+        "variant": "Constraint-preserving QAOA with Dicke-state initialization and complete-graph XY mixer",
+        "ansatz": "Dicke-state initialization + XY-mixer QAOA",
+        "optimizer": "Adam",
+        "num_layers": 1,
+        "convergence_criteria": "Up to 100 iterations with early stopping if improvement stalls",
+        "hyperparameters": {
+          "cardinality_constraint_K": 5,
+          "risk_aversion_q": 0.3,
+          "circuit_depth_p": "1..6",
+          "epsilon": 1e-10,
+          "stepsize": 0.02,
+          "max_iterations": 100,
+          "initialization_gamma_range": "0.1 -> 0.5",
+          "initialization_beta_range": "0.5 -> 0.1",
+          "readout_filter_hamming_weight": 5,
+          "readout_filter_probability_threshold": ">= 1%",
+          "continuity_bonus": 0.1,
+          "lookback_window_days": 180,
+          "transaction_cost_bps": 5,
+          "allocation_bounds": "0.05 <= wi <= 0.50",
+          "annualization_factor": 252,
+          "covariance_estimator": "Ledoit-Wolf shrinkage",
+          "portfolio_selection_objective": "min q x^T Sigma x - (1-q) mu^T x subject to sum_i x_i = K"
+        },
+        "parameter_initialization": "Trotterized linear ramp initialization for (gamma, beta): gamma_l = (l/p) * Delta t, beta_l = (1 - l/p) * Delta t; described as a warm start inspired by adiabatic quantum computing",
+        "optimizer_settings": {
+          "max_iterations": 100,
+          "tolerance": 1e-10,
+          "step_size": 0.02,
+          "learning_rate_schedule": null,
+          "parameter_bounds": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "One qubit per asset; binary variable x_i indicates inclusion/exclusion of asset i. The feasible subspace is restricted to Hamming weight K via Dicke-state initialization and XY mixing.",
+        "objective_function": "min_{x in {0,1}^N} q x^T Sigma x - (1-q) mu^T x subject to sum_i x_i = K",
+        "constraints_handling": "Hard constraint enforced by Dicke-state initialization, complete-graph XY mixer preserving Hamming weight, and post-measurement feasibility filtering to bitstrings with Hamming weight K and probability >= 1%",
+        "num_binary_variables": 10,
+        "problem_hamiltonian": "H_C = sum_i alpha_i Z_i + sum_{i<j} beta_ij Z_i Z_j, with alpha_i = -(1-q) mu_i^(ann), beta_ij = 2 q Sigma_ij^(ann)",
+        "num_ancilla_qubits": 0
+      },
+      "problem_instance": {
+        "description": "Monthly 2025 walk-forward portfolio selection over 10 U.S. large-cap equities with K=5 selected names per rebalance.",
+        "num_assets": 10,
+        "time_steps": 12,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": "Yahoo Finance / yfinance auto-adjusted Close prices",
+        "dataset_specification": {
+          "ticker_symbols": [
+            "AAPL",
+            "MSFT",
+            "GOOGL",
+            "AMZN",
+            "JPM",
+            "V",
+            "TSLA",
+            "UNH",
+            "LLY",
+            "XOM"
+          ],
+          "date_range": "2025-01-01 to 2025-12-31 for out-of-sample backtest; preceding 180 trading days used for each rebalance lookback",
+          "benchmark_name": null,
+          "preprocessing": [
+            "forward-fill missing values",
+            "drop non-trading rows",
+            "compute daily returns",
+            "annualize mean returns by 252",
+            "annualize covariance by 252",
+            "Ledoit-Wolf shrinkage covariance estimation"
+          ],
+          "train_test_split": "Rolling 180-trading-day lookback; monthly walk-forward evaluation in 2025"
+        },
+        "data_preprocessing_details": "Auto-adjusted close prices from Yahoo Finance via yfinance; missing values forward-filled; non-trading rows dropped; daily returns computed; mean and covariance estimated on rolling 180-trading-day windows and annualized; continuity bonus applied based on prior-period holdings.",
+        "evaluation_methodology": "Monthly walk-forward backtest in 2025; for each month, optimize at depths p=1..6, filter feasible bitstrings, rescore classically, then allocate weights via Sharpe-max SLSQP and evaluate net returns after 5 bps turnover costs."
+      },
+      "quantum_resources": {
+        "num_qubits": 10,
+        "qubit_type": "logical",
+        "circuit_depth": 6,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_statevector",
+        "provider": "PennyLane",
+        "device_name": "default.qubit",
+        "framework": "PennyLane"
+      },
+      "noise_model": {
+        "mitigation_details": null,
+        "is_noisy": false
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "SLSQP for Sharpe-max allocation; PyPortfolioOpt HRP fallback; neal.SimulatedAnnealingSampler used only as baseline",
+        "transpilation_settings": null,
+        "classical_preprocessing": [
+          "estimate mu and Sigma from rolling 180-trading-day window",
+          "apply Ledoit-Wolf shrinkage",
+          "construct Ising cost Hamiltonian",
+          "prepare Dicke state",
+          "apply XY mixer",
+          "initialize parameters with trotterized ramp",
+          "optimize with Adam",
+          "filter measurement outcomes by Hamming weight K and probability threshold",
+          "rescore candidates with classical objective",
+          "solve continuous Sharpe-max allocation with SLSQP"
+        ],
+        "classical_postprocessing": [
+          "compute turnover",
+          "apply 5 bps transaction cost times turnover",
+          "compound portfolio value monthly"
+        ],
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": {
+            "p=1": 100,
+            "p=2": 72,
+            "p=3": 66,
+            "p=4": 81,
+            "p=5": 90,
+            "p=6": 100
+          },
+          "final_loss_value": {
+            "p=1": -0.1488,
+            "p=2": -0.2979,
+            "p=3": -0.3869,
+            "p=4": -0.3319,
+            "p=5": -0.3568,
+            "p=6": -0.5355
+          },
+          "loss_curve_shape": "Generally decreasing with depth, but non-monotonic across intermediate depths (mild regression at p=4 and p=5)",
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "cardinality_constraint_k",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets selected",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "risk_aversion_q",
+          "value": 0.3,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "lookback_window",
+          "value": 180,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "trading_days",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "transaction_cost",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "bps",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "circuit_depth",
+          "value": 6,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "final_loss_value",
+          "value": -0.5355,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "final_loss_value",
+          "value": -0.1488,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "objective value",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "iterations_to_converge",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "iterations_to_converge",
+          "value": 66,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gradient_norm",
+          "value": 0.0547,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "norm",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "gradient_norm",
+          "value": 0.00533,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "norm",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "total_return",
+          "value": 30.09,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": 1.81,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "volatility",
+          "value": 18.55,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "max_drawdown",
+          "value": -8.27,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "turnover_monthly",
+          "value": 76.8,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "simulated_annealing",
+          "metric_name": "total_return",
+          "value": 24.17,
+          "unit": "%"
+        },
+        {
+          "method_name": "simulated_annealing",
+          "metric_name": "sharpe_ratio",
+          "value": 1.31,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "simulated_annealing",
+          "metric_name": "volatility",
+          "value": 19.53,
+          "unit": "%"
+        },
+        {
+          "method_name": "simulated_annealing",
+          "metric_name": "max_drawdown",
+          "value": -9.26,
+          "unit": "%"
+        },
+        {
+          "method_name": "simulated_annealing",
+          "metric_name": "turnover_monthly",
+          "value": 21.0,
+          "unit": "%"
+        },
+        {
+          "method_name": "hierarchical_risk_parity",
+          "metric_name": "total_return",
+          "value": 10.88,
+          "unit": "%"
+        },
+        {
+          "method_name": "hierarchical_risk_parity",
+          "metric_name": "sharpe_ratio",
+          "value": 0.98,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "hierarchical_risk_parity",
+          "metric_name": "volatility",
+          "value": 10.65,
+          "unit": "%"
+        },
+        {
+          "method_name": "hierarchical_risk_parity",
+          "metric_name": "max_drawdown",
+          "value": -8.4,
+          "unit": "%"
+        },
+        {
+          "method_name": "hierarchical_risk_parity",
+          "metric_name": "turnover_monthly",
+          "value": 21.6,
+          "unit": "%"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "No explicit computational speedup claim is reported; the paper discusses performance and trainability rather than runtime advantage."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 10,
+          "num_qubits": 10,
+          "metric_name": "final_loss_value",
+          "metric_value": -0.1488
+        },
+        {
+          "problem_size": 10,
+          "num_qubits": 10,
+          "metric_name": "final_loss_value",
+          "metric_value": -0.2979
+        },
+        {
+          "problem_size": 10,
+          "num_qubits": 10,
+          "metric_name": "final_loss_value",
+          "metric_value": -0.3869
+        },
+        {
+          "problem_size": 10,
+          "num_qubits": 10,
+          "metric_name": "final_loss_value",
+          "metric_value": -0.3319
+        },
+        {
+          "problem_size": 10,
+          "num_qubits": 10,
+          "metric_name": "final_loss_value",
+          "metric_value": -0.3568
+        },
+        {
+          "problem_size": 10,
+          "num_qubits": 10,
+          "metric_name": "final_loss_value",
+          "metric_value": -0.5355
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Simulated annealing QUBO selection experiment for the same 10-asset monthly 2025 portfolio optimization problem, used as a classical-hybrid baseline with cardinality penalty and continuity bonus.",
+      "algorithm": {
+        "family": "qubo",
+        "variant": "Simulated annealing on QUBO with cardinality penalty",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": "Keep best feasible sample satisfying sum_i x_i = K from 5,000 reads and 1,000 sweeps",
+        "hyperparameters": {
+          "cardinality_constraint_K": 5,
+          "risk_aversion_q": 0.3,
+          "penalty_scale": "P = 2.5 * maxcoeff * N",
+          "num_reads": 5000,
+          "num_sweeps": 1000,
+          "continuity_bonus": 0.1,
+          "lookback_window_days": 180,
+          "transaction_cost_bps": 5,
+          "allocation_bounds": "0.05 <= wi <= 0.50",
+          "annualization_factor": 252,
+          "covariance_estimator": "Ledoit-Wolf shrinkage",
+          "portfolio_selection_objective": "min q x^T Sigma x - (1-q) mu^T x subject to sum_i x_i = K, encoded as QUBO with penalty P(sum_i x_i - K)^2"
+        },
+        "parameter_initialization": "Not reported; sampled via simulated annealing with continuity-biased QUBO diagonal terms",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "One binary variable x_i per asset; cardinality enforced by quadratic penalty term P(sum_i x_i - K)^2; continuity bonus lowers diagonal terms for previously held assets.",
+        "objective_function": "min_{x in {0,1}^N} q x^T Sigma x - (1-q) mu^T x + P(sum_i x_i - K)^2",
+        "constraints_handling": "Quadratic penalty term in QUBO; feasibility enforced by selecting best sample with exact cardinality K",
+        "num_binary_variables": 10,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 0
+      },
+      "problem_instance": {
+        "description": "Monthly 2025 walk-forward portfolio selection over 10 U.S. large-cap equities with K=5 selected names per rebalance.",
+        "num_assets": 10,
+        "time_steps": 12,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": "Yahoo Finance / yfinance auto-adjusted Close prices",
+        "dataset_specification": {
+          "ticker_symbols": [
+            "AAPL",
+            "MSFT",
+            "GOOGL",
+            "AMZN",
+            "JPM",
+            "V",
+            "TSLA",
+            "UNH",
+            "LLY",
+            "XOM"
+          ],
+          "date_range": "2025-01-01 to 2025-12-31 for out-of-sample backtest; preceding 180 trading days used for each rebalance lookback",
+          "benchmark_name": null,
+          "preprocessing": [
+            "forward-fill missing values",
+            "drop non-trading rows",
+            "compute daily returns",
+            "annualize mean returns by 252",
+            "annualize covariance by 252",
+            "Ledoit-Wolf shrinkage covariance estimation"
+          ],
+          "train_test_split": "Rolling 180-trading-day lookback; monthly walk-forward evaluation in 2025"
+        },
+        "data_preprocessing_details": "Auto-adjusted close prices from Yahoo Finance via yfinance; missing values forward-filled; non-trading rows dropped; daily returns computed; mean and covariance estimated on rolling 180-trading-day windows and annualized; continuity bonus applied based on prior-period holdings.",
+        "evaluation_methodology": "Monthly walk-forward backtest in 2025; QUBO sampled with neal.SimulatedAnnealingSampler using 5,000 reads and 1,000 sweeps; best feasible exact-K sample retained; then continuous weights allocated and net returns computed after transaction costs."
+      },
+      "quantum_resources": {
+        "num_qubits": 10,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 5000,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": "D-Wave Ocean",
+        "device_name": "neal.SimulatedAnnealingSampler",
+        "framework": "Ocean"
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "neal.SimulatedAnnealingSampler; SLSQP for Sharpe-max allocation; PyPortfolioOpt HRP fallback",
+        "transpilation_settings": null,
+        "classical_preprocessing": [
+          "estimate mu and Sigma from rolling 180-trading-day window",
+          "apply Ledoit-Wolf shrinkage",
+          "construct QUBO coefficients Qii and Qij",
+          "apply continuity bonus to diagonal terms",
+          "sample with simulated annealing",
+          "retain best feasible exact-K sample",
+          "solve continuous Sharpe-max allocation with SLSQP"
+        ],
+        "classical_postprocessing": [
+          "compute turnover",
+          "apply 5 bps transaction cost times turnover",
+          "compound portfolio value monthly"
+        ],
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "cardinality_constraint_k",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets selected",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "risk_aversion_q",
+          "value": 0.3,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_reads",
+          "value": 5000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "reads",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_sweeps",
+          "value": 1000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "sweeps",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "penalty_scale_multiplier",
+          "value": 2.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "x maxcoeff * N",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "lookback_window",
+          "value": 180,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "trading_days",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "transaction_cost",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "bps",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "total_return",
+          "value": 24.17,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": 1.31,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "volatility",
+          "value": 19.53,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "max_drawdown",
+          "value": -9.26,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "turnover_monthly",
+          "value": 21.0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "%",
+          "higher_is_better": false,
+          "data_source": "table"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "hierarchical_risk_parity",
+          "metric_name": "total_return",
+          "value": 10.88,
+          "unit": "%"
+        },
+        {
+          "method_name": "hierarchical_risk_parity",
+          "metric_name": "sharpe_ratio",
+          "value": 0.98,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "hierarchical_risk_parity",
+          "metric_name": "volatility",
+          "value": 10.65,
+          "unit": "%"
+        },
+        {
+          "method_name": "hierarchical_risk_parity",
+          "metric_name": "max_drawdown",
+          "value": -8.4,
+          "unit": "%"
+        },
+        {
+          "method_name": "hierarchical_risk_parity",
+          "metric_name": "turnover_monthly",
+          "value": 21.6,
+          "unit": "%"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": null,
+          "baseline_method": null,
+          "conditions": null,
+          "is_demonstrated": false,
+          "caveats": "No computational speedup claim is reported; simulated annealing is used as a classical baseline for solution quality comparison."
+        }
+      ],
+      "scalability_data": [],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    }
+  ]
+}

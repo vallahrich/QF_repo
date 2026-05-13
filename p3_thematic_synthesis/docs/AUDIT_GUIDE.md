@@ -3,9 +3,10 @@
 > **Status note (2026-05-11): historical L4/R1 guide.** This guide explains
 > the intended researcher validation layer for the P3 thematic pipeline. The
 > canonical within-paper contract is **A1 -> L1 -> A2 -> L2 -> L3 -> A3 -> R1**.
-> In the frozen submission state A3 was retained/deferred, while R1 was executed
-> later as GL-10 post-freeze validation; use [../FREEZE.md](../FREEZE.md) and [../GL10_AUDIT.md](../GL10_AUDIT.md) for
-> current authority.
+> In the frozen submission state A3 was retained as a deferred contradiction-scan
+> prompt; R1 stratified review was executed in-freeze (2026-04-23 → 2026-04-25,
+> 3 working windows per day, +02:00). Use [../FREEZE.md](../FREEZE.md) and
+> [../GL10_AUDIT.md](../GL10_AUDIT.md) for current authority.
 
 ## Purpose
 

@@ -4,10 +4,16 @@ The figure is designed as an academic process board: concise labels in the
 graphic, with methodological detail left to the surrounding prose and caption.
 It shows calibration, split human screening, AI validation/recall checking,
 human-led reconciliation, and the handoff into full-text and corpus processing.
+
+Visual policy: routed through ``shared.style.figure_style`` Palette B and
+flowchart tokens (audit 2026-05-12 design-system unification) so this figure,
+the PRISMA flow diagram, and the Ch4 TikZ pipeline schematic share one
+visual language.
 """
 
 from __future__ import annotations
 
+import sys
 import textwrap
 from pathlib import Path
 
@@ -25,26 +31,45 @@ MANUSCRIPT_FIGURES = ROOT / "manuscript" / "05_Figures"
 OUTPUT_STEM = "fig5_p2_corpus_workflow"
 CLASSIFICATION_OUTPUT_STEM = "fig5_p2_llm_classification_workflow"
 
-INK = "#2b2b2b"
-MUTED = "#666666"
-EDGE = "#303030"
-FILL = "#ffffff"
-HUMAN = "#e9f2f8"
-AI = "#edf6ed"
-RECONCILE = "#f7efe3"
-EXCLUDED = "#f2f2f2"
-ACTIVE = "#e6f0eb"
-
-
-plt.rcParams.update(
-    {
-        "font.family": "serif",
-        "font.size": 7.2,
-        "figure.dpi": 300,
-        "savefig.bbox": "tight",
-        "savefig.pad_inches": 0.05,
-    }
+# Shared visual policy facade (Palette B + flowchart tokens).
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from shared.style.figure_style import (  # noqa: E402  -- after Agg backend
+    FLOW_ARROW_MSCALE,
+    FLOW_ARROW_STYLE,
+    FLOW_BOXSTYLE,
+    FLOW_LW_ARROW,
+    FLOW_LW_BOX,
+    FLOW_LW_OUTER,
+    LAYER_BLUE,
+    LAYER_CORAL,
+    LAYER_GOLD,
+    LAYER_GRAY,
+    LAYER_GREEN,
+    LINE_GRAY,
+    TEXT_MAIN,
+    TEXT_MUTED,
+    apply_house_style,
 )
+
+# Semantic role mapping (matches the PRISMA figure and Ch4 pipeline TikZ).
+INK = TEXT_MAIN
+MUTED = TEXT_MUTED
+EDGE = LINE_GRAY
+FILL = "#ffffff"          # plain neutral fill for backbone steps
+HUMAN = LAYER_BLUE        # human / process step
+AI = LAYER_GREEN          # automated / AI / LLM step
+RECONCILE = LAYER_GOLD    # reconciliation / handover
+EXCLUDED = LAYER_GRAY     # excluded
+ACTIVE = LAYER_CORAL      # final / active-outcome corpus
+
+apply_house_style()
+# Smaller font/pad overrides specific to this dense process-board layout;
+# everything else inherits from the house style.
+plt.rcParams.update({
+    "font.size": 8.5,  # Audit P0-1: was 7.2
+    "savefig.pad_inches": 0.05,
+})
 
 
 def wrapped(text: str, width: int) -> str:
@@ -63,16 +88,17 @@ def draw_box(
     text: str,
     *,
     facecolor: str = FILL,
-    fontsize: float = 7.2,
+    fontsize: float = 8.5,
     weight: str = "normal",
     wrap: int = 28,
+    outer: bool = False,
 ) -> None:
     patch = FancyBboxPatch(
         (x - width / 2, y - height / 2),
         width,
         height,
-        boxstyle="round,pad=0.18,rounding_size=1.25",
-        linewidth=0.8,
+        boxstyle=FLOW_BOXSTYLE,
+        linewidth=FLOW_LW_OUTER if outer else FLOW_LW_BOX,
         edgecolor=EDGE,
         facecolor=facecolor,
         zorder=1,
@@ -104,9 +130,9 @@ def draw_arrow(
     arrow = FancyArrowPatch(
         start,
         end,
-        arrowstyle="-|>",
-        mutation_scale=8,
-        linewidth=0.8,
+        arrowstyle=FLOW_ARROW_STYLE,
+        mutation_scale=FLOW_ARROW_MSCALE,
+        linewidth=FLOW_LW_ARROW,
         color=EDGE,
         connectionstyle=f"arc3,rad={rad}",
         shrinkA=shrink_a,
@@ -129,11 +155,26 @@ def section_label(ax, x: float, y: float, text: str) -> None:
     )
 
 
+def _draw_titled_outer_frame(ax, x0, y0, x1, y1, label):
+    """Pipeline-style group framing: thin rounded outline plus label-above."""
+    ax.add_patch(
+        FancyBboxPatch(
+            (x0, y0), x1 - x0, y1 - y0,
+            boxstyle="round,pad=0.4,rounding_size=2.0",
+            linewidth=FLOW_LW_BOX,
+            edgecolor=LINE_GRAY, facecolor="none", zorder=-1,
+        )
+    )
+    ax.text((x0 + x1) / 2, y1 + 1.6, label, ha="center", va="bottom",
+            fontsize=8.5, color=TEXT_MUTED)
+
+
 def build_figure() -> plt.Figure:
-    fig, ax = plt.subplots(figsize=(7.2, 6.15))
+    fig, ax = plt.subplots(figsize=(8.0, 6.8))  # Audit P0-1
     ax.set_xlim(0, 100)
     ax.set_ylim(0, 100)
     ax.axis("off")
+
 
     draw_box(ax, 50, 94.0, 50, 6.4, "3,010 unique records after deduplication", weight="bold", wrap=42)
     draw_box(
@@ -142,13 +183,13 @@ def build_figure() -> plt.Figure:
         85.0,
         64,
         7.2,
-        "Calibration sample (n = 49): criteria alignment before split screening",
-        facecolor="#fafafa",
+        "Calibration sample (n = 49)\ncriteria aligned before split screening",
+        facecolor=LAYER_GRAY,
         wrap=58,
     )
 
-    draw_box(ax, 29, 69.5, 34, 8.2, "Human split screening: Reviewer A half; Reviewer B half", facecolor=HUMAN, wrap=34)
-    draw_box(ax, 71, 69.5, 34, 8.2, "AI validation and recall: n = 100 validation; parallel recall check", facecolor=AI, wrap=34)
+    draw_box(ax, 29, 69.5, 34, 8.2, "Human split screening\nReviewer A and Reviewer B", facecolor=HUMAN, wrap=34)
+    draw_box(ax, 71, 69.5, 34, 8.2, "AI validation and recall check\n100-record validation subset", facecolor=AI, wrap=34)
 
     draw_box(
         ax,
@@ -156,7 +197,7 @@ def build_figure() -> plt.Figure:
         58.0,
         68,
         8.2,
-        "Human-led reconciliation: human includes retained; AI-include / human-exclude cases re-reviewed; final authority human",
+        "Human-led reconciliation\nhuman includes retained; AI-rescue cases re-reviewed",
         facecolor=RECONCILE,
         wrap=62,
     )
@@ -164,13 +205,13 @@ def build_figure() -> plt.Figure:
     draw_box(ax, 30, 47.0, 30, 6.8, "2,135 title/abstract exclusions", facecolor=EXCLUDED, wrap=28)
     draw_box(ax, 70, 47.0, 30, 6.8, "875 full-text candidates", weight="bold", wrap=26)
 
-    draw_box(ax, 70, 38.0, 35, 6.8, "Human full-text eligibility", wrap=30)
+    draw_box(ax, 70, 38.0, 35, 6.8, "Human full-text eligibility", facecolor=HUMAN, wrap=30)
     draw_box(ax, 26, 38.0, 28, 6.6, "98 full-text exclusions", facecolor=EXCLUDED, wrap=26)
     draw_box(ax, 70, 29.0, 35, 6.2, "777 processed audit corpus", weight="bold", wrap=32)
-    draw_box(ax, 70, 20.4, 35, 6.8, "Extraction + Pipeline C outputs", wrap=30)
-    draw_box(ax, 70, 11.6, 35, 6.6, "Post-classification audit", facecolor="#fafafa", wrap=30)
-    draw_box(ax, 26, 3.8, 28, 6.4, "22 off-scope retained for audit", facecolor=EXCLUDED, wrap=25)
-    draw_box(ax, 70, 3.8, 35, 6.4, "755 downstream-active papers", facecolor=ACTIVE, weight="bold", wrap=30)
+    draw_box(ax, 70, 20.4, 35, 6.8, "Text extraction + Pipeline C outputs", facecolor=AI, wrap=30)
+    draw_box(ax, 70, 11.6, 35, 6.6, "Post-classification audit", facecolor=RECONCILE, wrap=30)
+    draw_box(ax, 26, 3.8, 35, 6.4, "22 off-scope retained for audit", facecolor=EXCLUDED, wrap=30)
+    draw_box(ax, 70, 3.8, 35, 6.4, "755 downstream-active papers", facecolor=ACTIVE, weight="bold", wrap=30, outer=True)
 
     draw_arrow(ax, (50, 90.8), (50, 88.6), shrink_a=4, shrink_b=4)
     draw_arrow(ax, (42, 81.4), (30, 73.6), rad=0.03)
@@ -191,10 +232,11 @@ def build_figure() -> plt.Figure:
 
 
 def build_classification_figure() -> plt.Figure:
-    figure, axis = plt.subplots(figsize=(7.2, 6.15))
+    figure, axis = plt.subplots(figsize=(8.0, 6.8))  # Audit P0-1
     axis.set_xlim(0, 100)
     axis.set_ylim(0, 100)
     axis.axis("off")
+
 
     draw_box(axis, 50, 94.0, 50, 6.4, "777 processed Markdown profiles", weight="bold", wrap=42)
     draw_box(
@@ -204,7 +246,7 @@ def build_classification_figure() -> plt.Figure:
         64,
         7.2,
         "Pipeline C cached-prefix architecture: paper text reused across six sequential LLM calls",
-        facecolor="#f8f8f8",
+        facecolor=LAYER_GRAY,
         wrap=58,
     )
 
@@ -225,8 +267,8 @@ def build_classification_figure() -> plt.Figure:
             34,
             8.2,
             f"{title}\n{detail}",
-            facecolor=HUMAN,
-            fontsize=7.0,
+            facecolor=AI,
+            fontsize=8.5,
             wrap=32,
         )
 
@@ -237,7 +279,7 @@ def build_classification_figure() -> plt.Figure:
         68,
         8.2,
         "Per-paper outputs: structured Markdown profile plus companion extraction JSON",
-        facecolor="#f7efe3",
+        facecolor=RECONCILE,
         wrap=62,
     )
     draw_box(
@@ -250,6 +292,7 @@ def build_classification_figure() -> plt.Figure:
         facecolor=ACTIVE,
         weight="bold",
         wrap=62,
+        outer=True,
     )
     draw_box(
         axis,
@@ -258,8 +301,8 @@ def build_classification_figure() -> plt.Figure:
         68,
         6.6,
         "Boundary: single-LLM, single-pass extraction; limitations carried into interpretation",
-        facecolor="#fafafa",
-        fontsize=6.9,
+        facecolor=LAYER_GRAY,
+        fontsize=8.0,
         wrap=62,
     )
 

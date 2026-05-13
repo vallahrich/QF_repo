@@ -1,0 +1,641 @@
+{
+  "paper_id": "615067f0066c",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "615067f0066c_hybrid_quantum_classical_portfolio_optimization_leveraging_counterdiabatic_annea.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.875,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 7,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.implementation_details.classical_postprocessing: ['repair infeasible quantum samples to satisfy cardinality', 'select best candidate among hybrid portfolios', 'compute out-of-sample Sharpe ratio, maximum drawdown, volatility, and objective values'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.implementation_details.classical_preprocessing: ['download prices via yfinance', 'compute log returns', 'annualize mean and covariance', 'construct classical correlation matrix C', 'construct quantum risk matrix E from pairwise two-qubit Qiskit simulations', 'truncate E entries below epsilon to epsilon for robust penalty tuning'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.implementation_details.convergence_data.variance_across_runs: '10 independent runs per (α, λ) configuration; mean and standard deviation reported' is not of type 'number', 'null'",
+      "Schema error at experiments.0.problem_instance.dataset_specification.preprocessing: ['daily adjusted close prices', 'daily log returns computed as log(p_t/p_{t-1})', 'annualized mean returns by multiplying by 252 trading days', 'annualized covariance similarly', 'no shrinkage applied'] is not of type 'string', 'null'",
+      "Schema error at experiments.1.implementation_details.classical_postprocessing: ['symmetrize E', 'normalize by maximum entry', 'optionally truncate small entries to epsilon'] is not of type 'string', 'null'",
+      "Schema error at experiments.1.implementation_details.classical_preprocessing: ['construct pairwise two-qubit circuits', 'simulate statevector', 'reduce density matrices', 'compute von Neumann entropies', 'assemble and normalize quantum risk matrix E'] is not of type 'string', 'null'",
+      "Schema error at experiments.1.problem_instance.dataset_specification.preprocessing: ['classical correlation matrix C computed from annualized log returns', 'pairwise two-qubit simulation for each asset pair', 'von Neumann entropy computed from reduced density matrices', 'E symmetrized and normalized by maximum entry', 'small entries truncated to epsilon = 1e-4 in robustness analysis'] is not of type 'string', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.875,
+      "completeness": 0.875,
+      "num_experiments": 2,
+      "experiment_scores": [
+        1.0,
+        0.75
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Hybrid Quantum-Classical Portfolio Optimization Leveraging Counterdiabatic Annealing and Quantum Risk Factors",
+    "authors": [
+      "Yalla Jnan Devi Satya Prasad"
+    ],
+    "year": 2025,
+    "doi": "10.36227/techrxiv.175795525.59311374/v1"
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Hybrid quantum-classical portfolio optimization on a 10-asset real-market universe using a QUBO with classical mean-variance terms, an added quantum risk matrix from two-qubit Qiskit simulations, and D-Wave Advantage annealing with standard schedules; counterdiabatic effects were evaluated only in simulation/emulation.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "Hybrid quantum-classical portfolio optimization with quantum-risk-augmented QUBO and counterdiabatic annealing analysis",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": "until stopping criteria / convergence or max iterations",
+        "hyperparameters": {
+          "risk_aversion_parameter_q": null,
+          "cardinality_target_B": null,
+          "penalty_alpha": "swept over logarithmic grids; examples reported: 100, 50, 10",
+          "penalty_lambda": "swept over logarithmic grids; examples reported: 10, 5, 0",
+          "gamma": 0.5,
+          "epsilon_truncation": 0.0001,
+          "anneal_reads": 5000,
+          "annealing_time_us": 20,
+          "chain_strength": "1.0 to 2.0 depending on instance complexity; example 1.5",
+          "embedding_tool": "minorminer",
+          "average_chain_length": "about 5 to 5.5",
+          "chain_break_policy": "majority vote",
+          "independent_runs_per_configuration": 10,
+          "qiskit_theta_sampling": "uniform in [0, π]"
+        },
+        "parameter_initialization": "Classical portfolio initialized randomly feasible; Qiskit entanglement circuit parameters sampled uniformly in [0, π]",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "QUBO",
+        "encoding_details": "One binary inclusion variable per asset; portfolio size constraint enforced by quadratic penalty; quantum risk matrix added as pairwise quadratic term",
+        "objective_function": "maximize μ^T x - q x^T Σ x subject to 1^T x = B; equivalently minimize x^T Q_MV x + λ x^T E x + α(B - 1^T x)^2 with Q_MV = qΣ - 1/2 diag(μ)",
+        "constraints_handling": "Quadratic penalty term α(B - 1^T x)^2; infeasible quantum samples repaired post hoc to satisfy 1^T x = B",
+        "num_binary_variables": 10,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Portfolio optimization over 10 S&P 100 equities with in-sample calibration and out-of-sample validation",
+        "num_assets": 10,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": "yfinance downloaded adjusted close prices",
+        "dataset_specification": {
+          "ticker_symbols": [
+            "AAPL",
+            "MSFT",
+            "GOOGL",
+            "AMZN",
+            "TSLA",
+            "BRK-B",
+            "JPM",
+            "JNJ",
+            "V",
+            "PG"
+          ],
+          "date_range": "2019-01-01 to 2023-12-31",
+          "train_test_split": "training 2019-01-01 to 2021-12-31; testing 2022-01-01 to 2023-12-31",
+          "preprocessing": [
+            "daily adjusted close prices",
+            "daily log returns computed as log(p_t/p_{t-1})",
+            "annualized mean returns by multiplying by 252 trading days",
+            "annualized covariance similarly",
+            "no shrinkage applied"
+          ],
+          "benchmark_name": "S&P 100 subset"
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 10,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 5000,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "quantum_annealer",
+        "provider": "D-Wave",
+        "device_name": "Advantage system1.1",
+        "framework": "Ocean"
+      },
+      "noise_model": {
+        "is_noisy": null,
+        "noise_type": null,
+        "error_mitigation_method": "majority vote chain-break resolution; no explicit noise model reported"
+      },
+      "implementation_details": {
+        "code_available": false,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": "Pegasus topology embedding via minorminer",
+        "classical_solver": "SLSQP for classical optimization; Gurobi for MIQP baseline",
+        "classical_preprocessing": [
+          "download prices via yfinance",
+          "compute log returns",
+          "annualize mean and covariance",
+          "construct classical correlation matrix C",
+          "construct quantum risk matrix E from pairwise two-qubit Qiskit simulations",
+          "truncate E entries below epsilon to epsilon for robust penalty tuning"
+        ],
+        "classical_postprocessing": [
+          "repair infeasible quantum samples to satisfy cardinality",
+          "select best candidate among hybrid portfolios",
+          "compute out-of-sample Sharpe ratio, maximum drawdown, volatility, and objective values"
+        ],
+        "total_execution_time": "approximately 5 seconds per portfolio instance",
+        "quantum_execution_time": "approximately 0.1 seconds total anneal time per run (5000 reads × 20 µs)",
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": "10 independent runs per (α, λ) configuration; mean and standard deviation reported",
+          "num_independent_runs": 10
+        }
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "feasibility_percentage",
+          "value": 98,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "feasibility_percentage",
+          "value": 93,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "feasibility_percentage",
+          "value": 71,
+          "uncertainty": null,
+          "num_runs": 10,
+          "unit": "%",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "objective_value",
+          "value": 0.72,
+          "uncertainty": "±0.03",
+          "num_runs": null,
+          "unit": "objective units",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": 1.15,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "objective_value",
+          "value": 0.69,
+          "uncertainty": "±0.04",
+          "num_runs": null,
+          "unit": "objective units",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "sharpe_ratio",
+          "value": 1.08,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "pearson_correlation",
+          "value": 0.65,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "correlation coefficient",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "anneal_reads",
+          "value": 5000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "reads",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "annealing_time",
+          "value": 20,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "microseconds",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "chain_strength",
+          "value": 1.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "dimensionless",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "average_chain_length",
+          "value": 5.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "chains",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "independent_runs",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "runs",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "total_execution_time",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds per portfolio instance",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "quantum_execution_time",
+          "value": 0.1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds per run",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "classical_iteration_time",
+          "value": 0.3,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds per iteration",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "classical_iterations",
+          "value": 15,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "classical_complexity",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": null,
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "miqp_gurobi",
+          "metric_name": "objective_value",
+          "value": 0.69,
+          "unit": "objective units"
+        },
+        {
+          "method_name": "miqp_gurobi",
+          "metric_name": "sharpe_ratio",
+          "value": 1.08,
+          "unit": "ratio"
+        },
+        {
+          "method_name": "greedy_heuristic",
+          "metric_name": "objective_value",
+          "value": null,
+          "unit": null
+        },
+        {
+          "method_name": "greedy_heuristic",
+          "metric_name": "sharpe_ratio",
+          "value": null,
+          "unit": null
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "counterdiabatic term reduces diabatic error as O(1/T^2) plus O(1/K^2) dependence",
+          "baseline_method": "standard annealing / adiabatic evolution",
+          "conditions": "under smooth bounded Hamiltonians with a positive spectral gap and bounded commutator norms",
+          "is_demonstrated": false,
+          "caveats": "CD schedules were simulated/emulated on classical hardware; physical D-Wave runs used standard annealing schedules, so the claimed CD benefit was not physically demonstrated on the QPU."
+        },
+        {
+          "type": "empirical",
+          "factor": "approximately 5 seconds total runtime per portfolio instance; about 0.1 seconds of anneal time",
+          "baseline_method": "classical SLSQP optimization",
+          "conditions": "for n = 10 assets with 5000 reads and 20 microsecond anneals",
+          "is_demonstrated": true,
+          "caveats": "This is a runtime breakdown, not a direct speedup ratio; classical optimizer time was reported as 0.1–0.5 seconds per iteration over 10–20 iterations."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 10,
+          "num_qubits": 10,
+          "metric_name": "num_assets",
+          "metric_value": 10
+        },
+        {
+          "problem_size": 10,
+          "num_qubits": 10,
+          "metric_name": "total_execution_time",
+          "metric_value": 5
+        },
+        {
+          "problem_size": 10,
+          "num_qubits": 10,
+          "metric_name": "quantum_execution_time",
+          "metric_value": 0.1
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": "D-Wave annealing requires approximately n logical qubits plus embedding overhead; per-sample annealing time around 10–100 µs",
+        "classical_complexity": "Classical optimizer reported as O(k n^3)",
+        "speedup_order": "none",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": "approximately 5 seconds total instance runtime including embedding, annealing, and evaluation; anneal time itself about 0.1 seconds",
+        "wall_clock_classical": "0.1–0.5 seconds per SLSQP iteration, typically 10–20 iterations"
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Quantum risk factor construction experiment using a two-qubit Qiskit Aer statevector simulator to compute entanglement-based pairwise risk terms for the portfolio QUBO.",
+      "algorithm": {
+        "family": "quantum-simulation",
+        "variant": "Two-qubit entanglement proxy simulation for quantum risk matrix construction",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "gamma": 0.5,
+          "theta_sampling": "uniform in [0, π]",
+          "circuit_structure": "Ry(θ0), Ry(θ1), controlled-Z"
+        },
+        "parameter_initialization": "Random θ parameters sampled uniformly in [0, π]",
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": null
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "angle_encoding",
+        "encoding_details": "Two qubits per asset pair; parameterized Ry rotations followed by a CZ gate; von Neumann entropy of reduced density matrices used as entanglement proxy",
+        "objective_function": "Construct E_ij = |C_ij| + γ(S(ρ_i) + S(ρ_j) - S(ρ_ij)) and normalize by max entry",
+        "constraints_handling": null,
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Pairwise quantum risk matrix generation for the 10-asset portfolio",
+        "num_assets": 10,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": "yfinance downloaded adjusted close prices",
+        "dataset_specification": {
+          "ticker_symbols": [
+            "AAPL",
+            "MSFT",
+            "GOOGL",
+            "AMZN",
+            "TSLA",
+            "BRK-B",
+            "JPM",
+            "JNJ",
+            "V",
+            "PG"
+          ],
+          "date_range": "2019-01-01 to 2023-12-31",
+          "train_test_split": "training 2019-01-01 to 2021-12-31; testing 2022-01-01 to 2023-12-31",
+          "preprocessing": [
+            "classical correlation matrix C computed from annualized log returns",
+            "pairwise two-qubit simulation for each asset pair",
+            "von Neumann entropy computed from reduced density matrices",
+            "E symmetrized and normalized by maximum entry",
+            "small entries truncated to epsilon = 1e-4 in robustness analysis"
+          ],
+          "benchmark_name": null
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 2,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": 2,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_statevector",
+        "provider": "IBM",
+        "device_name": "Qiskit Aer statevector simulator",
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null
+      },
+      "implementation_details": {
+        "code_available": false,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": [
+          "construct pairwise two-qubit circuits",
+          "simulate statevector",
+          "reduce density matrices",
+          "compute von Neumann entropies",
+          "assemble and normalize quantum risk matrix E"
+        ],
+        "classical_postprocessing": [
+          "symmetrize E",
+          "normalize by maximum entry",
+          "optionally truncate small entries to epsilon"
+        ],
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": null
+      },
+      "results": [
+        {
+          "metric_name": "num_assets",
+          "value": 10,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "assets",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "gamma",
+          "value": 0.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "dimensionless",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "theta_sampling_range",
+          "value": 1.5707963267948966,
+          "uncertainty": "uniform in [0, π]",
+          "num_runs": null,
+          "unit": "radians",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_variational_params",
+          "value": 2,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "parameters",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "epsilon_truncation",
+          "value": 0.0001,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "dimensionless",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [],
+      "speedup_claims": [],
+      "scalability_data": [
+        {
+          "problem_size": 10,
+          "num_qubits": 2,
+          "metric_name": "num_assets",
+          "metric_value": 10
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    }
+  ]
+}

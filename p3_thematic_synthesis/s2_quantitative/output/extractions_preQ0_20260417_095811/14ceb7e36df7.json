@@ -1,0 +1,468 @@
+{
+  "paper_id": "14ceb7e36df7",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "14ceb7e36df7_time_series_generation_for_option_pricing_on_quantum_computers_using_tensor_netw.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.7,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 9,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.implementation_details.classical_postprocessing: ['Sample from the trained MPS model', 'Convert integer outputs back to real prices', 'Estimate option prices by Monte Carlo', 'Compute implied volatility by inverting Black-Scholes formula for the European option'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.implementation_details.classical_preprocessing: ['Classically generate Heston paths via Euler-Maruyama discretization', 'Compute min and max asset prices over the sample set for discretization'] is not of type 'string', 'null'",
+      "Schema error at experiments.0.implementation_details.convergence_data.variance_across_runs: '10 independent calculations per configuration; averages and standard errors reported' is not of type 'number', 'null'",
+      "Schema error at experiments.0.scalability_data.0.problem_size: 'm=4' is not of type 'number', 'null'",
+      "Schema error at experiments.0.scalability_data.1.problem_size: 'm=5' is not of type 'number', 'null'",
+      "Schema error at experiments.0.scalability_data.2.problem_size: 'm=6' is not of type 'number', 'null'",
+      "Schema error at experiments.0.scalability_data.3.problem_size: 'Dmax=64' is not of type 'number', 'null'",
+      "Schema error at experiments.0.scalability_data.4.problem_size: 'Dmax=100' is not of type 'number', 'null'",
+      "Schema error at experiments.0.scalability_data.5.problem_size: 'Dmax=150' is not of type 'number', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.7,
+      "completeness": 0.7,
+      "num_experiments": 1,
+      "experiment_scores": [
+        0.7
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "Time series generation for option pricing on quantum computers using tensor network",
+    "authors": [
+      "Nozomu Kobayashi",
+      "Yoshiyuki Suimon",
+      "Koichi Miyamoto"
+    ],
+    "year": 2024,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "derivative-pricing",
+    "secondary_silos": [
+      "simulation-monte-carlo",
+      "quantum-ml-finance"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Classical training of an MPS generative model on Heston-model price paths, then using generated paths to price European, Asian, lookback, and up-and-out barrier options; evaluated across multiple physical dimensions m and bond-dimension caps Dmax.",
+      "algorithm": {
+        "family": "quantum-ml",
+        "variant": "Matrix Product State (MPS) generative modeling for time-series generation",
+        "ansatz": null,
+        "optimizer": "gradient descent with sweeping algorithm",
+        "num_layers": null,
+        "convergence_criteria": "run for some epochs; bond dimensions truncated by singular-value criterion and capped by Dmax",
+        "hyperparameters": {
+          "physical_dimension_bits_m": [
+            4,
+            5,
+            6
+          ],
+          "physical_dimension": [
+            16,
+            32,
+            64
+          ],
+          "bond_dimension_cap_Dmax": [
+            64,
+            100,
+            150
+          ],
+          "time_steps_M": 5,
+          "time_step_delta_t": 0.004,
+          "training_samples_N": 10000,
+          "option_strike_K": 100,
+          "barrier_B": 105,
+          "heston_kappa": 1.0,
+          "heston_theta": 0.04,
+          "heston_xi": 2,
+          "heston_rho": -0.7,
+          "initial_asset_price_S0": 100,
+          "initial_squared_volatility_v0": 0.04,
+          "learning_rate_eta": null,
+          "singular_value_truncation_criterion": null
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": {
+          "max_iterations": null,
+          "tolerance": null,
+          "step_size": null,
+          "learning_rate_schedule": null,
+          "parameter_bounds": {
+            "bond_dimension_upper_bound": 150
+          }
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "Each discretized asset price at each time step is mapped to an m-bit integer in {0, ..., 2^m - 1}; the MPS has one physical leg of dimension 2^m per time step.",
+        "objective_function": "Minimize negative log-likelihood of discretized time-series samples under the MPS model; equivalently minimize KL divergence between model distribution p_theta(xt) and target distribution pi(xt).",
+        "constraints_handling": null,
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Generate Heston-model asset-price paths and use them to estimate prices of European, Asian, lookback, and up-and-out barrier call options.",
+        "num_assets": 1,
+        "time_steps": 5,
+        "num_features": null,
+        "dataset_size": 10000,
+        "data_type": "synthetic",
+        "dataset_name": "Heston model simulated paths",
+        "dataset_specification": {
+          "model": "Heston stochastic volatility model",
+          "discretization": "Euler-Maruyama with reflection positivity for negative variance",
+          "sampling": "daily observations",
+          "train_test_split": null
+        },
+        "data_preprocessing_details": [
+          "Generate 10000 Heston paths classically",
+          "Discretize each price using min-max scaling to m-bit integers",
+          "Use Smin and Smax over sample paths and time points"
+        ],
+        "evaluation_methodology": "Compare empirical distributions at selected time points and option prices against the original Heston-model Monte Carlo benchmark; 10 independent runs per configuration with averages and standard errors reported."
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "not_specified",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "transpilation_settings": null,
+        "classical_preprocessing": [
+          "Classically generate Heston paths via Euler-Maruyama discretization",
+          "Compute min and max asset prices over the sample set for discretization"
+        ],
+        "classical_postprocessing": [
+          "Sample from the trained MPS model",
+          "Convert integer outputs back to real prices",
+          "Estimate option prices by Monte Carlo",
+          "Compute implied volatility by inverting Black-Scholes formula for the European option"
+        ],
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": "10 independent calculations per configuration; averages and standard errors reported",
+          "num_independent_runs": 10
+        }
+      },
+      "results": [
+        {
+          "metric_name": "price",
+          "value": 1.1098,
+          "uncertainty": "±0.0052",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "implied_volatility",
+          "value": 0.1967,
+          "uncertainty": "±0.0009",
+          "num_runs": 10,
+          "unit": "volatility",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 0.6195,
+          "uncertainty": "±0.0035",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 1.4778,
+          "uncertainty": "±0.0056",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 0.9894,
+          "uncertainty": "±0.0049",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 0.6277,
+          "uncertainty": "±0.0031",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "implied_volatility",
+          "value": 0.1113,
+          "uncertainty": "±0.0005",
+          "num_runs": 10,
+          "unit": "volatility",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 0.2771,
+          "uncertainty": "±0.0020",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 0.8216,
+          "uncertainty": "±0.0030",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 0.5769,
+          "uncertainty": "±0.0028",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 0.8626,
+          "uncertainty": "±0.0034",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "implied_volatility",
+          "value": 0.1529,
+          "uncertainty": "±0.0009",
+          "num_runs": 10,
+          "unit": "volatility",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 0.4351,
+          "uncertainty": "±0.0021",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 1.1625,
+          "uncertainty": "±0.0039",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 0.8304,
+          "uncertainty": "±0.0029",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 1.0805,
+          "uncertainty": "±0.0041",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "implied_volatility",
+          "value": 0.1915,
+          "uncertainty": "±0.0007",
+          "num_runs": 10,
+          "unit": "volatility",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 0.6107,
+          "uncertainty": "±0.0026",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 1.4612,
+          "uncertainty": "±0.0049",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price",
+          "value": 0.916,
+          "uncertainty": "±0.0030",
+          "num_runs": 10,
+          "unit": "option price",
+          "higher_is_better": false,
+          "data_source": "table"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical monte carlo (heston model)",
+          "metric_name": "price",
+          "value": 1.1098,
+          "unit": "option price"
+        },
+        {
+          "method_name": "classical monte carlo (heston model)",
+          "metric_name": "implied_volatility",
+          "value": 0.1967,
+          "unit": "volatility"
+        },
+        {
+          "method_name": "classical monte carlo (heston model)",
+          "metric_name": "price",
+          "value": 0.6195,
+          "unit": "option price"
+        },
+        {
+          "method_name": "classical monte carlo (heston model)",
+          "metric_name": "price",
+          "value": 1.4778,
+          "unit": "option price"
+        },
+        {
+          "method_name": "classical monte carlo (heston model)",
+          "metric_name": "price",
+          "value": 0.9894,
+          "unit": "option price"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical monte carlo",
+          "conditions": "if the quantum Monte Carlo integration algorithm with QAE is implemented and state preparation is efficient",
+          "is_demonstrated": false,
+          "caveats": "The paper does not implement the full quantum pricing pipeline; it only proposes MPS-based state preparation and validates it classically."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": "m=4",
+          "num_qubits": null,
+          "metric_name": "price",
+          "metric_value": 0.6277
+        },
+        {
+          "problem_size": "m=5",
+          "num_qubits": null,
+          "metric_name": "price",
+          "metric_value": 0.8626
+        },
+        {
+          "problem_size": "m=6",
+          "num_qubits": null,
+          "metric_name": "price",
+          "metric_value": 1.0805
+        },
+        {
+          "problem_size": "Dmax=64",
+          "num_qubits": null,
+          "metric_name": "price",
+          "metric_value": 0.9767
+        },
+        {
+          "problem_size": "Dmax=100",
+          "num_qubits": null,
+          "metric_name": "price",
+          "metric_value": 1.0321
+        },
+        {
+          "problem_size": "Dmax=150",
+          "num_qubits": null,
+          "metric_name": "price",
+          "metric_value": 1.0805
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    }
+  ]
+}

@@ -1,0 +1,616 @@
+{
+  "paper_id": "4a6b7f9ddc5a",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "4a6b7f9ddc5a_a_quantum_online_portfolio_optimization_algorithm.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.217,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 1,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.2.quantum_resources.num_qubits: 'O(log n) for the asset index register plus O(T) ancilla qubits in Lemma 2; exact total not specified.' is not of type 'integer', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.217,
+      "completeness": 0.217,
+      "num_experiments": 3,
+      "experiment_scores": [
+        0.183,
+        0.183,
+        0.283
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 0.0,
+          "results": 0.0,
+          "baselines": 0.0,
+          "problem_instance": 0.3333333333333333
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 0.0,
+          "results": 0.0,
+          "baselines": 0.0,
+          "problem_instance": 0.3333333333333333
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 0.0,
+          "results": 0.0,
+          "baselines": 0.0,
+          "problem_instance": 0.3333333333333333
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "A Quantum Online Portfolio Optimization Algorithm",
+    "authors": [
+      "Debbie Lim",
+      "Patrick Rebentrost"
+    ],
+    "year": 2023,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "portfolio-optimization",
+    "secondary_silos": []
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Theoretical sampling-based online portfolio optimization algorithm that replaces full investment in all assets with ℓ1-sampling from the current portfolio vector, while still using the exact exponentiated-gradient update on the full price-relative vector.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "Sampling-based online portfolio optimization (Algorithm 2)",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "n": "number of assets",
+          "s": "number of samples per time step",
+          "eta": "learning rate",
+          "T": "total number of time steps",
+          "C": "transaction cost per invested asset",
+          "delta": "failure probability parameter",
+          "rmin": "known lower bound on price relatives"
+        },
+        "parameter_initialization": "Initialize portfolio uniformly as w^(1) = (1/n, ..., 1/n).",
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "qRAM",
+        "encoding_details": "Classical ℓ1-sampling data structure is built for the current portfolio vector w^(t); the algorithm samples s asset indices from w^(t) and invests equally across sampled assets.",
+        "objective_function": "Online portfolio selection maximizing average log wealth LS = (1/T) sum_t log(w^(t) · rho^(t)) under exponentiated-gradient updates.",
+        "constraints_handling": "No short-selling; portfolio vectors remain on the simplex. Sampling affects only executed trades, not the full update.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Abstract online portfolio-selection setting with adversarially revealed price-relative vectors over T rounds.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "No concrete market dataset is used; the paper analyzes an abstract online setting with price relatives rho^(t) satisfying rmin <= rho_i^(t) <= 1."
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "not_specified",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "is_noisy": null,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "Construct ℓ1-sampling data structure for w^(t); sample s indices i_1^(t), ..., i_s^(t) from w^(t).",
+        "classical_postprocessing": "Compute the sampled wealth factor (1/s) sum_l rho_{i_l^(t)}^(t) and update the full portfolio vector using EG(eta)."
+      },
+      "results": [
+        {
+          "metric_name": "regret",
+          "value": "2/rmin * sqrt(log(n)/(2T))",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "regret bound",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "runtime",
+          "value": "O(T^2 n log(T/delta))",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "time complexity",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "transaction_cost",
+          "value": "O(T^2 C log(T/delta))",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cost complexity",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "success_probability",
+          "value": "1 - 2delta",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "Algorithm 1 (full investment online portfolio optimization)",
+          "metric_name": "regret",
+          "value": "1/rmin * sqrt(log(n)/(2T))",
+          "unit": "regret bound"
+        },
+        {
+          "method_name": "Algorithm 1 (full investment online portfolio optimization)",
+          "metric_name": "runtime",
+          "value": "O(Tn)",
+          "unit": "time complexity"
+        },
+        {
+          "method_name": "Algorithm 1 (full investment online portfolio optimization)",
+          "metric_name": "transaction_cost",
+          "value": "O(TnC)",
+          "unit": "cost complexity"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "transaction cost independent of n",
+          "baseline_method": "Algorithm 1 full investment",
+          "conditions": "sampling-based execution with s samples per time step",
+          "is_demonstrated": true,
+          "caveats": "Runtime worsens to O(T^2 n log(T/delta)); only transaction cost improves."
+        }
+      ],
+      "scalability_data": [],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": "O(T^2 n log(T/delta)) time and O(T^2 C log(T/delta)) transaction cost for the sampling-based classical algorithm.",
+        "speedup_order": "none",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Approximate sampling-based online portfolio optimization that estimates the inner product w^(t) · rho^(t) classically with multiplicative error before performing the exponentiated-gradient update.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "Approximate sampling-based online portfolio optimization (Algorithm 3)",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "n": "number of assets",
+          "s": "number of samples per time step",
+          "eta": "learning rate",
+          "T": "total number of time steps",
+          "C": "transaction cost per invested asset",
+          "delta": "failure probability parameter",
+          "rmin": "known lower bound on price relatives",
+          "epsilon_I": "relative error for inner-product estimation, set to 3 eta / (4 rmin)"
+        },
+        "parameter_initialization": "Initialize portfolio uniformly as w^(1) = (1/n, ..., 1/n).",
+        "optimizer_settings": {
+          "epsilon_I": "3 eta / (4 rmin)",
+          "success_probability_inner_product": "1 - delta/T"
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "qRAM",
+        "encoding_details": "Uses classical ℓ1-sampling for trade execution and classical sampling-based inner-product estimation for the update.",
+        "objective_function": "Online portfolio selection with erroneous exponentiated-gradient update using approximate inner product and exact normalization.",
+        "constraints_handling": "No short-selling; simplex constraint maintained by exponentiated-gradient update.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Abstract online portfolio-selection setting with sequentially revealed price-relative vectors.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "No concrete dataset; analysis assumes price relatives bounded by rmin and 1."
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "not_specified",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "is_noisy": null,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "ℓ1-sample from w^(t); estimate w^(t) · rho^(t) via repeated classical sampling (median-of-means).",
+        "classical_postprocessing": "Use the estimated inner product in the erroneous exponentiated-gradient update; compute sampled wealth factor and regret bound."
+      },
+      "results": [
+        {
+          "metric_name": "regret",
+          "value": "8/rmin * sqrt(log(n)/(2T))",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "regret bound",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "runtime",
+          "value": "O(Tn + T^2/(rmin) log(1/delta) + T^2 log(T/delta))",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "time complexity",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "transaction_cost",
+          "value": "O(T^2 C log(T/delta))",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cost complexity",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "success_probability",
+          "value": "1 - 3delta",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "inner_product_relative_error",
+          "value": "3eta/(4rmin)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "relative error",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "Algorithm 2 (sampling-based online portfolio optimization)",
+          "metric_name": "regret",
+          "value": "2/rmin * sqrt(log(n)/(2T))",
+          "unit": "regret bound"
+        },
+        {
+          "method_name": "Algorithm 2 (sampling-based online portfolio optimization)",
+          "metric_name": "runtime",
+          "value": "O(T^2 n log(T/delta))",
+          "unit": "time complexity"
+        },
+        {
+          "method_name": "Algorithm 2 (sampling-based online portfolio optimization)",
+          "metric_name": "transaction_cost",
+          "value": "O(T^2 C log(T/delta))",
+          "unit": "cost complexity"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "none",
+          "factor": "no asymptotic speedup",
+          "baseline_method": "Algorithm 2 sampling-based classical method",
+          "conditions": "classical inner-product estimation via repeated sampling",
+          "is_demonstrated": true,
+          "caveats": "This is an approximate classical variant; it is introduced mainly as a bridge to the quantum algorithm."
+        }
+      ],
+      "scalability_data": [],
+      "complexity_analysis": {
+        "quantum_complexity": null,
+        "classical_complexity": "O(Tn + T^2/(rmin) log(1/delta) + T^2 log(T/delta)) time, as stated in the paper for Algorithm 3.",
+        "speedup_order": "none",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_3",
+      "description": "Quantum online portfolio optimization algorithm using quantum state preparation, quantum norm estimation, quantum inner-product estimation, and quantum multi-sampling to implement an online exponentiated-gradient portfolio update.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "Quantum online portfolio optimization (Algorithm 4)",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "n": "number of assets",
+          "s": "number of samples per time step",
+          "eta": "learning rate, set to 2 rmin sqrt(2 log n / T)",
+          "T": "total number of time steps",
+          "C": "transaction cost per invested asset",
+          "delta": "failure probability parameter",
+          "rmin": "known lower bound on price relatives",
+          "epsilon_I": "relative error for quantum inner-product estimation, set to 3 eta / (4 rmin)",
+          "epsilon_Z": "relative error for quantum norm estimation, set to eta^2 / rmin^2"
+        },
+        "parameter_initialization": "Initialize U_rho^(0) = I, I_tilde = 1, q^(1) = (1, ..., 1), and U_q^(1) = I.",
+        "optimizer_settings": {
+          "success_probability_per_subroutine": "1 - delta/(4T)",
+          "epsilon_I": "3 eta / (4 rmin)",
+          "epsilon_Z": "eta^2 / rmin^2"
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "qRAM",
+        "encoding_details": "Price relatives are provided via quantum oracles U_rho^(t) acting as |j>|0> -> |j>|rho_j^(t)>; portfolio vectors are represented implicitly through q^(t) and normalized via quantum state preparation.",
+        "objective_function": "Online portfolio selection maximizing average log wealth under exponentiated-gradient updates with approximate inner products and normalization.",
+        "constraints_handling": "No short-selling; simplex constraint enforced through normalized exponentiated-gradient updates.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": "O(T) ancilla qubits for gains and ratios in Lemma 2; exact count not specified."
+      },
+      "problem_instance": {
+        "description": "Abstract online portfolio-selection problem with sequentially revealed price-relative oracles.",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "No concrete market dataset; the paper assumes online access to price-relative oracles at each time step."
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": "O(log n) for the asset index register plus O(T) ancilla qubits in Lemma 2; exact total not specified.",
+        "qubit_type": "not_specified",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "not_specified",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "is_noisy": null,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": null,
+        "classical_preprocessing": "Prepare q^(t), estimate q_max, estimate ||q^(t)/q_max||_1, prepare approximate portfolio state, determine heavy coordinates, and perform quantum multi-sampling.",
+        "classical_postprocessing": "Query the price-relative oracle for sampled indices, estimate inner products, and update q^(t+1) via arithmetic circuits."
+      },
+      "results": [
+        {
+          "metric_name": "regret",
+          "value": "12/rmin * sqrt(log(n)/(2T))",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "regret bound",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "runtime",
+          "value": "O~(T^3 * sqrt(n/rmin) * log(1/delta)^(1.5))",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "time complexity",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "transaction_cost",
+          "value": "O(T^2 C log(T/delta))",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "cost complexity",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "success_probability",
+          "value": "1 - 3delta",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "inner_product_relative_error",
+          "value": "3eta/(4rmin)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "relative error",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "norm_relative_error",
+          "value": "eta^2/rmin^2",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "relative error",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": "O(log n) + O(T)",
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "Algorithm 3 (approximate sampling-based classical method)",
+          "metric_name": "regret",
+          "value": "8/rmin * sqrt(log(n)/(2T))",
+          "unit": "regret bound"
+        },
+        {
+          "method_name": "Algorithm 3 (approximate sampling-based classical method)",
+          "metric_name": "runtime",
+          "value": "O(Tn + T^2/(rmin) log(1/delta) + T^2 log(T/delta))",
+          "unit": "time complexity"
+        },
+        {
+          "method_name": "Algorithm 3 (approximate sampling-based classical method)",
+          "metric_name": "transaction_cost",
+          "value": "O(T^2 C log(T/delta))",
+          "unit": "cost complexity"
+        },
+        {
+          "method_name": "Algorithm 2 (sampling-based classical method)",
+          "metric_name": "runtime",
+          "value": "O(T^2 n log(T/delta))",
+          "unit": "time complexity"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic in n",
+          "baseline_method": "Algorithm 3 approximate classical method",
+          "conditions": "using quantum state preparation, quantum norm estimation, quantum inner-product estimation, and quantum multi-sampling",
+          "is_demonstrated": true,
+          "caveats": "The stated runtime is asymptotic and includes polylog factors hidden in O~; practical QRAM/oracle construction may dominate."
+        }
+      ],
+      "scalability_data": [],
+      "complexity_analysis": {
+        "quantum_complexity": "The paper states total runtime O~(T^3 sqrt(n/rmin) log^{1.5}(1/delta)) and quadratic speedup in n relative to the classical approximate algorithm.",
+        "classical_complexity": "O(Tn + T^2/(rmin) log(1/delta) + T^2 log(T/delta)) time for the approximate classical algorithm; the earlier sampling-based classical algorithm is O(T^2 n log(T/delta)).",
+        "speedup_order": "quadratic",
+        "constant_factor_quantum": "12/rmin in the regret bound relative to the optimal offline gain.",
+        "constant_factor_classical": "8/rmin in the regret bound for the approximate classical algorithm; 2/rmin for the sampling-based classical algorithm.",
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {}
+    }
+  ]
+}

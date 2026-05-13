@@ -1,0 +1,619 @@
+{
+  "paper_id": "b524b2fc9631",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-17",
+    "run_timestamp": "2026-04-17T08:21:51+00:00",
+    "schema_version": "benchmark_extraction_v1.0",
+    "prompt_version_hash": "2d440153b274177d",
+    "scope": "gate_based",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.4-mini"
+    },
+    "source_file": "b524b2fc9631_classical_and_quantum_computing_methods_for_estimating_loan_level_risk_distribut.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.7,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 0,
+    "validation_warnings": 13,
+    "validation_passed": true,
+    "validation_error_details": [],
+    "validation_warning_details": [
+      "experiments[0].results[0].unit='percentile' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[2].unit='months' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[4].unit='simulations' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[5].unit='simulations' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[6].unit='accounts' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[7].unit='exponent' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[8].unit='over_M' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[9].unit='over_sqrt_M' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[1].results[0].unit='percentile' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[1].results[1].unit='over_M' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[1].results[2].unit='over_sqrt_M' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[1].results[3].unit='m qubits' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[1].results[4].unit='N' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)"
+    ],
+    "quality_details": {
+      "score": 0.7,
+      "completeness": 0.7,
+      "num_experiments": 2,
+      "experiment_scores": [
+        0.7,
+        0.7
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.0,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "revalidated_at": "2026-04-17T08:36:08+00:00"
+  },
+  "paper_metadata": {
+    "title": "Classical and quantum computing methods for estimating loan-level risk distributions",
+    "authors": [
+      "Joseph L. Breeden",
+      "Yevgeniya Leonova"
+    ],
+    "year": 2023,
+    "doi": "10.1080/01605682.2022.2115415",
+    "scope": "gate_based"
+  },
+  "finance_domain": {
+    "primary_silo": "risk-management",
+    "secondary_silos": [
+      "credit-lending",
+      "simulation-monte-carlo"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "The paper develops a classical Monte Carlo model for loan-level lifetime default risk and reports that 10,000 simulations produce smooth distributions, while only 50 simulations already estimate the distribution in 1.9 s for one account. On the quantum side, it proposes a gate-based QAE approach with quadratic sample complexity O(sqrt(M)) for a simplified unconditional PD model, but concludes that the full competing-risks version would require roughly 4Nm qubits and is beyond near-term hardware.",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Quantum Monte Carlo / quantum amplitude estimation for estimating the 95th percentile of lifetime probability of default under a simplified unconditional default-probability model.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "Quantum Monte Carlo simulation with Quantum Amplitude Estimation (QAE) following Egger et al. / Woerner & Egger",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "target_quantile": "95th percentile",
+          "confidence_level": "95%",
+          "forecast_horizon_months": 36,
+          "number_of_time_steps": "N (not numerically specified)",
+          "register_size_per_time_step": "m qubits",
+          "distribution_assumption": "logit-normal approximated by normal/lognormal for efficient loading",
+          "QAE_error_scaling": "O(1/M)",
+          "classical_MC_error_scaling": "O(1/sqrt(M))"
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "Each forecast-horizon unconditional PD distribution UPD(t) is loaded into an m-qubit register; N time-step registers are summed to form lifetime PD; a condition qubit marks whether the sum exceeds a threshold x for QAE.",
+        "objective_function": "Estimate the cumulative probability a = P(LPD <= x) and invert via bisection to find x at the desired confidence level (95th percentile of lifetime PD).",
+        "constraints_handling": "Threshold test qubit in operator C; no explicit penalty formulation.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Freddie Mac mortgage loan-level risk distribution estimation using unconditional default probabilities over a 36-month forecast horizon for selected test accounts.",
+        "num_assets": 1,
+        "time_steps": 36,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "public_benchmark",
+        "dataset_name": "Freddie Mac mortgage data",
+        "dataset_specification": {
+          "description": "30-year fixed-rate conforming mortgages; account-level fields include balance, delinquency, payments, payoff, origination date, score, postal code, LTV, DTI, borrowers, property type, purpose"
+        },
+        "data_preprocessing_details": "Multihorizon survival model and APC decomposition used to generate unconditional PD distributions; logit-normal distributions approximated by lognormal/normal for efficient loading; 10,000 classical Monte Carlo samples used to validate distributional shape.",
+        "evaluation_methodology": "Proof-of-principle comparison to classical Monte Carlo; 10,000 simulations for distribution plots; fit assessed with Cullen-Frey plot and Kolmogorov-Smirnov, Cramer-von Mises, and Anderson-Darling tests."
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": {
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        }
+      },
+      "hardware": {
+        "type": "not_specified",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "is_noisy": null,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "Classical Monte Carlo simulation on CPU",
+        "transpilation_settings": null,
+        "classical_preprocessing": "APC decomposition; multihorizon survival model; Ornstein-Uhlenbeck extrapolation of environment function; lognormal fit to simulated lifetime PD distributions.",
+        "classical_postprocessing": "Distribution fitting and goodness-of-fit testing; estimation of mean/variance and confidence intervals.",
+        "total_execution_time": "1.9 s for M=50 classical Monte Carlo simulations; 10,000 simulations used for smooth plots",
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        },
+        "classical_mc_samples": null,
+        "num_layers": null,
+        "ansatz_depth": null,
+        "p_rounds": null
+      },
+      "results": [
+        {
+          "metric_name": "tail_risk_estimate",
+          "value": 95,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "percentile",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "confidence_level",
+          "value": 95,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "percent",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "forecast_horizon",
+          "value": 36,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "months",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "classical_monte_carlo_runtime",
+          "value": 1.9,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "seconds",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "classical_monte_carlo_samples",
+          "value": 50,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "simulations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "distribution_fit_samples",
+          "value": 10000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "simulations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_test_accounts",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "accounts",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "speedup_scaling",
+          "value": 0.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "exponent",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "qae_error_scaling",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "over_M",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "classical_mc_error_scaling",
+          "value": 0.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "over_sqrt_M",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical monte carlo",
+          "metric_name": "classical_monte_carlo_runtime",
+          "value": 1.9,
+          "unit": "seconds"
+        },
+        {
+          "method_name": "classical monte carlo",
+          "metric_name": "distribution_fit_samples",
+          "value": 10000,
+          "unit": "simulations"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo",
+          "conditions": "for quantum amplitude estimation applied to the simplified unconditional lifetime PD estimation problem",
+          "is_demonstrated": false,
+          "caveats": "The paper states the speed enhancement is on the order of the square root of the number of simulations needed; no hardware experiment was run."
+        },
+        {
+          "type": "theoretical",
+          "factor": "O(sqrt(M))",
+          "baseline_method": "classical Monte Carlo O(M)",
+          "conditions": "when estimating the 95th percentile / confidence interval via QAE",
+          "is_demonstrated": false,
+          "caveats": "Requires a unitary A = USC construction and a threshold test qubit; only a proof-of-principle formulation is given."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": null,
+          "num_qubits": null,
+          "metric_name": "forecast_horizon",
+          "metric_value": 36
+        },
+        {
+          "problem_size": null,
+          "num_qubits": null,
+          "metric_name": "num_test_accounts",
+          "metric_value": 4
+        },
+        {
+          "problem_size": null,
+          "num_qubits": null,
+          "metric_name": "distribution_fit_samples",
+          "metric_value": 10000
+        },
+        {
+          "problem_size": null,
+          "num_qubits": null,
+          "metric_name": "classical_monte_carlo_samples",
+          "metric_value": 50
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": "O(sqrt(M)) samples for QAE-based estimation",
+        "classical_complexity": "O(M) samples for Monte Carlo estimation; classical error convergence O(1/sqrt(M))",
+        "speedup_order": "quadratic",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {
+        "advantage_status": "theoretical_only",
+        "hoefler_viable": false,
+        "maturity_level": "L0_theory",
+        "crossover_size": "Not established; the paper states the full competing-risks version would require far more qubits than available in the next couple of years.",
+        "resources_for_advantage": "A gate-based QAE circuit with N m-qubit registers plus support qubits; the paper gives no concrete qubit count for the simplified case and notes the full conditional version would need about 4Nm qubits.",
+        "data_loading_bottleneck": true,
+        "feasibility_horizon": "near_term_2_5_years",
+        "limiting_factors": [
+          "No actual quantum hardware results",
+          "Quadratic speedup only",
+          "State preparation/loading of distributions is non-trivial",
+          "Full conditional competing-risks version requires too many qubits",
+          "Current hardware noise/decoherence not addressed experimentally"
+        ]
+      },
+      "provenance": {
+        "hardware_type": "paper_reported",
+        "num_qubits": "derived",
+        "circuit_depth": "paper_reported",
+        "speedup_order": "paper_reported",
+        "quantum_complexity": "paper_reported",
+        "classical_complexity": "paper_reported",
+        "notes": [
+          "No actual quantum hardware experiment was run; the paper presents a theoretical gate-based QAE formulation only.",
+          "num_qubits is inferred from the paper's statement that N separate m-qubit registers are needed, with additional support qubits, but no numeric qubit count is given.",
+          "circuit depth is not numerically reported; only the algorithmic structure U-S-C and QAE are described.",
+          "The paper presents a theoretical QAE-based speedup claim relative to classical Monte Carlo, but no quantum benchmark is run.",
+          "The authors explicitly say the problem is beyond current quantum computers and that the full competing-risks approach is not feasible in the near term."
+        ],
+        "advantage_status": "paper_reported"
+      }
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Quantum Monte Carlo / QAE for the simplified unconditional PD model, emphasizing efficient loading of log-concave approximations and in-place summation of horizon distributions.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "Quantum risk analysis / QAE for unconditional lifetime PD with Grover-Rudolph state preparation",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": null,
+        "hyperparameters": {
+          "distribution_loading": "efficient loading via Grover-Rudolph for log-concave distributions",
+          "approximation": "logit-normal approximated by normal/lognormal",
+          "target_metric": "mean and variance of final distribution parameters",
+          "QAE_precision": "improves with number of quantum samples M"
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "One m-qubit register per forecast horizon; distributions loaded into registers and summed in-place; amplitude estimation used to estimate distribution parameters rather than full histogram.",
+        "objective_function": "Estimate mean and variance of the lifetime PD distribution to parameterize a lognormal approximation.",
+        "constraints_handling": "No explicit constraints beyond thresholding in QAE and in-place summation.",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": null
+      },
+      "problem_instance": {
+        "description": "Same Freddie Mac mortgage unconditional PD forecasting problem, but framed as parameter estimation for a lognormal approximation to the lifetime PD distribution.",
+        "num_assets": 1,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "public_benchmark",
+        "dataset_name": "Freddie Mac mortgage data",
+        "dataset_specification": {
+          "description": "Mortgage account-level data with origination and performance attributes"
+        },
+        "data_preprocessing_details": "Use of logit-normal distributions in log-odds space; approximation by lognormal distributions to enable efficient quantum loading.",
+        "evaluation_methodology": "Theoretical complexity comparison only; no hardware benchmark."
+      },
+      "quantum_resources": {
+        "num_qubits": null,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": {
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        }
+      },
+      "hardware": {
+        "type": "not_specified",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "is_noisy": null,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "Classical Monte Carlo / classical parameter estimation",
+        "transpilation_settings": null,
+        "classical_preprocessing": "Distribution approximation and parameter extraction for lognormal fit.",
+        "classical_postprocessing": "Closed-form parameter recovery for the assumed distribution family.",
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": null,
+          "final_loss_value": null,
+          "loss_curve_shape": null,
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        },
+        "classical_mc_samples": null,
+        "num_layers": null,
+        "ansatz_depth": null,
+        "p_rounds": null
+      },
+      "results": [
+        {
+          "metric_name": "tail_risk_estimate",
+          "value": 95,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "percentile",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "qae_error_scaling",
+          "value": 1,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "over_M",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "classical_mc_error_scaling",
+          "value": 0.5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "over_sqrt_M",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits_per_register",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "m qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "number_of_time_steps",
+          "value": null,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "N",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "classical monte carlo",
+          "metric_name": "classical_mc_error_scaling",
+          "value": 0.5,
+          "unit": "over_sqrt_M"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo",
+          "conditions": "for QAE-based estimation of the mean and variance of the final lifetime PD distribution under an unconditional model",
+          "is_demonstrated": false,
+          "caveats": "The paper notes that efficient loading is possible for log-concave distributions, but logit-normal/lognormal are only approximated; no concrete quantum benchmark is reported."
+        },
+        {
+          "type": "theoretical",
+          "factor": "O(sqrt(M))",
+          "baseline_method": "classical Monte Carlo O(M)",
+          "conditions": "when estimating distribution parameters (mean and variance) for a lognormal approximation",
+          "is_demonstrated": false,
+          "caveats": "The paper emphasizes that the result is a theoretical formulation and that current hardware is not sufficient for the full problem."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": null,
+          "num_qubits": null,
+          "metric_name": "num_qubits_required",
+          "metric_value": null
+        },
+        {
+          "problem_size": null,
+          "num_qubits": null,
+          "metric_name": "register_size_per_time_step",
+          "metric_value": null
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": "O(sqrt(M)) samples for QAE-based estimation",
+        "classical_complexity": "O(M) samples for Monte Carlo estimation",
+        "speedup_order": "quadratic",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {
+        "advantage_status": "theoretical_only",
+        "hoefler_viable": false,
+        "maturity_level": "L0_theory",
+        "crossover_size": "Not established; the paper only argues that QAE could estimate mean/variance with O(sqrt(M)) samples.",
+        "resources_for_advantage": "N m-qubit registers for horizon distributions plus support qubits; no concrete device or qubit count is reported.",
+        "data_loading_bottleneck": true,
+        "feasibility_horizon": "near_term_2_5_years",
+        "limiting_factors": [
+          "No experimental quantum implementation",
+          "Quadratic speedup only",
+          "Efficient loading assumed for approximated distributions",
+          "Distribution approximation to lognormal/normal may reduce fidelity to the original model"
+        ]
+      },
+      "provenance": {
+        "hardware_type": "paper_reported",
+        "num_qubits": "derived",
+        "circuit_depth": "paper_reported",
+        "speedup_order": "paper_reported",
+        "quantum_complexity": "paper_reported",
+        "classical_complexity": "paper_reported",
+        "notes": [
+          "This is not a separate empirical run; it is a second theoretical gate-based formulation in the discussion section.",
+          "The paper does not specify a concrete device, simulator, or transpiled circuit metrics.",
+          "This is a second theoretical formulation in the discussion section, not a separate executed experiment.",
+          "The paper does not provide a hardware benchmark or a crossover size."
+        ],
+        "advantage_status": "paper_reported"
+      }
+    }
+  ]
+}

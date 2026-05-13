@@ -1,51 +1,52 @@
-# Quantum Finance — Clean Submission Workspace
+# Quantum Finance — Submission Supplementary Repository
 
-This detached cleanup copy has been slimmed for submission review. P2 processed traceability evidence and Phase 3 S1-S5 thesis evidence are present in the hand-in tree; high-volume support evidence, raw/non-final material, and local-only working material were moved to an external source archive, not deleted.
+Companion repository to the MSc thesis *Quantum Computing in Financial Services* (Copenhagen Business School, 2026), authored by Aleix Telesforo (@TelesforoAleix) and Vincent Wallerich (@vallahrich).
 
-Archive root: `C:\QF_submission_packages\source_internal_archive\QF_repo_supporting_artifacts_20260509`  
-Archive manifest: `C:\QF_submission_packages\source_internal_archive\QF_repo_supporting_artifacts_20260509\SOURCE_ARCHIVE_MANIFEST.csv`
+This repository is the **self-contained supplementary archive** submitted alongside the thesis. It carries the full audit trail, configurations, prompts, derived artifacts, and reproduction tooling for every claim made in the manuscript. Everything an examiner needs to verify the thesis claims is in this tree — no external archive is required.
+
+The repository is **frozen** as a hand-in artifact. Headline numbers, taxonomies, cohorts, and audit ledgers are pinned by [`FREEZE.md`](FREEZE.md) at the root and per-folder `FREEZE.md` files.
 
 ## Start Here
 
 | File | Purpose |
 |---|---|
-| [`FREEZE.md`](FREEZE.md) | Top-level frozen status and headline numbers for the hand-in tree. |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Clean map of the hand-in repository structure. |
+| [`FREEZE.md`](FREEZE.md) | Top-level frozen status and headline numbers. |
+| [`FAIR_USE.md`](FAIR_USE.md) | Fair-use rationale: which materials are excluded (copyrighted source PDFs and full-text transcripts), which are shipped, and how to obtain originals via DOI. |
+| [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) | Toolchain, setup commands, per-phase reproduction entry points, and LLM-call posture. |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Map of the hand-in repository structure. |
 | [`docs/PIPELINE.md`](docs/PIPELINE.md) | Phase-by-phase research pipeline overview. |
-| [`docs/PROJECT_STATE.yaml`](docs/PROJECT_STATE.yaml) | Compact machine-readable project state and cross-phase contracts; per-folder freeze files control artifact counts. |
-| [`docs/PROJECT_TIMELINE.md`](docs/PROJECT_TIMELINE.md) | Clean chronology grounded in real artifacts. |
-| [`docs/AUDIT_INDEX.md`](docs/AUDIT_INDEX.md) | Audit/log navigation, with source-archive notes for moved evidence. |
-| [`docs/METHODOLOGY_DESIGN.md`](docs/METHODOLOGY_DESIGN.md) | Historical methodology scaffold retained for provenance; not the controlling current method. |
+| [`docs/PROJECT_STATE.yaml`](docs/PROJECT_STATE.yaml) | Compact machine-readable project state and cross-phase contracts. |
+| [`docs/PROJECT_TIMELINE.md`](docs/PROJECT_TIMELINE.md) | Chronology grounded in real artifacts. |
+| [`docs/AUDIT_INDEX.md`](docs/AUDIT_INDEX.md) | Audit and log navigation. |
+| [`docs/ARTIFACT_CLAIM_LEDGER.md`](docs/ARTIFACT_CLAIM_LEDGER.md) | Per-claim source files, allowed wording, and verification commands. **The single highest-value reference for examiners.** |
+| [`docs/ai-prompt-iteration-stats.md`](docs/ai-prompt-iteration-stats.md) | Quantitative LLM prompt-iteration and review-acceptance evidence. |
 
-## Where Are The Logs?
+## LLM Audit Trail
 
-The root [`logs/`](logs/) folder is a reviewer signpost, not the central storage location for all logs. Canonical logs and audit evidence are kept phase-locally next to the artifacts they document. Start with [`logs/README.md`](logs/README.md) or [`docs/AUDIT_INDEX.md`](docs/AUDIT_INDEX.md) to locate the relevant audit trail.
+Raw LLM call logs from both researchers' execution sessions are merged at [`audit/logs/`](audit/logs/). Each phase that invoked an LLM also keeps stage-local call logs (e.g., `p3_thematic_synthesis/s4_thematic_coding/<silo>/themes/*.raw_response.txt` and `*_calls.jsonl` files). Together these constitute the complete AI-use audit trail referenced in the manuscript's AI Use Declaration appendix.
 
-## Phase-Local Provenance File
+## Phase-Local Provenance Files
 
 | File | Why it is here |
 |---|---|
 | [`p2_systematic_review/output/audit/manual_extraction_targets.txt`](p2_systematic_review/output/audit/manual_extraction_targets.txt) | Manual extraction target list used in the same P2/P4 triage chain; referenced by [`p4_experiments/canonical/cohort.json`](p4_experiments/canonical/cohort.json). |
+| [`p2_systematic_review/output/audit/triage_classification.json`](p2_systematic_review/output/audit/triage_classification.json) | Post-classification quantitative triage ledger. |
 
-This is not a current headline-result file. It is retained for traceability; current claims are controlled by the freeze files and canonical outputs listed above. The post-classification quantitative triage ledger is phase-local at [`p2_systematic_review/output/audit/triage_classification.json`](p2_systematic_review/output/audit/triage_classification.json).
+These are retained for traceability; current claims are controlled by the freeze files and canonical outputs listed above.
 
 ## Phase 3 Evidence
 
-The Phase 3 thematic synthesis spine is included as `p3_thematic_synthesis/s1_silo_scoping/` through `p3_thematic_synthesis/s5_cross_silo/`. The S6 descriptive finance-framing sibling is also present as clean outputs because the freeze and tests expect it. The restored P3 layer keeps final/canonical thesis evidence and leaves source PDFs, full-paper Markdown, raw text, raw model responses, raw request bundles, logs, legacy snapshots, and comparator archives in the external source archive.
+The Phase 3 thematic synthesis spine is included as `p3_thematic_synthesis/s1_silo_scoping/` through `p3_thematic_synthesis/s5_cross_silo/` plus the `s6_silo_framing/` descriptive sibling. Each active silo carries its codes, themes, and reviewed-disposition logs (S4); the cross-silo synthesis (S5) and per-silo descriptive briefs (S6) are present in their final form.
 
-## What Was Archived Out Of This Workspace
+## What Is Not in This Repository
 
-- Source-paper PDFs and full-text folders.
-- Local `.venv`, cache, and operational log folders.
-- Internal Copilot/process folders (`.github/`, `review/`, `manuscript/working/`).
-- Noisy planning/proofreading docs outside the clean documentation set.
-- Raw LLM prompt/request logs and S6 request bundles.
-- High-volume generated P4 support evidence plus non-final/raw P2/P3 support evidence useful for deep audit but too noisy or sensitive as loose files.
-- Expanded Phase 11 release bundle tree; the canonical `zenodo_bundle.tar.gz` and `.sha256` sidecar remain under `p4_experiments/canonical/release/`.
+The following materials were deliberately excluded from this submission. See [`FAIR_USE.md`](FAIR_USE.md) for the full rationale.
 
-## Restore Archived Evidence
-
-To restore a moved path, copy it back from the archive root preserving the relative path shown in `SOURCE_ARCHIVE_MANIFEST.csv`. The external archive is local-only and is not intended for public redistribution.
+- **Source PDFs and full-text transcripts of corpus papers** — copyrighted; obtain via DOI from the bridge file at [`shared/bridge/paper_id_bridge.csv`](shared/bridge/paper_id_bridge.csv).
+- **Reference PDFs of the Phase 3 quantum-advantage frameworks** (Rønnow, Beverland, Dalzell, Hoefler, Babbush, Chakrabarti, Stilck França) — see [`p3_thematic_synthesis/s3_quantum_advantage/REFERENCE_PDFS_EXCLUDED.md`](p3_thematic_synthesis/s3_quantum_advantage/REFERENCE_PDFS_EXCLUDED.md) for citations.
+- **The thesis manuscript itself** — submitted as the primary deliverable on Digital Exam, not as part of this supplementary archive.
+- **Personal review notes, work-in-progress audits, internal review matrices, and design-iteration scaffolding** — not part of the validation surface; the canonical evidence (claim ledger, freeze files, audit reports) covers what those notes were tracking.
+- **Operational caches and bytecode** (`__pycache__/`, vector stores, API caches) — regenerable.
 
 ## Verification
 
@@ -56,4 +57,4 @@ pwsh .\verify.ps1
 python -m pytest
 ```
 
-The derivative packages under `C:\QF_submission_packages` are separately curated and manifest-verified.
+For Phase 4 reproduction, see [`p4_experiments/canonical/REPRODUCE.md`](p4_experiments/canonical/REPRODUCE.md). Expensive paths support `--dry-run` for plan-only inspection.

@@ -1,0 +1,692 @@
+{
+  "paper_id": "67ed9d74dd96",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-17",
+    "run_timestamp": "2026-04-17T08:12:14+00:00",
+    "schema_version": "benchmark_extraction_v1.0",
+    "prompt_version_hash": "2d440153b274177d",
+    "scope": "gate_based",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.4-mini"
+    },
+    "source_file": "67ed9d74dd96_approximate_complex_amplitude_encoding_algorithm_and_its_application_to_data_cla.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.75,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 0,
+    "validation_warnings": 4,
+    "validation_passed": true,
+    "validation_error_details": [],
+    "validation_warning_details": [
+      "experiments[0].results[6].unit='features' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[0].results[8].unit='layers' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[1].results[3].unit='features' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)",
+      "experiments[1].results[5].unit='layers' not in standard vocabulary (allowed: seconds, ms, percent, ratio, unitless, ...)"
+    ],
+    "quality_details": {
+      "score": 0.75,
+      "completeness": 0.75,
+      "num_experiments": 2,
+      "experiment_scores": [
+        0.75,
+        0.75
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.0,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "revalidated_at": "2026-04-17T08:36:06+00:00"
+  },
+  "paper_metadata": {
+    "title": "Approximate complex amplitude encoding algorithm and its application to data classification problems",
+    "authors": [
+      "Naoki Mitsuda",
+      "Tatsuhiro Ichimura",
+      "Kouhei Nakaji",
+      "Yohichi Suzuki",
+      "Tomoki Tanaka",
+      "Rudy Raymond",
+      "Hiroyuki Tezuka",
+      "Tamiya Onodera",
+      "Naoki Yamamoto"
+    ],
+    "year": 2024,
+    "doi": "",
+    "scope": "gate_based"
+  },
+  "finance_domain": {
+    "primary_silo": "quantum-ml-finance",
+    "secondary_silos": [
+      "fraud-detection"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "The paper proposes approximate complex amplitude encoding (ACAE) for complex-valued state preparation using a fidelity-based cost function estimated by classical shadows, and applies it to a compact Hadamard classifier. It reports a 5-qubit, 12-layer Iris demonstration with final fidelity 0.994 and a 5-qubit fraud-detection demonstration on a Kaggle credit-card dataset, but provides no hardware benchmark or classical runtime advantage claim.",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Approximate complex amplitude encoding (ACAE) used to prepare complex-valued data states for compact Hadamard classifier on the Iris binary classification task (I. setosa vs I. versicolor and I. versicolor vs I. virginica).",
+      "algorithm": {
+        "family": "quantum-ml",
+        "variant": "Approximate complex amplitude encoding (ACAE) + compact Hadamard classifier",
+        "ansatz": "hardware-efficient ansatz with single-qubit Rx/Ry/Rz rotations and CNOT entanglers; test-data encoder uses Ry + CNOT only",
+        "optimizer": "Adam",
+        "num_layers": 12,
+        "convergence_criteria": "fixed training budget; 400 iterations for training U(θ), 100 iterations for U′(θ′)",
+        "hyperparameters": {
+          "Nshot": 1000,
+          "learning_rate_schedule_training": [
+            0.1,
+            0.01,
+            0.005,
+            0.001
+          ],
+          "learning_rate_schedule_test_encoder": [
+            0.1,
+            0.01
+          ],
+          "iterations_training": 400,
+          "iterations_test_encoder": 100,
+          "fidelity_target": null,
+          "random_initialization": "randomly initialize rotation axes (X/Y/Z) and parameters θr",
+          "cost_function": "fidelity between model state and target state",
+          "gradient_method": "parameter-shift rule"
+        },
+        "parameter_initialization": "randomly initialize all axes of each rotating gate and θr",
+        "optimizer_settings": {
+          "max_iterations": 400,
+          "learning_rate_schedule": [
+            0.1,
+            0.01,
+            0.005,
+            0.001
+          ],
+          "num_shots": 1000
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "Complex-valued data vector encoded into amplitudes of a 5-qubit state; training data embedded in real and imaginary parts of ancilla-0 branch, test data in ancilla-1 branch",
+        "objective_function": "maximize fidelity f(θ)=|<Data|ψ(θ)>|^2 for approximate state preparation",
+        "constraints_handling": "global phase ignored; compact Hadamard classifier uses ancilla measurement after Hadamard to infer label",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 1
+      },
+      "problem_instance": {
+        "description": "Binary classification of Iris species using 4 features per sample; two pairwise tasks reported: setosa vs versicolor and versicolor vs virginica",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": 4,
+        "dataset_size": 8,
+        "data_type": "public_benchmark",
+        "dataset_name": "Iris dataset",
+        "dataset_specification": {
+          "description": "Iris setosa and Iris versicolor: training IDs 1-4 and 51-54; test IDs 5-8 and 55-58. Iris versicolor vs Iris virginica: analogous split with IDs 55-58 and 105-108 shown in results."
+        },
+        "data_preprocessing_details": "features are used as given; amplitudes normalized to satisfy state normalization",
+        "evaluation_methodology": "single proof-of-principle numerical demonstration; classification results reported for 8 test cases per binary task"
+      },
+      "quantum_resources": {
+        "num_qubits": 5,
+        "qubit_type": "logical",
+        "circuit_depth": 12,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 1000,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": {
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        }
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "Adam optimizer; classical shadow estimation; stabilizer-formalism simulation of Clifford snapshots",
+        "transpilation_settings": null,
+        "classical_preprocessing": "feature normalization; training/test split selection; random Clifford measurements for fidelity estimation",
+        "classical_postprocessing": "sign of ancilla Z expectation value used as class label",
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": 400,
+          "final_loss_value": null,
+          "loss_curve_shape": "fidelity increases to 0.994 by end of training",
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        },
+        "classical_mc_samples": null,
+        "num_layers": null,
+        "ansatz_depth": null,
+        "p_rounds": null
+      },
+      "results": [
+        {
+          "metric_name": "fidelity",
+          "value": 0.994,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "fidelity",
+          "value": 0.999,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "accuracy",
+          "value": 1.0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "accuracy",
+          "value": 0.625,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "accuracy",
+          "value": 1.0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "dataset_size",
+          "value": 8,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "samples",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_features",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "features",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "circuit_depth",
+          "value": 12,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "iterations_training",
+          "value": 400,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "iterations_test_encoder",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_shots",
+          "value": 1000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "shots",
+          "higher_is_better": false,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "avoids O(2^n) state-preparation gates; uses O(poly(n)) gates",
+          "baseline_method": "exact amplitude encoding / exact state preparation",
+          "conditions": "for approximate state preparation on shallow parametrized quantum circuits",
+          "is_demonstrated": false,
+          "caveats": "The paper does not prove an end-to-end quantum advantage; classical training of the fidelity estimate still includes an O(2^n) summation."
+        },
+        {
+          "type": "theoretical",
+          "factor": "fewer gates than original compact Hadamard classifier requiring exponentially many gates for exact initial state preparation",
+          "baseline_method": "original compact Hadamard classifier with exact state preparation",
+          "conditions": "when using ACAE to approximate the complex-valued data loading",
+          "is_demonstrated": false,
+          "caveats": "This is a circuit-depth/gate-count reduction claim, not a runtime speedup benchmark."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 8,
+          "num_qubits": 5,
+          "metric_name": "accuracy",
+          "metric_value": 1.0
+        },
+        {
+          "problem_size": 8,
+          "num_qubits": 5,
+          "metric_name": "accuracy",
+          "metric_value": 0.625
+        },
+        {
+          "problem_size": 8,
+          "num_qubits": 5,
+          "metric_name": "accuracy",
+          "metric_value": 1.0
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": "ACAE uses O(poly(n)) gates for approximate state preparation; CHC implementation avoids exponentially many gates for state preparation",
+        "classical_complexity": "Exact state preparation requires O(2^n) CNOT gates; classical evaluation of fidelity estimate includes O(2^n) summation in training",
+        "speedup_order": "polynomial_other",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {
+        "advantage_status": "theoretical_only",
+        "hoefler_viable": false,
+        "maturity_level": "L1_noiseless_sim",
+        "crossover_size": "not_assessed",
+        "resources_for_advantage": "No hardware execution or classical-vs-quantum runtime comparison is reported; only a 5-qubit, 12-layer numerical demonstration is given.",
+        "data_loading_bottleneck": true,
+        "feasibility_horizon": "near_term_2_5_years",
+        "limiting_factors": [
+          "No QPU benchmark",
+          "No classical baseline comparison for runtime",
+          "State-preparation cost remains exponential in exact form",
+          "Classical shadow and Clifford sampling add overhead",
+          "Toy-scale Iris task only"
+        ]
+      },
+      "provenance": {
+        "hardware_type": "paper_inferred",
+        "num_qubits": "paper_reported",
+        "circuit_depth": "paper_reported",
+        "speedup_order": "paper_reported",
+        "quantum_complexity": "paper_reported",
+        "classical_complexity": "paper_reported",
+        "notes": [
+          "hardware.type inferred as simulator_other because the paper reports numerical demonstrations and does not name a real QPU or cloud backend.",
+          "num_qubits and circuit depth are reported for the Iris demonstration as n+m+1=5 qubits and a 12-layer ansatz for U(θ).",
+          "speedup_order is inferred from the paper's claim of avoiding exponentially many gates for state preparation while not proving an asymptotic end-to-end quantum advantage.",
+          "The paper demonstrates a 5-qubit Iris classification example with 12-layer ansatz and reports classification accuracy, but does not show practical quantum advantage over classical methods."
+        ],
+        "advantage_status": "paper_inferred"
+      }
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "Approximate complex amplitude encoding (ACAE) used to prepare complex-valued data states for compact Hadamard classifier on credit card fraud detection.",
+      "algorithm": {
+        "family": "quantum-ml",
+        "variant": "Approximate complex amplitude encoding (ACAE) + compact Hadamard classifier",
+        "ansatz": "hardware-efficient ansatz for training data encoder; test-data encoder uses Ry + CNOT only",
+        "optimizer": "Adam",
+        "num_layers": 12,
+        "convergence_criteria": "fixed training budget; 400 iterations for training U(θ), 100 iterations for U′(θ′)",
+        "hyperparameters": {
+          "Nshot": 1000,
+          "learning_rate_schedule_training": [
+            0.1,
+            0.01,
+            0.005,
+            0.001
+          ],
+          "learning_rate_schedule_test_encoder": [
+            0.1,
+            0.01
+          ],
+          "iterations_training": 400,
+          "iterations_test_encoder": 100,
+          "random_initialization": "randomly initialize rotation axes (X/Y/Z) and parameters θr",
+          "cost_function": "fidelity between model state and target state",
+          "gradient_method": "parameter-shift rule"
+        },
+        "parameter_initialization": "randomly initialize all axes of each rotating gate and θr",
+        "optimizer_settings": {
+          "max_iterations": 400,
+          "learning_rate_schedule": [
+            0.1,
+            0.01,
+            0.005,
+            0.001
+          ],
+          "num_shots": 1000
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "amplitude_encoding",
+        "encoding_details": "4 selected PCA features (V1-V4) of each transaction encoded into amplitudes of a 5-qubit state; normal transactions in ancilla-0 branch and fraudulent transactions in ancilla-1 branch",
+        "objective_function": "maximize fidelity f(θ)=|<Data|ψ(θ)>|^2 for approximate state preparation; classify by sign of ancilla Z expectation value",
+        "constraints_handling": "global phase ignored; compact Hadamard classifier uses ancilla measurement after Hadamard to infer label",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 1
+      },
+      "problem_instance": {
+        "description": "Binary fraud detection on credit card transactions using 4 features from a public Kaggle dataset",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": 4,
+        "dataset_size": 8,
+        "data_type": "public_benchmark",
+        "dataset_name": "Credit Card Fraud Detection dataset",
+        "dataset_specification": {
+          "description": "Kaggle dataset of European cardholder transactions from September 2013; training uses 4 normal and 4 fraudulent transactions; test uses top four normal and top four fraudulent IDs excluding training data"
+        },
+        "data_preprocessing_details": "use PCA-transformed features V1-V4 from the 28 PCA features; amplitudes normalized to satisfy state normalization",
+        "evaluation_methodology": "single proof-of-concept numerical demonstration; also mentions an additional simulation with 48 randomly selected instances, of which 42 were correctly classified"
+      },
+      "quantum_resources": {
+        "num_qubits": 5,
+        "qubit_type": "logical",
+        "circuit_depth": 12,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 1000,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": {
+          "code_distance": null,
+          "physical_qubits_per_logical": null,
+          "total_physical_qubits": null,
+          "logical_error_rate": null,
+          "physical_error_rate_assumed": null
+        }
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": null,
+        "device_name": null,
+        "framework": null
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": null,
+        "code_url": null,
+        "framework_version": null,
+        "transpilation_target": null,
+        "classical_solver": "Adam optimizer; classical shadow estimation; stabilizer-formalism simulation of Clifford snapshots",
+        "transpilation_settings": null,
+        "classical_preprocessing": "PCA feature selection (V1-V4); training/test split selection; random Clifford measurements for fidelity estimation",
+        "classical_postprocessing": "sign of ancilla Z expectation value used as class label",
+        "total_execution_time": null,
+        "quantum_execution_time": null,
+        "quantum_fraction_of_runtime": null,
+        "circuit_compilation_time": null,
+        "convergence_data": {
+          "iterations_to_converge": 400,
+          "final_loss_value": null,
+          "loss_curve_shape": "fidelity increases during training; final fidelity not explicitly stated for fraud task",
+          "variance_across_runs": null,
+          "num_independent_runs": null
+        },
+        "classical_mc_samples": null,
+        "num_layers": null,
+        "ansatz_depth": null,
+        "p_rounds": null
+      },
+      "results": [
+        {
+          "metric_name": "accuracy",
+          "value": 1.0,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "accuracy",
+          "value": 0.75,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "dataset_size",
+          "value": 8,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "samples",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_features",
+          "value": 4,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "features",
+          "higher_is_better": true,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_qubits",
+          "value": 5,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "qubits",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "circuit_depth",
+          "value": 12,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "layers",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "iterations_training",
+          "value": 400,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "iterations_test_encoder",
+          "value": 100,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "iterations",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "num_shots",
+          "value": 1000,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "shots",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "accuracy",
+          "value": 0.875,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "ratio",
+          "higher_is_better": true,
+          "data_source": "text"
+        }
+      ],
+      "classical_baselines": [],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "avoids O(2^n) state-preparation gates; uses O(poly(n)) gates",
+          "baseline_method": "exact amplitude encoding / exact state preparation",
+          "conditions": "for approximate state preparation on shallow parametrized quantum circuits",
+          "is_demonstrated": false,
+          "caveats": "The paper does not provide a classical runtime baseline for fraud detection; the claim is about circuit complexity, not measured speedup."
+        },
+        {
+          "type": "theoretical",
+          "factor": "fewer gates than original compact Hadamard classifier requiring exponentially many gates for exact initial state preparation",
+          "baseline_method": "original compact Hadamard classifier with exact state preparation",
+          "conditions": "when using ACAE to approximate the complex-valued data loading",
+          "is_demonstrated": false,
+          "caveats": "This is a gate-count reduction claim only."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": 8,
+          "num_qubits": 5,
+          "metric_name": "accuracy",
+          "metric_value": 1.0
+        },
+        {
+          "problem_size": 8,
+          "num_qubits": 5,
+          "metric_name": "accuracy",
+          "metric_value": 0.875
+        }
+      ],
+      "complexity_analysis": {
+        "quantum_complexity": "ACAE uses O(poly(n)) gates for approximate state preparation; CHC implementation avoids exponentially many gates for state preparation",
+        "classical_complexity": "Exact state preparation requires O(2^n) CNOT gates; classical evaluation of fidelity estimate includes O(2^n) summation in training",
+        "speedup_order": "polynomial_other",
+        "constant_factor_quantum": null,
+        "constant_factor_classical": null,
+        "total_operations_quantum": null,
+        "total_operations_classical": null,
+        "crossover_n": null,
+        "wall_clock_quantum": null,
+        "wall_clock_classical": null
+      },
+      "advantage_assessment": {
+        "advantage_status": "theoretical_only",
+        "hoefler_viable": false,
+        "maturity_level": "L1_noiseless_sim",
+        "crossover_size": "not_assessed",
+        "resources_for_advantage": "No hardware execution or classical-vs-quantum runtime comparison is reported; only a 5-qubit, 12-layer numerical demonstration is given.",
+        "data_loading_bottleneck": true,
+        "feasibility_horizon": "near_term_2_5_years",
+        "limiting_factors": [
+          "No QPU benchmark",
+          "No classical baseline comparison for runtime",
+          "State-preparation cost remains exponential in exact form",
+          "Classical shadow and Clifford sampling add overhead",
+          "Toy-scale fraud-detection subset only"
+        ]
+      },
+      "provenance": {
+        "hardware_type": "paper_inferred",
+        "num_qubits": "paper_reported",
+        "circuit_depth": "paper_reported",
+        "speedup_order": "paper_reported",
+        "quantum_complexity": "paper_reported",
+        "classical_complexity": "paper_reported",
+        "notes": [
+          "hardware.type inferred as simulator_other because the paper reports numerical demonstrations and does not name a real QPU or cloud backend.",
+          "num_qubits and circuit depth are reported for the fraud detection demonstration as n+m+1=5 qubits and a 12-layer ansatz for U(θ).",
+          "speedup_order is inferred from the paper's claim of avoiding exponentially many gates for state preparation while not proving an asymptotic end-to-end quantum advantage.",
+          "The paper demonstrates a 5-qubit credit-card-fraud classification example and reports correct classification on the selected test set, but does not establish practical quantum advantage."
+        ],
+        "advantage_status": "paper_inferred"
+      }
+    }
+  ]
+}

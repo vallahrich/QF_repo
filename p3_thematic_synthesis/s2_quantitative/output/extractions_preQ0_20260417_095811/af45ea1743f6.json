@@ -1,0 +1,1039 @@
+{
+  "paper_id": "af45ea1743f6",
+  "extraction_metadata": {
+    "extraction_date": "2026-04-14",
+    "models_used": {
+      "2": "gpt-5.4-mini",
+      "3": "gpt-5.4-mini",
+      "4": "gpt-5.3"
+    },
+    "source_file": "af45ea1743f6_a_hybrid_quantum_wasserstein_gan_with_applications_to_option_pricing.md",
+    "pipeline": "3-step-v3",
+    "quality_score": 0.87,
+    "validation_flagged": 0,
+    "validation_total": 0,
+    "validation_errors": 4,
+    "validation_warnings": 0,
+    "validation_error_details": [
+      "Schema error at experiments.0.scalability_data.0.problem_size: '5 qubits / 32 grid points' is not of type 'number', 'null'",
+      "Schema error at experiments.0.scalability_data.1.problem_size: '5 qubits / 32 grid points' is not of type 'number', 'null'",
+      "Schema error at experiments.2.scalability_data.0.problem_size: '100 simulated variance paths and 100 asset price paths' is not of type 'number', 'null'",
+      "Schema error at experiments.2.scalability_data.1.problem_size: '100 simulated variance paths and 100 asset price paths' is not of type 'number', 'null'"
+    ],
+    "quality_details": {
+      "score": 0.87,
+      "completeness": 0.87,
+      "num_experiments": 5,
+      "experiment_scores": [
+        0.8,
+        0.9,
+        0.8,
+        0.95,
+        0.9
+      ],
+      "details": [
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 0.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 1.0,
+          "hardware": 0.5,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        },
+        {
+          "algorithm": 1.0,
+          "quantum_resources": 0.5,
+          "hardware": 1.0,
+          "results": 1.0,
+          "baselines": 1.0,
+          "problem_instance": 1.0
+        }
+      ]
+    },
+    "validation_passed": false
+  },
+  "paper_metadata": {
+    "title": "A HYBRID QUANTUM WASSERSTEIN GAN WITH APPLICATIONS TO OPTION PRICING",
+    "authors": [
+      "Felix Fuchs",
+      "Blanka Horvath"
+    ],
+    "year": 2023,
+    "doi": null
+  },
+  "finance_domain": {
+    "primary_silo": "derivative-pricing",
+    "secondary_silos": [
+      "simulation-monte-carlo",
+      "quantum-ml-finance"
+    ]
+  },
+  "has_quantitative_results": true,
+  "summary": "",
+  "experiments": [
+    {
+      "experiment_id": "exp_1",
+      "description": "Hybrid qWGAN training on a synthetic lognormal distribution, comparing BCE-loss training versus Wasserstein-loss training for loading a 5-qubit discretized distribution.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "hybrid quantum Wasserstein GAN (qWGAN) with classical discriminator and quantum generator",
+        "ansatz": "Two_Local circuit; alternating RX/RY rotation layers with shifted-circular-alternating CX entanglement",
+        "optimizer": "AMSGrad",
+        "num_layers": 2,
+        "convergence_criteria": "trained for 2000 epochs; best result selected by lowest relative entropy",
+        "hyperparameters": {
+          "epochs": 2000,
+          "batch_size": 1000,
+          "learning_rate_bce": 0.0001,
+          "learning_rate_wasserstein": 0.0001,
+          "beta1": 0.9,
+          "beta2": 0.999,
+          "num_qubits": 5,
+          "num_grid_points": 32,
+          "training_sample_size": 10000,
+          "strike_price": 1.0,
+          "distribution": "lognormal",
+          "mu": "ln(1.1) - 0.25^2 / 2",
+          "sigma": 0.25,
+          "initial_parameter_range": "uniform[-0.1, 0.1]",
+          "hidden_layer_size": 20,
+          "discriminator_layers": 3,
+          "ancilla_qubits_for_pricing": 2
+        },
+        "parameter_initialization": "generator parameters sampled uniformly from [-0.1, 0.1]; input state initialized to uniform superposition via Hadamard gates",
+        "optimizer_settings": {
+          "learning_rate": 0.0001,
+          "beta1": 0.9,
+          "beta2": 0.999,
+          "batch_size": 1000,
+          "epochs": 2000
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "5 qubits represent 2^5 = 32 discrete values mapped to {0.0, 0.1, ..., 3.1}; generator outputs a probability distribution over basis states",
+        "objective_function": "minimize divergence between generated and real distributions; BCE setup uses binary cross entropy, Wasserstein setup uses L_QWGAN = E_real[D(x)] - E_fake[D(x)]",
+        "constraints_handling": null,
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 0
+      },
+      "problem_instance": {
+        "description": "Synthetic lognormal asset-price-at-maturity distribution for European call option pricing",
+        "num_assets": null,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 10000,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "Samples drawn from Lognormal(mu, sigma) with mu = ln(1.1) - 0.25^2/2 and sigma = 0.25; rounded to one decimal place; support discretized to 32 grid points from 0.0 to 3.1"
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 5,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 1000,
+        "num_variational_params": 10,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": "IBM",
+        "device_name": "aer_simulator",
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": "https://github.com/felixfuchs/qwgan-option-pricing",
+        "framework_version": null,
+        "classical_solver": null,
+        "classical_preprocessing": "generate 10,000 lognormal samples; round to one decimal; discretize onto 32-point grid; normalize probabilities",
+        "classical_postprocessing": "compute relative entropy and Wasserstein distance; select best trained model; compare generated distribution to target distribution"
+      },
+      "results": [
+        {
+          "metric_name": "relative_entropy",
+          "value": 0.0043,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "nats",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "wasserstein_distance",
+          "value": 0.001394,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "distance",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "relative_entropy",
+          "value": 0.1858,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "nats",
+          "higher_is_better": false,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "wasserstein_distance",
+          "value": 0.017387,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "distance",
+          "higher_is_better": false,
+          "data_source": "table"
+        }
+      ],
+      "classical_baselines": [],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo / classical GAN-style loading",
+          "conditions": "for option-pricing pipeline and distribution loading; claimed via Wasserstein training stability and quantum amplitude estimation in the overall workflow",
+          "is_demonstrated": true,
+          "caveats": "The paper reports improved fit quality for the qWGAN versus BCE training, but the quadratic speedup itself belongs to the IQAE/QAE pricing step rather than the GAN training step."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": "5 qubits / 32 grid points",
+          "num_qubits": 5,
+          "metric_name": "relative_entropy",
+          "metric_value": 0.0043
+        },
+        {
+          "problem_size": "5 qubits / 32 grid points",
+          "num_qubits": 5,
+          "metric_name": "wasserstein_distance",
+          "metric_value": 0.001394
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_2",
+      "description": "End-to-end European call option pricing using the trained hybrid qWGAN distribution loader and Iterative Quantum Amplitude Estimation on real IBM hardware.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "Iterative Quantum Amplitude Estimation (IQAE) in a three-step option-pricing pipeline",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": "iterative narrowing of confidence interval until estimate stabilizes; paper reports final confidence interval after execution",
+        "hyperparameters": {
+          "strike_price": 1.0,
+          "num_qubits_distribution_register": 5,
+          "num_ancilla_qubits": 2,
+          "quantum_samples": 4,
+          "confidence_level": 0.99
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "5-qubit discretized asset-price distribution loaded into quantum state; one comparison ancilla and one payoff ancilla used to encode call payoff",
+        "objective_function": "estimate E[max(S_T - K, 0)] via probability of measuring |1> on payoff ancilla",
+        "constraints_handling": "comparison circuit marks states with i > K; payoff rotation maps payoff to ancilla amplitude",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 2
+      },
+      "problem_instance": {
+        "description": "European call option on the synthetic lognormal distribution from exp_1",
+        "num_assets": 1,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 10000,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "Same synthetic lognormal maturity distribution as exp_1; strike K = 1.0"
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 7,
+        "qubit_type": "physical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "real_qpu_superconducting",
+        "provider": "IBM",
+        "device_name": "ibm_nairobi",
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "is_noisy": true,
+        "noise_type": "hardware noise on IBM superconducting QPU",
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": "https://github.com/felixfuchs/qwgan-option-pricing",
+        "framework_version": null,
+        "classical_solver": null,
+        "classical_preprocessing": "use trained qWGAN output distribution; build comparator circuit and payoff rotation; discretize payoff on 5-qubit grid",
+        "classical_postprocessing": "map measured integer y to theta_a = y*pi/M and estimate amplitude a = sin^2(theta_a); compute option price and confidence interval"
+      },
+      "results": [
+        {
+          "metric_name": "target_distribution_payout",
+          "value": 0.1618,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "trained_distribution_payout",
+          "value": 0.1623,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "estimated_value",
+          "value": 0.1661,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "confidence_interval",
+          "value": 0.1661,
+          "uncertainty": "[0.1512, 0.1810]",
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "target_distribution_payout",
+          "value": 0.1618,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "trained_distribution_payout",
+          "value": 0.1584,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "estimated_value",
+          "value": 0.1574,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "confidence_interval",
+          "value": 0.1574,
+          "uncertainty": "[0.1315, 0.1833]",
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.0043,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute payout error",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.0034,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute payout error",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.001,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute payout error",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.0043,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute payout error",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.0043,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute payout error",
+          "higher_is_better": false,
+          "data_source": "computed"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "analytical target distribution payout",
+          "metric_name": "target_distribution_payout",
+          "value": 0.1618,
+          "unit": "payout"
+        },
+        {
+          "method_name": "trained distribution payout",
+          "metric_name": "trained_distribution_payout",
+          "value": 0.1584,
+          "unit": "payout"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo",
+          "conditions": "option-pricing amplitude estimation step; using IQAE with 2 ancilla qubits / 4 quantum samples as described in the paper",
+          "is_demonstrated": true,
+          "caveats": "The paper states quadratic error scaling improvement, but the reported numerical experiment is on noisy IBM hardware and the confidence interval is empirical."
+        }
+      ],
+      "scalability_data": [],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_3",
+      "description": "Hybrid qWGAN training on a synthetic Heston-model maturity distribution, followed by option pricing with IQAE.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "hybrid qWGAN on Heston-model-generated distribution",
+        "ansatz": "Two_Local circuit; alternating RX/RY rotation layers with shifted-circular-alternating CX entanglement",
+        "optimizer": "AMSGrad",
+        "num_layers": 2,
+        "convergence_criteria": "trained until good fit; paper reports good result after about 300 epochs",
+        "hyperparameters": {
+          "epochs": 2000,
+          "batch_size": 1000,
+          "learning_rate_bce": 0.0001,
+          "learning_rate_wasserstein": 0.0001,
+          "beta1": 0.9,
+          "beta2": 0.999,
+          "num_qubits": 5,
+          "num_grid_points": 32,
+          "training_sample_size": 100,
+          "strike_price": 1.0,
+          "distribution": "Heston model",
+          "initial_parameter_range": "uniform[-0.1, 0.1]",
+          "hidden_layer_size": 20,
+          "discriminator_layers": 3,
+          "ancilla_qubits_for_pricing": 2
+        },
+        "parameter_initialization": "generator parameters sampled uniformly from [-0.1, 0.1]",
+        "optimizer_settings": {
+          "learning_rate": 0.0001,
+          "beta1": 0.9,
+          "beta2": 0.999,
+          "batch_size": 1000,
+          "epochs": 2000
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "Heston maturity distribution discretized onto 32 grid points and loaded into 5-qubit basis states",
+        "objective_function": "learn the discretized Heston maturity distribution with qWGAN; then estimate E[max(S_T - K, 0)]",
+        "constraints_handling": null,
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 2
+      },
+      "problem_instance": {
+        "description": "Synthetic Heston stochastic-volatility model maturity distribution for option pricing",
+        "num_assets": 1,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 100,
+        "data_type": "synthetic",
+        "dataset_name": "Heston model simulation",
+        "dataset_specification": {
+          "description": "100 simulated variance paths and 100 corresponding asset price paths; PDF estimated with Gaussian KDE and discretized; mean return 10%, initial and long-term average volatility 25%; strike K = 1.0"
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 5,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 1000,
+        "num_variational_params": 10,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": "IBM",
+        "device_name": "aer_simulator",
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": "https://github.com/felixfuchs/qwgan-option-pricing",
+        "framework_version": null,
+        "classical_solver": null,
+        "classical_preprocessing": "simulate Heston paths; estimate PDF with Gaussian KDE; discretize and normalize onto 32-point grid",
+        "classical_postprocessing": "evaluate trained distribution fit via relative entropy and Wasserstein distance; then run IQAE for option price"
+      },
+      "results": [
+        {
+          "metric_name": "relative_entropy",
+          "value": 0.0079,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "nats",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "wasserstein_distance",
+          "value": 0.001526,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "distance",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "target_distribution_payout",
+          "value": 0.1583,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "trained_distribution_payout",
+          "value": 0.1528,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "estimated_value",
+          "value": 0.1478,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "confidence_interval",
+          "value": 0.1478,
+          "uncertainty": "[0.1339, 0.1621]",
+          "num_runs": null,
+          "unit": "payout",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.0055,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute payout error",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.0055,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute payout error",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.0105,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute payout error",
+          "higher_is_better": false,
+          "data_source": "computed"
+        }
+      ],
+      "classical_baselines": [],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo",
+          "conditions": "IQAE pricing step on the Heston-distribution experiment",
+          "is_demonstrated": true,
+          "caveats": "The paper reports the quadratic scaling claim generally for IQAE; the specific Heston experiment reports only numerical fit and pricing outputs."
+        }
+      ],
+      "scalability_data": [
+        {
+          "problem_size": "100 simulated variance paths and 100 asset price paths",
+          "num_qubits": 5,
+          "metric_name": "relative_entropy",
+          "metric_value": 0.0079
+        },
+        {
+          "problem_size": "100 simulated variance paths and 100 asset price paths",
+          "num_qubits": 5,
+          "metric_name": "wasserstein_distance",
+          "metric_value": 0.001526
+        }
+      ],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_4",
+      "description": "Hybrid qWGAN training on a real-market Apple options-implied distribution, followed by option pricing with IQAE.",
+      "algorithm": {
+        "family": "hybrid",
+        "variant": "hybrid qWGAN on real implied option-price distribution",
+        "ansatz": "Two_Local circuit; alternating RX/RY rotation layers with shifted-circular-alternating CX entanglement",
+        "optimizer": "AMSGrad",
+        "num_layers": 2,
+        "convergence_criteria": "trained until close fit; paper reports relative entropy and Wasserstein distance after training",
+        "hyperparameters": {
+          "epochs": 2000,
+          "batch_size": 1000,
+          "learning_rate_bce": 0.0001,
+          "learning_rate_wasserstein": 0.0001,
+          "beta1": 0.9,
+          "beta2": 0.999,
+          "num_qubits": 5,
+          "num_grid_points": 32,
+          "strike_price": 150.0,
+          "initial_parameter_range": "uniform[-0.1, 0.1]",
+          "hidden_layer_size": 20,
+          "discriminator_layers": 3,
+          "ancilla_qubits_for_pricing": 2
+        },
+        "parameter_initialization": "generator parameters sampled uniformly from [-0.1, 0.1]",
+        "optimizer_settings": {
+          "learning_rate": 0.0001,
+          "beta1": 0.9,
+          "beta2": 0.999,
+          "batch_size": 1000,
+          "epochs": 2000
+        }
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "implied maturity-price distribution discretized and normalized onto 32 grid points, then loaded into 5-qubit basis states",
+        "objective_function": "learn the implied distribution from Apple options and estimate the expected call payoff",
+        "constraints_handling": null,
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 2
+      },
+      "problem_instance": {
+        "description": "Real Apple options data; implied distribution inferred from option chain and Breeden-Litzenberger formula",
+        "num_assets": 1,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": null,
+        "data_type": "real_market",
+        "dataset_name": "AAPL options chain",
+        "dataset_specification": {
+          "description": "Yahoo Finance AAPL options chain; 3 months to maturity; Apple share around 152 USD at data collection; strike K = 150 USD; implied density approximated from option prices and implied volatility using Breeden-Litzenberger formula"
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 5,
+        "qubit_type": "logical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": 1000,
+        "num_variational_params": 10,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "simulator_other",
+        "provider": "IBM",
+        "device_name": "aer_simulator",
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "is_noisy": false,
+        "noise_type": null,
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": "https://github.com/felixfuchs/qwgan-option-pricing",
+        "framework_version": null,
+        "classical_solver": null,
+        "classical_preprocessing": "download AAPL options chain; infer implied distribution via Breeden-Litzenberger formula; discretize and normalize onto 32-point grid",
+        "classical_postprocessing": "evaluate trained distribution fit via relative entropy and Wasserstein distance; then run IQAE for option price and confidence interval"
+      },
+      "results": [
+        {
+          "metric_name": "relative_entropy",
+          "value": 0.0175,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "nats",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "wasserstein_distance",
+          "value": 0.002145,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "distance",
+          "higher_is_better": false,
+          "data_source": "text"
+        },
+        {
+          "metric_name": "real_option_price",
+          "value": 7.83,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "USD",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "trained_distribution_payout",
+          "value": 9.3,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "USD",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "estimated_value",
+          "value": 9.24,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "USD",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "confidence_interval",
+          "value": 9.24,
+          "uncertainty": "[8.8131, 9.7624]",
+          "num_runs": null,
+          "unit": "USD",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 1.47,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "USD absolute error vs real option price",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 1.41,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "USD absolute error vs real option price",
+          "higher_is_better": false,
+          "data_source": "computed"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "real option price",
+          "metric_name": "real_option_price",
+          "value": 7.83,
+          "unit": "USD"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo",
+          "conditions": "IQAE pricing step applied after loading the real implied distribution",
+          "is_demonstrated": true,
+          "caveats": "The paper emphasizes the quadratic error scaling of IQAE, not a runtime benchmark against classical methods on the Apple dataset."
+        }
+      ],
+      "scalability_data": [],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    },
+    {
+      "experiment_id": "exp_5",
+      "description": "Hybrid qWGAN pricing of a digital call option using the synthetic lognormal distribution and IQAE.",
+      "algorithm": {
+        "family": "amplitude-estimation",
+        "variant": "Iterative Quantum Amplitude Estimation (IQAE) for digital payoff",
+        "ansatz": null,
+        "optimizer": null,
+        "num_layers": null,
+        "convergence_criteria": "final estimate reported after IQAE execution",
+        "hyperparameters": {
+          "strike_price": 1.0,
+          "num_qubits_distribution_register": 5,
+          "num_ancilla_qubits": 2,
+          "quantum_samples": 4,
+          "confidence_level": 0.99
+        },
+        "parameter_initialization": null,
+        "optimizer_settings": null
+      },
+      "problem_formulation": {
+        "encoding_method": "basis_encoding",
+        "encoding_details": "same 5-qubit synthetic lognormal distribution as exp_1; digital payoff encoded via ancilla qubit",
+        "objective_function": "estimate P(S_T > K) for a digital call option",
+        "constraints_handling": "comparison circuit marks states with i > K",
+        "num_binary_variables": null,
+        "problem_hamiltonian": null,
+        "num_ancilla_qubits": 2
+      },
+      "problem_instance": {
+        "description": "Digital call option on the synthetic lognormal distribution",
+        "num_assets": 1,
+        "time_steps": null,
+        "num_features": null,
+        "dataset_size": 10000,
+        "data_type": "synthetic",
+        "dataset_name": null,
+        "dataset_specification": {
+          "description": "Same synthetic lognormal maturity distribution as exp_1; strike K = 1.0"
+        }
+      },
+      "quantum_resources": {
+        "num_qubits": 7,
+        "qubit_type": "physical",
+        "circuit_depth": null,
+        "circuit_depth_transpiled": null,
+        "gate_count_total": null,
+        "cnot_count": null,
+        "t_count": null,
+        "t_depth": null,
+        "num_shots": null,
+        "num_variational_params": null,
+        "gate_fidelity": null,
+        "readout_fidelity": null,
+        "error_correction": null
+      },
+      "hardware": {
+        "type": "real_qpu_superconducting",
+        "provider": "IBM",
+        "device_name": "ibm_nairobi",
+        "framework": "Qiskit"
+      },
+      "noise_model": {
+        "is_noisy": true,
+        "noise_type": "hardware noise on IBM superconducting QPU",
+        "error_mitigation_method": null,
+        "noise_parameters": null,
+        "mitigation_details": null
+      },
+      "implementation_details": {
+        "code_available": true,
+        "code_url": "https://github.com/felixfuchs/qwgan-option-pricing",
+        "framework_version": null,
+        "classical_solver": null,
+        "classical_preprocessing": "same as exp_1; build digital payoff circuit instead of call payoff",
+        "classical_postprocessing": "estimate digital payoff probability and confidence interval from IQAE output"
+      },
+      "results": [
+        {
+          "metric_name": "target_distribution_payout",
+          "value": 0.5258,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "trained_distribution_payout",
+          "value": 0.5264,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "estimated_value",
+          "value": 0.5203,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "confidence_interval",
+          "value": 0.5203,
+          "uncertainty": "[0.5111, 0.5271]",
+          "num_runs": null,
+          "unit": "probability",
+          "higher_is_better": true,
+          "data_source": "table"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.0055,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute probability error",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.0006,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute probability error",
+          "higher_is_better": false,
+          "data_source": "computed"
+        },
+        {
+          "metric_name": "price_error",
+          "value": 0.0061,
+          "uncertainty": null,
+          "num_runs": null,
+          "unit": "absolute probability error",
+          "higher_is_better": false,
+          "data_source": "computed"
+        }
+      ],
+      "classical_baselines": [
+        {
+          "method_name": "target distribution payout",
+          "metric_name": "target_distribution_payout",
+          "value": 0.5258,
+          "unit": "probability"
+        }
+      ],
+      "speedup_claims": [
+        {
+          "type": "theoretical",
+          "factor": "quadratic",
+          "baseline_method": "classical Monte Carlo",
+          "conditions": "IQAE for digital payoff on the synthetic lognormal distribution",
+          "is_demonstrated": true,
+          "caveats": "The paper reports only the final estimate and confidence interval; no direct classical runtime benchmark is given."
+        }
+      ],
+      "scalability_data": [],
+      "complexity_analysis": null,
+      "advantage_assessment": {}
+    }
+  ]
+}

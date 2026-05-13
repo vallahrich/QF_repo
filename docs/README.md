@@ -1,14 +1,15 @@
-# `docs/` — Clean Submission Documentation
+# `docs/` — Project documentation
 
-This workspace keeps only the clean documentation set. Planning notes, proofreading matrices, local figures, manual review trackers, and package-design scratch reports were moved to the external source archive.
+Project-level documentation for the thesis. The two authoritative documents are [`PROJECT_STATE.yaml`](PROJECT_STATE.yaml) (machine-readable status, contracts, decisions) and [`ARTIFACT_CLAIM_LEDGER.md`](ARTIFACT_CLAIM_LEDGER.md) (per-claim source files and verification commands).
 
 | File | Purpose |
-|---|---|
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Human-readable map of the hand-in repository structure. |
-| [`PIPELINE.md`](PIPELINE.md) | Phase-by-phase research pipeline overview. |
-| [`PROJECT_STATE.yaml`](PROJECT_STATE.yaml) | Machine-readable project state and contracts. |
-| [`PROJECT_TIMELINE.md`](PROJECT_TIMELINE.md) | Clean chronology grounded in real artifacts. |
-| [`AUDIT_INDEX.md`](AUDIT_INDEX.md) | Audit/log navigation, with archive notes for moved evidence. |
-| [`METHODOLOGY_DESIGN.md`](METHODOLOGY_DESIGN.md) | Historical methodology scaffold retained for provenance; not the controlling current method. |
+|------|---------|
+| `PROJECT_STATE.yaml` | **★ Source of truth** for phase status, contracts, decisions. |
+| `ARTIFACT_CLAIM_LEDGER.md` | **★ Per-claim ledger** mapping every numerical claim to its authoritative source file plus the verification command. |
+| `ARCHITECTURE.md` | Map of the hand-in repository structure. |
+| `PIPELINE.md` | Phase-by-phase research pipeline overview. |
+| `PROJECT_TIMELINE.md` | Chronology of research milestones grounded in real artifacts. |
+| `AUDIT_INDEX.md` | Audit and log navigation index. |
+| `ai-prompt-iteration-stats.md` | Quantitative LLM prompt-iteration and review-acceptance evidence (cited from manuscript Annex H/I). |
 
-Archived docs are recorded in `C:\QF_submission_packages\source_internal_archive\QF_repo_supporting_artifacts_20260509\SOURCE_ARCHIVE_MANIFEST.csv`.
+See parent [`../README.md`](../README.md).

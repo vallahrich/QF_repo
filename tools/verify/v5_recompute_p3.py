@@ -23,7 +23,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REPORT_DIR = REPO_ROOT / "tools" / "verify" / "reports"
-MATRIX = REPO_ROOT / "p3_thematic_synthesis" / "s3_quantum_advantage" / "combined" / "output" / "triangulation_matrix.json"
+# Active S3 surface is the filtered matrix (110 inactive-silo rows dropped).
+# See p3_thematic_synthesis/FREEZE.md and s3_quantum_advantage/combined/output/README.md.
+MATRIX = REPO_ROOT / "p3_thematic_synthesis" / "s3_quantum_advantage" / "combined" / "output" / "triangulation_matrix.filtered.json"
 
 
 def main() -> int:

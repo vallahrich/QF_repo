@@ -7,10 +7,13 @@ Checks
 ------
 C1 PD codes in `unified_taxonomy.json` ⊇ codes in `silo_inclusion.json`
    (`active_silos` ∪ `excluded_silos`).
-C2 For every active silo, `p3_thematic_synthesis/problems/<folder>/`
-   exists.
-C3 Every silo folder under `problems/` is referenced somewhere in the
-   taxonomy / silo_inclusion / cross_cutting list (no orphan folders).
+C2 For every active silo, `p3_thematic_synthesis/s4_thematic_coding/<folder>/`
+   exists. (Active per-silo working data was relocated from `problems/`
+   to `s4_thematic_coding/` after the 2026-05-02 freeze; `problems/`
+   retains only the excluded PD-08 silo for traceability.)
+C3 Every silo folder under `s4_thematic_coding/` is referenced somewhere
+   in the taxonomy / silo_inclusion / cross_cutting list (no orphan folders).
+   Non-silo subfolders (`cross_silo/`, `papers/`, `output/`) are skipped.
 C4 PD-08 status drift: `unified_taxonomy.json` PD-08 should have
    `status=excluded` AND silo_inclusion.json should list it under
    `excluded_silos`.
@@ -49,7 +52,12 @@ def main() -> int:
 
     tax = _load(REPO_ROOT / "shared" / "config" / "unified_taxonomy.json")
     silo = _load(REPO_ROOT / "shared" / "config" / "silo_inclusion.json")
+    # Active per-silo working data lives under s4_thematic_coding/ since the
+    # post-2026-05-02 restructure; problems/ retains only excluded PD-08.
+    active_silo_dir = REPO_ROOT / "p3_thematic_synthesis" / "s4_thematic_coding"
     problems_dir = REPO_ROOT / "p3_thematic_synthesis" / "problems"
+    # Subfolders of s4_thematic_coding/ that are not silos.
+    NON_SILO_SUBDIRS = {"cross_silo", "papers", "output"}
 
     tax_codes = {v["code"]: k for k, v in tax["topic_tags"].items()}
     tax_status = {v["code"]: v.get("status", "active") for v in tax["topic_tags"].values()}
@@ -67,26 +75,29 @@ def main() -> int:
         findings.append({"check": "C1_superset", "severity": "fail",
                          "code": c, "msg": f"{c} appears in silo_inclusion.json but not in unified_taxonomy.json"})
 
-    # C2: active silo folder exists on disk
+    # C2: active silo folder exists on disk (under s4_thematic_coding/)
     for code, entry in silo_active.items():
         folder = entry["folder"]
-        if not (problems_dir / folder).is_dir():
+        if not (active_silo_dir / folder).is_dir():
             findings.append({"check": "C2_active_folder_exists", "severity": "fail",
                              "code": code, "folder": folder,
-                             "msg": f"Active silo {code} ({folder}) has no folder under problems/"})
+                             "msg": f"Active silo {code} ({folder}) has no folder under s4_thematic_coding/"})
 
-    # C3: orphan folders (not in any registry)
+    # C3: orphan folders under s4_thematic_coding/ (not in any registry)
     known_folders = set()
     for entry in silo_active.values():
         known_folders.add(entry["folder"])
     for entry in silo_excluded.values():
         known_folders.add(entry["folder"])
     known_folders |= silo_cross_cutting
-    for d in sorted(p for p in problems_dir.iterdir() if p.is_dir()):
-        if d.name not in known_folders:
-            findings.append({"check": "C3_orphan_folder", "severity": "warn",
-                             "folder": d.name,
-                             "msg": f"Folder problems/{d.name}/ is not referenced by silo_inclusion.json"})
+    if active_silo_dir.is_dir():
+        for d in sorted(p for p in active_silo_dir.iterdir() if p.is_dir()):
+            if d.name in NON_SILO_SUBDIRS:
+                continue
+            if d.name not in known_folders:
+                findings.append({"check": "C3_orphan_folder", "severity": "warn",
+                                 "folder": d.name,
+                                 "msg": f"Folder s4_thematic_coding/{d.name}/ is not referenced by silo_inclusion.json"})
 
     # C4: PD-08 status drift
     if tax_status.get("PD-08") != "excluded":

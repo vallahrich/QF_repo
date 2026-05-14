@@ -53,7 +53,7 @@ p2_systematic_review/
 ## Usage
 
 ```bash
-# From the project root (quantum-finance/)
+# From the archive root (the unzipped submission folder)
 
 # === Production pipeline used to generate the 777 outputs (Pipeline C) ===
 # Batch 6-step cached-prefix classification with parallel workers.

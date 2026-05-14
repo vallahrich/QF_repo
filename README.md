@@ -6,6 +6,23 @@ This repository is the **self-contained supplementary archive** submitted alongs
 
 The repository is **frozen** as a hand-in artifact. Headline numbers, taxonomies, cohorts, and audit ledgers are pinned by [`FREEZE.md`](FREEZE.md) at the root and per-folder `FREEZE.md` files.
 
+## Examiner Quickstart
+
+Three commands from the unzipped archive root. Requires **Python 3.12 or 3.13** and PowerShell (`pwsh`). No LLM credentials, no quantum hardware, no Azure account.
+
+```powershell
+python -m venv .venv ; .\.venv\Scripts\Activate.ps1
+pip install -r requirements-verify.txt
+pwsh .\verify.ps1 ; python -m pytest
+```
+
+Expected on a clean archive:
+
+- `verify.ps1` ends with `All verification checks passed.` and prints the JSON reports path under `tools/verify/reports/`.
+- `pytest` ends with `798 passed, 24 skipped` (counts may differ slightly across Python patch versions).
+
+If anything fails, see [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) and [`tools/verify/reports/known_drift_2026-05.md`](tools/verify/reports/known_drift_2026-05.md).
+
 ## Start Here
 
 | File | Purpose |
@@ -23,7 +40,7 @@ The repository is **frozen** as a hand-in artifact. Headline numbers, taxonomies
 
 ## LLM Audit Trail
 
-Raw LLM call logs from both researchers' execution sessions are merged at [`audit/logs/`](audit/logs/). Each phase that invoked an LLM also keeps stage-local call logs (e.g., `p3_thematic_synthesis/s4_thematic_coding/<silo>/themes/*.raw_response.txt` and `*_calls.jsonl` files). Together these constitute the complete AI-use audit trail referenced in the manuscript's AI Use Declaration appendix.
+Raw LLM call logs from both researchers' execution sessions are merged at [`audit/logs/`](audit/logs/). See [`audit/README.md`](audit/README.md) for the navigation entry point and per-phase pointers; the full file-pattern catalog is in [`audit/logs/README.md`](audit/logs/README.md), and the schema-and-questions index is [`docs/AUDIT_INDEX.md`](docs/AUDIT_INDEX.md). Each phase that invoked an LLM also keeps stage-local call logs (e.g., `p3_thematic_synthesis/s4_thematic_coding/<silo>/themes/*.raw_response.txt` and `*_calls.jsonl` files). Together these constitute the complete AI-use audit trail referenced in the manuscript's AI Use Declaration appendix.
 
 ## Phase-Local Provenance Files
 
@@ -52,9 +69,17 @@ The following materials were deliberately excluded from this submission. See [`F
 
 These checks use existing artifacts only; they do not rerun LLM extraction, classification, or expensive experiment jobs.
 
+Requires **Python 3.12 or 3.13**.
+
 ```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements-verify.txt
+
 pwsh .\verify.ps1
 python -m pytest
 ```
+
+`requirements-verify.txt` is the minimal pinned dependency set for the verifier and test surface. For full Phase 4 reproduction (heavy), use [`p4_experiments/canonical/requirements.lock`](p4_experiments/canonical/requirements.lock) instead. See [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) for both paths.
 
 For Phase 4 reproduction, see [`p4_experiments/canonical/REPRODUCE.md`](p4_experiments/canonical/REPRODUCE.md). Expensive paths support `--dry-run` for plan-only inspection.

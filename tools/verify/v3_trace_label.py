@@ -23,7 +23,9 @@ REPORT_DIR = REPO_ROOT / "tools" / "verify" / "reports"
 
 COHORT = REPO_ROOT / "p4_experiments" / "canonical" / "cohort.json"
 S2_EXTRACTIONS = REPO_ROOT / "p3_thematic_synthesis" / "s2_quantitative" / "output" / "extractions"
-S3_MATRIX = REPO_ROOT / "p3_thematic_synthesis" / "s3_quantum_advantage" / "combined" / "output" / "triangulation_matrix.json"
+# Active S3 surface is the filtered matrix (110 inactive-silo rows dropped).
+# See p3_thematic_synthesis/FREEZE.md and s3_quantum_advantage/combined/output/README.md.
+S3_MATRIX = REPO_ROOT / "p3_thematic_synthesis" / "s3_quantum_advantage" / "combined" / "output" / "triangulation_matrix.filtered.json"
 P2_PROCESSED = REPO_ROOT / "p2_systematic_review" / "output" / "processed"
 BRIDGE = REPO_ROOT / "shared" / "bridge" / "paper_id_bridge.csv"
 ALLOWLIST = REPO_ROOT / "tools" / "verify" / "v3_trace_label_allowlist.json"

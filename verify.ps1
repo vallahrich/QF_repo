@@ -42,11 +42,14 @@ foreach ($s in $scripts) {
 }
 
 Write-Host ""
+$reportDir = Join-Path $repoRoot "tools/verify/reports"
 if ($failures.Count -eq 0) {
     Write-Host "All verification checks passed." -ForegroundColor Green
+    Write-Host ("JSON reports: {0}" -f $reportDir) -ForegroundColor DarkGray
     exit 0
 } else {
     Write-Host "FAILED checks:" -ForegroundColor Red
     $failures | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
+    Write-Host ("JSON reports (including failures): {0}" -f $reportDir) -ForegroundColor DarkGray
     exit 1
 }

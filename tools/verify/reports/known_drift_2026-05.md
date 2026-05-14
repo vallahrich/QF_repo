@@ -16,6 +16,12 @@ schema-level decisions outside the chore/remediation-2026-05 branch.
 
 **Status:** 0 fail / 0 warn at 2026-05-02 after the hardening pass.
 
+**Update 2026-05-14:** Active per-silo working data was relocated from
+`p3_thematic_synthesis/problems/` to `p3_thematic_synthesis/s4_thematic_coding/`
+after the 2026-05-02 freeze. V2's C2/C3 paths were updated accordingly; the
+legacy `problems/` tree retains only the excluded PD-08 silo for traceability.
+W2.1 below is preserved as historical context.
+
 ### W2.1 — closed: orphan folder `problems/forecasting_prediction/`
 - Folder exists under `p3_thematic_synthesis/problems/` but is not
   referenced by `silo_inclusion.json` (neither active nor excluded nor
@@ -39,6 +45,15 @@ Three DOI-backed bridge rows were repaired in
 `e922f913e80b` (`SM8`). The remaining bridge-only gaps are accepted only when
 they match the allow-list exactly; any new unaccepted V3 break still exits 1 and
 fails [../../../verify.ps1](../../../verify.ps1).
+
+**Update 2026-05-14:** V3 now reads `triangulation_matrix.filtered.json`
+(the active S3 surface; the unfiltered matrix is excluded from the hand-in per
+`p3_thematic_synthesis/FREEZE.md`). Eight cohort labels (`SX1`-`SX8`) live in
+the inactive `silo='other'` partition and their triangulation rows were among
+the 110 inactive-silo rows dropped by the filter. They were added to the V3
+allow-list with a new classification `row dropped from filtered triangulation
+matrix`. Their P2 processed papers and P3 S2 extractions remain on disk; only
+the unfiltered matrix is absent.
 
 ### B3.1 — Bridge-only gaps in P4 cohort labels
 - Original finding: 35/71 cohort label-links referenced paper IDs missing from

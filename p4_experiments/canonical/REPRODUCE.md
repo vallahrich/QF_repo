@@ -27,10 +27,10 @@ Current audited state:
 
 ## Environment
 
-Use the repository root as the working directory:
+Use the archive root (the unzipped submission folder) as the working directory:
 
 ```powershell
-cd quantum-finance
+cd <archive-root>
 $py = if (Test-Path ".\.venv\Scripts\python.exe") { ".\.venv\Scripts\python.exe" } elseif (Test-Path "..\.venv\Scripts\python.exe") { "..\.venv\Scripts\python.exe" } else { "python" }
 & $py -m p4_experiments.canonical.run_pipeline --dry-run
 ```

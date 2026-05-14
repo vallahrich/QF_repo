@@ -4,27 +4,43 @@ This document is the entry point for reproducing or verifying any artifact in th
 
 ## Toolchain (open-source only)
 
+**Python: 3.12 or 3.13** (the production Phase 4 environment used 3.13.13; the verify-only path was independently confirmed on 3.12.10).
+
 | Component | Pinned version | Source |
 |-----------|---------------|--------|
-| Python | 3.13 | python.org |
+| Python | 3.12 – 3.13 | python.org |
 | qiskit | 2.3.0 | PyPI (pip) |
 | qiskit-aer | 0.17.2 | PyPI (pip) |
 | qsharp | 1.27.0 | PyPI (pip) |
 | numpy, scipy, pandas, pytest | latest compatible | PyPI (pip) |
 
-Full pinned set: [`p4_experiments/requirements.lock`](p4_experiments/requirements.lock).
+Full pinned set for the heavy Phase 4 pipeline: [`p4_experiments/canonical/requirements.lock`](p4_experiments/canonical/requirements.lock).
 
 No proprietary or paid dependencies are required. No quantum hardware credentials are required (Phase 4 uses Qiskit Aer classical simulation throughout).
 
 ## Setup
 
+Two install paths are supported. **Most examiners only need the verify path.**
+
+### Verify-only (lightweight; runs `verify.ps1` and `pytest`)
+
 ```powershell
-# 1. Fresh Python 3.13 venv
+# Fresh Python 3.12 or 3.13 venv
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
-# 2. Install the pinned Phase 4 requirements (covers all phases)
-pip install -r p4_experiments/requirements.lock
+pip install -r requirements-verify.txt
+```
+
+Pinned set: [`requirements-verify.txt`](requirements-verify.txt) — `jsonschema`, `numpy`, `openai`, `openpyxl`, `pandas`, `pytest`, `python-dotenv`, `python-frontmatter`. (`openai` and `python-dotenv` are pulled in transitively by `shared.tools` modules at test-collection time; no LLM call is made during verification.)
+
+### Full Phase 4 reproduction (heavy)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+pip install -r p4_experiments/canonical/requirements.lock
 ```
 
 ## Running the verification harness

@@ -1,185 +1,38 @@
 # Contributing
 
-This repository uses a simple branch-based workflow.
+This archive is the **frozen supplementary repository** for the MSc thesis
+*Quantum Computing in Financial Services* (Copenhagen Business School, 2026).
+It is a hand-in artifact distributed as a `.zip`. **Contributions are not
+accepted, and the contents are not under active development.**
 
-## Rules
+The archive is intended only for examiner verification, reproducibility, and
+secondary citation as a Zenodo deposit.
 
-- Never commit directly to `main`
-- Create one branch per feature or fix
-- Merge the latest `origin/main` into your branch regularly
-- Open a Pull Request to merge into `main`
-- Prefer `Squash and merge` on GitHub
-- Do not use force-push in this workflow
+## For Reviewers
 
-## Branch Naming
+Start here:
 
-Use one of these patterns:
+- [`README.md`](README.md) — submission boundary and verification commands.
+- [`FREEZE.md`](FREEZE.md) — frozen status table and headline numbers.
+- [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) — toolchain, setup, per-phase
+  reproduction entry points.
+- [`docs/ARTIFACT_CLAIM_LEDGER.md`](docs/ARTIFACT_CLAIM_LEDGER.md) — every
+  manuscript claim mapped to its source file and verification command.
 
-```text
-feature/short-description
-fix/short-description
-docs/short-description
-chore/short-description
-```
+The verification surface (`pwsh ./verify.ps1`, `python -m pytest`) and the
+`tools/verify/` validators read existing artifacts only; they do not re-run any
+LLM or experiment job.
 
-Examples:
+## Provenance Note
 
-```text
-feature/monte-carlo-pricing
-fix/payoff-bug
-docs/readme-setup
-chore/update-gitignore
-```
+During development, work was done with one branch per feature/fix, squash-merge
+PRs into `main`, and conventional commit prefixes (`feat:`, `fix:`, `docs:`,
+`chore:`). The development repository, branch history, and code-review
+discussion are not part of this submission archive; only the frozen tree at
+hand-in time is included.
 
-## Commit Style
+## Errata
 
-Use short imperative commit messages:
-
-```text
-feat: add basket option circuit
-fix: correct discount factor formula
-docs: clarify local setup
-chore: remove unused notebook output
-```
-
-## One-Time Setup
-
-```bash
-git clone https://github.com/TelesforoAleix/quantum-finance.git
-cd quantum-finance
-git config pull.ff only
-git config fetch.prune true
-git switch main
-git pull origin main
-```
-
-## Start A New Branch
-
-Always branch from an up-to-date `main`:
-
-```bash
-git switch main
-git pull origin main
-git switch -c feature/short-description
-```
-
-## Daily Workflow
-
-Start work and sync with `main`:
-
-```bash
-git fetch origin
-git switch feature/short-description
-git merge origin/main
-```
-
-Check your changes:
-
-```bash
-git status
-```
-
-Commit your work:
-
-```bash
-git add -A
-git commit -m "feat: short description"
-```
-
-Push your branch.
-
-First push:
-
-```bash
-git push -u origin feature/short-description
-```
-
-Later pushes:
-
-```bash
-git push
-```
-
-## Pull Request Workflow
-
-Open the Pull Request on GitHub with:
-
-- Base branch: `main`
-- Compare branch: `feature/short-description`
-
-Use a Draft PR until the feature is ready.
-
-Before requesting review or merging, update the branch again:
-
-```bash
-git fetch origin
-git switch feature/short-description
-git merge origin/main
-git push
-```
-
-When approved, merge on GitHub with `Squash and merge`.
-
-After merge, clean up locally:
-
-```bash
-git switch main
-git pull origin main
-git branch -D feature/short-description
-```
-
-## Conflict Resolution Basics
-
-If `git merge origin/main` reports conflicts:
-
-```bash
-git status
-```
-
-Resolve each conflicted file by removing the markers and keeping the correct content:
-
-```text
-<<<<<<< HEAD
-your changes
-=======
-changes from main
->>>>>>> origin/main
-```
-
-Then finish the merge:
-
-```bash
-git add -A
-git commit
-git push
-```
-
-If you want to stop and try again later:
-
-```bash
-git merge --abort
-```
-
-## PR Description Template
-
-Copy this into the PR body if needed:
-
-```md
-## Summary
-What changed?
-
-## Why
-Why is this needed?
-
-## Testing
-What did you run or verify?
-
-## Notes
-Risks, follow-ups, or anything reviewers should watch for.
-
-## Checklist
-- [ ] Branch is up to date with main
-- [ ] Changes are scoped to one feature or fix
-- [ ] I tested the change
-- [ ] Ready for review
-```
+If you find an error of fact in the manuscript or supplementary materials,
+please raise it through the official Copenhagen Business School examination
+channel rather than as a code change to this archive.

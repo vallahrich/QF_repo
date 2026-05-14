@@ -4,9 +4,11 @@ How to reproduce the SLR pipeline from search through synthesis. Written for the
 
 ## Environment Setup
 
+This toolkit is shipped inlined under `p2_systematic_review/s1_slr/` of the
+thesis archive. Run from the SLR toolkit folder:
+
 ```bash
-git clone <repo-url>
-cd quantum-finance-slr
+cd p2_systematic_review/s1_slr
 python -m venv .venv
 .venv\Scripts\activate
 pip install -e ".[dev]"

@@ -74,7 +74,7 @@ quantum-finance-slr/
 ## Setup
 
 ```bash
-cd quantum-finance-slr
+cd p2_systematic_review/s1_slr
 python -m venv .venv
 .venv\Scripts\activate        # Windows
 pip install -e ".[dev]"

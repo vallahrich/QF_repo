@@ -35,35 +35,35 @@ $counts = @{
     'p3 s2 quantitative files' = (Get-ChildItem p3_thematic_synthesis\s2_quantitative\output -Recurse -File -ErrorAction SilentlyContinue | Measure-Object).Count
 }
 $counts.GetEnumerator() | ForEach-Object { Ok ("{0,-30} = {1}" -f $_.Key,$_.Value) }
-if ($counts['p2 processed *.md'] -ne 777) { Warn "p2 processed *.md = $($counts['p2 processed *.md']); FREEZE expects 777 + paper_base.md template" }
+if ($counts['p2 processed *.md'] -ne 777) {
+    $hasReadme = Test-Path 'p2_systematic_review\output\processed\README.md'
+    if ($counts['p2 processed *.md'] -eq 778 -and $hasReadme) {
+        Ok "p2 processed *.md = 778 (= 777 corpus + README.md; matches FREEZE)"
+    } else {
+        Warn "p2 processed *.md = $($counts['p2 processed *.md']); FREEZE expects 777 corpus + README.md"
+    }
+}
 
 # --- 3. Required artifacts present ---
 Section "3. Required artifacts"
 $required = @(
     'README.md','FREEZE.md','LICENSE','verify.ps1','pyproject.toml',
-    'docs\SUBMISSION_TRUTH_MAP.md','docs\AUDIT_INDEX.md','docs\PIPELINE.md',
+    'requirements-verify.txt','REPRODUCIBILITY.md','FAIR_USE.md',
+    'docs\ARTIFACT_CLAIM_LEDGER.md','docs\AUDIT_INDEX.md','docs\PIPELINE.md',
     'docs\ARCHITECTURE.md','docs\PROJECT_STATE.yaml','docs\PROJECT_TIMELINE.md',
     'p1_framework_synthesis\FREEZE.md','p2_systematic_review\FREEZE.md',
     'p3_thematic_synthesis\FREEZE.md','p4_experiments\FREEZE.md',
     'p4_experiments\canonical\cohort.json',
-    'p4_experiments\canonical\release\zenodo_bundle.tar.gz',
-    'p4_experiments\canonical\release\zenodo_bundle.tar.gz.sha256',
     'p3_thematic_synthesis\s3_quantum_advantage\combined\output\triangulation_matrix.filtered.json'
 )
 foreach ($p in $required) {
     if (Test-Path $p) { Ok $p } else { Block "missing: $p" }
 }
 
-# --- 4. Zenodo bundle hash matches sidecar ---
-Section "4. Phase-11 release bundle integrity"
-$tar  = 'p4_experiments\canonical\release\zenodo_bundle.tar.gz'
-$side = 'p4_experiments\canonical\release\zenodo_bundle.tar.gz.sha256'
-if ((Test-Path $tar) -and (Test-Path $side)) {
-    $actual = (Get-FileHash -Algorithm SHA256 $tar).Hash.ToLower()
-    $expected = (Get-Content $side -Raw).Trim().Split()[0].ToLower()
-    if ($actual -eq $expected) { Ok "SHA-256 matches: $actual" }
-    else { Block "SHA-256 MISMATCH  tar=$actual  sidecar=$expected" }
-}
+# --- 4. Zenodo deposition note (Posture B: bundle is built separately) ---
+Section "4. Zenodo deposition"
+Ok "This zip IS the Zenodo deposit. No bundled tarball is required inside the zip."
+Ok "To build a separate Zenodo asset later: python -m p4_experiments.canonical.phase11_zenodo_bundle"
 
 # --- 5. Credential / secret scan ---
 Section "5. Secret scan"
@@ -89,17 +89,20 @@ $envFiles = Get-ChildItem -Recurse -Force -File -Include '.env','.env.local','.e
 if (-not $envFiles) { Ok "no live .env files" }
 else { foreach ($f in $envFiles) { Block "live .env file present: $($f.FullName)" } }
 
-# --- 6. Forbidden artifact types (PDFs, large media, source full-text dumps) ---
+# --- 6. Forbidden artifact types (corpus PDFs, large media, source full-text dumps) ---
+# Research-output figures under **/figures/** and **/04_figures/** are legitimately
+# regenerated artefacts; skip them so the gate stays signal, not noise.
 Section "6. Forbidden / unexpected artifact types"
+$figureDirRegex = '\\(figures|04_figures)\\'
 $forbidden = Get-ChildItem -Recurse -File -Force -ErrorAction SilentlyContinue -Include '*.pdf','*.epub','*.docx','*.doc','*.pptx','*.ppt' |
-    Where-Object { $_.FullName -notmatch $skipDir }
-if (-not $forbidden) { Ok "no PDF/Office docs (IP-clean)" }
+    Where-Object { $_.FullName -notmatch $skipDir -and $_.FullName -notmatch $figureDirRegex }
+if (-not $forbidden) { Ok "no corpus PDFs / Office docs (IP-clean; research-output figures under **/figures/ excluded by design)" }
 else { foreach ($f in $forbidden) { Warn "office/PDF doc present: $($f.FullName) ($([int]($f.Length/1KB)) KB)" } }
 
 # --- 7. Dev caches that should not ship ---
 Section "7. Dev caches and venvs"
 $caches = Get-ChildItem -Recurse -Directory -Force -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -in '.venv','venv','node_modules','__pycache__','.pytest_cache','.mypy_cache','.ipynb_checkpoints','.vs','.idea' }
+    Where-Object { $_.Name -in '.venv','venv','node_modules','__pycache__','.pytest_cache','.mypy_cache','.ipynb_checkpoints','.vs','.idea','_handover_scratch' }
 if (-not $caches) { Ok "no dev caches" }
 else {
     $caches | Group-Object Name | ForEach-Object {
@@ -126,9 +129,7 @@ $bannerChecks = @{
     'p3_thematic_synthesis\docs\B2_MANUSCRIPT_READINESS.md'  = 'Status note \(2026-05-'
     'p3_thematic_synthesis\docs\C2_DISPOSITION_LOG.md'       = 'Status note \(2026-05-'
     'p3_thematic_synthesis\docs\C2_GROUNDING_REPORT.md'      = 'Status note \(2026-05-'
-    'p3_thematic_synthesis\docs\B1_B2_COALESCENCE_REPORT.md' = 'Status note \(2026-05-'
     'p3_thematic_synthesis\docs\THEME_CROSSWALK_SHORTLIST.md'= 'Status note \(2026-05-'
-    'p4_experiments\docs\MIGRATION_PLAN.md'                  = 'Status note \(2026-05-'
 }
 foreach ($kv in $bannerChecks.GetEnumerator()) {
     if ((Test-Path $kv.Key) -and (Select-String -Path $kv.Key -Pattern $kv.Value -Quiet)) { Ok $kv.Key }
@@ -155,6 +156,6 @@ Write-Host ""
 Write-Host "Suggested zip command (PowerShell):" -ForegroundColor Cyan
 Write-Host "  `$stamp = Get-Date -Format 'yyyyMMdd'"
 Write-Host "  `$out   = `"`$env:USERPROFILE\Desktop\QF_repo_handin_`$stamp.zip`""
-Write-Host "  Get-ChildItem -Path . -Force | Where-Object { `$_.Name -notin '.git','.venv','venv','__pycache__','.pytest_cache','node_modules','.mypy_cache','.vs','.idea' } | Compress-Archive -DestinationPath `$out -Force"
+Write-Host "  Get-ChildItem -Path . -Force | Where-Object { `$_.Name -notin '.git','.venv','venv','__pycache__','.pytest_cache','node_modules','.mypy_cache','.vs','.idea','_handover_scratch' } | Compress-Archive -DestinationPath `$out -Force"
 Write-Host ""
 exit 0
